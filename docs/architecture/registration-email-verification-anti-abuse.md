@@ -78,7 +78,7 @@ Legal acceptance records are not automatically deleted by registration maintenan
 
 ## Maintenance
 
-`DatabaseRegistrationMaintenance` removes only old consumed/expired verification tokens and old rate-limit buckets in bounded batches. It deliberately does not purge legal audit records.
+`DatabaseRegistrationMaintenance` performs bounded-batch cleanup for old consumed/expired verification tokens, old registration rate-limit buckets and expired/disabled invites retained past the configured retention interval. It deliberately never purges legal acceptance audit records.
 
 ## Permission and security boundary
 
@@ -99,4 +99,4 @@ No destructive reset is required.
 
 ## Acceptance status
 
-04.02 is complete when mode enforcement, approval/invite-only behavior, server-side CAPTCHA validation, disposable-email policy hook, privacy-preserving rate limiting, legal acceptance snapshots, email-verification state transition, persistence migration and relevant unit tests are all present without critical placeholders.
+04.02 is complete when mode enforcement, approval/invite-only behavior, server-side CAPTCHA validation, disposable-email policy hook, privacy-preserving rate limiting, legal acceptance snapshots, email-verification state transition, persistence migration, bounded maintenance and relevant unit tests are all present without critical placeholders.

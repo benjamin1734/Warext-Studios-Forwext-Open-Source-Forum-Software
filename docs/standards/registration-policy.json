@@ -43,6 +43,11 @@
     "records_raw_ip": false,
     "automatic_purge": false
   },
+  "maintenance": {
+    "bounded_batches": true,
+    "purges": ["expired_or_consumed_email_tokens", "old_rate_limit_buckets", "expired_or_disabled_invites"],
+    "purges_legal_acceptance": false
+  },
   "credential_boundary": "04.03",
   "migration": "20260914243000_registration_security"
 }

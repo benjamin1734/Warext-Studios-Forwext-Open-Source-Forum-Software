@@ -16,7 +16,7 @@ final readonly class DatabaseRegistrationMaintenance
     {
     }
 
-    /** @return array{verification_tokens:int, rate_limit_buckets:int} */
+    /** @return array{verification_tokens:int, rate_limit_buckets:int, invites:int} */
     public function purge(DateTimeImmutable $now, int $retentionDays = 30, int $batchSize = 1000): array
     {
         if ($retentionDays < 1 || $retentionDays > 365 || $batchSize < 1 || $batchSize > 5000) {
@@ -38,10 +38,17 @@ final readonly class DatabaseRegistrationMaintenance
             'DELETE FROM `forwext_registration_rate_limits` WHERE `bucket_start_utc` < :cutoff LIMIT ' . $batchSize,
             ['cutoff' => $cutoff],
         ));
+        $invites = $this->database->execute(new CompiledQuery(
+            'DELETE FROM `forwext_registration_invites` '
+            . 'WHERE (`expires_at_utc` IS NOT NULL AND `expires_at_utc` < :cutoff) '
+            . 'OR (`disabled` = 1 AND `created_at_utc` < :cutoff) LIMIT ' . $batchSize,
+            ['cutoff' => $cutoff],
+        ));
 
         return [
             'verification_tokens' => $verification,
             'rate_limit_buckets' => $rateLimits,
+            'invites' => $invites,
         ];
     }
 }

@@ -25,8 +25,12 @@ final class RegistrationMaintenanceTest extends TestCase
             batchSize: 250,
         );
 
-        self::assertSame(['verification_tokens' => 2, 'rate_limit_buckets' => 2], $result);
-        self::assertCount(2, $database->queries);
+        self::assertSame([
+            'verification_tokens' => 2,
+            'rate_limit_buckets' => 2,
+            'invites' => 2,
+        ], $result);
+        self::assertCount(3, $database->queries);
         foreach ($database->queries as $query) {
             self::assertStringContainsString('LIMIT 250', $query->sql);
             self::assertStringNotContainsString('forwext_user_legal_acceptances', $query->sql);
