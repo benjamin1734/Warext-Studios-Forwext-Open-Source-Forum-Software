@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.queue_scheduler_realtime",
+  "roadmap_step": "03.06",
+  "queue": {
+    "drivers": ["database", "redis"],
+    "default_driver": "database",
+    "reservation_token_required": true,
+    "visibility_timeout": true,
+    "retry": true,
+    "dead_letter": true,
+    "binary_payloads": true,
+    "redis_atomic_lua": true,
+    "redis_cluster_hash_tag": true
+  },
+  "scheduler": {
+    "cron_fields": 5,
+    "timezone": "UTC",
+    "duplicate_minute_claims": true,
+    "claim_drivers": ["database", "redis"],
+    "dispatches_to_queue": true
+  },
+  "realtime": {
+    "modes": ["polling", "sse", "websocket"],
+    "default_mode": "polling",
+    "cursor_sequence": true,
+    "database_history": true,
+    "sse_binary_payload_encoding": "base64",
+    "websocket_persist_before_broadcast": true
+  },
+  "database_migration": "20260914213000_queue_scheduler_realtime",
+  "security": {
+    "reservation_token_ownership": true,
+    "channel_name_grants_authorization": false,
+    "job_payload_grants_authorization": false,
+    "silent_consistency_downgrade": false
+  }
+}

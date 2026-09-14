@@ -55,6 +55,22 @@ return [
             'secret_key_secret' => 'storage.s3.secret_key',
         ],
     ],
+    'queue' => [
+        'driver' => 'database',
+        'default_queue' => 'default',
+        'visibility_timeout_seconds' => 60,
+        'default_max_attempts' => 3,
+    ],
+    'scheduler' => [
+        'claim_driver' => 'database',
+        'timezone' => 'UTC',
+        'claim_retention_days' => 14,
+    ],
+    'realtime' => [
+        'mode' => 'polling',
+        'poll_limit' => 100,
+        'message_retention_seconds' => 86400,
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [
