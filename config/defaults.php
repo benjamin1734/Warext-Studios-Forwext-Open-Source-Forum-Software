@@ -13,6 +13,17 @@ return [
         'trusted_proxies' => [],
         'cloudflare_proxies' => [],
     ],
+    'database' => [
+        'driver' => 'mysql',
+        'host' => 'localhost',
+        'port' => 3306,
+        'name' => null,
+        'username' => null,
+        'charset' => 'utf8mb4',
+        'connect_timeout_seconds' => 5,
+        'unix_socket' => null,
+        'password_secret' => 'database.password',
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

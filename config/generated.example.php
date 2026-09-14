@@ -11,6 +11,14 @@ return [
         'trusted_proxies' => ['10.0.0.0/8'],
         'cloudflare_proxies' => [],
     ],
+    'database' => [
+        'host' => 'localhost',
+        'port' => 3306,
+        'name' => 'forwext_forum',
+        'username' => 'forwext_user',
+        'charset' => 'utf8mb4',
+        'password_secret' => 'database.password',
+    ],
     'http_security' => [
         'trusted_hosts' => ['forum.example.com'],
         'cors' => [

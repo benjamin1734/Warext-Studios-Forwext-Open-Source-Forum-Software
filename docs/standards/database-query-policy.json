@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.database_query_layer",
+  "roadmap_step": "03.01",
+  "runtime": {
+    "driver": "pdo_mysql",
+    "charset_default": "utf8mb4",
+    "native_prepares": true,
+    "persistent_connections_default": false,
+    "password_source": "encrypted_secret_store"
+  },
+  "query_builder": {
+    "typed_select_insert_update_delete": true,
+    "identifier_validation": true,
+    "dynamic_values_are_parameters": true,
+    "public_raw_where_escape_hatch": false,
+    "update_delete_without_where_requires_explicit_opt_in": true
+  },
+  "pagination": {
+    "validated_page_and_size": true,
+    "bounded_page_size": true,
+    "offset_overflow_rejected": true,
+    "separate_count_query": true
+  },
+  "transactions": {
+    "nested_savepoints": true,
+    "application_exception_rolls_back_and_rethrows": true
+  },
+  "row_locking": {
+    "for_update": true,
+    "shared_lock": true,
+    "active_transaction_required": true
+  },
+  "optimistic_locking": {
+    "id_and_version_compare_and_swap": true,
+    "version_increment": true,
+    "exactly_one_affected_row_required": true
+  },
+  "authorization": {
+    "row_found_grants_permission": false
+  }
+}

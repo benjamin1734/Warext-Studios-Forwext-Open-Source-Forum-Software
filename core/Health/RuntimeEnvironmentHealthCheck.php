@@ -9,7 +9,7 @@ final readonly class RuntimeEnvironmentHealthCheck implements HealthCheck
     /** @param list<string> $requiredExtensions */
     public function __construct(
         private int $minimumPhpVersionId = 80400,
-        private array $requiredExtensions = ['json', 'openssl', 'pdo'],
+        private array $requiredExtensions = ['json', 'openssl', 'pdo', 'pdo_mysql'],
     ) {
     }
 

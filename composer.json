@@ -4,7 +4,10 @@
   "type": "project",
   "license": "Apache-2.0",
   "require": {
-    "php": ">=8.4"
+    "php": ">=8.4",
+    "ext-openssl": "*",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.2.14",

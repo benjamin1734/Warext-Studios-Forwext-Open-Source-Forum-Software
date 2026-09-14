@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.0-dev
 LAST_COMPLETED_MAIN_STEP = 02
-LAST_COMPLETED_SUBSTEP = 02.07
-CURRENT_STEP = 03.01
+LAST_COMPLETED_SUBSTEP = 03.01
+CURRENT_STEP = 03.02
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 03.01
+NEXT_STEP = 03.02
 ```
 
 ## Current position
@@ -22,8 +22,8 @@ NEXT_STEP = 03.01
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`
 - Current main step: `03`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`
-- Current sub-step: `03.01`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01`
+- Current sub-step: `03.02`
 - Persistent server installation required yet: `no`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)

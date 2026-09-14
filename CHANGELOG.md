@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.01 — Database Connection and Typed Query Builder
+
+- Added PDO MySQL connection configuration/factory with native prepared statements, utf8mb4 defaults and non-persistent connections.
+- Added generic database connection executor with typed parameter binding and generic non-leaking exception wrapping.
+- Added nested transaction/savepoint handling and transaction-required query enforcement for row locks.
+- Added validated identifier handling plus typed SELECT/INSERT/UPDATE/DELETE builders with no public raw-WHERE escape hatch.
+- Added fail-closed protection against accidental full-table UPDATE/DELETE operations.
+- Added bounded pagination with separate count queries and overflow checks.
+- Added `FOR UPDATE` / shared row-lock query modes that require an active transaction.
+- Added optimistic compare-and-swap updates with mandatory version increment and exactly-one-row enforcement.
+- Added builder/service tests plus optional in-memory PDO transaction/prepared-statement tests when `pdo_sqlite` is available.
+- Added explicit PHP runtime requirements for OpenSSL, PDO and PDO MySQL.
+
 ### 02.07 — HTTP Security and Runtime Health
 
 - Added context/scope/lifetime-bound HMAC CSRF tokens and browser-route CSRF middleware with secure `__Host-` context cookies.
@@ -123,6 +136,6 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Defined permission-aware UX requirements and the rule that UI hiding never substitutes for backend authorization.
 - Added mobile, accessibility, reduced-motion, form validation and cPanel performance expectations.
 - Added a machine-readable usability policy manifest for later ACP/UI implementation.
-- Synced the repository to the binding v2.0 master plan (20 main steps / 138 sub-steps).
+- Synced the repository to the binding v2.0 master plan (20 main steps / 138 real sub-steps).
 - Corrected the first persistent installation milestone to 03.03.
 - Expanded the 1.0 product/scope contracts to the full v2 first-party system set.
