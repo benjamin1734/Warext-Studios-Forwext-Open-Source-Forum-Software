@@ -6,12 +6,12 @@ This file is the canonical human-readable development pointer for continuing For
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.0-dev
-LAST_COMPLETED_MAIN_STEP = 01
-LAST_COMPLETED_SUBSTEP = 02.06
-CURRENT_STEP = 02.07
+LAST_COMPLETED_MAIN_STEP = 02
+LAST_COMPLETED_SUBSTEP = 02.07
+CURRENT_STEP = 03.01
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 02.07
+NEXT_STEP = 03.01
 ```
 
 ## Current position
@@ -20,10 +20,10 @@ NEXT_STEP = 02.07
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`
-- Current main step: `02`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.06`
-- Current sub-step: `02.07`
+- Completed main steps: `01`, `02`
+- Current main step: `03`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`
+- Current sub-step: `03.01`
 - Persistent server installation required yet: `no`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)

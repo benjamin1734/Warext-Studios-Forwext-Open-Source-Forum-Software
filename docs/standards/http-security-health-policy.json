@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.http_security_health",
+  "roadmap_step": "02.07",
+  "csrf": {
+    "authenticated_tokens": true,
+    "context_bound": true,
+    "scope_bound": true,
+    "expiration_required": true,
+    "unsafe_methods_require_validation": true,
+    "default_cookie_prefix": "__Host-",
+    "default_same_site": "Lax"
+  },
+  "cors": {
+    "deny_by_default": true,
+    "explicit_origins_methods_headers": true,
+    "credentialed_wildcard_rejected": true,
+    "preflight_validation": true,
+    "vary_origin": true
+  },
+  "rate_limit": {
+    "driver_contract": true,
+    "standard_cpanel_file_driver": true,
+    "file_locking": true,
+    "symlink_state_rejected": true,
+    "default_identity": "trusted_effective_client_ip",
+    "blocked_status": 429
+  },
+  "trusted_host": {
+    "required_for_production_composition": true,
+    "effective_host_after_proxy_resolution": true,
+    "rejected_status": 421
+  },
+  "security_headers": {
+    "content_type_nosniff": true,
+    "referrer_policy": true,
+    "permissions_policy": true,
+    "central_csp": true,
+    "frame_ancestors": true,
+    "hsts_only_on_effective_https": true
+  },
+  "logging": {
+    "structured_contract": true,
+    "json_file_driver": true,
+    "secret_mask_before_persistence": true,
+    "request_id_correlation": true,
+    "access_log_query_string_excluded": true
+  },
+  "errors": {
+    "production_exception_details_exposed": false,
+    "debug_requires_explicit_enable": true,
+    "debug_still_masks_registered_secrets": true,
+    "handled_errors_no_store": true
+  },
+  "health": {
+    "statuses": ["healthy", "degraded", "unhealthy"],
+    "public_details_default": false,
+    "unhealthy_http_status": 503,
+    "check_exceptions_hidden": true
+  },
+  "authorization": {
+    "middleware_success_grants_domain_permission": false
+  }
+}

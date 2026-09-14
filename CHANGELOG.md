@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.07 — HTTP Security and Runtime Health
+
+- Added context/scope/lifetime-bound HMAC CSRF tokens and browser-route CSRF middleware with secure `__Host-` context cookies.
+- Added deny-by-default CORS policy/preflight middleware with credential/wildcard safeguards.
+- Added trusted-host exact/wildcard policy evaluated against the trusted effective request host.
+- Added centralized CSP, nosniff, referrer, permissions, frame and HTTPS-only HSTS response-header baseline.
+- Added rate-limit policy/store contract, deterministic in-memory driver and locked cPanel-compatible file driver.
+- Added JSON-lines structured logging with secret masking plus query-string-free correlated access logging.
+- Added production-safe/debug-masked error handling with request-ID correlation and logging-failure fallback.
+- Added healthy/degraded/unhealthy health aggregation, runtime/writable-directory checks and minimal-by-default health handler.
+- Added edge-case tests for CSRF, CORS, trusted hosts, security headers, rate limits, logging/errors and health behavior.
+- Completed Main Step 02 and advanced development to 03.01.
+
 ### 02.06 — Router, Canonical URL and Proxy
 
 - Added named route registration, friendly single-segment parameters, method-aware dispatch and static-route precedence.
@@ -14,6 +27,7 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Added a shared base-path contract for root and subfolder installations.
 - Added configured canonical-origin parsing and fixed-target HTTPS/canonical redirects.
 - Added explicit IPv4/IPv6 CIDR trusted-proxy handling with right-to-left `X-Forwarded-For` resolution.
+- Added RFC `Forwarded` origin/client support for trusted peers in addition to common `X-Forwarded-*` headers.
 - Added Cloudflare-aware client IP/scheme support gated by configured Cloudflare source CIDRs.
 - Added redirect-loop protection that refuses untrusted forwarded-origin claims instead of trusting them.
 - Added tests for routing, URL generation, encoded-path safety, CIDR resolution, trusted/untrusted proxies, Cloudflare and TLS-termination canonical behavior.
