@@ -1,0 +1,14 @@
+parameters:
+    level: max
+    paths:
+        - app
+        - core
+        - modules
+        - addons
+        - database
+        - public
+        - tests
+        - tools
+    tmpDir: storage/cache/phpstan
+    treatPhpDocTypesAsCertain: true
+    reportUnmatchedIgnoredErrors: true

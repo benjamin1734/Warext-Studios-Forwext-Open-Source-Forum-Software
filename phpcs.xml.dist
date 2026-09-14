@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="Forwext">
+    <description>Forwext PHP coding standard: PSR-12 plus project-level strict_types enforcement.</description>
+
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <file>app</file>
+    <file>core</file>
+    <file>modules</file>
+    <file>addons</file>
+    <file>database</file>
+    <file>public</file>
+    <file>tests</file>
+    <file>tools</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/storage/*</exclude-pattern>
+
+    <rule ref="PSR12"/>
+</ruleset>

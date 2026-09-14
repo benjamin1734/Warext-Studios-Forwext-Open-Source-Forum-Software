@@ -1,0 +1,15 @@
+vendor/
+storage/
+**/node_modules/
+frontend/.next/
+**/dist/
+*.md
+**/*.md
+*.php
+**/*.php
+*.xml
+**/*.xml
+LICENSE
+NOTICE
+VERSION
+.gitignore

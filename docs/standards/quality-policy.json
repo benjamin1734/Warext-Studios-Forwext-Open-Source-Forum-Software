@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.code_quality",
+  "roadmap_step": "02.02",
+  "php": {
+    "minimum": ">=8.4",
+    "ci_targets": ["8.4", "8.5"],
+    "strict_types_required": true,
+    "coding_standard": "PSR-12"
+  },
+  "static_analysis": {
+    "phpstan_level": "max",
+    "psalm_error_level": 1,
+    "blanket_baselines_allowed": false
+  },
+  "tests": {
+    "runner": "PHPUnit",
+    "required_categories": [
+      "unit",
+      "integration",
+      "permission_security",
+      "api",
+      "migration_install_update",
+      "browser_e2e",
+      "module_addon_lifecycle"
+    ]
+  },
+  "typescript": {
+    "eslint_flat_config": true,
+    "strict_compiler_options": true,
+    "formatter": "Prettier",
+    "node_runtime_required_in_production": false,
+    "typescript_supported_range": ">=4.8.4 <6.1.0",
+    "selected_typescript_line": "5.9.x"
+  },
+  "quality_commands": [
+    "composer qa:php",
+    "npm run lint",
+    "npm run format:check"
+  ]
+}

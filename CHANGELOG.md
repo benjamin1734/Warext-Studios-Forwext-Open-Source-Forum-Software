@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.02 — Code Standards and Static Analysis
+
+- Set PHP 8.4 minimum and PHP 8.4/8.5 compatibility targets in executable quality policy/configuration.
+- Added PSR-12 PHP_CodeSniffer configuration and repository-wide `strict_types=1` enforcement.
+- Added PHPStan `max` and Psalm error-level `1` configurations.
+- Added PHPUnit 12 test configuration plus architecture tests for quality-policy invariants.
+- Added ESLint 10 flat config, strict TypeScript base options and Prettier formatting configuration for modern frontend/package development.
+- Pinned TypeScript to the supported 5.9 line rather than using an unsupported newer compiler with the selected typescript-eslint line.
+- Inventoried all new development-only dependencies with license/security metadata; none are production runtime dependencies.
+
 ### 02.01 — Monorepo / Repository Layout
 
 - Created every required top-level project boundary: `app`, `core`, `modules`, `addons`, `themes`, `resources`, `database`, `storage`, `public`, `frontend`, `packages`, `tests`, `docs` and `tools`.

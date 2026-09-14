@@ -1,0 +1,47 @@
+{
+  "name": "warext-studios/forwext",
+  "description": "Forwext — Open Source Forum Platform",
+  "type": "project",
+  "license": "Apache-2.0",
+  "require": {
+    "php": ">=8.4"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.2.14",
+    "phpunit/phpunit": "^12.5",
+    "squizlabs/php_codesniffer": "^4.0.4",
+    "vimeo/psalm": "^6.16.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Forwext\\App\\": "app/",
+      "Forwext\\Core\\": "core/",
+      "Forwext\\Modules\\": "modules/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Forwext\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "qa:strict-types": "php tools/quality/check-strict-types.php",
+    "qa:cs": "phpcs --standard=phpcs.xml.dist",
+    "qa:phpstan": "phpstan analyse --configuration=phpstan.neon.dist --no-progress",
+    "qa:psalm": "psalm --config=psalm.xml --no-cache --no-progress",
+    "test": "phpunit --configuration=phpunit.xml.dist",
+    "qa:php": [
+      "@qa:strict-types",
+      "@qa:cs",
+      "@qa:phpstan",
+      "@qa:psalm",
+      "@test"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

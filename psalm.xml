@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<psalm
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
+    errorLevel="1"
+    phpVersion="8.4"
+    resolveFromConfigFile="true"
+    findUnusedCode="true"
+    findUnusedBaselineEntry="true"
+>
+    <projectFiles>
+        <directory name="app" />
+        <directory name="core" />
+        <directory name="modules" />
+        <directory name="addons" />
+        <directory name="database" />
+        <directory name="public" />
+        <directory name="tests" />
+        <directory name="tools" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="storage" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

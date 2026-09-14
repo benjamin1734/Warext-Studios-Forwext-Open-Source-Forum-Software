@@ -2,23 +2,14 @@
 
 This file is the human-readable attribution inventory for third-party code/assets distributed with Forwext.
 
-## Current inventory
+## Production/runtime redistribution
 
-**No third-party runtime/library component has been approved or vendored into the repository yet.**
+**No third-party runtime/library component is currently approved or vendored for redistribution in a Forwext production release.**
 
-The machine-readable inventory is `docs/standards/dependency-inventory.json`.
+## Development/build tooling
 
-When a component is added, record at minimum:
+Roadmap step 02.02 declares development-only quality tooling in `composer.json` and `package.json`, including PHPUnit, PHPStan, Psalm, PHP_CodeSniffer, ESLint, typescript-eslint, Prettier and TypeScript. These tools are not application runtime dependencies and are not redistributed in production ZIPs by this step.
 
-- component/package name;
-- exact version;
-- upstream/project URL;
-- SPDX license identifier;
-- usage scope (runtime/dev/build/asset);
-- whether it is redistributed in full/update release packages;
-- required attribution/NOTICE text;
-- security/advisory source;
-- maintainer/update status;
-- approval date/reviewer.
+Their exact reviewed versions, licenses and security sources are tracked in `docs/standards/dependency-inventory.json`.
 
-Generated release packages must include all attribution texts required by redistributed components. Removing a dependency also requires removing attribution only when the applicable license permits it and no redistributed artifact still contains that component.
+When a component becomes redistributed, record its required attribution/license text here and carry it into generated release NOTICE/license output.
