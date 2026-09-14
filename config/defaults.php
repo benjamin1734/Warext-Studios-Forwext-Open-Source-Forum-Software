@@ -8,6 +8,11 @@ return [
         'debug' => false,
         'maintenance' => false,
     ],
+    'routing' => [
+        'canonical_url' => null,
+        'trusted_proxies' => [],
+        'cloudflare_proxies' => [],
+    ],
     'security' => [
         'secret_store_path' => 'storage/secrets/forwext.secrets',
         'master_key_environment' => 'FORWEXT_MASTER_KEY',

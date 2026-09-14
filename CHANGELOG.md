@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.06 — Router, Canonical URL and Proxy
+
+- Added named route registration, friendly single-segment parameters, method-aware dispatch and static-route precedence.
+- Added fail-closed ambiguous-route detection plus 404/405/Allow behavior.
+- Added named path/absolute URL generation with RFC 3986 query encoding.
+- Added a shared base-path contract for root and subfolder installations.
+- Added configured canonical-origin parsing and fixed-target HTTPS/canonical redirects.
+- Added explicit IPv4/IPv6 CIDR trusted-proxy handling with right-to-left `X-Forwarded-For` resolution.
+- Added Cloudflare-aware client IP/scheme support gated by configured Cloudflare source CIDRs.
+- Added redirect-loop protection that refuses untrusted forwarded-origin claims instead of trusting them.
+- Added tests for routing, URL generation, encoded-path safety, CIDR resolution, trusted/untrusted proxies, Cloudflare and TLS-termination canonical behavior.
+
 ### 02.05 — Request, Response and Middleware
 
 - Added typed HTTP method/request/response primitives and immutable-style request attributes/response mutations.

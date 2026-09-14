@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.routing_proxy",
+  "roadmap_step": "02.06",
+  "router": {
+    "named_routes": true,
+    "friendly_urls": true,
+    "route_parameters_are_single_segments": true,
+    "encoded_slash_or_backslash_rejected": true,
+    "dot_segments_rejected": true,
+    "invalid_utf8_rejected": true,
+    "static_route_precedence": true,
+    "ambiguous_equal_specificity_fails_closed": true,
+    "method_not_allowed_status": 405,
+    "head_matches_get": true
+  },
+  "subfolder_install": {
+    "supported": true,
+    "base_path_shared_by_match_and_generation": true
+  },
+  "canonical_url": {
+    "configured_not_request_derived": true,
+    "https_supported": true,
+    "redirect_status": 308,
+    "fixed_target_prevents_open_redirect": true,
+    "query_preserved": true
+  },
+  "trusted_proxy": {
+    "explicit_cidr_only": true,
+    "ipv4": true,
+    "ipv6": true,
+    "xff_right_to_left": true,
+    "rfc_forwarded_supported": true,
+    "forwarded_origin_headers_require_trusted_peer": true,
+    "untrusted_forwarding_never_changes_effective_origin_or_client_ip": true
+  },
+  "cloudflare": {
+    "cf_headers_require_configured_cloudflare_source_cidr": true,
+    "client_ip_header": "CF-Connecting-IP",
+    "scheme_fallback_header": "CF-Visitor",
+    "hardcoded_permanent_ip_ranges": false
+  },
+  "redirect_loop_protection": {
+    "trusted_tls_termination_resolves_external_https": true,
+    "untrusted_forwarding_on_origin_mismatch_status": 400
+  },
+  "authorization": {
+    "route_match_grants_permission": false
+  }
+}

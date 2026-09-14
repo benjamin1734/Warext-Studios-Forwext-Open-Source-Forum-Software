@@ -41,6 +41,15 @@ final class Response
         return new self($body, $status, new HeaderBag(['Content-Type' => 'application/json; charset=utf-8']));
     }
 
+    public static function redirect(string $location, int $status = 308): self
+    {
+        if ($status < 300 || $status > 399) {
+            throw new HttpException('Redirect response status must be between 300 and 399.');
+        }
+
+        return new self('', $status, new HeaderBag(['Location' => $location]));
+    }
+
     public function body(): string
     {
         return $this->body;
