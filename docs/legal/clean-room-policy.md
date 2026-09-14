@@ -124,9 +124,9 @@ When an AI system produces output suspiciously similar to known third-party impl
 
 ## 9. Third-party dependencies are separate from behavioral references
 
-A dependency intentionally included in Forwext is not governed solely by this clean-room rule. It must pass the license, NOTICE, security, maintenance and compatibility requirements defined at roadmap step 01.05.
+A dependency intentionally included in Forwext is not governed solely by this clean-room rule. It must pass the license, NOTICE, security, maintenance and compatibility requirements in `docs/legal/licensing-and-dependency-policy.md` and be recorded in `docs/standards/dependency-inventory.json` before redistribution.
 
-Until 01.05 is finalized, do not add new vendored third-party implementation code to the official repository merely because it is publicly accessible.
+Public availability alone is never sufficient approval to vendor third-party implementation code.
 
 ## 10. Security research and vulnerability information
 

@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 01.05 — License and Third-Party Dependency Policy
+
+- Selected **Apache License 2.0** as the Forwext project license and added the authoritative root `LICENSE`.
+- Added root `NOTICE` and `THIRD_PARTY_NOTICES.md` files.
+- Defined license compatibility review categories and explicit treatment of copyleft, source-available, proprietary and unclear-provenance components.
+- Defined mandatory dependency inventory, security/advisory, maintenance/freshness, version-pinning and release-compliance rules.
+- Added a machine-readable dependency inventory; no third-party runtime dependency is currently approved/vendored.
+
 ### 01.04 — Clean-room and Intellectual Property Boundaries
 
 - Added the normative Forwext clean-room/IP policy.

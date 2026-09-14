@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.0-dev
 LAST_COMPLETED_MAIN_STEP = none
-LAST_COMPLETED_SUBSTEP = 01.04
-CURRENT_STEP = 01.05
+LAST_COMPLETED_SUBSTEP = 01.05
+CURRENT_STEP = 01.06
 LAST_COMMIT = git:HEAD
-BLOCKERS = 01.05 requires the exact open-source license choice; no prior binding license choice is recorded
-NEXT_STEP = 01.05
+BLOCKERS = none
+NEXT_STEP = 01.06
 ```
 
 ## Current position
@@ -19,9 +19,10 @@ NEXT_STEP = 01.05
 - Target: **Production-ready 1.0.0**
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
+- Project license: **Apache-2.0**
 - Active main step: `01`
-- Completed sub-steps: `01.01`, `01.02`, `01.03`, `01.04`
-- Current sub-step: `01.05`
+- Completed sub-steps: `01.01`, `01.02`, `01.03`, `01.04`, `01.05`
+- Current sub-step: `01.06`
 - Persistent server installation required yet: `no`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
