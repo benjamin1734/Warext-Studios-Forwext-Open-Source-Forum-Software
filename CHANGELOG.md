@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.07 — Search Driver Foundation and Capability Resolver
+
+- Added native MySQL/MariaDB FULLTEXT search with parameterized query text, type/locale filters and access-scope candidate filtering.
+- Restricted search-driver results to document type/id plus score so indexed titles, bodies and snippets cannot bypass final domain authorization.
+- Added provider-neutral external search client/driver contracts while keeping external search optional for the cPanel baseline.
+- Added reusable PHP/runtime/server capability matrix covering required and optional extensions, functions, SAPI, INI limits, PDO drivers and database server capabilities.
+- Added conservative MySQL/MariaDB server detection and InnoDB FULLTEXT capability reporting without executing dangerous functions during probing.
+- Added versioned migration `20260914223000_search_index` for search documents, access scopes and native FULLTEXT index verification.
+- Added native search as the default deployment driver with fail-closed capability requirements for actual installation selection.
+- Added tests for query normalization/parameterization, access-scope indexing, external adapter result limits, migration verification and minimum/optional capability resolution.
+- Completed Main Step 03 and advanced the roadmap to 04.01 User domain and account lifecycle.
+
 ### 03.06 — Queue / Scheduler / Realtime Drivers
 
 - Added binary-safe DB and Redis queue drivers with delayed availability, reservation visibility timeouts and bounded max-attempt metadata.
