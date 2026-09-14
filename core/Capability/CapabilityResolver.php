@@ -15,12 +15,18 @@ final readonly class CapabilityResolver
     public function resolve(): CapabilityMatrix
     {
         $entries = [
-            new CapabilityEntry('runtime.php_8_4', version_compare($this->source->phpVersion(), '8.4.0', '>='), true, $this->source->phpVersion()),
+            new CapabilityEntry(
+                'runtime.php_8_4',
+                version_compare($this->source->phpVersion(), '8.4.0', '>='),
+                true,
+                $this->source->phpVersion(),
+            ),
             $this->extension('openssl', true),
             $this->extension('pdo', true),
             $this->extension('pdo_mysql', true),
             $this->extension('redis'),
             $this->extension('intl'),
+            $this->extension('mbstring'),
             $this->extension('fileinfo'),
             $this->extension('gd'),
             $this->extension('imagick'),
@@ -29,6 +35,7 @@ final readonly class CapabilityResolver
             $this->function('json_encode', true),
             $this->function('password_hash', true),
             $this->function('finfo_open'),
+            $this->function('mb_convert_case'),
             $this->function('proc_open'),
             $this->function('exec'),
             new CapabilityEntry(
