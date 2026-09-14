@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.06 — Queue / Scheduler / Realtime Drivers
+
+- Added binary-safe DB and Redis queue drivers with delayed availability, reservation visibility timeouts and bounded max-attempt metadata.
+- Added random reservation ownership tokens so stale workers cannot acknowledge, retry or fail a newer reservation.
+- Added database row-lock reservation with `FOR UPDATE SKIP LOCKED`, bounded expired-job cleanup and persistent dead-letter storage.
+- Added atomic Redis Lua enqueue/reserve/retry/ack/fail transitions with Redis Cluster hash-tagged per-queue keys.
+- Added five-field UTC cron parsing with lists, ranges, steps and standard day-of-month/day-of-week OR semantics.
+- Added scheduler registry/dispatcher plus DB and Redis per-task/per-minute claim stores to prevent duplicate cron enqueue operations.
+- Added polling, SSE and WebSocket realtime transports over one persisted sequence/cursor model; WebSocket persists before broadcast and SSE payloads are binary-safe base64.
+- Added versioned core migration `20260914213000_queue_scheduler_realtime` for jobs, failed jobs, scheduler claims and realtime message history.
+- Added cPanel-safe defaults: database queue/claims and polling realtime, while retaining optional Redis/WebSocket advanced deployment paths.
+- Added tests for DB reservation locking/token ownership, Redis atomic queue scripts/cluster slots, cron due logic, scheduler dedup/retry, realtime cursors/SSE/WebSocket and migration verification.
+
 ### 03.05 — Storage and Media Drivers
 
 - Added strict internal storage paths that reject absolute paths, traversal, backslashes, control characters and unsafe segments.
