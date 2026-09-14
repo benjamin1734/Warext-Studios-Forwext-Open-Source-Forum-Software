@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.04 — Cache / Session / Lock Drivers
+
+- Added shared cache/session/lock contracts with safe key validation and clock abstraction.
+- Added file-backed cache/session drivers with TTL, atomic writes, restrictive permissions, symlink rejection and bounded session garbage collection.
+- Added database-backed cache/session drivers plus tag invalidation and bounded expiry cleanup.
+- Added optional Redis cache/session drivers and a concrete `ext-redis` adapter without making Redis mandatory for the minimum cPanel profile.
+- Added local file locks plus database and Redis distributed lease locks with random ownership tokens and token-safe release.
+- Added cache stampede protection through double-checked regeneration locking.
+- Added versioned core migration `20260914203000_infrastructure_drivers` for cache, cache-tag, session and lock tables.
+- Added driver behavior tests covering TTL/tag invalidation, sessions, file/Redis/DB locking, stampede prevention and infrastructure migration verification.
+- Added cPanel-safe default driver configuration and documented consistency/security boundaries.
+
 ### 03.03 — Migration / Install / Upgrade Engine
 
 - Added core/module/add-on migration ownership and sortable versioned migration IDs.
