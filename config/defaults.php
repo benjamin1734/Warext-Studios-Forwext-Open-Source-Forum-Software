@@ -39,6 +39,22 @@ return [
         'path' => 'storage/locks',
         'default_ttl_seconds' => 30,
     ],
+    'storage' => [
+        'driver' => 'local',
+        'local' => [
+            'private_root' => 'storage/files/private',
+            'public_root' => 'public/storage',
+            'public_base_url' => null,
+        ],
+        's3' => [
+            'bucket' => null,
+            'prefix' => '',
+            'endpoint' => null,
+            'region' => null,
+            'access_key_secret' => 'storage.s3.access_key',
+            'secret_key_secret' => 'storage.s3.secret_key',
+        ],
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

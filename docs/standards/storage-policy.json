@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.storage",
+  "roadmap_step": "03.05",
+  "drivers": ["local", "s3-compatible"],
+  "visibility": ["private", "public"],
+  "binary_safe": true,
+  "streaming": true,
+  "path_policy": {
+    "absolute_paths": false,
+    "dot_segments": false,
+    "backslashes": false,
+    "control_characters": false,
+    "symlink_traversal_local": false
+  },
+  "local": {
+    "private_root": "storage/files/private",
+    "public_root": "public/storage",
+    "atomic_write": true,
+    "private_mode": "0600",
+    "public_mode": "0644"
+  },
+  "s3": {
+    "sdk_locked": false,
+    "temporary_private_url_max_ttl_seconds": 86400,
+    "credentials_in_secret_store": true
+  },
+  "metadata": ["path", "visibility", "size", "sha256", "content_type"],
+  "content_type_is_security_validation": false,
+  "storage_visibility_grants_forum_authorization": false
+}
