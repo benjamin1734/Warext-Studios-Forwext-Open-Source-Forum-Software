@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Forwext\Core\Redis;
 
 use Forwext\Core\Infrastructure\InfrastructureException;
+use ReflectionClass;
 use ReflectionMethod;
 use SensitiveParameter;
 use Throwable;
 
-final readonly class PhpRedisClient implements RedisClient
+final readonly class PhpRedisClient implements RedisScriptClient
 {
     /** @param object $redis Connected ext-redis client instance. */
     public function __construct(private object $redis)
@@ -34,8 +35,7 @@ final readonly class PhpRedisClient implements RedisClient
         }
 
         try {
-            $class = 'Redis';
-            $redis = new $class();
+            $redis = (new ReflectionClass('Redis'))->newInstance();
             if (self::call($redis, 'connect', [$host, $port, $timeoutSeconds]) !== true) {
                 throw new InfrastructureException('Unable to connect to Redis.');
             }
@@ -93,6 +93,7 @@ final readonly class PhpRedisClient implements RedisClient
         if ($ttlMilliseconds < 1) {
             throw new InfrastructureException('Redis lock TTL must be positive.');
         }
+
         try {
             return self::call($this->redis, 'set', [$key, $value, ['nx', 'px' => $ttlMilliseconds]]) === true;
         } catch (Throwable $exception) {
@@ -155,10 +156,24 @@ end
 return 0
 LUA;
 
+        return (int) $this->evaluate($script, [$key], [$expectedValue]) === 1;
+    }
+
+    public function evaluate(string $script, array $keys, array $arguments = []): mixed
+    {
+        if ($script === '' || $keys === []) {
+            throw new InfrastructureException('Redis script and key list cannot be empty.');
+        }
+        foreach ($keys as $key) {
+            if ($key === '' || str_contains($key, "\0")) {
+                throw new InfrastructureException('Redis script contains an invalid key.');
+            }
+        }
+
         try {
-            return (int) self::call($this->redis, 'eval', [$script, [$key, $expectedValue], 1]) === 1;
+            return self::call($this->redis, 'eval', [$script, [...$keys, ...$arguments], count($keys)]);
         } catch (Throwable $exception) {
-            throw new InfrastructureException('Redis compare-and-delete failed.', previous: $exception);
+            throw new InfrastructureException('Redis script execution failed.', previous: $exception);
         }
     }
 
