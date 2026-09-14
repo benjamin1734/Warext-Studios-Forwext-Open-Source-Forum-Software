@@ -71,6 +71,9 @@ return [
         'poll_limit' => 100,
         'message_retention_seconds' => 86400,
     ],
+    'search' => [
+        'driver' => 'native',
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

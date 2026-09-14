@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.search_capabilities",
+  "roadmap_step": "03.07",
+  "search": {
+    "default_driver": "native",
+    "drivers": ["native_mysql_mariadb", "external_adapter"],
+    "native_mode": "innodb_fulltext_natural_language",
+    "candidate_hits_only": true,
+    "hit_fields": ["document_type", "document_id", "score"],
+    "access_scope_filter_required": true,
+    "final_backend_authorization_required": true,
+    "query_text_parameterized": true,
+    "external_provider_required_for_minimum_profile": false
+  },
+  "capabilities": {
+    "minimum": [
+      "runtime.php_8_4",
+      "extension.openssl",
+      "extension.pdo",
+      "extension.pdo_mysql",
+      "function.random_bytes",
+      "function.json_encode",
+      "function.password_hash",
+      "database.pdo_mysql_driver",
+      "server.file_uploads"
+    ],
+    "optional": [
+      "extension.redis",
+      "extension.intl",
+      "extension.fileinfo",
+      "extension.gd",
+      "extension.imagick",
+      "extension.sodium",
+      "function.finfo_open",
+      "function.proc_open",
+      "function.exec",
+      "server.cli",
+      "database.innodb_fulltext"
+    ],
+    "dangerous_functions_executed_during_probe": false,
+    "secrets_exposed": false
+  },
+  "database_migration": "20260914223000_search_index"
+}
