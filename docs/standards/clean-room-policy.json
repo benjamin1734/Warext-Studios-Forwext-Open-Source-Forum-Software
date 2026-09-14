@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.clean_room",
+  "roadmap_step": "01.04",
+  "status": "normative",
+  "reference_products": {
+    "default_mode": "behavior_only",
+    "examples": ["XenForo", "MyBB", "other forum/community software"]
+  },
+  "allowed_inputs": [
+    "normal_authorized_product_usage",
+    "public_documentation",
+    "public_feature_descriptions",
+    "original_behavioral_observations",
+    "public_standards_and_rfcs",
+    "license_approved_dependencies"
+  ],
+  "prohibited_inputs": [
+    "proprietary_source_code",
+    "decompiled_proprietary_implementation",
+    "proprietary_templates",
+    "proprietary_phrase_or_language_packs",
+    "proprietary_database_schema_or_migrations",
+    "proprietary_assets",
+    "leaked_pirated_or_nulled_packages",
+    "proprietary_tests_or_fixtures",
+    "ai_inputs_containing_prohibited_proprietary_material"
+  ],
+  "independent_design_required_for": [
+    "source_code",
+    "internal_identifiers",
+    "database_schema",
+    "templates",
+    "phrases_and_help_text",
+    "frontend_assets",
+    "api_routes_events_and_extension_contracts",
+    "tests_and_fixtures"
+  ],
+  "high_risk_process": [
+    "write_neutral_behavior_spec",
+    "exclude_reference_implementation_details",
+    "implement_from_forwext_spec_and_architecture",
+    "review_independent_naming_schema_templates_and_phrases",
+    "record_provenance"
+  ],
+  "contribution_provenance_required": true,
+  "ai_assistance": {
+    "allowed": true,
+    "proprietary_input_allowed": false,
+    "human_review_required": true
+  },
+  "merge_blockers": [
+    "unclear_provenance",
+    "copied_or_adapted_proprietary_material",
+    "unreviewed_third_party_material",
+    "missing_required_provenance_declaration"
+  ]
+}

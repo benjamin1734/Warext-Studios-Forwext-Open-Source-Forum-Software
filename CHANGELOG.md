@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 01.04 — Clean-room and Intellectual Property Boundaries
+
+- Added the normative Forwext clean-room/IP policy.
+- Restricted XenForo, MyBB and other forum products to behavioral-reference use by default.
+- Explicitly prohibited copying/adapting proprietary code, templates, phrases, schemas/migrations, assets, leaked packages and AI-generated rewrites based on prohibited material.
+- Defined an enhanced clean-room process for high-risk parity work.
+- Added contributor provenance and AI-assistance rules.
+- Added a machine-readable clean-room policy manifest and a pull-request provenance checklist.
+- Added `CONTRIBUTING.md` so clean-room, architecture, security and completion rules are visible before code contribution begins.
+
 ### 01.03 — Technical Glossary and Domain Names
 
 - Expanded the normative glossary with canonical User, Group, Role, Permission, Node, Forum, Thread, Post, Ticket, Report, Moderation Case, Marketplace Listing, Giveaway, Module, Add-on, Widget and UI Slot definitions.
