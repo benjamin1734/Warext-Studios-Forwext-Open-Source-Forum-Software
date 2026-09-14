@@ -6,6 +6,12 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 01.03 — Technical Glossary and Domain Names
+
+- Expanded the normative glossary with canonical User, Group, Role, Permission, Node, Forum, Thread, Post, Ticket, Report, Moderation Case, Marketplace Listing, Giveaway, Module, Add-on, Widget and UI Slot definitions.
+- Fixed important non-synonym boundaries such as Role vs Group, Module vs Add-on, Ticket vs Thread and Report vs Moderation Case.
+- Added machine-readable canonical PHP/API names and domain invariants for future code/API consistency.
+
 ### 01.02 — Usability Constitution
 
 - Added the normative simple-by-default / deep-on-demand usability constitution.

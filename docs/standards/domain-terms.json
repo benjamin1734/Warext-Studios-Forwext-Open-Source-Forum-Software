@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.domain_terms",
+  "roadmap_step": "01.03",
+  "canonical_terms": {
+    "user": {"php": "User", "api": "users"},
+    "group": {"php": "Group", "api": "groups"},
+    "role": {"php": "Role", "api": "roles"},
+    "permission": {"php": "Permission", "api": "permissions"},
+    "node": {"php": "Node", "api": "nodes"},
+    "forum": {"php": "Forum", "api": "forums"},
+    "thread": {"php": "Thread", "api": "threads"},
+    "post": {"php": "Post", "api": "posts"},
+    "ticket": {"php": "Ticket", "api": "tickets"},
+    "report": {"php": "Report", "api": "reports"},
+    "moderation_case": {"php": "ModerationCase", "api": "moderation-cases"},
+    "marketplace_listing": {"php": "MarketplaceListing", "api": "marketplace-listings"},
+    "giveaway": {"php": "Giveaway", "api": "giveaways"},
+    "module": {"php": "Module", "api": "modules"},
+    "addon": {"php": "AddOn", "api": "addons"},
+    "widget": {"php": "Widget", "api": "widgets"},
+    "ui_slot": {"php": "UiSlot", "api": "ui-slots"}
+  },
+  "invariants": [
+    "user_and_member_are_not_separate_identity_domains",
+    "role_and_group_are_distinct",
+    "first_party_module_and_third_party_addon_are_distinct",
+    "report_and_moderation_case_are_distinct",
+    "ticket_and_thread_are_distinct",
+    "widget_region_and_ui_slot_are_distinct",
+    "analytics_event_and_audit_event_are_distinct",
+    "marketplace_category_is_not_a_forum_node"
+  ]
+}
