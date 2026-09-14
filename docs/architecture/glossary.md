@@ -1,0 +1,42 @@
+# Forwext Architecture Glossary
+
+This glossary is normative naming for the 1.x codebase.
+
+- **Core**: mandatory runtime and forum functionality that cannot be uninstalled.
+- **First-party module**: an official Forwext subsystem shipped with the product and integrated with core services. May be enable/disable/uninstall capable when safe.
+- **Third-party add-on**: externally developed extension using documented public extension APIs.
+- **Node**: hierarchical site container such as category/forum/page/link-like nodes.
+- **Forum**: a node that accepts threads according to its configuration and permissions.
+- **Thread**: top-level discussion/content container belonging to a forum.
+- **Post**: ordered message/content entry inside a thread.
+- **Content type**: registered domain content participating in shared services such as moderation, search, reactions, reporting and notifications.
+- **Conversation**: private/direct-message container with one or more participants.
+- **Entity / Domain model**: typed representation of persisted business state. Persistence concerns must not replace domain rules.
+- **Repository**: query/persistence boundary for domain data.
+- **Service**: application/domain operation boundary. Web, API, CLI and jobs should call shared services rather than duplicate business logic.
+- **Migration**: versioned, idempotent-or-safely-repeatable schema/data evolution step tracked by the platform.
+- **Driver**: infrastructure implementation behind an interface, e.g. Redis vs database cache.
+- **Provider**: pluggable external capability implementation, e.g. OAuth, AI, mail or embed provider.
+- **Capability**: server/environment ability such as process spawning, sockets, image processing or persistent workers.
+- **Event**: typed domain/platform notification consumed by zero or more listeners without changing the event producer's core responsibility.
+- **Decorator**: explicit service extension that wraps a public service contract in deterministic order.
+- **Job**: retryable asynchronous work unit.
+- **Scheduler**: time-based trigger registry that enqueues or executes scheduled tasks according to the hosting profile.
+- **Module registry**: authoritative registry of first-party module state, dependencies, capabilities and versions.
+- **Permission**: authorization rule evaluated by the shared permission engine. Includes global, node-scoped, numeric/limit and user/group overrides.
+- **ACP**: Forwext Administration Control Panel.
+- **Theme**: inheritable presentation package/design configuration.
+- **Style property / design token**: controlled appearance value consumed by official frontends/components.
+- **Template**: native PHP frontend presentation source compiled/cached by the platform.
+- **Widget**: reusable configurable UI block placed into a layout region/slot.
+- **Region**: major layout area such as header, main, sidebar or footer.
+- **UI slot**: named extension location where first-party modules and add-ons can register components without editing core templates.
+- **Visibility rule**: server-evaluated condition controlling layout/widget/navigation display without bypassing content authorization.
+- **Public API**: compatibility-governed extension surface covered by SemVer/deprecation policy.
+- **Internal API**: implementation detail that may change without third-party compatibility guarantees.
+- **Experimental API**: explicitly unstable extension point requiring opt-in.
+- **Release artifact**: generated install/update ZIP, checksum and related release metadata.
+- **Full package**: complete package capable of installing the current version from zero.
+- **Update package**: package intended to move the immediately previous supported Forwext release to the target release without resetting application data.
+- **Health check**: diagnostic proving a subsystem can operate, distinct from file-integrity checks.
+- **Clean-room reference**: behavior/architecture observation that does not copy proprietary implementation, schema, templates, phrases, identifiers or assets.
