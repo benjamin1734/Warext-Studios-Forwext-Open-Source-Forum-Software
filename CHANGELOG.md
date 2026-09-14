@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.03 — Migration / Install / Upgrade Engine
+
+- Added core/module/add-on migration ownership and sortable versioned migration IDs.
+- Added mandatory idempotency, explicit transactional declaration and post-run verification contracts.
+- Added source fingerprinting so modified previously-recorded migrations fail integrity checks instead of silently mutating history.
+- Added persistent MySQL migration history with running/applied/failed states, batches, attempts, timestamps and safe failure codes.
+- Added recovery hook for partially applied non-transactional migrations and fail-closed migration execution reporting.
+- Added installed-version store and install/upgrade coordinator; installed version advances only after every migration succeeds and verifies.
+- Added exact source-version enforcement for upgrades and atomic protected file persistence for installed-version state.
+- Documented MySQL DDL transaction limitations and external update-lock requirement rather than promising unsafe rollback semantics.
+
 ### 03.02 — Domain Entity / Repository / Service Layer
 
 - Added canonical opaque `EntityId` and identity-bearing `Entity` contract.
@@ -142,7 +153,6 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Defined mandatory Basic/Advanced progressive disclosure behavior.
 - Defined safe-default priority, explanation/help, preview, reset/undo/revision/rollback and dangerous-action rules.
 - Defined permission-aware UX requirements and the rule that UI hiding never substitutes for backend authorization.
-- Added mobile, accessibility, reduced-motion, form validation and dangerous-action rules.
 - Added mobile, accessibility, reduced-motion, form validation and cPanel performance expectations.
 - Added a machine-readable usability policy manifest for later ACP/UI implementation.
 - Synced the repository to the binding v2.0 master plan (20 main steps / 138 real sub-steps).

@@ -10,7 +10,7 @@ use PDOException;
 use PDOStatement;
 use Throwable;
 
-final class DatabaseConnection implements QueryExecutor
+final class DatabaseConnection implements TransactionalQueryExecutor
 {
     private int $transactionDepth = 0;
 
@@ -61,11 +61,6 @@ final class DatabaseConnection implements QueryExecutor
         return $this->transactionDepth > 0;
     }
 
-    /**
-     * @template T
-     * @param Closure(self): T $callback
-     * @return T
-     */
     public function transaction(Closure $callback): mixed
     {
         $level = $this->transactionDepth;

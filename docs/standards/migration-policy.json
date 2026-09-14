@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.migrations",
+  "roadmap_step": "03.03",
+  "migration_id_format": "YYYYMMDDHHMMSS_slug",
+  "owner_scopes": ["core", "module", "addon"],
+  "idempotent_required": true,
+  "source_fingerprint_recorded": true,
+  "fingerprint_drift_blocks_execution": true,
+  "statuses": ["running", "applied", "failed"],
+  "post_run_verification_required": true,
+  "recoverable_migration_supported": true,
+  "transactional_declaration_explicit": true,
+  "mysql_ddl_assumed_transactional": false,
+  "installed_version_advances_only_after_success": true,
+  "unexpected_upgrade_source_blocks_before_migration": true,
+  "database_reset_is_normal_upgrade_path": false,
+  "parallel_execution_requires_external_update_lock": true
+}
