@@ -28,11 +28,13 @@
     "optional": [
       "extension.redis",
       "extension.intl",
+      "extension.mbstring",
       "extension.fileinfo",
       "extension.gd",
       "extension.imagick",
       "extension.sodium",
       "function.finfo_open",
+      "function.mb_convert_case",
       "function.proc_open",
       "function.exec",
       "server.cli",

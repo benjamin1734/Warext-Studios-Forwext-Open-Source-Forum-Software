@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.user_domain",
+  "roadmap_step": "04.01",
+  "user_id": {
+    "bits": 128,
+    "encoding": "lowercase_hex",
+    "opaque": true
+  },
+  "username": {
+    "min_characters": 3,
+    "max_characters": 32,
+    "ascii_case_insensitive": true,
+    "unicode_requires": ["intl_normalizer", "mbstring_case_fold"],
+    "unicode_without_capability": "reject",
+    "unique_canonical_key": true
+  },
+  "email": {
+    "account_identity_case_insensitive": true,
+    "smtp_utf8_local_part": false,
+    "idn_domain": "punycode_when_intl_available",
+    "max_bytes": 254,
+    "unique_canonical_key": true
+  },
+  "states": [
+    "pending_email",
+    "pending_approval",
+    "active",
+    "suspended",
+    "banned",
+    "deactivated",
+    "deletion_pending"
+  ],
+  "normal_authentication_state": "active",
+  "locale": "bounded_bcp47_style",
+  "timezone": "named_iana_or_utc",
+  "custom_field_value_types": ["string", "integer", "boolean", "json"],
+  "history": {
+    "records_changed_field_names": true,
+    "records_actor": true,
+    "records_status_transition": true,
+    "records_reason_code": true,
+    "copies_old_email_username_custom_values": false
+  },
+  "persistence": {
+    "transactional_user_custom_fields_history": true,
+    "optimistic_versioning": true,
+    "unchanged_save_increments_version": false
+  },
+  "database_migration": "20260914233000_user_domain",
+  "security": {
+    "repository_lookup_is_public_enumeration_endpoint": false,
+    "legal_state_transition_grants_actor_permission": false,
+    "custom_field_storage_grants_visibility": false
+  }
+}
