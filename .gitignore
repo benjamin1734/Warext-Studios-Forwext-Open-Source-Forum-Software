@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+/config/generated.php
+/config/secret.key
 
 # PHP dependency working tree (release packaging vendors reviewed production deps separately)
 /vendor/

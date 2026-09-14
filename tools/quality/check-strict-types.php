@@ -6,7 +6,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 $root = dirname(__DIR__, 2);
-$directories = ['app', 'core', 'modules', 'addons', 'database', 'public', 'tests', 'tools'];
+$directories = ['app', 'config', 'core', 'modules', 'addons', 'database', 'public', 'tests', 'tools'];
 $violations = [];
 $checked = 0;
 

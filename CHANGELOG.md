@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.04 — Configuration, Environments and Secrets
+
+- Added explicit production/development/test/install/maintenance environment model.
+- Added deterministic defaults → generated config → prefixed environment override loading.
+- Added update-protected generated config and cPanel-compatible master-key file strategy with environment-key preference.
+- Added AES-256-GCM authenticated secret encryption with CSPRNG IVs, versioned payloads and tamper failure.
+- Added locked/atomic encrypted file secret store with restrictive permissions and symlink rejection.
+- Added centralized structured secret masking for logs/debug contexts.
+- Added tests for configuration precedence/type decoding, encrypted secret persistence, tamper detection, key persistence and masking.
+
 ### 02.03 — Application Kernel and DI Container
 
 - Added the core DI container with explicit bindings, transient/singleton lifetimes and lazy factories.

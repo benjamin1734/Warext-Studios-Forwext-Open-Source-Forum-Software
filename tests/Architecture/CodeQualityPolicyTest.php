@@ -15,6 +15,7 @@ final class CodeQualityPolicyTest extends TestCase
 {
     private const PHP_SOURCE_DIRECTORIES = [
         'app',
+        'config',
         'core',
         'modules',
         'addons',

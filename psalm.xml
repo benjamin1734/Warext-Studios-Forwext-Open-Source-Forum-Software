@@ -10,6 +10,7 @@
 >
     <projectFiles>
         <directory name="app" />
+        <directory name="config" />
         <directory name="core" />
         <directory name="modules" />
         <directory name="addons" />

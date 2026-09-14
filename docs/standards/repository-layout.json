@@ -4,6 +4,7 @@
   "roadmap_step": "02.01",
   "required_directories": [
     "app",
+    "config",
     "core",
     "modules",
     "addons",
@@ -25,9 +26,11 @@
     "third_party_addons_directory": "addons",
     "preferred_web_root": "public",
     "mutable_runtime_root": "storage",
+    "generated_config": "config/generated.php",
+    "master_key_file": "config/secret.key",
     "native_php_frontend_first_class": true,
     "modern_frontend_optional": true
   },
-  "protected_from_normal_update_overwrite": ["storage", "site_generated_config", "user_uploads"],
+  "protected_from_normal_update_overwrite": ["storage", "config/generated.php", "config/secret.key", "user_uploads"],
   "ignored_working_directories": ["vendor", "frontend/node_modules", "frontend/.next", "frontend/dist"]
 }

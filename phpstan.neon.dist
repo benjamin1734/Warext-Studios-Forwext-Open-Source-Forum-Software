@@ -2,6 +2,7 @@ parameters:
     level: max
     paths:
         - app
+        - config
         - core
         - modules
         - addons

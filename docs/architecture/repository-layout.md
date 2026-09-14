@@ -10,6 +10,7 @@ Forwext uses a single source repository with explicit product/runtime/ecosystem 
 | Directory | Ownership / purpose |
 | --- | --- |
 | `app/` | application composition and delivery/use-case adapters |
+| `config/` | safe defaults plus update-protected generated site configuration/key location |
 | `core/` | mandatory non-uninstallable platform/runtime foundation |
 | `modules/` | first-party integrated Forwext modules |
 | `addons/` | third-party add-on packages/installation area |
@@ -48,15 +49,17 @@ Hard rules:
 3. Third-party add-ons do not patch core files as their supported extension mechanism.
 4. `public/` never becomes a dumping ground for PHP source, secrets or private runtime data.
 5. `storage/` is mutable and update-protected; source-of-truth application code does not live there.
-6. `frontend/` is optional for deployment; native PHP remains first-class.
-7. `packages/` exposes deliberate consumable contracts, not accidental imports from server internals.
-8. Database schema ownership evolves through versioned migrations.
+6. `config/generated.php` and `config/secret.key` are site-specific/update-protected and are not committed.
+7. `frontend/` is optional for deployment; native PHP remains first-class.
+8. `packages/` exposes deliberate consumable contracts, not accidental imports from server internals.
+9. Database schema ownership evolves through versioned migrations.
 
 ## Source versus generated state
 
 Source-controlled:
 
 - application/core/module/add-on/theme source intended for the repository;
+- safe configuration defaults/examples;
 - migration definitions;
 - templates/phrases/source assets;
 - tests and tools;
@@ -64,6 +67,7 @@ Source-controlled:
 
 Not source-controlled by default:
 
+- generated site configuration and master key;
 - mutable runtime cache/log/session/queue/temp state;
 - local secrets/environment files;
 - dependency working directories such as `vendor/` or `node_modules/`;
@@ -85,4 +89,4 @@ A feature's directory never grants permission to execute it. Authorization remai
 
 ## Acceptance status
 
-02.01 establishes every required top-level boundary in Git using a real tracked file, documents its intended ownership/dependency rules, protects mutable storage from accidental source commits and supplies a machine-readable layout contract for later tooling. No runtime bootstrap code is fabricated before the kernel/coding-standard steps that follow.
+02.01 established the required initial boundaries; subsequent architecture steps may add explicit top-level operational directories such as `config/` when their runtime contract is implemented. No runtime bootstrap code is fabricated before its roadmap step.

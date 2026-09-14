@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.config_and_secrets",
+  "roadmap_step": "02.04",
+  "environments": ["production", "development", "test", "install", "maintenance"],
+  "configuration_precedence": ["defaults", "generated", "environment"],
+  "environment_prefix": "FORWEXT_CONFIG__",
+  "safe_defaults": {
+    "environment": "production",
+    "debug": false,
+    "maintenance": false
+  },
+  "generated_config": {
+    "path": "config/generated.php",
+    "update_protected": true,
+    "may_contain_plaintext_secrets": false
+  },
+  "master_key": {
+    "preferred_environment_variable": "FORWEXT_MASTER_KEY",
+    "shared_hosting_file": "config/secret.key",
+    "bytes": 32,
+    "git_ignored": true
+  },
+  "secret_store": {
+    "cipher": "aes-256-gcm",
+    "iv_bytes": 12,
+    "tag_bytes": 16,
+    "fresh_random_iv_per_write": true,
+    "authenticated": true,
+    "file_locking": true,
+    "atomic_replace": true,
+    "symbolic_links_rejected": true,
+    "mask_before_logging": true
+  }
+}
