@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.domain_layer",
+  "roadmap_step": "03.02",
+  "boundaries": {
+    "entity_has_identity": true,
+    "dto_is_not_entity": true,
+    "repository_hides_persistence_details": true,
+    "repository_performs_authorization": false,
+    "application_service_coordinates_use_case": true,
+    "domain_service_owns_cross_entity_business_logic": true
+  },
+  "validation": {
+    "structured_violations": true,
+    "stable_machine_codes": true,
+    "composite_validation": true,
+    "sensitive_values_in_messages": false,
+    "domain_invariants_remain_in_domain": true
+  },
+  "domain_events": {
+    "immutable_facts": true,
+    "utc_timestamp": true,
+    "optional_aggregate_id": true,
+    "aggregate_release_clears_queue": true,
+    "synchronous_dispatch_is_durable": false,
+    "events_grant_authorization": false
+  },
+  "security": {
+    "entity_id_grants_authorization": false,
+    "wrong_repository_entity_type_fails_closed": true,
+    "raw_sql_exposed_from_repository": false
+  }
+}

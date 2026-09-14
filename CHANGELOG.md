@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.02 — Domain Entity / Repository / Service Layer
+
+- Added canonical opaque `EntityId` and identity-bearing `Entity` contract.
+- Added explicit DTO, application-service and domain-service architectural boundaries.
+- Added generic repository contract plus abstract repository with typed not-found behavior and wrong-entity fail-closed protection.
+- Added structured validator/violation/result/exception model plus composite validation.
+- Added immutable domain-event contract, aggregate event recording/release and synchronous in-process dispatcher.
+- Documented authorization, transaction, validation and durable-event-delivery boundaries so domain primitives do not become hidden security/infrastructure shortcuts.
+- Added unit tests for identity values, repository persistence/type safety, structured validation and event recording/dispatch.
+
 ### 03.01 — Database Connection and Typed Query Builder
 
 - Added PDO MySQL connection configuration/factory with native prepared statements, utf8mb4 defaults and non-persistent connections.
@@ -22,28 +32,26 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 ### 02.07 — HTTP Security and Runtime Health
 
 - Added context/scope/lifetime-bound HMAC CSRF tokens and browser-route CSRF middleware with secure `__Host-` context cookies.
-- Added deny-by-default CORS policy/preflight middleware with credential/wildcard safeguards.
-- Added trusted-host exact/wildcard policy evaluated against the trusted effective request host.
-- Added centralized CSP, nosniff, referrer, permissions, frame and HTTPS-only HSTS response-header baseline.
-- Added rate-limit policy/store contract, deterministic in-memory driver and locked cPanel-compatible file driver.
-- Added JSON-lines structured logging with secret masking plus query-string-free correlated access logging.
-- Added production-safe/debug-masked error handling with request-ID correlation and logging-failure fallback.
-- Added healthy/degraded/unhealthy health aggregation, runtime/writable-directory checks and minimal-by-default health handler.
-- Added edge-case tests for CSRF, CORS, trusted hosts, security headers, rate limits, logging/errors and health behavior.
-- Completed Main Step 02 and advanced development to 03.01.
+- Added CSRF failure rotation with a fresh replacement token and protection against unsafe-method bypass.
+- Added trusted-host enforcement before application dispatch.
+- Added conservative CORS policy/service plus middleware; credentials require exact origins and wildcard+credentials is rejected.
+- Added browser/API security-header profiles including CSP, nosniff, referrer, frame-ancestor and permissions policies.
+- Added host-bound signed maintenance bypass tokens and maintenance middleware with public-path exclusions.
+- Added runtime `ErrorHandler` with masked correlation IDs, generic production 500 responses and no-stack-trace production output.
+- Added storage/error loggers that pass context through `SecretMasker` before writing.
+- Added runtime health contracts and service for liveness/readiness/version/capability reporting with redacted machine-readable data.
+- Added tests for CSRF replay/scope/expiry behavior, CORS, trusted hosts, security headers, maintenance bypass, masked error handling and health output.
 
-### 02.06 — Router, Canonical URL and Proxy
+### 02.06 — Router, Canonical URL and Trusted Proxy Handling
 
-- Added named route registration, friendly single-segment parameters, method-aware dispatch and static-route precedence.
-- Added fail-closed ambiguous-route detection plus 404/405/Allow behavior.
-- Added named path/absolute URL generation with RFC 3986 query encoding.
-- Added a shared base-path contract for root and subfolder installations.
-- Added configured canonical-origin parsing and fixed-target HTTPS/canonical redirects.
-- Added explicit IPv4/IPv6 CIDR trusted-proxy handling with right-to-left `X-Forwarded-For` resolution.
-- Added RFC `Forwarded` origin/client support for trusted peers in addition to common `X-Forwarded-*` headers.
-- Added Cloudflare-aware client IP/scheme support gated by configured Cloudflare source CIDRs.
-- Added redirect-loop protection that refuses untrusted forwarded-origin claims instead of trusting them.
-- Added tests for routing, URL generation, encoded-path safety, CIDR resolution, trusted/untrusted proxies, Cloudflare and TLS-termination canonical behavior.
+- Added route registration, named-route URL generation, typed placeholders, path-variable decoding and request dispatch.
+- Added route-level middleware ordering and global fallback handling for 404/405 responses.
+- Added central canonical URL generator using configured origin/base path rather than untrusted request Host headers.
+- Added IPv4/IPv6 CIDR matcher and trusted-proxy resolver for client IP/scheme/host/port derivation.
+- Added Cloudflare `CF-Connecting-IP` support only when the direct peer is in the separately configured Cloudflare proxy set.
+- Added fail-closed forwarded-chain parsing: forwarded headers are ignored for untrusted peers and malformed forwarded chains do not become client truth.
+- Added `RequestContextMiddleware` to attach resolved network context to request attributes.
+- Added tests for static/variable routes, constraints, URL encoding, 404/405, route middleware order, canonical URLs, trusted proxies and Cloudflare handling.
 
 ### 02.05 — Request, Response and Middleware
 
@@ -134,6 +142,7 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Defined mandatory Basic/Advanced progressive disclosure behavior.
 - Defined safe-default priority, explanation/help, preview, reset/undo/revision/rollback and dangerous-action rules.
 - Defined permission-aware UX requirements and the rule that UI hiding never substitutes for backend authorization.
+- Added mobile, accessibility, reduced-motion, form validation and dangerous-action rules.
 - Added mobile, accessibility, reduced-motion, form validation and cPanel performance expectations.
 - Added a machine-readable usability policy manifest for later ACP/UI implementation.
 - Synced the repository to the binding v2.0 master plan (20 main steps / 138 real sub-steps).
