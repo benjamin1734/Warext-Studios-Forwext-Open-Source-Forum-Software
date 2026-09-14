@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 03.05 — Storage and Media Drivers
+
+- Added strict internal storage paths that reject absolute paths, traversal, backslashes, control characters and unsafe segments.
+- Added explicit public/private visibility scopes and local storage with physically separate roots.
+- Added binary-safe string and stream read/write APIs so large media can be transferred without mandatory full buffering.
+- Added atomic local writes, bounded chunk copying, SHA-256/size metadata, restrictive file modes and symlink traversal rejection.
+- Added public URL generation only for public local objects; private local objects never receive direct URLs.
+- Added SDK-neutral S3-compatible client/driver contracts with streaming upload/read, object metadata, delete, public URL and bounded temporary private URL signing.
+- Added S3 visibility verification and secret-store configuration references for object-storage credentials.
+- Added tests for traversal rejection, public/private namespace separation, binary preservation, multi-megabyte stream behavior and S3 visibility/signing semantics.
+
 ### 03.04 — Cache / Session / Lock Drivers
 
 - Added shared cache/session/lock contracts with safe key validation and clock abstraction.
