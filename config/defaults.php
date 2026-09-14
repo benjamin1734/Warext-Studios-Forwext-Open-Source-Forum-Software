@@ -24,6 +24,21 @@ return [
         'unix_socket' => null,
         'password_secret' => 'database.password',
     ],
+    'cache' => [
+        'driver' => 'file',
+        'path' => 'storage/cache/data',
+        'default_ttl_seconds' => 300,
+    ],
+    'session' => [
+        'driver' => 'file',
+        'path' => 'storage/sessions',
+        'ttl_seconds' => 7200,
+    ],
+    'lock' => [
+        'driver' => 'file',
+        'path' => 'storage/locks',
+        'default_ttl_seconds' => 30,
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.cache_session_lock_drivers",
+  "roadmap_step": "03.04",
+  "cache": {
+    "drivers": ["file", "database", "redis"],
+    "ttl": true,
+    "tag_invalidation": true,
+    "implicit_php_object_serialization": false,
+    "stampede_protection": "double_checked_lock"
+  },
+  "session": {
+    "drivers": ["file", "database", "redis"],
+    "absolute_expiry": true,
+    "file_database_gc": true,
+    "redis_native_ttl": true
+  },
+  "lock": {
+    "file_scope": "shared_filesystem_local",
+    "database_distributed_lease": true,
+    "redis_distributed_lease": true,
+    "random_owner_token": true,
+    "token_safe_release": true,
+    "ttl_required_for_distributed_leases": true
+  },
+  "redis": {
+    "required_for_minimum_cpanel_profile": false,
+    "native_adapter": "PhpRedisClient",
+    "atomic_compare_delete": true
+  },
+  "database_migration": "20260914203000_infrastructure_drivers",
+  "default_drivers": {
+    "cache": "file",
+    "session": "file",
+    "lock": "file"
+  },
+  "security": {
+    "drivers_grant_authorization": false,
+    "symlink_rejection_for_mutable_file_entries": true,
+    "atomic_file_replace": true,
+    "database_redis_errors_silently_downgrade": false
+  }
+}

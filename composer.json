@@ -19,6 +19,7 @@
     "psr-4": {
       "Forwext\\App\\": "app/",
       "Forwext\\Core\\": "core/",
+      "Forwext\\Database\\": "database/",
       "Forwext\\Modules\\": "modules/"
     }
   },
