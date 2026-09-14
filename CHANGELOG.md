@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.01 — User Domain and Account Lifecycle
+
+- Added opaque CSPRNG 128-bit user identifiers and canonical `User` aggregate state.
+- Added username normalization with ASCII-safe baseline and fail-closed Unicode NFKC/case-fold requirements through optional Intl/Mbstring capabilities.
+- Added canonical case-insensitive email identity with strict local-part policy, lowercase storage and optional IDN-to-Punycode conversion.
+- Added canonical locale and named-IANA timezone value objects.
+- Added pending-email, pending-approval, active, suspended, banned, deactivated and deletion-pending account states with explicit legal transition policy.
+- Added typed per-user custom-field value storage for string/integer/boolean/JSON data while keeping visibility/edit authorization outside the aggregate.
+- Added mutation history/domain events that record changed fields, actor, state transition and reason code without duplicating old/new email, username or custom-field values.
+- Added transactional database repository with no-op unchanged saves and optimistic aggregate versioning to prevent lost updates.
+- Added versioned migration `20260914233000_user_domain` for users, custom-field values and user history plus unique canonical username/email constraints.
+- Added domain/repository/migration tests covering normalization, state transitions, custom fields, history, persistence and concurrency behavior.
+
 ### 03.07 — Search Driver Foundation and Capability Resolver
 
 - Added native MySQL/MariaDB FULLTEXT search with parameterized query text, type/locale filters and access-scope candidate filtering.
