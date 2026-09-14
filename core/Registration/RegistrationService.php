@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Registration;
 
+use Forwext\Core\Auth\Credential\CredentialProvisioner;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\User\EmailAddress;
 use Forwext\Core\Domain\User\User;
@@ -30,6 +31,7 @@ final readonly class RegistrationService
         private RegistrationInviteStore $invites,
         private LegalAcceptanceStore $legalAcceptances,
         private EmailVerificationTokenStore $verificationTokens,
+        private CredentialProvisioner $credentials,
         private Clock $clock = new SystemClock(),
     ) {
     }
@@ -38,6 +40,9 @@ final readonly class RegistrationService
     {
         if ($this->policy->mode === RegistrationMode::Closed) {
             throw new RegistrationException('Registration is currently closed.');
+        }
+        if ($request->password === null || $request->password === '') {
+            throw new RegistrationException('Password credential is required for password registration.');
         }
 
         $username = Username::fromString($request->username);
@@ -113,6 +118,7 @@ final readonly class RegistrationService
                 $now,
             );
             $this->users->save($user);
+            $this->credentials->provision($user->id(), $request->password, $now);
 
             foreach ($this->policy->legalDocuments() as $document) {
                 $this->legalAcceptances->record($user->id(), $document, $now, $ipFingerprint);

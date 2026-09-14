@@ -60,13 +60,11 @@ final readonly class DatabaseSessionStore implements SessionStore
         }
         $expiresAt = $this->clock->now()->add(new DateInterval('PT' . $ttlSeconds . 'S'));
         $this->database->execute(new CompiledQuery(
-            'INSERT INTO `forwext_sessions` (`session_hash`, `session_id`, `payload`, `expires_at_utc`) '
-            . 'VALUES (:session_hash, :session_id, :payload, :expires_at_utc) '
-            . 'ON DUPLICATE KEY UPDATE `session_id` = VALUES(`session_id`), `payload` = VALUES(`payload`), '
-            . '`expires_at_utc` = VALUES(`expires_at_utc`)',
+            'INSERT INTO `forwext_sessions` (`session_hash`, `payload`, `expires_at_utc`) '
+            . 'VALUES (:session_hash, :payload, :expires_at_utc) '
+            . 'ON DUPLICATE KEY UPDATE `payload` = VALUES(`payload`), `expires_at_utc` = VALUES(`expires_at_utc`)',
             [
                 'session_hash' => hash('sha256', $sessionId),
-                'session_id' => $sessionId,
                 'payload' => $payload,
                 'expires_at_utc' => $expiresAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s.u'),
             ],
@@ -87,7 +85,6 @@ final readonly class DatabaseSessionStore implements SessionStore
         if ($limit < 1 || $limit > 10000) {
             throw new InfrastructureException('Session garbage-collection limit must be between 1 and 10000.');
         }
-        // The integer is validated/bounded before interpolation; identifiers/data remain parameterized.
         return $this->database->execute(new CompiledQuery(
             'DELETE FROM `forwext_sessions` WHERE `expires_at_utc` <= :now ORDER BY `expires_at_utc` ASC LIMIT ' . $limit,
             ['now' => $this->clock->now()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s.u')],
