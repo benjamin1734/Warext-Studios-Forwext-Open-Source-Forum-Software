@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.usability.constitution",
+  "roadmap_step": "01.02",
+  "status": "normative",
+  "applies_to": [
+    "core",
+    "first_party_modules",
+    "acp",
+    "native_php_frontend",
+    "official_react_frontend",
+    "official_next_frontend",
+    "addon_admin_surfaces"
+  ],
+  "required_principles": {
+    "progressive_disclosure": true,
+    "basic_advanced_mode": true,
+    "safe_defaults": true,
+    "plain_language_descriptions": true,
+    "preview_or_impact_review_when_applicable": true,
+    "recovery_mechanism_when_applicable": true,
+    "backend_permission_enforcement": true,
+    "permission_explainability": true,
+    "backend_validation": true,
+    "mobile_touch_viability": true,
+    "accessibility_baseline": true,
+    "shared_hosting_viability": true
+  },
+  "default_priority": [
+    "security_privacy",
+    "data_preservation",
+    "predictability",
+    "shared_hosting_compatibility",
+    "accessibility",
+    "performance",
+    "convenience"
+  ],
+  "setting_metadata": {
+    "required": ["label", "description", "level", "default", "validation"],
+    "level_values": ["basic", "advanced"],
+    "conditional": [
+      "required_permission",
+      "sensitivity",
+      "preview_capability",
+      "reset_behavior",
+      "search_keywords"
+    ]
+  },
+  "dangerous_action": {
+    "backend_permission_check": true,
+    "csrf_or_sensitive_action_protection": true,
+    "scope_identification": true,
+    "consequence_explanation": true,
+    "risk_proportional_confirmation": true,
+    "audit_when_relevant": true,
+    "duplicate_submit_protection_when_relevant": true
+  },
+  "preview_invariants": [
+    "must_not_publish_live_content",
+    "must_not_send_notifications",
+    "must_not_charge_money",
+    "must_not_dispatch_webhooks",
+    "must_not_change_permissions"
+  ],
+  "authorization_invariants": [
+    "ui_visibility_is_not_authorization",
+    "protected_actions_use_shared_backend_permission_engine",
+    "protected_search_preview_and_analytics_do_not_bypass_authorization"
+  ],
+  "recovery_order": [
+    "undo",
+    "reset_to_default",
+    "revision_history",
+    "rollback",
+    "compensating_action"
+  ],
+  "state_language": {
+    "save": "persist_current_valid_configuration",
+    "publish": "make_staged_or_revisioned_change_live",
+    "enable_disable": "change_runtime_availability_without_data_deletion",
+    "uninstall": "lifecycle_action_distinct_from_disable",
+    "delete_purge": "remove_data_with_explicit_retention_consequence",
+    "reset": "return_defined_scope_to_defaults",
+    "rollback": "restore_recorded_prior_revision_or_version"
+  }
+}
