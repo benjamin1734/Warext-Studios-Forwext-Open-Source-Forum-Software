@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.05 — Request, Response and Middleware
+
+- Added typed HTTP method/request/response primitives and immutable-style request attributes/response mutations.
+- Added case-insensitive validated header handling with CRLF/NUL injection rejection.
+- Added bounded, throwing JSON request parsing and JSON response encoding.
+- Added secure response-cookie serialization with SameSite and `__Secure-` / `__Host-` invariants.
+- Added PHP `$_FILES` tree normalization and verified HTTP-upload movement primitive.
+- Added reusable deterministic middleware/request-handler pipeline.
+- Added request-ID correlation with strict incoming validation and CSPRNG fallback generation.
+- Added unit tests for headers, JSON, cookies, nested uploads, middleware order/reuse and request-ID propagation.
+
 ### 02.04 — Configuration, Environments and Secrets
 
 - Added explicit production/development/test/install/maintenance environment model.

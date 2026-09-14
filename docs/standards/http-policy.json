@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.http_primitives",
+  "roadmap_step": "02.05",
+  "request": {
+    "typed_method": true,
+    "raw_uri_validated_for_control_characters": true,
+    "json_requires_json_media_type": true,
+    "json_has_explicit_size_limit": true,
+    "proxy_headers_trusted_at_this_step": false
+  },
+  "headers": {
+    "case_insensitive": true,
+    "crlf_injection_rejected": true,
+    "multiple_values_preserved": true
+  },
+  "cookies": {
+    "secure_default": true,
+    "http_only_default": true,
+    "same_site_default": "Lax",
+    "same_site_none_requires_secure": true,
+    "host_prefix_invariants": true
+  },
+  "uploads": {
+    "php_files_tree_normalized": true,
+    "malformed_tree_rejected": true,
+    "client_filename_is_untrusted": true,
+    "client_media_type_is_untrusted": true,
+    "move_requires_verified_http_upload": true
+  },
+  "middleware": {
+    "pipeline_reusable_across_requests": true,
+    "deterministic_order": true
+  },
+  "request_id": {
+    "attribute": "request_id",
+    "response_header": "X-Request-ID",
+    "invalid_incoming_replaced": true,
+    "generated_entropy_bits": 128,
+    "authorization_credential": false
+  }
+}
