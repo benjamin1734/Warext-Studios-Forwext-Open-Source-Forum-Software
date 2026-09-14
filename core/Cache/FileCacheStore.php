@@ -15,10 +15,8 @@ use JsonException;
 
 final readonly class FileCacheStore implements CacheStore
 {
-    public function __construct(
-        private string $directory,
-        private Clock $clock = new SystemClock(),
-    ) {
+    public function __construct(private string $directory, private Clock $clock = new SystemClock())
+    {
     }
 
     public function get(string $key): ?CacheEntry
@@ -31,22 +29,22 @@ final readonly class FileCacheStore implements CacheStore
         if (is_link($path)) {
             throw new InfrastructureException('Cache entry may not be a symbolic link.');
         }
-
         $raw = @file_get_contents($path);
         if ($raw === false) {
             throw new InfrastructureException('Unable to read cache entry.');
         }
-
         try {
             $decoded = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
             throw new InfrastructureException('Cache entry is corrupted.', previous: $exception);
         }
-
-        if (!is_array($decoded) || ($decoded['key'] ?? null) !== $key || !is_string($decoded['value'] ?? null)) {
+        if (!is_array($decoded) || ($decoded['key'] ?? null) !== $key || !is_string($decoded['value_b64'] ?? null)) {
             throw new InfrastructureException('Cache entry has an invalid shape.');
         }
-
+        $value = base64_decode($decoded['value_b64'], true);
+        if ($value === false) {
+            throw new InfrastructureException('Cache value encoding is invalid.');
+        }
         $expiresAt = null;
         if (isset($decoded['expires_at'])) {
             if (!is_string($decoded['expires_at'])) {
@@ -58,19 +56,16 @@ final readonly class FileCacheStore implements CacheStore
                 throw new InfrastructureException('Cache expiry is invalid.', previous: $exception);
             }
         }
-
         $tags = $decoded['tags'] ?? [];
         if (!is_array($tags) || array_filter($tags, static fn (mixed $tag): bool => !is_string($tag)) !== []) {
             throw new InfrastructureException('Cache tags are invalid.');
         }
         /** @var list<string> $tags */
-
-        $entry = new CacheEntry($decoded['value'], $expiresAt, array_values($tags));
+        $entry = new CacheEntry($value, $expiresAt, array_values($tags));
         if ($entry->isExpired($this->clock->now())) {
             @unlink($path);
             return null;
         }
-
         return $entry;
     }
 
@@ -80,22 +75,18 @@ final readonly class FileCacheStore implements CacheStore
         if ($ttlSeconds !== null && $ttlSeconds < 1) {
             throw new InfrastructureException('Cache TTL must be positive.');
         }
-
         $normalizedTags = [];
         foreach ($tags as $tag) {
             $normalizedTags[] = KeyValidator::tag($tag);
         }
         $normalizedTags = array_values(array_unique($normalizedTags));
-        $expiresAt = $ttlSeconds === null
-            ? null
-            : $this->clock->now()->add(new DateInterval('PT' . $ttlSeconds . 'S'));
+        $expiresAt = $ttlSeconds === null ? null : $this->clock->now()->add(new DateInterval('PT' . $ttlSeconds . 'S'));
         $payload = json_encode([
             'key' => $key,
-            'value' => $value,
+            'value_b64' => base64_encode($value),
             'expires_at' => $expiresAt?->format(DATE_ATOM),
             'tags' => $normalizedTags,
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
-
         $this->atomicWrite($this->path($key), $payload);
     }
 
@@ -113,7 +104,6 @@ final readonly class FileCacheStore implements CacheStore
         $tag = KeyValidator::tag($tag);
         $this->ensureDirectory();
         $deleted = 0;
-
         foreach (glob($this->directory . '/*.json') ?: [] as $path) {
             if (!is_file($path) || is_link($path)) {
                 continue;
@@ -127,14 +117,10 @@ final readonly class FileCacheStore implements CacheStore
             } catch (JsonException) {
                 continue;
             }
-            if (!is_array($decoded) || !is_array($decoded['tags'] ?? null)) {
-                continue;
-            }
-            if (in_array($tag, $decoded['tags'], true) && @unlink($path)) {
+            if (is_array($decoded) && is_array($decoded['tags'] ?? null) && in_array($tag, $decoded['tags'], true) && @unlink($path)) {
                 ++$deleted;
             }
         }
-
         return $deleted;
     }
 

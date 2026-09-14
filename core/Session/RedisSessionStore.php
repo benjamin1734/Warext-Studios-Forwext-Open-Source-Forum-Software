@@ -16,11 +16,8 @@ use JsonException;
 
 final readonly class RedisSessionStore implements SessionStore
 {
-    public function __construct(
-        private RedisClient $redis,
-        private string $prefix = 'forwext:session:',
-        private Clock $clock = new SystemClock(),
-    ) {
+    public function __construct(private RedisClient $redis, private string $prefix = 'forwext:session:', private Clock $clock = new SystemClock())
+    {
     }
 
     public function read(string $sessionId): ?SessionRecord
@@ -30,29 +27,28 @@ final readonly class RedisSessionStore implements SessionStore
         if ($raw === null) {
             return null;
         }
-
         try {
             $decoded = json_decode($raw, true, 16, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
             throw new InfrastructureException('Redis session payload is invalid.', previous: $exception);
         }
-
-        if (!is_array($decoded) || !is_string($decoded['payload'] ?? null) || !is_string($decoded['expires_at'] ?? null)) {
+        if (!is_array($decoded) || !is_string($decoded['payload_b64'] ?? null) || !is_string($decoded['expires_at'] ?? null)) {
             throw new InfrastructureException('Redis session payload has an invalid shape.');
         }
-
+        $payload = base64_decode($decoded['payload_b64'], true);
+        if ($payload === false) {
+            throw new InfrastructureException('Redis session payload encoding is invalid.');
+        }
         try {
             $expires = new DateTimeImmutable($decoded['expires_at']);
         } catch (Exception $exception) {
             throw new InfrastructureException('Redis session expiry is invalid.', previous: $exception);
         }
-
-        $record = new SessionRecord($decoded['payload'], $expires);
+        $record = new SessionRecord($payload, $expires);
         if ($record->isExpired($this->clock->now())) {
             $this->delete($sessionId);
             return null;
         }
-
         return $record;
     }
 
@@ -62,10 +58,9 @@ final readonly class RedisSessionStore implements SessionStore
         if ($ttlSeconds < 1) {
             throw new InfrastructureException('Session TTL must be positive.');
         }
-
         $expires = $this->clock->now()->add(new DateInterval('PT' . $ttlSeconds . 'S'));
         $encoded = json_encode([
-            'payload' => $payload,
+            'payload_b64' => base64_encode($payload),
             'expires_at' => $expires->format(DATE_ATOM),
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         $this->redis->set($this->key($sessionId), $encoded, $ttlSeconds);
@@ -81,8 +76,6 @@ final readonly class RedisSessionStore implements SessionStore
         if ($limit < 1) {
             throw new InfrastructureException('Session garbage-collection limit must be positive.');
         }
-
-        // Redis expiration handles session garbage collection atomically.
         return 0;
     }
 

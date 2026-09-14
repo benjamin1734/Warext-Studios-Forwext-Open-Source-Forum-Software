@@ -15,10 +15,8 @@ use JsonException;
 
 final readonly class FileSessionStore implements SessionStore
 {
-    public function __construct(
-        private string $directory,
-        private Clock $clock = new SystemClock(),
-    ) {
+    public function __construct(private string $directory, private Clock $clock = new SystemClock())
+    {
     }
 
     public function read(string $sessionId): ?SessionRecord
@@ -39,15 +37,19 @@ final readonly class FileSessionStore implements SessionStore
         } catch (JsonException $exception) {
             throw new InfrastructureException('Session data is corrupted.', previous: $exception);
         }
-        if (!is_array($decoded) || !is_string($decoded['payload'] ?? null) || !is_string($decoded['expires_at'] ?? null)) {
+        if (!is_array($decoded) || !is_string($decoded['payload_b64'] ?? null) || !is_string($decoded['expires_at'] ?? null)) {
             throw new InfrastructureException('Session data has an invalid shape.');
+        }
+        $payload = base64_decode($decoded['payload_b64'], true);
+        if ($payload === false) {
+            throw new InfrastructureException('Session payload encoding is invalid.');
         }
         try {
             $expiresAt = new DateTimeImmutable($decoded['expires_at']);
         } catch (Exception $exception) {
             throw new InfrastructureException('Session expiry is invalid.', previous: $exception);
         }
-        $record = new SessionRecord($decoded['payload'], $expiresAt);
+        $record = new SessionRecord($payload, $expiresAt);
         if ($record->isExpired($this->clock->now())) {
             @unlink($path);
             return null;
@@ -63,7 +65,7 @@ final readonly class FileSessionStore implements SessionStore
         }
         $expires = $this->clock->now()->add(new DateInterval('PT' . $ttlSeconds . 'S'));
         $encoded = json_encode([
-            'payload' => $payload,
+            'payload_b64' => base64_encode($payload),
             'expires_at' => $expires->format(DATE_ATOM),
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         $path = $this->path($sessionId);
