@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Auth\Password;
 
+use Forwext\Core\Auth\AuthException;
 use Forwext\Core\Auth\Challenge\AuthChallengePurpose;
 use Forwext\Core\Auth\Challenge\AuthChallengeTokenStore;
 use Forwext\Core\Auth\Credential\CredentialStore;
@@ -21,6 +22,9 @@ final readonly class PasswordConfirmationService
         private int $confirmationTtlSeconds = 900,
         private Clock $clock = new SystemClock(),
     ) {
+        if ($confirmationTtlSeconds < 60 || $confirmationTtlSeconds > 3600) {
+            throw new AuthException('Password confirmation TTL is outside safe bounds.');
+        }
     }
 
     public function confirm(EntityId $userId, #[SensitiveParameter] string $password): ?string

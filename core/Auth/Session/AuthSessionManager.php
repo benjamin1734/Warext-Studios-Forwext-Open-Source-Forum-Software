@@ -46,6 +46,24 @@ final readonly class AuthSessionManager
         return $sessionId;
     }
 
+    public function establish(
+        EntityId $userId,
+        string $deviceId,
+        int $credentialVersion,
+        ?string $previousSessionId = null,
+    ): string {
+        $newSessionId = $this->create($userId, $deviceId, $credentialVersion);
+        if ($previousSessionId !== null && $previousSessionId !== $newSessionId) {
+            try {
+                $this->sessions->delete($previousSessionId);
+            } catch (\Throwable $exception) {
+                $this->sessions->delete($newSessionId);
+                throw new AuthException('Unable to replace the previous session.', previous: $exception);
+            }
+        }
+        return $newSessionId;
+    }
+
     public function resolve(string $sessionId): ?AuthSessionIdentity
     {
         $record = $this->sessions->read($sessionId);
@@ -103,12 +121,12 @@ final readonly class AuthSessionManager
         if ($identity === null) {
             throw new AuthException('Authentication session cannot be rotated.');
         }
-        $newSessionId = $this->create($identity->userId, $identity->deviceId, $identity->credentialVersion);
-        if (!$this->sessions->delete($currentSessionId)) {
-            $this->sessions->delete($newSessionId);
-            throw new AuthException('Authentication session rotation lost the previous session.');
-        }
-        return $newSessionId;
+        return $this->establish(
+            $identity->userId,
+            $identity->deviceId,
+            $identity->credentialVersion,
+            $currentSessionId,
+        );
     }
 
     public function revoke(string $sessionId): void

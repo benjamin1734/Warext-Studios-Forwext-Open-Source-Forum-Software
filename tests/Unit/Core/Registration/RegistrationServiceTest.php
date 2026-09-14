@@ -7,12 +7,13 @@ namespace Forwext\Tests\Unit\Core\Registration;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Auth\Credential\CredentialProvisioner;
+use Forwext\Core\Auth\Credential\CredentialRecord;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\EmailAddress;
 use Forwext\Core\Domain\User\User;
-use Forwext\Core\Domain\User\UserHistoryEntry;
 use Forwext\Core\Domain\User\UserId;
 use Forwext\Core\Domain\User\UserLocale;
 use Forwext\Core\Domain\User\Username;
@@ -38,30 +39,30 @@ use Forwext\Core\Registration\RegistrationRequest;
 use Forwext\Core\Registration\RegistrationService;
 use Forwext\Core\Security\Secret\SecretStore;
 use PHPUnit\Framework\TestCase;
+use SensitiveParameter;
 
 final class RegistrationServiceTest extends TestCase
 {
-    public function testApprovalRegistrationCreatesPendingEmailUserAndOneTimeVerificationTarget(): void
+    public function testApprovalRegistrationCreatesCredentialPendingEmailUserAndVerificationTarget(): void
     {
         $database = new RegistrationTransactionDatabase();
         $users = new MemoryRegistrationUserRepository();
+        $credentials = new MemoryRegistrationCredentialProvisioner();
         $captcha = new SuccessfulCaptchaVerifier();
         $legal = new MemoryLegalAcceptanceStore();
         $tokens = new MemoryEmailVerificationTokenStore();
-        $clock = new FrozenRegistrationClock('2026-09-14 21:00:00');
         $document = new LegalDocumentRequirement('terms', '2026-09', str_repeat('a', 64));
-        $policy = new RegistrationPolicy(mode: RegistrationMode::Approval, legalDocuments: [$document]);
         $service = $this->service(
             $database,
             $users,
-            $policy,
+            new RegistrationPolicy(mode: RegistrationMode::Approval, legalDocuments: [$document]),
             $captcha,
             new NeverDisposableChecker(),
             new AllowingRateLimiter(),
             new MemoryInviteStore(),
             $legal,
             $tokens,
-            $clock,
+            $credentials,
         );
 
         $result = $service->register(new RegistrationRequest(
@@ -72,40 +73,37 @@ final class RegistrationServiceTest extends TestCase
             clientIp: '203.0.113.10',
             captchaToken: 'captcha-ok',
             acceptedLegalVersions: ['terms' => '2026-09'],
+            password: 'Correct Horse Battery Staple 1!',
         ));
 
         self::assertSame(UserStatus::PendingEmailVerification, $result->status);
-        self::assertSame('verification-token', $result->emailVerificationToken);
         self::assertSame(UserStatus::PendingApproval, $tokens->issuedTarget);
-        self::assertSame(1, $captcha->calls);
+        self::assertSame('verification-token', $result->emailVerificationToken);
+        self::assertSame('Correct Horse Battery Staple 1!', $credentials->lastPassword);
         self::assertCount(1, $legal->records);
+        self::assertSame(1, $captcha->calls);
         self::assertSame(1, $database->transactions);
-        $stored = $users->find($result->userId);
-        self::assertNotNull($stored);
-        self::assertSame('user@example.com', $stored->email()->value());
+        self::assertSame('user@example.com', $users->find($result->userId)?->email()->value());
     }
 
     public function testInviteOnlyWithoutEmailVerificationConsumesInviteAndCreatesActiveAccount(): void
     {
-        $database = new RegistrationTransactionDatabase();
-        $users = new MemoryRegistrationUserRepository();
         $invites = new MemoryInviteStore();
-        $policy = new RegistrationPolicy(
-            mode: RegistrationMode::InviteOnly,
-            emailVerificationRequired: false,
-            captchaRequired: false,
-        );
         $service = $this->service(
-            $database,
-            $users,
-            $policy,
+            new RegistrationTransactionDatabase(),
+            new MemoryRegistrationUserRepository(),
+            new RegistrationPolicy(
+                mode: RegistrationMode::InviteOnly,
+                emailVerificationRequired: false,
+                captchaRequired: false,
+            ),
             new SuccessfulCaptchaVerifier(),
             new NeverDisposableChecker(),
             new AllowingRateLimiter(),
             $invites,
             new MemoryLegalAcceptanceStore(),
             new MemoryEmailVerificationTokenStore(),
-            new FrozenRegistrationClock('2026-09-14 21:00:00'),
+            new MemoryRegistrationCredentialProvisioner(),
         );
 
         $result = $service->register(new RegistrationRequest(
@@ -115,6 +113,7 @@ final class RegistrationServiceTest extends TestCase
             'UTC',
             '2001:db8::5',
             inviteCode: 'VALID_INVITE_123',
+            password: 'Correct Horse Battery Staple 2!',
         ));
 
         self::assertSame(UserStatus::Active, $result->status);
@@ -122,27 +121,25 @@ final class RegistrationServiceTest extends TestCase
         self::assertSame(['VALID_INVITE_123'], $invites->consumedCodes);
     }
 
-    public function testLegalVersionMismatchFailsBeforeDatabaseTransaction(): void
+    public function testLegalVersionMismatchAndDisposableEmailFailBeforeAccountTransaction(): void
     {
         $database = new RegistrationTransactionDatabase();
-        $policy = new RegistrationPolicy(
-            captchaRequired: false,
-            legalDocuments: [new LegalDocumentRequirement('privacy', 'v2', str_repeat('b', 64))],
-        );
         $service = $this->service(
             $database,
             new MemoryRegistrationUserRepository(),
-            $policy,
+            new RegistrationPolicy(
+                captchaRequired: false,
+                legalDocuments: [new LegalDocumentRequirement('privacy', 'v2', str_repeat('b', 64))],
+            ),
             new SuccessfulCaptchaVerifier(),
             new NeverDisposableChecker(),
             new AllowingRateLimiter(),
             new MemoryInviteStore(),
             new MemoryLegalAcceptanceStore(),
             new MemoryEmailVerificationTokenStore(),
-            new FrozenRegistrationClock('2026-09-14 21:00:00'),
+            new MemoryRegistrationCredentialProvisioner(),
         );
 
-        $this->expectException(RegistrationException::class);
         try {
             $service->register(new RegistrationRequest(
                 'legal_user',
@@ -151,41 +148,58 @@ final class RegistrationServiceTest extends TestCase
                 'UTC',
                 '203.0.113.11',
                 acceptedLegalVersions: ['privacy' => 'v1'],
+                password: 'Correct Horse Battery Staple 3!',
             ));
-        } finally {
+            self::fail('Expected legal acceptance rejection.');
+        } catch (RegistrationException) {
             self::assertSame(0, $database->transactions);
         }
-    }
 
-    public function testDisposableEmailIsRejectedBeforeDatabaseTransaction(): void
-    {
-        $database = new RegistrationTransactionDatabase();
-        $policy = new RegistrationPolicy(captchaRequired: false);
-        $service = $this->service(
-            $database,
+        $disposableDatabase = new RegistrationTransactionDatabase();
+        $disposable = $this->service(
+            $disposableDatabase,
             new MemoryRegistrationUserRepository(),
-            $policy,
+            new RegistrationPolicy(captchaRequired: false),
             new SuccessfulCaptchaVerifier(),
             new AlwaysDisposableChecker(),
             new AllowingRateLimiter(),
             new MemoryInviteStore(),
             new MemoryLegalAcceptanceStore(),
             new MemoryEmailVerificationTokenStore(),
-            new FrozenRegistrationClock('2026-09-14 21:00:00'),
+            new MemoryRegistrationCredentialProvisioner(),
         );
-
-        $this->expectException(RegistrationException::class);
         try {
-            $service->register(new RegistrationRequest(
+            $disposable->register(new RegistrationRequest(
                 'temp_user',
                 'temp@example.com',
                 'en-US',
                 'UTC',
                 '203.0.113.12',
+                password: 'Correct Horse Battery Staple 4!',
             ));
-        } finally {
-            self::assertSame(0, $database->transactions);
+            self::fail('Expected disposable-email rejection.');
+        } catch (RegistrationException) {
+            self::assertSame(0, $disposableDatabase->transactions);
         }
+    }
+
+    public function testMissingPasswordFailsClosed(): void
+    {
+        $service = $this->service(
+            new RegistrationTransactionDatabase(),
+            new MemoryRegistrationUserRepository(),
+            new RegistrationPolicy(captchaRequired: false),
+            new SuccessfulCaptchaVerifier(),
+            new NeverDisposableChecker(),
+            new AllowingRateLimiter(),
+            new MemoryInviteStore(),
+            new MemoryLegalAcceptanceStore(),
+            new MemoryEmailVerificationTokenStore(),
+            new MemoryRegistrationCredentialProvisioner(),
+        );
+
+        $this->expectException(RegistrationException::class);
+        $service->register(new RegistrationRequest('no_password', 'no@example.com', 'en-US', 'UTC', '203.0.113.13'));
     }
 
     public function testEmailVerificationConsumesGrantAndTransitionsAccount(): void
@@ -227,7 +241,7 @@ final class RegistrationServiceTest extends TestCase
         RegistrationInviteStore $invites,
         LegalAcceptanceStore $legal,
         EmailVerificationTokenStore $tokens,
-        Clock $clock,
+        CredentialProvisioner $credentials,
     ): RegistrationService {
         return new RegistrationService(
             $database,
@@ -242,7 +256,8 @@ final class RegistrationServiceTest extends TestCase
             $invites,
             $legal,
             $tokens,
-            $clock,
+            $credentials,
+            new FrozenRegistrationClock('2026-09-14 21:00:00'),
         );
     }
 }
@@ -252,40 +267,16 @@ final class RegistrationTransactionDatabase implements TransactionalQueryExecuto
     public int $transactions = 0;
     private int $depth = 0;
 
-    public function execute(CompiledQuery $query): int
-    {
-        return 1;
-    }
-
-    public function fetchOne(CompiledQuery $query): ?array
-    {
-        return null;
-    }
-
-    public function fetchAll(CompiledQuery $query): array
-    {
-        return [];
-    }
-
-    public function fetchValue(CompiledQuery $query): mixed
-    {
-        return null;
-    }
-
-    public function inTransaction(): bool
-    {
-        return $this->depth > 0;
-    }
-
+    public function execute(CompiledQuery $query): int { return 1; }
+    public function fetchOne(CompiledQuery $query): ?array { return null; }
+    public function fetchAll(CompiledQuery $query): array { return []; }
+    public function fetchValue(CompiledQuery $query): mixed { return null; }
+    public function inTransaction(): bool { return $this->depth > 0; }
     public function transaction(Closure $callback): mixed
     {
         ++$this->transactions;
         ++$this->depth;
-        try {
-            return $callback($this);
-        } finally {
-            --$this->depth;
-        }
+        try { return $callback($this); } finally { --$this->depth; }
     }
 }
 
@@ -294,31 +285,21 @@ final class MemoryRegistrationUserRepository implements UserRepository
     /** @var array<string, User> */
     private array $users = [];
 
-    public function find(EntityId $id): ?User
-    {
-        return $this->users[$id->value()] ?? null;
-    }
-
+    public function find(EntityId $id): ?User { return $this->users[$id->value()] ?? null; }
     public function findByUsername(Username $username): ?User
     {
         foreach ($this->users as $user) {
-            if ($user->username()->key() === $username->key()) {
-                return $user;
-            }
+            if ($user->username()->key() === $username->key()) { return $user; }
         }
         return null;
     }
-
     public function findByEmail(EmailAddress $email): ?User
     {
         foreach ($this->users as $user) {
-            if ($user->email()->key() === $email->key()) {
-                return $user;
-            }
+            if ($user->email()->key() === $email->key()) { return $user; }
         }
         return null;
     }
-
     public function save(User $user): void
     {
         if ($user->version() === 0 || $user->pendingHistory() !== []) {
@@ -326,17 +307,25 @@ final class MemoryRegistrationUserRepository implements UserRepository
         }
         $this->users[$user->id()->value()] = $user;
     }
+    public function history(EntityId $id, int $limit = 100, int $offset = 0): array { return []; }
+}
 
-    public function history(EntityId $id, int $limit = 100, int $offset = 0): array
-    {
-        return [];
+final class MemoryRegistrationCredentialProvisioner implements CredentialProvisioner
+{
+    public ?string $lastPassword = null;
+    public function provision(
+        EntityId $userId,
+        #[SensitiveParameter] string $password,
+        DateTimeImmutable $now,
+    ): CredentialRecord {
+        $this->lastPassword = $password;
+        return new CredentialRecord($userId, '$2y$12$testhashplaceholder', 1, $now);
     }
 }
 
 final class SuccessfulCaptchaVerifier implements CaptchaVerifier
 {
     public int $calls = 0;
-
     public function verify(string $token, string $clientIp): CaptchaVerification
     {
         ++$this->calls;
@@ -346,18 +335,12 @@ final class SuccessfulCaptchaVerifier implements CaptchaVerifier
 
 final class NeverDisposableChecker implements DisposableEmailChecker
 {
-    public function isDisposable(EmailAddress $email): bool
-    {
-        return false;
-    }
+    public function isDisposable(EmailAddress $email): bool { return false; }
 }
 
 final class AlwaysDisposableChecker implements DisposableEmailChecker
 {
-    public function isDisposable(EmailAddress $email): bool
-    {
-        return true;
-    }
+    public function isDisposable(EmailAddress $email): bool { return true; }
 }
 
 final class AllowingRateLimiter implements RegistrationRateLimiter
@@ -368,21 +351,17 @@ final class AllowingRateLimiter implements RegistrationRateLimiter
         int $limit,
         int $windowSeconds,
         DateTimeImmutable $now,
-    ): bool {
-        return true;
-    }
+    ): bool { return true; }
 }
 
 final class MemoryInviteStore implements RegistrationInviteStore
 {
     /** @var list<string> */
     public array $consumedCodes = [];
-
     public function issue(int $maxUses, ?DateTimeImmutable $expiresAt, DateTimeImmutable $now): string
     {
         return 'MEMORY_INVITE';
     }
-
     public function consume(string $code, DateTimeImmutable $now): bool
     {
         $this->consumedCodes[] = $code;
@@ -394,22 +373,18 @@ final class MemoryLegalAcceptanceStore implements LegalAcceptanceStore
 {
     /** @var list<array{string, string}> */
     public array $records = [];
-
     public function record(
         EntityId $userId,
         LegalDocumentRequirement $document,
         DateTimeImmutable $acceptedAt,
         string $clientFingerprint,
-    ): void {
-        $this->records[] = [$userId->value(), $document->type];
-    }
+    ): void { $this->records[] = [$userId->value(), $document->type]; }
 }
 
 final class MemoryEmailVerificationTokenStore implements EmailVerificationTokenStore
 {
     public ?UserStatus $issuedTarget = null;
     public ?EmailVerificationGrant $grant = null;
-
     public function issue(
         EntityId $userId,
         UserStatus $targetStatus,
@@ -419,61 +394,28 @@ final class MemoryEmailVerificationTokenStore implements EmailVerificationTokenS
         $this->issuedTarget = $targetStatus;
         return 'verification-token';
     }
-
-    public function consume(string $token, DateTimeImmutable $now): ?EmailVerificationGrant
-    {
-        return $this->grant;
-    }
+    public function consume(string $token, DateTimeImmutable $now): ?EmailVerificationGrant { return $this->grant; }
 }
 
 final class FrozenRegistrationClock implements Clock
 {
     private readonly DateTimeImmutable $time;
-
-    public function __construct(string $time)
-    {
-        $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC'));
-    }
-
-    public function now(): DateTimeImmutable
-    {
-        return $this->time;
-    }
+    public function __construct(string $time) { $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC')); }
+    public function now(): DateTimeImmutable { return $this->time; }
 }
 
 final class RegistrationSecretStore implements SecretStore
 {
     /** @param array<string, string> $values */
-    public function __construct(private array $values)
-    {
-    }
-
-    public function has(string $name): bool
-    {
-        return isset($this->values[$name]);
-    }
-
-    public function get(string $name): ?string
-    {
-        return $this->values[$name] ?? null;
-    }
-
-    public function set(string $name, string $value): void
-    {
-        $this->values[$name] = $value;
-    }
-
+    public function __construct(private array $values) {}
+    public function has(string $name): bool { return isset($this->values[$name]); }
+    public function get(string $name): ?string { return $this->values[$name] ?? null; }
+    public function set(string $name, string $value): void { $this->values[$name] = $value; }
     public function delete(string $name): bool
     {
-        if (!isset($this->values[$name])) {
-            return false;
-        }
+        if (!isset($this->values[$name])) { return false; }
         unset($this->values[$name]);
         return true;
     }
-
-    public function all(): array
-    {
-        return $this->values;
-    }
+    public function all(): array { return $this->values; }
 }

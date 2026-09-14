@@ -49,9 +49,8 @@ final readonly class PasswordResetService
     public function reset(string $token, #[SensitiveParameter] string $newPassword): bool
     {
         $now = $this->clock->now();
-        $newHash = $this->hasher->hash($newPassword);
 
-        return $this->database->transaction(function () use ($token, $newHash, $now): bool {
+        return $this->database->transaction(function () use ($token, $newPassword, $now): bool {
             $grant = $this->challenges->consume($token, AuthChallengePurpose::PasswordReset, $now);
             if ($grant === null) {
                 return false;
@@ -60,6 +59,7 @@ final readonly class PasswordResetService
             if ($current === null) {
                 throw new AuthException('Password credential disappeared during reset.');
             }
+            $newHash = $this->hasher->hash($newPassword);
             $this->credentials->replacePassword($grant->userId, $current->version, $newHash, $now);
             $this->rememberTokens->revokeUser($grant->userId, $now);
             return true;

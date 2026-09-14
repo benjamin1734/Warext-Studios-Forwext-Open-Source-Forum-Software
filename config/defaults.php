@@ -95,6 +95,34 @@ return [
         'disposable_email_domains' => [],
         'legal_documents' => [],
     ],
+    'authentication' => [
+        'password' => [
+            'minimum_characters' => 12,
+            'maximum_bytes' => 1024,
+            'preferred_algorithm' => 'argon2id',
+            'argon_memory_cost' => 32768,
+            'argon_time_cost' => 3,
+            'argon_threads' => 1,
+            'bcrypt_fallback_cost' => 12,
+        ],
+        'session' => [
+            'ttl_seconds' => 7200,
+        ],
+        'remember' => [
+            'ttl_seconds' => 2592000,
+        ],
+        'login_rate_limit' => [
+            'attempts' => 10,
+            'window_seconds' => 900,
+        ],
+        'password_reset' => [
+            'ttl_seconds' => 3600,
+        ],
+        'password_confirmation' => [
+            'ttl_seconds' => 900,
+        ],
+        'fingerprint_secret_name' => 'authentication.fingerprint_key',
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

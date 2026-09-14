@@ -12,7 +12,7 @@ final readonly class PasswordHashPolicy
     public function __construct(
         public int $minimumCharacters = 12,
         public int $maximumBytes = 1024,
-        public int $argonMemoryCost = 65536,
+        public int $argonMemoryCost = 32768,
         public int $argonTimeCost = 3,
         public int $argonThreads = 1,
         public int $bcryptCost = 12,
@@ -30,7 +30,12 @@ final readonly class PasswordHashPolicy
 
     public function assertPassword(#[SensitiveParameter] string $password): void
     {
-        if ($password === '' || strlen($password) > $this->maximumBytes || preg_match('//u', $password) !== 1) {
+        if ($password === ''
+            || strlen($password) > $this->maximumBytes
+            || str_contains($password, "\0")
+            || preg_match('//u', $password) !== 1
+            || trim($password) === ''
+        ) {
             throw new AuthException('Password does not satisfy the configured length/encoding policy.');
         }
         $characters = preg_match_all('/./us', $password, $matches);
@@ -57,7 +62,8 @@ final readonly class PasswordHashPolicy
     /** @return array<string, int> */
     public function options(): array
     {
-        if ($this->algorithm() === (defined('PASSWORD_ARGON2ID') ? constant('PASSWORD_ARGON2ID') : null)) {
+        $algorithm = $this->algorithm();
+        if (defined('PASSWORD_ARGON2ID') && $algorithm === constant('PASSWORD_ARGON2ID')) {
             return [
                 'memory_cost' => $this->argonMemoryCost,
                 'time_cost' => $this->argonTimeCost,

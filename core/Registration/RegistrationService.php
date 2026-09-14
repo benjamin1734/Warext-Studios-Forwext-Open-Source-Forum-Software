@@ -41,7 +41,8 @@ final readonly class RegistrationService
         if ($this->policy->mode === RegistrationMode::Closed) {
             throw new RegistrationException('Registration is currently closed.');
         }
-        if ($request->password === null || $request->password === '') {
+        $password = $request->password;
+        if ($password === null || $password === '') {
             throw new RegistrationException('Password credential is required for password registration.');
         }
 
@@ -84,6 +85,7 @@ final readonly class RegistrationService
 
         return $this->database->transaction(function () use (
             $request,
+            $password,
             $username,
             $email,
             $locale,
@@ -118,7 +120,7 @@ final readonly class RegistrationService
                 $now,
             );
             $this->users->save($user);
-            $this->credentials->provision($user->id(), $request->password, $now);
+            $this->credentials->provision($user->id(), $password, $now);
 
             foreach ($this->policy->legalDocuments() as $document) {
                 $this->legalAcceptances->record($user->id(), $document, $now, $ipFingerprint);

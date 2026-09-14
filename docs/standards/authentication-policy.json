@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.authentication",
+  "roadmap_step": "04.03",
+  "password": {
+    "minimum_characters": 12,
+    "maximum_bytes": 1024,
+    "preferred_algorithm": "argon2id",
+    "fallback_algorithm": "bcrypt",
+    "argon_memory_cost_kib": 32768,
+    "argon_time_cost": 3,
+    "argon_threads": 1,
+    "bcrypt_cost": 12,
+    "plaintext_persisted": false,
+    "dummy_verify_for_unknown_identity": true,
+    "rehash_increments_credential_version": false,
+    "password_change_increments_credential_version": true
+  },
+  "session": {
+    "default_ttl_seconds": 7200,
+    "id_entropy_bits": 256,
+    "rotate_on_authentication": true,
+    "database_raw_session_id_persisted": false,
+    "credential_version_checked_on_resolve": true
+  },
+  "device": {
+    "id_entropy_bits": 128,
+    "stores_raw_ip": false,
+    "stores_raw_user_agent": false,
+    "trusted_semantics_step": "04.04"
+  },
+  "login": {
+    "generic_public_failure": "Authentication failed.",
+    "default_attempt_limit": 10,
+    "default_window_seconds": 900,
+    "fingerprint": "hmac-sha256",
+    "fingerprint_secret_store_key": "authentication.fingerprint_key"
+  },
+  "remember": {
+    "default_ttl_seconds": 2592000,
+    "selector_bytes": 16,
+    "validator_bytes": 32,
+    "raw_token_persisted": false,
+    "digest": "sha256",
+    "rotate_on_use": true,
+    "replay_revokes_family": true,
+    "sliding_expiry": false
+  },
+  "challenge": {
+    "token_bytes": 32,
+    "raw_token_persisted": false,
+    "digest": "sha256",
+    "purposes": ["password_reset", "password_confirmation"],
+    "password_reset_ttl_seconds": 3600,
+    "password_confirmation_ttl_seconds": 900,
+    "single_use": true
+  },
+  "migration": "20260914253000_authentication_runtime"
+}

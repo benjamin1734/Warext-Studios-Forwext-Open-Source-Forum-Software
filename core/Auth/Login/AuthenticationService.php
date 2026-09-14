@@ -46,14 +46,7 @@ final readonly class AuthenticationService
         $rateFingerprint = hash('sha256', $identityFingerprint . ':' . $ipFingerprint);
 
         if (!$this->rateLimiter->consume($rateFingerprint, $this->attemptLimit, $this->attemptWindowSeconds, $now)) {
-            $this->history->record(
-                null,
-                $identityFingerprint,
-                $ipFingerprint,
-                $deviceFingerprint,
-                LoginOutcome::RateLimited,
-                $now,
-            );
+            $this->history->record(null, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::RateLimited, $now);
             throw new AuthenticationRejectedException();
         }
 
@@ -61,34 +54,13 @@ final readonly class AuthenticationService
         $credential = $user !== null ? $this->credentials->find($user->id()) : null;
         if ($credential === null) {
             $this->hasher->dummyVerify($request->password);
-            $this->reject(
-                $user,
-                $identityFingerprint,
-                $ipFingerprint,
-                $deviceFingerprint,
-                LoginOutcome::InvalidCredentials,
-                $now,
-            );
+            $this->reject($user, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::InvalidCredentials, $now);
         }
         if (!$this->hasher->verify($request->password, $credential->passwordHash)) {
-            $this->reject(
-                $user,
-                $identityFingerprint,
-                $ipFingerprint,
-                $deviceFingerprint,
-                LoginOutcome::InvalidCredentials,
-                $now,
-            );
+            $this->reject($user, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::InvalidCredentials, $now);
         }
         if ($user === null || !$user->status()->canAuthenticateNormally()) {
-            $this->reject(
-                $user,
-                $identityFingerprint,
-                $ipFingerprint,
-                $deviceFingerprint,
-                LoginOutcome::AccountUnavailable,
-                $now,
-            );
+            $this->reject($user, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::AccountUnavailable, $now);
         }
 
         if ($this->hasher->needsRehash($credential->passwordHash)) {
@@ -106,7 +78,12 @@ final readonly class AuthenticationService
             $ipFingerprint,
             $now,
         );
-        $sessionId = $this->sessions->create($user->id(), $device->deviceId, $credential->version);
+        $sessionId = $this->sessions->establish(
+            $user->id(),
+            $device->deviceId,
+            $credential->version,
+            $request->previousSessionId,
+        );
         try {
             $rememberToken = $request->rememberMe
                 ? $this->rememberTokens->issue($user->id(), $device->deviceId, $credential->version, $now)
