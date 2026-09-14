@@ -6,6 +6,20 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.02 — Registration, Email Verification and Anti-Abuse
+
+- Added safe-default registration modes: open, approval, invite-only and closed; fresh installations remain closed until policy/legal/CAPTCHA configuration is ready.
+- Added provider-neutral CAPTCHA verification plus first-party Cloudflare Turnstile server-side Siteverify validation with secret-store loading, remote IP, UUID idempotency key and optional hostname/action enforcement.
+- Added privacy-preserving registration abuse fingerprints using HMAC-SHA256 instead of raw IP/email rate-limit keys, plus atomic database rate-limit buckets.
+- Added disposable-email policy abstraction and built-in managed domain-set checker.
+- Added CSPRNG invite issuance with hash-only persistence, expiry/disable/max-use controls and row-locked atomic consumption.
+- Added 256-bit email-verification tokens with SHA-256-only persistence, expiry, one-time consumption and controlled pending-email → active/pending-approval state transitions.
+- Added versioned terms/privacy acceptance snapshots recording document type/version/content digest and a privacy-preserving client fingerprint.
+- Added versioned migration `20260914243000_registration_security` for invites, email-verification tokens, legal acceptances and registration rate-limit buckets.
+- Added bounded maintenance cleanup for old verification tokens, old rate-limit buckets and expired/disabled invites while preserving legal acceptance audit records.
+- Added orchestration, persistence, Turnstile, invite, rate-limit, email-verification and maintenance tests.
+- Kept password hashing/login credentials out of registration storage; authentication credentials begin in roadmap step 04.03.
+
 ### 04.01 — User Domain and Account Lifecycle
 
 - Added opaque CSPRNG 128-bit user identifiers and canonical `User` aggregate state.
