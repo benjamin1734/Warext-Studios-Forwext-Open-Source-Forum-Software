@@ -40,17 +40,27 @@ final readonly class RegistrationService
             throw new RegistrationException('Registration is currently closed.');
         }
 
-        $username = Username::fromInput($request->username);
-        $email = EmailAddress::fromInput($request->email);
+        $username = Username::fromString($request->username);
+        $email = EmailAddress::fromString($request->email);
         $locale = UserLocale::fromString($request->locale);
         $timezone = UserTimezone::fromString($request->timezone);
         $now = $this->clock->now();
         $ipFingerprint = $this->fingerprint->ip($request->clientIp);
         $emailFingerprint = $this->fingerprint->email($email);
 
-        if (!$this->rateLimiter->consume('registration.ip', $ipFingerprint, $this->policy->ipAttemptLimit, $this->policy->rateLimitWindowSeconds, $now)
-            || !$this->rateLimiter->consume('registration.email', $emailFingerprint, $this->policy->emailAttemptLimit, $this->policy->rateLimitWindowSeconds, $now)
-        ) {
+        if (!$this->rateLimiter->consume(
+            'registration.ip',
+            $ipFingerprint,
+            $this->policy->ipAttemptLimit,
+            $this->policy->rateLimitWindowSeconds,
+            $now,
+        ) || !$this->rateLimiter->consume(
+            'registration.email',
+            $emailFingerprint,
+            $this->policy->emailAttemptLimit,
+            $this->policy->rateLimitWindowSeconds,
+            $now,
+        )) {
             throw new RegistrationException('Registration rate limit exceeded.');
         }
 

@@ -16,7 +16,7 @@ final readonly class NativeTurnstileTransport implements TurnstileTransport
         if ($timeoutSeconds < 1 || $timeoutSeconds > 15) {
             throw new RegistrationException('Turnstile HTTP timeout is invalid.');
         }
-        if ((string) ini_get('allow_url_fopen') === '' || ini_get('allow_url_fopen') === '0') {
+        if (!filter_var((string) ini_get('allow_url_fopen'), FILTER_VALIDATE_BOOLEAN)) {
             throw new RegistrationException('Turnstile native transport requires allow_url_fopen or a custom transport.');
         }
 

@@ -74,6 +74,27 @@ return [
     'search' => [
         'driver' => 'native',
     ],
+    'registration' => [
+        'mode' => 'closed',
+        'email_verification_required' => true,
+        'email_verification_ttl_seconds' => 86400,
+        'captcha' => [
+            'required' => true,
+            'provider' => 'turnstile',
+            'site_key' => null,
+            'secret_name' => 'turnstile.secret',
+            'expected_hostname' => null,
+            'expected_action' => 'register',
+        ],
+        'rate_limit' => [
+            'ip_attempts' => 10,
+            'email_attempts' => 5,
+            'window_seconds' => 3600,
+            'fingerprint_secret_name' => 'registration.fingerprint_key',
+        ],
+        'disposable_email_domains' => [],
+        'legal_documents' => [],
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.registration",
+  "roadmap_step": "04.02",
+  "default_mode": "closed",
+  "modes": ["open", "approval", "invite_only", "closed"],
+  "email_verification": {
+    "default_required": true,
+    "default_ttl_seconds": 86400,
+    "raw_token_persisted": false,
+    "digest": "sha256",
+    "allowed_target_statuses": ["active", "pending_approval"]
+  },
+  "captcha": {
+    "provider_abstraction": true,
+    "first_party_provider": "cloudflare_turnstile",
+    "server_side_validation_required": true,
+    "turnstile_endpoint": "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    "turnstile_max_token_characters": 2048,
+    "turnstile_provider_token_ttl_seconds": 300,
+    "turnstile_single_use": true,
+    "validate_hostname_when_configured": true,
+    "validate_action": "register",
+    "secret_store_key": "turnstile.secret"
+  },
+  "rate_limit": {
+    "default_ip_attempts": 10,
+    "default_email_attempts": 5,
+    "default_window_seconds": 3600,
+    "raw_ip_or_email_as_key": false,
+    "fingerprint": "hmac-sha256",
+    "secret_store_key": "registration.fingerprint_key"
+  },
+  "invite": {
+    "raw_code_persisted": false,
+    "digest": "sha256",
+    "atomic_consumption": true
+  },
+  "legal_acceptance": {
+    "records_document_type": true,
+    "records_document_version": true,
+    "records_content_sha256": true,
+    "records_raw_ip": false,
+    "automatic_purge": false
+  },
+  "credential_boundary": "04.03",
+  "migration": "20260914243000_registration_security"
+}
