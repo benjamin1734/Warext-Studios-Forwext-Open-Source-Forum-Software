@@ -37,11 +37,16 @@ final readonly class SemanticVersion implements Stringable
 
     public function isGreaterThan(self $other): bool
     {
-        return version_compare($this->value, $other->value, '>');
+        return version_compare(self::precedenceValue($this->value), self::precedenceValue($other->value), '>');
     }
 
     public function __toString(): string
     {
         return $this->value;
+    }
+
+    private static function precedenceValue(string $value): string
+    {
+        return explode('+', $value, 2)[0];
     }
 }

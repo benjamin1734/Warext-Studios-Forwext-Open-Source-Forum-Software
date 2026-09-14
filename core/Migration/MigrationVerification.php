@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Migration;
 
+use InvalidArgumentException;
+
 final readonly class MigrationVerification
 {
     /** @var list<string> */
@@ -29,7 +31,12 @@ final readonly class MigrationVerification
 
     public static function failed(string $failure, string ...$more): self
     {
-        return new self([$failure, ...$more]);
+        $result = new self([$failure, ...$more]);
+        if ($result->failures === []) {
+            throw new InvalidArgumentException('Failed migration verification requires at least one diagnostic.');
+        }
+
+        return $result;
     }
 
     public function isPassed(): bool
