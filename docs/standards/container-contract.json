@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.container_kernel",
+  "roadmap_step": "02.03",
+  "container": {
+    "lifetimes": ["transient", "singleton"],
+    "factories_are_lazy": true,
+    "constructor_autowiring": true,
+    "circular_dependency_detection": true,
+    "ambiguous_dependency_fails_closed": true,
+    "production_rebinding_allowed": false,
+    "test_overrides": true
+  },
+  "kernel": {
+    "provider_register_phase_before_boot_phase": true,
+    "boot_idempotent_after_success": true,
+    "failed_boot_state": "failed",
+    "provider_addition_after_boot_starts": false
+  },
+  "authorization": {
+    "container_resolution_grants_permission": false,
+    "backend_permission_checks_remain_required": true
+  }
+}

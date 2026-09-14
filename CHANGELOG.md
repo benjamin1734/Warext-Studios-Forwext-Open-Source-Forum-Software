@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.03 — Application Kernel and DI Container
+
+- Added the core DI container with explicit bindings, transient/singleton lifetimes and lazy factories.
+- Added constructor autowiring with fail-closed handling for ambiguous/unresolvable dependencies.
+- Added circular-dependency detection that reports the active resolution path.
+- Added isolated test overrides while rejecting silent production service replacement.
+- Added application-kernel lifecycle/state management and deterministic two-phase provider registration/boot.
+- Added unit tests for container lifecycle, lazy resolution, autowiring, circular dependencies, overrides and kernel provider ordering/idempotence.
+
 ### 02.02 — Code Standards and Static Analysis
 
 - Set PHP 8.4 minimum and PHP 8.4/8.5 compatibility targets in executable quality policy/configuration.
