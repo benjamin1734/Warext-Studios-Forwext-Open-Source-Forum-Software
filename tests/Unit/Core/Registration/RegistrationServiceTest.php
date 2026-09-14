@@ -168,6 +168,7 @@ final class RegistrationServiceTest extends TestCase
             new MemoryEmailVerificationTokenStore(),
             new MemoryRegistrationCredentialProvisioner(),
         );
+
         try {
             $disposable->register(new RegistrationRequest(
                 'temp_user',
@@ -199,7 +200,13 @@ final class RegistrationServiceTest extends TestCase
         );
 
         $this->expectException(RegistrationException::class);
-        $service->register(new RegistrationRequest('no_password', 'no@example.com', 'en-US', 'UTC', '203.0.113.13'));
+        $service->register(new RegistrationRequest(
+            'no_password',
+            'no@example.com',
+            'en-US',
+            'UTC',
+            '203.0.113.13',
+        ));
     }
 
     public function testEmailVerificationConsumesGrantAndTransitionsAccount(): void
@@ -267,16 +274,40 @@ final class RegistrationTransactionDatabase implements TransactionalQueryExecuto
     public int $transactions = 0;
     private int $depth = 0;
 
-    public function execute(CompiledQuery $query): int { return 1; }
-    public function fetchOne(CompiledQuery $query): ?array { return null; }
-    public function fetchAll(CompiledQuery $query): array { return []; }
-    public function fetchValue(CompiledQuery $query): mixed { return null; }
-    public function inTransaction(): bool { return $this->depth > 0; }
+    public function execute(CompiledQuery $query): int
+    {
+        return 1;
+    }
+
+    public function fetchOne(CompiledQuery $query): ?array
+    {
+        return null;
+    }
+
+    public function fetchAll(CompiledQuery $query): array
+    {
+        return [];
+    }
+
+    public function fetchValue(CompiledQuery $query): mixed
+    {
+        return null;
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->depth > 0;
+    }
+
     public function transaction(Closure $callback): mixed
     {
         ++$this->transactions;
         ++$this->depth;
-        try { return $callback($this); } finally { --$this->depth; }
+        try {
+            return $callback($this);
+        } finally {
+            --$this->depth;
+        }
     }
 }
 
@@ -285,21 +316,31 @@ final class MemoryRegistrationUserRepository implements UserRepository
     /** @var array<string, User> */
     private array $users = [];
 
-    public function find(EntityId $id): ?User { return $this->users[$id->value()] ?? null; }
+    public function find(EntityId $id): ?User
+    {
+        return $this->users[$id->value()] ?? null;
+    }
+
     public function findByUsername(Username $username): ?User
     {
         foreach ($this->users as $user) {
-            if ($user->username()->key() === $username->key()) { return $user; }
+            if ($user->username()->key() === $username->key()) {
+                return $user;
+            }
         }
         return null;
     }
+
     public function findByEmail(EmailAddress $email): ?User
     {
         foreach ($this->users as $user) {
-            if ($user->email()->key() === $email->key()) { return $user; }
+            if ($user->email()->key() === $email->key()) {
+                return $user;
+            }
         }
         return null;
     }
+
     public function save(User $user): void
     {
         if ($user->version() === 0 || $user->pendingHistory() !== []) {
@@ -307,12 +348,17 @@ final class MemoryRegistrationUserRepository implements UserRepository
         }
         $this->users[$user->id()->value()] = $user;
     }
-    public function history(EntityId $id, int $limit = 100, int $offset = 0): array { return []; }
+
+    public function history(EntityId $id, int $limit = 100, int $offset = 0): array
+    {
+        return [];
+    }
 }
 
 final class MemoryRegistrationCredentialProvisioner implements CredentialProvisioner
 {
     public ?string $lastPassword = null;
+
     public function provision(
         EntityId $userId,
         #[SensitiveParameter] string $password,
@@ -326,6 +372,7 @@ final class MemoryRegistrationCredentialProvisioner implements CredentialProvisi
 final class SuccessfulCaptchaVerifier implements CaptchaVerifier
 {
     public int $calls = 0;
+
     public function verify(string $token, string $clientIp): CaptchaVerification
     {
         ++$this->calls;
@@ -335,12 +382,18 @@ final class SuccessfulCaptchaVerifier implements CaptchaVerifier
 
 final class NeverDisposableChecker implements DisposableEmailChecker
 {
-    public function isDisposable(EmailAddress $email): bool { return false; }
+    public function isDisposable(EmailAddress $email): bool
+    {
+        return false;
+    }
 }
 
 final class AlwaysDisposableChecker implements DisposableEmailChecker
 {
-    public function isDisposable(EmailAddress $email): bool { return true; }
+    public function isDisposable(EmailAddress $email): bool
+    {
+        return true;
+    }
 }
 
 final class AllowingRateLimiter implements RegistrationRateLimiter
@@ -351,17 +404,21 @@ final class AllowingRateLimiter implements RegistrationRateLimiter
         int $limit,
         int $windowSeconds,
         DateTimeImmutable $now,
-    ): bool { return true; }
+    ): bool {
+        return true;
+    }
 }
 
 final class MemoryInviteStore implements RegistrationInviteStore
 {
     /** @var list<string> */
     public array $consumedCodes = [];
+
     public function issue(int $maxUses, ?DateTimeImmutable $expiresAt, DateTimeImmutable $now): string
     {
         return 'MEMORY_INVITE';
     }
+
     public function consume(string $code, DateTimeImmutable $now): bool
     {
         $this->consumedCodes[] = $code;
@@ -373,18 +430,22 @@ final class MemoryLegalAcceptanceStore implements LegalAcceptanceStore
 {
     /** @var list<array{string, string}> */
     public array $records = [];
+
     public function record(
         EntityId $userId,
         LegalDocumentRequirement $document,
         DateTimeImmutable $acceptedAt,
         string $clientFingerprint,
-    ): void { $this->records[] = [$userId->value(), $document->type]; }
+    ): void {
+        $this->records[] = [$userId->value(), $document->type];
+    }
 }
 
 final class MemoryEmailVerificationTokenStore implements EmailVerificationTokenStore
 {
     public ?UserStatus $issuedTarget = null;
     public ?EmailVerificationGrant $grant = null;
+
     public function issue(
         EntityId $userId,
         UserStatus $targetStatus,
@@ -394,28 +455,61 @@ final class MemoryEmailVerificationTokenStore implements EmailVerificationTokenS
         $this->issuedTarget = $targetStatus;
         return 'verification-token';
     }
-    public function consume(string $token, DateTimeImmutable $now): ?EmailVerificationGrant { return $this->grant; }
+
+    public function consume(string $token, DateTimeImmutable $now): ?EmailVerificationGrant
+    {
+        return $this->grant;
+    }
 }
 
 final class FrozenRegistrationClock implements Clock
 {
     private readonly DateTimeImmutable $time;
-    public function __construct(string $time) { $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC')); }
-    public function now(): DateTimeImmutable { return $this->time; }
+
+    public function __construct(string $time)
+    {
+        $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC'));
+    }
+
+    public function now(): DateTimeImmutable
+    {
+        return $this->time;
+    }
 }
 
 final class RegistrationSecretStore implements SecretStore
 {
     /** @param array<string, string> $values */
-    public function __construct(private array $values) {}
-    public function has(string $name): bool { return isset($this->values[$name]); }
-    public function get(string $name): ?string { return $this->values[$name] ?? null; }
-    public function set(string $name, string $value): void { $this->values[$name] = $value; }
+    public function __construct(private array $values)
+    {
+    }
+
+    public function has(string $name): bool
+    {
+        return isset($this->values[$name]);
+    }
+
+    public function get(string $name): ?string
+    {
+        return $this->values[$name] ?? null;
+    }
+
+    public function set(string $name, string $value): void
+    {
+        $this->values[$name] = $value;
+    }
+
     public function delete(string $name): bool
     {
-        if (!isset($this->values[$name])) { return false; }
+        if (!isset($this->values[$name])) {
+            return false;
+        }
         unset($this->values[$name]);
         return true;
     }
-    public function all(): array { return $this->values; }
+
+    public function all(): array
+    {
+        return $this->values;
+    }
 }
