@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.0-dev
 LAST_COMPLETED_MAIN_STEP = 02
-LAST_COMPLETED_SUBSTEP = 03.03
-CURRENT_STEP = 03.04
+LAST_COMPLETED_SUBSTEP = 03.04
+CURRENT_STEP = 03.05
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 03.04
+NEXT_STEP = 03.05
 ```
 
 ## Current position
@@ -22,9 +22,9 @@ NEXT_STEP = 03.04
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`
 - Current main step: `03`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.03`
-- Current sub-step: `03.04`
-- Persistent server installation required yet: `yes — 03.03 engine complete; first persistent install may begin once concrete core schema migrations for the tested install slice exist`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.04`
+- Current sub-step: `03.05`
+- Persistent server installation required yet: `available — 03.03 migration engine and 03.04 first concrete core infrastructure migration exist; a full application install still requires later application-schema migrations`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
