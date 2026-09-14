@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.release_delivery",
+  "roadmap_step": "01.06",
+  "versioning": {
+    "standard": "SemVer-2.0.0",
+    "version_file": "VERSION",
+    "current": "0.0.0-dev",
+    "prerelease_order": ["alpha", "beta", "rc"]
+  },
+  "required_status_fields": [
+    "PROJECT",
+    "PLAN_VERSION",
+    "CURRENT_VERSION",
+    "LAST_COMPLETED_MAIN_STEP",
+    "LAST_COMPLETED_SUBSTEP",
+    "CURRENT_STEP",
+    "LAST_COMMIT",
+    "BLOCKERS",
+    "NEXT_STEP"
+  ],
+  "release_artifacts": {
+    "full": "forwext-v{version}-full.zip",
+    "update": "forwext-v{version}-update.zip",
+    "both_required_for_releasable_versions": true
+  },
+  "update_contract": {
+    "default_source": "immediately_previous_supported_release",
+    "wrong_source_must_fail_before_destructive_changes": true,
+    "database_reset_for_normal_update": false,
+    "migrations_required_for_persistent_schema_or_data_changes": true,
+    "protected_site_data_must_not_be_blindly_overwritten": true,
+    "obsolete_application_files_require_manifest": true,
+    "post_update_rebuilds": true,
+    "post_update_health_check": true
+  },
+  "persistent_install_milestone": "03.03",
+  "continuation": {
+    "binding_plan": "forwext_master_gelistirme_plani_v2.txt",
+    "status_file": "PROJECT_STATUS.md",
+    "repository_branch": "main",
+    "verify_head_before_work": true,
+    "complete_substep_before_progress_advance": true,
+    "substep_commit_message_contains_step_id": true
+  },
+  "release_gate": [
+    "tests",
+    "migration_install_update_verification",
+    "version_consistency",
+    "dependency_license_notice_compliance",
+    "package_integrity",
+    "security",
+    "changelog"
+  ]
+}

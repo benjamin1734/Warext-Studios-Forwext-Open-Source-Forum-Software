@@ -2,9 +2,20 @@
 
 All notable Forwext development changes are recorded here.
 
-Forwext follows the binding project roadmap during pre-release development. Semantic version release entries will become authoritative once releasable packaging begins.
+Forwext follows the binding project roadmap during pre-release development. Semantic version release entries become authoritative once releasable packaging begins.
 
 ## Unreleased
+
+### 01.06 — Version, Delivery and Continuation Protocol
+
+- Adopted SemVer 2.0.0 for releasable Forwext versions and added root `VERSION` (`0.0.0-dev` development marker).
+- Defined changelog/version synchronization and prerelease naming rules.
+- Formalized the new-session continuation sequence and required progress fields.
+- Reaffirmed mandatory full + update ZIP artifacts for every releasable version once packaging tooling exists.
+- Defined exact source→target update validation, migration requirements, protected site data and post-update rebuild/health gates.
+- Corrected remaining legacy `03.02` persistent-install references to binding v2 step `03.03`.
+- Added a machine-readable release/delivery policy.
+- Completed Main Step 01 and advanced development to 02.01.
 
 ### 01.05 — License and Third-Party Dependency Policy
 
