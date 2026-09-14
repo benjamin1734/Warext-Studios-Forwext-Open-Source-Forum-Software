@@ -395,12 +395,35 @@ final class LoginMemorySessionStore implements SessionStore
 
 final class LoginDatabase implements TransactionalQueryExecutor
 {
-    public function execute(CompiledQuery $query): int { return 1; }
-    public function fetchOne(CompiledQuery $query): ?array { return null; }
-    public function fetchAll(CompiledQuery $query): array { return []; }
-    public function fetchValue(CompiledQuery $query): mixed { return null; }
-    public function inTransaction(): bool { return false; }
-    public function transaction(Closure $callback): mixed { return $callback($this); }
+    public function execute(CompiledQuery $query): int
+    {
+        return 1;
+    }
+
+    public function fetchOne(CompiledQuery $query): ?array
+    {
+        return null;
+    }
+
+    public function fetchAll(CompiledQuery $query): array
+    {
+        return [];
+    }
+
+    public function fetchValue(CompiledQuery $query): mixed
+    {
+        return null;
+    }
+
+    public function inTransaction(): bool
+    {
+        return false;
+    }
+
+    public function transaction(Closure $callback): mixed
+    {
+        return $callback($this);
+    }
 }
 
 final class LoginSecretStore implements SecretStore
@@ -409,21 +432,48 @@ final class LoginSecretStore implements SecretStore
     public function __construct(private array $values)
     {
     }
-    public function has(string $name): bool { return isset($this->values[$name]); }
-    public function get(string $name): ?string { return $this->values[$name] ?? null; }
-    public function set(string $name, string $value): void { $this->values[$name] = $value; }
+
+    public function has(string $name): bool
+    {
+        return isset($this->values[$name]);
+    }
+
+    public function get(string $name): ?string
+    {
+        return $this->values[$name] ?? null;
+    }
+
+    public function set(string $name, string $value): void
+    {
+        $this->values[$name] = $value;
+    }
+
     public function delete(string $name): bool
     {
-        if (!isset($this->values[$name])) { return false; }
+        if (!isset($this->values[$name])) {
+            return false;
+        }
         unset($this->values[$name]);
         return true;
     }
-    public function all(): array { return $this->values; }
+
+    public function all(): array
+    {
+        return $this->values;
+    }
 }
 
 final class LoginFrozenClock implements Clock
 {
     private readonly DateTimeImmutable $time;
-    public function __construct(string $time) { $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC')); }
-    public function now(): DateTimeImmutable { return $this->time; }
+
+    public function __construct(string $time)
+    {
+        $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC'));
+    }
+
+    public function now(): DateTimeImmutable
+    {
+        return $this->time;
+    }
 }
