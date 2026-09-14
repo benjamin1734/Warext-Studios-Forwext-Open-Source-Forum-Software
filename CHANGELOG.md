@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 02.01 — Monorepo / Repository Layout
+
+- Created every required top-level project boundary: `app`, `core`, `modules`, `addons`, `themes`, `resources`, `database`, `storage`, `public`, `frontend`, `packages`, `tests`, `docs` and `tools`.
+- Defined ownership and dependency-direction rules for core, first-party modules and third-party add-ons.
+- Established `public/` as the preferred HTTP document root and `storage/` as mutable update-protected runtime state.
+- Added repository/runtime ignore rules so local secrets, dependency working trees and mutable storage are not accidentally committed.
+- Added a machine-readable repository-layout contract for future validation/release tooling.
+
 ### 01.06 — Version, Delivery and Continuation Protocol
 
 - Adopted SemVer 2.0.0 for releasable Forwext versions and added root `VERSION` (`0.0.0-dev` development marker).

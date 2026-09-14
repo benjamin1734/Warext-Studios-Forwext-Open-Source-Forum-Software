@@ -1,0 +1,29 @@
+# Local/environment configuration
+.env
+.env.*
+!.env.example
+
+# PHP dependency working tree (release packaging vendors reviewed production deps separately)
+/vendor/
+
+# Frontend dependency/build working trees
+/frontend/node_modules/
+/frontend/.next/
+/frontend/dist/
+/packages/*/node_modules/
+/packages/*/dist/
+
+# Test/tool caches
+.phpunit.result.cache
+.phpunit.cache/
+.phpstan.cache/
+.psalm/cache/
+coverage/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime mutable storage is ignored by storage/.gitignore

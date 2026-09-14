@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.repository_layout",
+  "roadmap_step": "02.01",
+  "required_directories": [
+    "app",
+    "core",
+    "modules",
+    "addons",
+    "themes",
+    "resources",
+    "database",
+    "storage",
+    "public",
+    "frontend",
+    "packages",
+    "tests",
+    "docs",
+    "tools"
+  ],
+  "boundaries": {
+    "core_must_not_depend_on_specific_module": true,
+    "core_must_not_depend_on_addon": true,
+    "first_party_modules_directory": "modules",
+    "third_party_addons_directory": "addons",
+    "preferred_web_root": "public",
+    "mutable_runtime_root": "storage",
+    "native_php_frontend_first_class": true,
+    "modern_frontend_optional": true
+  },
+  "protected_from_normal_update_overwrite": ["storage", "site_generated_config", "user_uploads"],
+  "ignored_working_directories": ["vendor", "frontend/node_modules", "frontend/.next", "frontend/dist"]
+}
