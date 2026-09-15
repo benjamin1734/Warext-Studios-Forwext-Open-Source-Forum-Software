@@ -41,7 +41,7 @@ final readonly class DatabaseProfileUrlStore implements ProfileUrlStore
             return null;
         }
 
-        $userId = UserId::fromString($row['user_id']);
+        $userId = UserId::fromStored($row['user_id']);
         $current = ProfileSlug::fromString($row['current_slug']);
         $isCurrent = ($row['retired_at_utc'] ?? null) === null && $current->value() === $slug->value();
         return new ProfileUrlResolution($userId, $slug, $current, $isCurrent);
