@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 06.03
-CURRENT_STEP = 06.04
-LAST_COMMIT = 88931da6c23dc10978cf306c1bd07c9c1dcdd9a4
+LAST_COMPLETED_SUBSTEP = 06.04
+CURRENT_STEP = 06.05
+LAST_COMMIT = 43686017253047ad2a71ecfd5296b33ecc08d967
 BLOCKERS = none
-NEXT_STEP = 06.04 - Prefix/tag/custom fields
+NEXT_STEP = 06.05 - Poll system
 ```
 
 ## Current position
@@ -20,9 +20,9 @@ NEXT_STEP = 06.04 - Prefix/tag/custom fields
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.03` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.03`.
-- Current sub-step: `06.04 — Prefix/tag/custom fields`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.04` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.04`.
+- Current sub-step: `06.05 — Poll system`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - Permission system: `shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed`
@@ -30,12 +30,30 @@ NEXT_STEP = 06.04 - Prefix/tag/custom fields
 - Thread domain: `thread identity/lifecycle, locked/sticky/featured/moderated states, protected extensible thread-type registry, optimistic persistence and granular node permissions completed`
 - Post domain: `real first-post identity at position 1, create/edit/history/soft-delete/restore/approve/reject lifecycle, optimistic persistence, serialized per-thread positions, permission-aware services, authoritative derived counters and bounded pagination completed`
 - Thread publication: `canonical ThreadPublishingService wraps thread creation plus first-post creation in one outer database transaction so first-post failure can roll back the new thread`
-- Post permission profiles: `new_user/member/verified allow own edit/delete but deny edit-any/delete-any/restore/moderate; moderator/administrator allow all six post-management capabilities`
-- Installer migration integrity: `all current role/permission/forum/thread/post migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
+- Forum metadata: `prefix groups/prefix eligibility, tag policy/autocomplete, typed thread/forum custom fields, forum-scoped configuration, actor-bound own/any editing and atomic metadata replacement completed`
+- Metadata safe defaults: `unconfigured forums have tags disabled/new-tag creation disabled/max tags zero; custom field validation is typed and bounded without arbitrary executable regex/HTML/JS`
+- Installer migration integrity: `all current role/permission/forum/thread/post/metadata migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. Status/changelog-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 06.04
+
+- Added bounded prefix groups and thread prefixes with deterministic ordering, enable/disable state and explicit forum-group eligibility.
+- Added Unicode-capable tags with case-insensitive database identity, forum-level tag enable/new-tag/max-count policy and parameterized wildcard-safe autocomplete.
+- Added safe-default forum metadata configuration: missing configuration disables tags and new tag creation with a zero tag limit.
+- Added typed `thread` and `forum` custom fields supporting text, integer, boolean and allowlisted choice values with required/min/max validation and a 100000-byte text hard cap.
+- Explicitly avoided arbitrary administrator-supplied executable regex/PHP/HTML/JavaScript validation.
+- Added forum-specific enabled thread-field mappings and typed forum-level field values.
+- Added actor-bound `ThreadMetadataService`: own threads require `forum.thread.edit_own`, other users' threads require `forum.thread.edit_any`, with existing `forum.view` authorization preserved.
+- Added `ForumMetadataAdminService` behind global `acp.manage` for prefix, field-definition, forum-configuration and forum-field administration.
+- Added atomic metadata replacement for prefix/tag/custom-field relations and atomic forum configuration replacement.
+- Added tag-id dedup after database collation resolution so Unicode/case-equivalent names cannot create duplicate thread-tag PK inserts even when Mbstring is unavailable.
+- Added migration `20260915235957_forum_metadata` creating eleven normalized tables, fourteen foreign keys, two thread-edit permissions and ten starter-profile rules.
+- Registered the migration after post-domain persistence in the clean-install registry and extended installer-registry regression coverage.
+- Added domain, repository, service and migration tests plus architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
 
 ## Completed in 06.03
 
