@@ -7,6 +7,19 @@
   "inventory_status": "active",
   "components": [
     {
+      "name": "web-auth/webauthn-lib",
+      "version": "^5.3.9",
+      "source_url": "https://github.com/web-auth/webauthn-lib",
+      "spdx_license": "MIT",
+      "scope": "runtime",
+      "redistributed": true,
+      "notice_required": true,
+      "security_advisory_url": "https://github.com/web-auth/webauthn-lib/security",
+      "maintainer_status": "active",
+      "last_reviewed_at": "2026-09-15",
+      "approved_by": "Warext Studios / Forwext 04.04 WebAuthn security review"
+    },
+    {
       "name": "phpstan/phpstan",
       "version": "^2.2.14",
       "source_url": "https://github.com/phpstan/phpstan",
@@ -161,6 +174,7 @@
     "missing_required_notice_blocks_release": true,
     "untracked_redistributed_component_blocks_release": true,
     "unmitigated_known_critical_vulnerability_blocks_release": true,
-    "reviewed_version_must_match_packaged_version": true
+    "reviewed_version_must_match_packaged_version": true,
+    "composer_lock_required_for_release": true
   }
 }
