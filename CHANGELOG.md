@@ -6,6 +6,20 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.03 — Login, Session, Remember-Me and Recovery
+
+- Added Argon2id-preferred password hashing with bcrypt fallback, bounded password policy, dummy verification for unknown identities and rehash without credential-version churn.
+- Added transactional password credential persistence and integrated mandatory credential provisioning into password-based registration.
+- Added credential-version invalidation so real password changes/resets invalidate existing authenticated sessions and persistent login credentials.
+- Added 256-bit CSPRNG authentication sessions with fixation-safe rotation and hash-only database session identifiers; migration removes the legacy raw `session_id` column without rewriting historical migrations.
+- Added privacy-preserving device tracking and login history using HMAC fingerprints rather than raw IP addresses, submitted identifiers or User-Agent strings.
+- Added independent identity and network login throttle buckets: repeated attacks against one account and password spraying from one source are limited separately.
+- Added replay-aware rotating remember-me selector/validator token families with hash-only persistence and family revocation on stale-token reuse.
+- Added one-time hash-only password-reset and password-confirmation challenge tokens, with reset-driven credential-version increment and remember-token revocation.
+- Added remember-token session restoration, bounded authentication maintenance cleanup and generic enumeration-resistant public authentication failures.
+- Added versioned migration `20260914253000_authentication_runtime` for credentials, devices, login history, auth throttles, remember tokens and auth challenges.
+- Added authentication/session, login, remember/recovery, migration, maintenance and independent throttle tests.
+
 ### 04.02 — Registration, Email Verification and Anti-Abuse
 
 - Added safe-default registration modes: open, approval, invite-only and closed; fresh installations remain closed until policy/legal/CAPTCHA configuration is ready.
@@ -100,7 +114,7 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Added structured validator/violation/result/exception model plus composite validation.
 - Added immutable domain-event contract, aggregate event recording/release and synchronous in-process dispatcher.
 - Documented authorization, transaction, validation and durable-event-delivery boundaries so domain primitives do not become hidden security/infrastructure shortcuts.
-- Added unit tests for identity values, repository persistence/type safety, structured validation and event recording/dispatch.
+- Added unit tests for identity values, repository persistence/type safety, structured validation and domain-event release/dispatch behavior.
 
 ### 03.01 — Database Connection and Typed Query Builder
 
