@@ -9,6 +9,7 @@ use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
+use Forwext\Database\Migrations\Core\CreatePollTables;
 use Forwext\Database\Migrations\Core\CreatePostDomainTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
@@ -48,5 +49,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateThreadDomainTables::class, $classes);
         self::assertContains(CreatePostDomainTables::class, $classes);
         self::assertContains(CreateForumMetadataTables::class, $classes);
+        self::assertContains(CreatePollTables::class, $classes);
     }
 }
