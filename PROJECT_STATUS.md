@@ -24,7 +24,8 @@ NEXT_STEP = 04.05
 - Current main step: `04`
 - Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.04`
 - Current sub-step: `04.05`
-- Persistent server installation required yet: `available — browser installer now applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
+- Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
+- Installation packaging: `GitHub CI builds a vendor-inclusive cPanel ZIP after strict-types and PHPUnit checks`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
