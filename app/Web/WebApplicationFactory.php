@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Forwext\App\Web;
 
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
+use Forwext\App\Web\Profile\CustomProfileUrlHandler;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
 use Forwext\App\Web\Profile\ProfileMusicHandler;
+use Forwext\App\Web\Profile\ProfileUrlSettingsHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
@@ -18,6 +20,8 @@ use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
 use Forwext\Core\Http\HttpMethod;
+use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
+use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Profile\DatabaseProfileStore;
 use Forwext\Core\Profile\Music\BaselineProfileMusicPermissionResolver;
 use Forwext\Core\Profile\Music\DatabaseProfileMusicStore;
@@ -28,6 +32,10 @@ use Forwext\Core\Profile\ProfileDirectoryReader;
 use Forwext\Core\Profile\ProfileMediaKind;
 use Forwext\Core\Profile\ProfileMediaService;
 use Forwext\Core\Profile\ProfileService;
+use Forwext\Core\Profile\Url\BaselineProfileUrlPermissionResolver;
+use Forwext\Core\Profile\Url\DatabaseProfileUrlStore;
+use Forwext\Core\Profile\Url\ProfileSlugPolicy;
+use Forwext\Core\Profile\Url\ProfileUrlService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\PathTemplate;
 use Forwext\Core\Routing\Route;
@@ -36,6 +44,7 @@ use Forwext\Core\Routing\Router;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
 use Forwext\Core\Security\Secret\SecretCipher;
+use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Session\DatabaseSessionStore;
 use Forwext\Core\Session\FileSessionStore;
 use Forwext\Core\Session\SessionStore;
@@ -86,7 +95,24 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_music.upload_max_bytes'),
             $config->requireInt('profile_music.default_volume'),
         );
+        $profileUrlService = new ProfileUrlService(
+            new DatabaseProfileUrlStore($database),
+            $accessPolicy,
+            new BaselineProfileUrlPermissionResolver($config->requireBool('profile_url.permissions.use')),
+            new ProfileSlugPolicy($this->profileUrlReservedNames($config)),
+            $config->requireInt('profile_url.minimum_change_interval_seconds'),
+            $config->requireInt('profile_url.change_window_seconds'),
+            $config->requireInt('profile_url.maximum_changes_per_window'),
+        );
         $basePath = $this->basePath($config);
+        $profilePage = new ProfileViewHandler(
+            $users,
+            $profileService,
+            $accessPolicy,
+            $viewerResolver,
+            $basePath,
+            $musicService,
+        );
 
         $routes = new RouteCollection();
         $routes->add(new Route(
@@ -105,14 +131,7 @@ final readonly class WebApplicationFactory
             'members.profile',
             [HttpMethod::Get],
             new PathTemplate('/members/{username}'),
-            new ProfileViewHandler(
-                $users,
-                $profileService,
-                $accessPolicy,
-                $viewerResolver,
-                $basePath,
-                $musicService,
-            ),
+            $profilePage,
         ));
         $routes->add(new Route(
             'members.avatar',
@@ -131,6 +150,26 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/members/{username}/music'),
             new ProfileMusicHandler($users, $musicService, $viewerResolver),
+        ));
+        $routes->add(new Route(
+            'profiles.custom',
+            [HttpMethod::Get],
+            new PathTemplate('/u/{slug}'),
+            new CustomProfileUrlHandler(
+                $profileUrlService,
+                $users,
+                $profileService,
+                $viewerResolver,
+                $profilePage,
+                $basePath,
+            ),
+        ));
+        $routes->add(new Route(
+            'account.profile-url',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/profile-url'),
+            new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath),
+            [$this->profileUrlCsrfMiddleware($config)],
         ));
 
         return new Router($routes, $basePath);
@@ -158,13 +197,9 @@ final readonly class WebApplicationFactory
 
     private function database(ConfigRepository $config): DatabaseConnection
     {
-        $keyProvider = new EnvironmentOrFileSecretKeyProvider(
-            $this->projectPath($config->requireString('security.master_key_file')),
-            $config->requireString('security.master_key_environment'),
-        );
         $secrets = new EncryptedFileSecretStore(
             $this->projectPath($config->requireString('security.secret_store_path')),
-            new SecretCipher($keyProvider->load()),
+            new SecretCipher($this->masterKey($config)),
         );
         $password = $secrets->get($config->requireString('database.password_secret'));
         if ($password === null) {
@@ -186,6 +221,34 @@ final readonly class WebApplicationFactory
             $config->requireInt('database.connect_timeout_seconds'),
             $socket,
         ));
+    }
+
+    private function profileUrlCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        $master = $this->masterKey($config);
+        $derived = hash_hmac(
+            'sha256',
+            'forwext.csrf.profile-url.v1',
+            $master->bytesForCrypto(),
+            true,
+        );
+        $csrfKey = SecretKey::fromBase64(base64_encode($derived));
+
+        return new CsrfMiddleware(
+            new CsrfTokenManager($csrfKey, $config->requireInt('http_security.csrf.token_ttl_seconds')),
+            'profile-url',
+            $config->requireString('http_security.csrf.cookie_name'),
+            true,
+            $config->requireInt('http_security.csrf.cookie_max_age'),
+        );
+    }
+
+    private function masterKey(ConfigRepository $config): SecretKey
+    {
+        return (new EnvironmentOrFileSecretKeyProvider(
+            $this->projectPath($config->requireString('security.master_key_file')),
+            $config->requireString('security.master_key_environment'),
+        ))->load();
     }
 
     private function sessionStore(ConfigRepository $config, DatabaseConnection $database): SessionStore
@@ -231,6 +294,21 @@ final readonly class WebApplicationFactory
             }
         }
         return new ProfileMusicExternalPolicy($hosts);
+    }
+
+    /** @return list<string> */
+    private function profileUrlReservedNames(ConfigRepository $config): array
+    {
+        $names = $config->get('profile_url.reserved_names', []);
+        if (!is_array($names) || !array_is_list($names)) {
+            throw new RuntimeException('Reserved custom profile URL names must be a list.');
+        }
+        foreach ($names as $name) {
+            if (!is_string($name)) {
+                throw new RuntimeException('Reserved custom profile URL names contain an invalid entry.');
+            }
+        }
+        return $names;
     }
 
     private function basePath(ConfigRepository $config): BasePath
