@@ -1,0 +1,69 @@
+name: Build installation package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+
+      - name: Enforce strict types
+        run: php tools/quality/check-strict-types.php
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Prepare production vendor tree
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Build cPanel package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION)"
+          ROOT="forwext-${VERSION}"
+          mkdir -p "dist/${ROOT}"
+          rsync -a ./ "dist/${ROOT}/" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'dist/' \
+            --exclude 'tests/' \
+            --exclude 'tools/' \
+            --exclude 'node_modules/'
+          (
+            cd dist
+            zip -rq "forwext-${VERSION}-install.zip" "${ROOT}"
+            sha256sum "forwext-${VERSION}-install.zip" > "forwext-${VERSION}-install.zip.sha256"
+          )
+
+      - name: Upload installation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forwext-install-package
+          path: |
+            dist/forwext-*-install.zip
+            dist/forwext-*-install.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
