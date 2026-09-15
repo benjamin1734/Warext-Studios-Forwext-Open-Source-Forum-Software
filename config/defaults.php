@@ -124,6 +124,24 @@ return [
         ],
         'fingerprint_secret_name' => 'authentication.fingerprint_key',
     ],
+    'mfa' => [
+        'challenge_ttl_seconds' => 300,
+        'trusted_device_ttl_seconds' => 2592000,
+        'recovery_code_count' => 10,
+        'totp' => [
+            'issuer' => 'Forwext',
+            'period_seconds' => 30,
+            'window' => 1,
+        ],
+        'webauthn' => [
+            'rp_name' => 'Forwext',
+            'rp_id' => null,
+            'host' => null,
+            'ceremony_ttl_seconds' => 300,
+            'user_verification' => 'required',
+            'attestation' => 'none',
+        ],
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [
