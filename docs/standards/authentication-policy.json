@@ -31,8 +31,11 @@
   },
   "login": {
     "generic_public_failure": "Authentication failed.",
-    "default_attempt_limit": 10,
+    "identity_attempt_limit": 10,
+    "network_attempt_limit": 50,
     "default_window_seconds": 900,
+    "independent_identity_and_network_buckets": true,
+    "bucket_key": "sha256(scope:hmac-fingerprint)",
     "fingerprint": "hmac-sha256",
     "fingerprint_secret_store_key": "authentication.fingerprint_key"
   },

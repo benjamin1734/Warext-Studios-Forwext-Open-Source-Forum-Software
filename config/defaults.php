@@ -112,7 +112,8 @@ return [
             'ttl_seconds' => 2592000,
         ],
         'login_rate_limit' => [
-            'attempts' => 10,
+            'identity_attempts' => 10,
+            'network_attempts' => 50,
             'window_seconds' => 900,
         ],
         'password_reset' => [

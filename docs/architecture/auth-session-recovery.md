@@ -46,9 +46,11 @@ OAuth/passwordless account creation in later roadmap steps may use a different a
 
 `AuthenticationService` accepts username or email identifiers, but all public credential/account-state failures use the same `Authentication failed.` exception. Internal login-history outcomes distinguish invalid credentials, unavailable accounts and rate-limited attempts without exposing that distinction to the caller.
 
-Login-specific rate limiting uses a hash derived from HMAC-protected identity and IP fingerprints. Raw submitted identifiers, raw IP addresses and raw User-Agent strings are not stored in login history/device tables.
+Login throttling uses **two independent fixed-window buckets**. The identity bucket is derived from the HMAC-protected submitted identifier and limits repeated attacks against one account even when source IPs change. The network bucket is derived independently from the HMAC-protected client IP and limits password spraying from one source across many account names. Both scoped bucket keys are SHA-256 hashes; neither raw identifier nor raw IP is persisted in the rate-limit table.
 
-Only `active` accounts can authenticate normally.
+Default limits are 10 attempts per identity and 50 attempts per network fingerprint in 900 seconds. Both buckets are consumed on every login attempt so a rejected identity bucket does not prevent the network-abuse signal from advancing.
+
+Raw submitted identifiers, raw IP addresses and raw User-Agent strings are not stored in login history/device tables. Only `active` accounts can authenticate normally.
 
 ## Sessions and fixation protection
 
@@ -108,4 +110,4 @@ The migration is idempotent and intentionally non-transactional because MySQL/Ma
 
 ## Acceptance status
 
-04.03 is complete when password policy/hash/rehash, password-registration credential persistence, generic enumeration-resistant login, session establishment/rotation, device/history persistence, rotating replay-aware remember tokens, reset/confirmation, credential-version invalidation, hash-only token/session persistence, migration and relevant tests are all present without critical placeholders.
+04.03 is complete when password policy/hash/rehash, password-registration credential persistence, generic enumeration-resistant login, independent identity/network throttling, session establishment/rotation, device/history persistence, rotating replay-aware remember tokens, reset/confirmation, credential-version invalidation, hash-only token/session persistence, migration and relevant tests are all present without critical placeholders.
