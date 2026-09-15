@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 05.01
-CURRENT_STEP = 05.02
-LAST_COMMIT = 48167dad699ecc8dcd19c9fdb8deeeee535dd0c4
+LAST_COMPLETED_SUBSTEP = 05.02
+CURRENT_STEP = 05.03
+LAST_COMMIT = 389e367c023c8a9ef0775528d02288b9965b882e
 BLOCKERS = none
-NEXT_STEP = 05.02 - Global and node permission engine
+NEXT_STEP = 05.03 - Permission templates and ready-made profiles
 ```
 
 ## Current position
@@ -20,9 +20,9 @@ NEXT_STEP = 05.02 - Global and node permission engine
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01`.
-- Current sub-step: `05.02 — Global and node permission engine`
+- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` and `05.02` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.02`.
+- Current sub-step: `05.03 — Permission templates and ready-made profiles`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
@@ -33,10 +33,23 @@ NEXT_STEP = 05.02 - Global and node permission engine
 - Custom profile URLs: `canonical /u/{slug} routes, configurable reserved names, permanent non-reusable historical claims, privacy-aware 308 redirects, change cooldown/window limits, race-safe uniqueness and CSRF-protected owner settings completed`
 - Custom profile URL permission bridge: `05.x shared role/group engine can replace ProfileUrlPermissionResolver without rewriting URL persistence/service/HTTP handlers`
 - Role/user-group model: `primary and secondary groups are separate from roles; custom/staff/system roles, protected system roles, stable identifiers, normalized persisted memberships/assignments and fail-closed foreign-key constraints completed`
+- Permission engine: `typed flag/numeric definitions, global + node rules, allow/deny/inherit, direct-user overrides, deterministic precedence, restrictive numeric aggregation, parameterized persistence and decision trace completed`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. The status-only commit that updates this file is intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 05.02
+
+- Added typed permission keys, flag/numeric definitions and `allow` / `deny` / `inherit` rule effects.
+- Added global and generic node/forum-scoped rule persistence without prematurely coupling 05.02 to a forum table that is introduced later.
+- Added deterministic precedence: node user → global user → node group/role membership → global group/role membership → implicit deny.
+- Kept direct per-user overrides stronger than membership policy while preserving node-specific user overrides above global user overrides.
+- Added same-tier deny-over-allow semantics, inheritance fall-through and most-restrictive numeric aggregation for combined group/role limits.
+- Added fail-closed behavior for unknown permissions, malformed rules and repository failures without leaking internal exception details.
+- Added parameterized database rule lookup for user/group/role/node identifiers and a machine-readable decision trace for the later permission analyzer.
+- Added versioned migration `20260915210000_permission_engine`, domain/database/migration tests and architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
 
 ## Completed in 05.01
 
