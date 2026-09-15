@@ -19,6 +19,7 @@ use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
+use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
 use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
@@ -46,6 +47,7 @@ final class CoreMigrationRegistry
             new CreateRoleAppearanceTable(),
             new RegisterFirstPartyPermissionNamespaces(),
             new CreateForumNodeTables(),
+            new CreateThreadDomainTables(),
         ];
     }
 }
