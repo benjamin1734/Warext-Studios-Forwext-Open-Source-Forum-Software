@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 05.04
-CURRENT_STEP = 05.05
-LAST_COMMIT = c75d33ff00a190d20b95705e70bcb536bcc0a1ef
+LAST_COMPLETED_SUBSTEP = 05.05
+CURRENT_STEP = 05.06
+LAST_COMMIT = 79abe8c163bc6514a3b3a6d007789ce4b4cb0c60
 BLOCKERS = none
-NEXT_STEP = 05.05 - Role appearance and banner system
+NEXT_STEP = 05.06 - Content and system permission namespaces
 ```
 
 ## Current position
@@ -20,9 +20,9 @@ NEXT_STEP = 05.05 - Role appearance and banner system
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` through `05.04` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.04`.
-- Current sub-step: `05.05 — Role appearance and banner system`
+- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` through `05.05` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.05`.
+- Current sub-step: `05.06 — Content and system permission namespaces`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
@@ -36,10 +36,24 @@ NEXT_STEP = 05.05 - Role appearance and banner system
 - Permission engine: `typed flag/numeric definitions, global + node rules, allow/deny/inherit, direct-user overrides, deterministic precedence, restrictive numeric aggregation, parameterized persistence and decision trace completed`
 - Permission templates: `five protected starter profiles, typed template rules, transactional one-click apply, custom-rule preservation and safe core permission seed completed`
 - Permission analyzer: `human-readable decision summaries, ordered precedence visualization, inheritance/fail-closed visibility, numeric-limit explanation and escaped native PHP HTML renderer completed`
+- Role appearance: `safe colors/gradients, built-in icons/patterns/animations, banner text/color, role priority metadata, mobile/profile/post visibility, parameterized persistence and reduced-motion native CSS completed`
+- Installer migration integrity: `05.01–05.05 migrations are explicitly registered and registry tests prevent silent omission from clean installs`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. The status-only commit that updates this file is intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 05.05
+
+- Added a dedicated role-presentation model that remains separate from authorization and cannot grant, deny or alter permissions.
+- Added canonical six-digit role colors, optional two-color gradients with bounded angles, six built-in icons, five patterns and five animations without accepting arbitrary CSS/HTML/URLs.
+- Added optional banner text/color plus independent mobile, profile and post visibility controls while keeping role name and priority authoritative in the existing `Role` model.
+- Added one-to-one `forwext_role_appearances` persistence with cascading cleanup when a role is deleted and parameterized repository reads/upserts.
+- Added an escaped native PHP renderer that rejects role/appearance identity mismatches and emits stable safe classes/CSS variables only from validated values.
+- Added responsive native CSS, built-in icon glyphs/patterns/animations and `prefers-reduced-motion` handling.
+- Added migration `20260915230000_role_appearance`, installer registry integration, domain/repository/renderer/migration tests and architecture documentation.
+- Fixed an installer registry regression discovered during 05.05 review: the already-completed 05.01 role/group, 05.02 permission engine and 05.03 permission-template migrations are now explicitly registered, with a regression test that requires their presence.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
 
 ## Completed in 05.04
 
