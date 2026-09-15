@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "roadmap_step": "04.07",
+  "permissions": [
+    "profile.music.use",
+    "profile.music.upload",
+    "profile.music.external",
+    "profile.music.autoplay",
+    "profile.music.moderate"
+  ],
+  "baseline": {
+    "use": true,
+    "upload": true,
+    "external": false,
+    "autoplay": true,
+    "moderate": false,
+    "shared_role_engine_integration": "ProfileMusicPermissionResolver"
+  },
+  "upload": {
+    "storage_visibility": "private",
+    "default_max_bytes": 20971520,
+    "hard_max_bytes": 104857600,
+    "accepted_formats": ["mp3", "ogg", "wav", "m4a"],
+    "content_address": "sha256",
+    "direct_public_url": false,
+    "single_range_delivery": true
+  },
+  "external": {
+    "enabled_by_default": false,
+    "scheme": "https",
+    "default_port_only": true,
+    "credentials_allowed": false,
+    "fragments_allowed": false,
+    "ip_literals_allowed": false,
+    "localhost_allowed": false,
+    "host_matching": "exact",
+    "wildcards": false,
+    "csp_media_src_from_allowlist": true,
+    "proxy_external_audio": false
+  },
+  "player": {
+    "native_audio_controls": true,
+    "html_autoplay_attribute": false,
+    "programmatic_autoplay_requires_permission": true,
+    "programmatic_autoplay_starts_muted": true,
+    "automatic_unmute": false,
+    "coarse_pointer_autoplay": false,
+    "volume_range": [0, 100]
+  },
+  "moderation": {
+    "block_disables_playback": true,
+    "append_only_history": true,
+    "actor_and_utc_timestamp_recorded": true,
+    "bounded_reason_code": true
+  },
+  "privacy": {
+    "visibility": ["public", "members", "private"],
+    "private_media_cache": "private, no-store",
+    "hidden_upload_response": 404,
+    "revoked_external_host": "hide_player"
+  },
+  "runtime": {
+    "node_required": false,
+    "redis_required": false,
+    "daemon_required": false,
+    "ffmpeg_required": false
+  }
+}
