@@ -6,12 +6,12 @@ This file is the canonical human-readable development pointer for continuing For
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
-LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 06.07
-CURRENT_STEP = 06.08
-LAST_COMMIT = 1d7f30acba458dd86a995d091511713c85e891c4
+LAST_COMPLETED_MAIN_STEP = 06
+LAST_COMPLETED_SUBSTEP = 06.08
+CURRENT_STEP = 07.01
+LAST_COMMIT = a1d1098c396b2ffc074d00deee54a1ed778ebafb
 BLOCKERS = none
-NEXT_STEP = 06.08 - Thread/post moderation operations
+NEXT_STEP = 07.01 - Attachment and image pipeline
 ```
 
 ## Current position
@@ -20,24 +20,38 @@ NEXT_STEP = 06.08 - Thread/post moderation operations
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.07` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.07`.
-- Current sub-step: `06.08 — Thread/post moderation operations`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.08`.
+- Current sub-step: `07.01 — Attachment and image pipeline`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - Permission system: `shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed`
 - Forum node hierarchy: `category/forum/subforum/page/link nodes, ordering, breadcrumbs, visibility, settings, transaction-safe persistence and node-scoped forum.view authorization completed`
-- Thread domain: `identity/lifecycle, locked/sticky/featured/moderated states, protected extensible thread types, optimistic persistence and granular node permissions completed`
-- Post domain: `real first-post identity at position 1, create/edit/history/soft-delete/restore/approve/reject lifecycle, optimistic persistence, serialized per-thread positions, authoritative derived counters and bounded pagination completed`
-- Forum metadata: `prefix groups/prefix eligibility, tag policy/autocomplete, typed thread/forum custom fields, forum-scoped configuration, actor-bound own/any editing and atomic metadata replacement completed`
-- Poll system: `single/multiple choice, vote changes, open/secret voters, duration/participant limits, actor-bound permissions and result visibility policies completed`
-- Discussion state: `revision-safe autosave drafts, monotonic thread/forum read state, unread resolution, watched forums/threads and subscription preferences completed`
+- Thread/post system: `thread types/lifecycle, first-post identity, post history, moderation state, soft-delete/restore, counters, pagination, metadata, polls, drafts/read/watch state and rich editor completed`
 - Rich editor: `safe bounded BBCode renderer, authenticated preview and mention lookup, stable-id mentions, iframe-free safe embeds, reusable thread/post editor UI and live character/word/byte counters completed`
-- Installer migration integrity: `all current role/permission/forum/thread/post/metadata/poll/discussion-state migrations are explicitly registered and regression-tested`
+- Content moderation: `audited move/copy/merge/split/lock/sticky/approve/delete/restore/bulk operations, soft-delete/merge tombstones and actor-bound permission enforcement completed`
+- Installer migration integrity: `all current role/permission/forum/thread/post/metadata/poll/discussion-state/content-moderation migrations are explicitly registered and regression-tested`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 06.08
+
+- Added actor-bound thread/post moderation operations for move, copy, merge, split, lock/unlock, sticky/unsticky, approve, soft-delete, restore and bounded bulk actions.
+- Reused existing granular thread/post permissions where they already existed and added seven structural permissions for move/copy/merge/split/thread delete/thread restore/bulk moderation.
+- Required structural permissions across every affected source/target forum and required bulk permission together with the underlying action permission, preventing bulk-action privilege escalation.
+- Added soft-delete and merge-tombstone thread lifecycle columns; normal thread lookup/list/update paths now exclude inactive tombstones so stale application objects cannot resurrect moderated content.
+- Added transaction-safe structural operations with deterministic row locking, monotonic post re-positioning and first-post invariants.
+- Added split-time read-watermark remapping using the real `last_read_post_position` schema so compacting source post positions cannot mark newer content as already read.
+- Copy creates new thread/post identities and deliberately copies only core content, not destination-policy-sensitive metadata, polls or private watch/read state.
+- Merge preserves source thread identities as soft-deleted `merged_into_thread_id` tombstones instead of hard-deleting their historical identity.
+- Added append-only forum moderation audit events with authenticated actor, action, target, forum, bounded reason code, request/correlation id, curated before/after state and UTC timestamp.
+- Audit append is required inside the same mutation transaction; audit persistence failure therefore prevents the moderation mutation from committing.
+- Added migration `20260916000000_content_moderation`, seven permission definitions and a complete 35-rule five-profile starter matrix.
+- Added domain, service, repository, normal-thread visibility, migration and installer-registry tests plus architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
+- Completed Main Step 06 and advanced the roadmap to `07.01 — Attachment and image pipeline`.
 
 ## Completed in 06.07
 
