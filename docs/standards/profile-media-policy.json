@@ -15,16 +15,35 @@
     "avatar_max_dimensions": [4096, 4096],
     "banner_max_dimensions": [8192, 4096],
     "content_address": "sha256",
-    "svg_allowed": false
+    "svg_allowed": false,
+    "direct_public_url": false,
+    "delivery_cache_control": "private, no-store"
+  },
+  "web": {
+    "authentication_session_cookie": "__Host-forwext_session",
+    "viewer_identity_source": "validated_auth_session_only",
+    "query_or_form_identity_override": false,
+    "directory_visibility": "public_profiles_only",
+    "hidden_profile_status": 404,
+    "hidden_media_status": 404,
+    "native_routes": [
+      "/members",
+      "/members/{username}",
+      "/members/{username}/avatar",
+      "/members/{username}/banner"
+    ]
   },
   "rendering": {
     "about_is_plain_text": true,
-    "escape_user_content": true
+    "escape_user_content": true,
+    "social_links_require_https": true,
+    "social_link_rel": "nofollow noopener noreferrer"
   },
   "runtime": {
     "node_required": false,
     "redis_required": false,
     "daemon_required": false,
-    "image_extension_required": false
+    "image_extension_required": false,
+    "stock_storage_driver": "local_private"
   }
 }

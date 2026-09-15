@@ -5,13 +5,13 @@ This file is the canonical human-readable development pointer for continuing For
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.3-dev
+CURRENT_VERSION = 0.0.4-dev
 LAST_COMPLETED_MAIN_STEP = 03
-LAST_COMPLETED_SUBSTEP = 04.05
-CURRENT_STEP = 04.06
+LAST_COMPLETED_SUBSTEP = 04.06
+CURRENT_STEP = 04.07
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 04.06
+NEXT_STEP = 04.07
 ```
 
 ## Current position
@@ -22,11 +22,13 @@ NEXT_STEP = 04.06
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`
 - Current main step: `04`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.05`
-- Current sub-step: `04.06`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.06`
+- Current sub-step: `04.07`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel install/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
+- Profile/media: `persisted avatar + banner + about + social links + tab preferences, owner-safe visibility policy, private media storage and native PHP member/profile/media routes completed`
+- Profile web privacy: `viewer identity derives only from validated authentication sessions; hidden profiles/media fail closed as 404 and private media is never exposed through a direct public-storage URL`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
