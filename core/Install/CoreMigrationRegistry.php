@@ -10,9 +10,12 @@ use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
+use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
+use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
+use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
@@ -34,6 +37,9 @@ final class CoreMigrationRegistry
             new CreateUserProfileMediaTables(),
             new CreateProfileMusicTables(),
             new CreateCustomProfileUrlTables(),
+            new CreateRoleGroupTables(),
+            new CreatePermissionEngineTables(),
+            new CreatePermissionTemplateTables(),
         ];
     }
 }

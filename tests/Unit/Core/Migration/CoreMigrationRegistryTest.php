@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Migration;
 
 use Forwext\Core\Install\CoreMigrationRegistry;
+use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
+use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
+use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use PHPUnit\Framework\TestCase;
 
 final class CoreMigrationRegistryTest extends TestCase
@@ -23,5 +26,17 @@ final class CoreMigrationRegistryTest extends TestCase
         $sorted = $ids;
         sort($sorted, SORT_STRING);
         self::assertSame($sorted, $ids, 'Core migrations must be registered in chronological id order.');
+    }
+
+    public function testInstallerIncludesCurrentRoleAndPermissionMigrations(): void
+    {
+        $classes = array_map(
+            static fn (object $migration): string => $migration::class,
+            CoreMigrationRegistry::all(),
+        );
+
+        self::assertContains(CreateRoleGroupTables::class, $classes);
+        self::assertContains(CreatePermissionEngineTables::class, $classes);
+        self::assertContains(CreatePermissionTemplateTables::class, $classes);
     }
 }
