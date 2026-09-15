@@ -6,6 +6,36 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 06.01 — Node, Category and Forum Hierarchy
+
+- Added first-class category, forum, page and link nodes with opaque 128-bit ids and globally unique canonical slugs.
+- Added true subforum support while keeping page/link nodes as hierarchy leaves.
+- Added deterministic sibling ordering, root-to-current breadcrumbs and bounded hierarchy validation for orphan parents, duplicate ids/slugs, illegal leaf parents, cycles and excessive depth.
+- Added listed, unlisted and disabled visibility with ancestor propagation while keeping visibility strictly separate from authorization.
+- Added node-scoped `forum.view` authorization through the shared actor-bound permission gate; disabled node chains fail closed before permission lookup.
+- Added forum settings for thread/reply policy, approval policy, default sorting and threads-per-page without prematurely implementing thread/post tables.
+- Added safe page/link payload validation, including credential-free HTTPS-only external links and bounded page source text.
+- Added transactional database persistence with row-locked hierarchy revalidation and child-aware deletion refusal.
+- Added migration `20260915235930_forum_nodes`, installer registry coverage, domain/repository/authorization/migration tests and architecture documentation.
+- GitHub CI passed PHP 8.4 and PHP 8.5 PHPUnit, strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+
+### 05.07 — Permission Security Test Matrix
+
+- Added actor-bound `PermissionGate` so UI visibility and backend enforcement use the same trusted authenticated actor and shared authorization decision.
+- Added generic permission-denial exceptions without leaking repository/provider internals.
+- Added mandatory IDOR/BOLA, moderator/admin bypass, multi-role deny, inheritance, node/global precedence, numeric-limit and UI/backend parity regression tests.
+- Kept the matrix inside the standard PHPUnit tree so permission regressions block both PHP 8.4/8.5 CI and release package production.
+- Added permission-security documentation and the extension rule for future protected first-party/add-on authorization shapes.
+
+### 05.06 — Content and System Permission Namespaces
+
+- Registered 83 typed first-party permission definitions across 28 namespaces spanning forum, moderation, independent audit, ACP, profile, support, FAQ, bug reports, portfolio, invite/referral, AI, spellcheck, user-content management, freshness, giveaway, Easter Egg, trophies, promotions/rewards, marketplace, payments, subscriptions, ads/notices, analytics, appearance and API surfaces.
+- Added shared `PermissionAuthorizer` and persisted user-access assignment loading for first-party runtime integration.
+- Replaced temporary profile music and custom-profile-URL authorization baselines with shared-engine resolvers while preserving their domain interfaces.
+- Added a narrow compatibility group only for real pre-05.x users missing persisted primary-group assignments; it grants no new staff/ACP/marketplace/etc. capabilities.
+- Added migration `20260915235900_permission_namespaces`, starter-template bridge rules, installer registration, catalog/assignment/authorizer/runtime/migration tests and architecture documentation.
+- Fixed the initially invalid hour-24 migration timestamp after CI rejected it; the final migration id is valid and chronological.
+
 ### 05.05 — Role Appearance and Banner System
 
 - Added a dedicated role-presentation model that remains separate from authorization and cannot grant, deny or alter permissions.
