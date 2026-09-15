@@ -23,7 +23,7 @@ final class PermissionNamespaceMigrationTest extends TestCase
         $migration->up(new MigrationContext($database));
 
         $catalogCount = count(FirstPartyPermissionCatalog::entries());
-        self::assertSame('20260915240000_permission_namespaces', $migration->id()->value());
+        self::assertSame('20260915235900_permission_namespaces', $migration->id()->value());
         self::assertCount($catalogCount + 6 + 30, $database->queries);
 
         $catalogKeys = [];

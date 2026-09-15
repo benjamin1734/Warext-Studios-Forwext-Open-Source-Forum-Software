@@ -88,7 +88,7 @@ The five built-in permission templates receive equivalent profile rules so apply
 
 ## Persistence and installation
 
-Migration `20260915240000_permission_namespaces`:
+Migration `20260915235900_permission_namespaces`:
 
 - idempotently upserts all 83 first-party permission definitions into `forwext_permissions`;
 - seeds only the six narrow `system:unassigned` compatibility rules;

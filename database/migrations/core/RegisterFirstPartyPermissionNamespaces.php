@@ -26,7 +26,7 @@ final readonly class RegisterFirstPartyPermissionNamespaces implements Migration
 
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260915240000_permission_namespaces');
+        return MigrationId::fromString('20260915235900_permission_namespaces');
     }
 
     public function owner(): MigrationOwner
