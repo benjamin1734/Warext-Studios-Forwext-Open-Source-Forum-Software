@@ -178,10 +178,8 @@ jobs:
           from __future__ import annotations
 
           import hashlib
-          import json
           import os
           import shutil
-          from datetime import datetime, timezone
           from pathlib import Path
 
           old_root = Path(os.environ["OLD_ROOT"])
@@ -208,7 +206,6 @@ jobs:
                   result[relative] = {
                       "path": path,
                       "sha256": sha256(path),
-                      "size": path.stat().st_size,
                   }
               return result
 
@@ -216,7 +213,7 @@ jobs:
           new_files = inventory(new_root)
           update_root.mkdir(parents=True, exist_ok=True)
 
-          changes: list[dict[str, object]] = []
+          changed = 0
           for relative, metadata in new_files.items():
               old_metadata = old_files.get(relative)
               if old_metadata is not None and old_metadata["sha256"] == metadata["sha256"]:
@@ -225,45 +222,14 @@ jobs:
               destination = update_root / relative
               destination.parent.mkdir(parents=True, exist_ok=True)
               shutil.copy2(metadata["path"], destination)
-              changes.append(
-                  {
-                      "path": relative,
-                      "operation": "add" if old_metadata is None else "replace",
-                      "sha256": metadata["sha256"],
-                      "size": metadata["size"],
-                  }
-              )
+              changed += 1
 
           deleted = sorted(set(old_files) - set(new_files))
-          manifest = {
-              "schema": 1,
-              "product": "Forwext",
-              "from_version": from_version,
-              "to_version": to_version,
-              "generated_at": datetime.now(timezone.utc).isoformat(),
-              "files": changes,
-              "delete": deleted,
-          }
-          (update_root / ".forwext-update.json").write_text(
-              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
-              encoding="utf-8",
-          )
-          (update_root / "UPDATE-DELETE.txt").write_text(
-              ("\n".join(deleted) + "\n") if deleted else "No packaged files require deletion.\n",
-              encoding="utf-8",
-          )
-          (update_root / "UPDATE-README.txt").write_text(
-              f"Forwext update package\n"
-              f"From: {from_version}\n"
-              f"To:   {to_version}\n\n"
-              "Extract this ZIP directly over the existing Forwext site root.\n"
-              "Only files added or changed between the two tested release packages are included.\n"
-              "Files listed in UPDATE-DELETE.txt are obsolete packaged files and must be removed by the updater/manual cleanup.\n"
-              "User-created files that were never part of the previous release package are not included in the delete list.\n",
-              encoding="utf-8",
-          )
-
-          print(f"Update from {from_version} to {to_version}: {len(changes)} add/replace, {len(deleted)} delete")
+          print(f"Update from {from_version} to {to_version}: {changed} add/replace, {len(deleted)} delete")
+          if deleted:
+              print("Deleted packaged files (report to the user; do not add helper files to the ZIP):")
+              for relative in deleted:
+                  print(f"DELETE: {relative}")
           PY
 
           (
@@ -314,7 +280,8 @@ jobs:
           - Production dependencies are resolved separately against a PHP 8.4.0 platform baseline
           - Full cPanel installation package: \`forwext-${VERSION}-install.zip\`
           - Differential update package from ${PREVIOUS_VERSION}: \`forwext-${VERSION}-update.zip\`
-          - Update ZIP contains only added/changed packaged files plus a deletion manifest
+          - Update ZIP contains only real added/changed site files; no update/delete/readme/manifest helper files are injected
+          - Any obsolete packaged files are reported separately and are not represented by files inside the ZIP
           - Root \`.htaccess\` is not overwritten by the full package, preserving cPanel/EA-PHP handlers
           - Production Composer dependencies are bundled in \`vendor/\`
           - This is a development prerelease, not Forwext 1.0.0
