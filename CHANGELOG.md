@@ -6,6 +6,27 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.06 — Profile and Profile Media System
+
+- Added persisted per-user profile data for about text, avatar/banner references, profile/section visibility, normalized social links and configurable profile tabs.
+- Added owner-safe profile authorization with public/member/private visibility and an explicit future integration boundary for the shared role/permission engine.
+- Added private avatar/banner storage with JPEG/PNG/WebP validation, byte/dimension limits, content-addressed names and safe replacement/remove ordering.
+- Added native PHP `/members`, `/members/{username}`, avatar and banner routes through the shared Router instead of embedding SQL in the public entry point.
+- Added validated authentication-session viewer resolution; request/query/form input cannot promote anonymous visitors to member or staff visibility.
+- Added privacy-preserving 404 behavior for unknown/hidden profiles and media, plus `private, no-store` protected media delivery and nosniff headers.
+- Added escaped plain-text profile rendering and HTTPS-only social links with safe outbound-link attributes.
+- Added versioned migration `20260915130000_user_profile_media`, profile directory/query services, persistence tests and HTTP privacy/media tests.
+- Kept the cPanel baseline free of Node, Redis, daemons and image-manipulation extensions; stock web composition uses local private storage and existing file/database session drivers.
+
+### 04.05 — OAuth and Connected Accounts
+
+- Added provider-neutral OAuth/connected-account architecture with first-party Google and Discord providers.
+- Added state-bound authorization transactions with PKCE, bounded expiry and redirect validation rather than trusting callback query data directly.
+- Added verified-email account linking rules, duplicate external-identity prevention and safe connected-account persistence.
+- Added unlink safety so removing an external provider cannot strand an account without another valid authentication path.
+- Added encrypted secret-store references for provider client secrets and disabled-by-default provider configuration.
+- Added versioned connected-account persistence/migration support plus provider, transaction, linking, duplicate-prevention and unlink tests.
+
 ### 04.04 — MFA, Passkeys and Device Security
 
 - Added encrypted TOTP enrollment/verification with persisted accepted-counter replay protection.
