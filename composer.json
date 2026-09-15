@@ -38,7 +38,13 @@
     "test": "phpunit --configuration=phpunit.xml.dist",
     "qa:php": ["@qa:strict-types", "@qa:cs", "@qa:phpstan", "@qa:psalm", "@test"]
   },
-  "config": {"sort-packages": true, "preferred-install": "dist"},
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist",
+    "platform": {
+      "php": "8.4.0"
+    }
+  },
   "minimum-stability": "stable",
   "prefer-stable": true
 }
