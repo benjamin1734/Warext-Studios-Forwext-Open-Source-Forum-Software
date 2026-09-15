@@ -8,6 +8,7 @@ use Forwext\Core\Install\CoreMigrationRegistry;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
+use Forwext\Database\Migrations\Core\CreatePostDomainTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
@@ -19,14 +20,12 @@ final class CoreMigrationRegistryTest extends TestCase
     public function testInstallerMigrationIdsAreValidUniqueAndChronological(): void
     {
         $ids = [];
-
         foreach (CoreMigrationRegistry::all() as $migration) {
             $ids[] = $migration->id()->value();
         }
 
         self::assertNotEmpty($ids);
         self::assertCount(count($ids), array_unique($ids));
-
         $sorted = $ids;
         sort($sorted, SORT_STRING);
         self::assertSame($sorted, $ids, 'Core migrations must be registered in chronological id order.');
@@ -46,5 +45,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(RegisterFirstPartyPermissionNamespaces::class, $classes);
         self::assertContains(CreateForumNodeTables::class, $classes);
         self::assertContains(CreateThreadDomainTables::class, $classes);
+        self::assertContains(CreatePostDomainTables::class, $classes);
     }
 }

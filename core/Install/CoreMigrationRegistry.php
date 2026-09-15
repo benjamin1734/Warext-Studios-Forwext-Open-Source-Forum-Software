@@ -13,6 +13,7 @@ use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
+use Forwext\Database\Migrations\Core\CreatePostDomainTables;
 use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
@@ -48,6 +49,7 @@ final class CoreMigrationRegistry
             new RegisterFirstPartyPermissionNamespaces(),
             new CreateForumNodeTables(),
             new CreateThreadDomainTables(),
+            new CreatePostDomainTables(),
         ];
     }
 }
