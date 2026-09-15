@@ -16,6 +16,7 @@ final readonly class LoginRequest
         public ?string $deviceId = null,
         public bool $rememberMe = false,
         public ?string $previousSessionId = null,
+        #[SensitiveParameter] public ?string $trustedDeviceToken = null,
     ) {
         if (filter_var($clientIp, FILTER_VALIDATE_IP) === false || $identifier === '' || strlen($identifier) > 512) {
             throw new \InvalidArgumentException('Login request identity/network input is invalid.');
@@ -23,11 +24,11 @@ final readonly class LoginRequest
         if ($userAgent === '' || strlen($userAgent) > 2048 || str_contains($userAgent, "\0")) {
             throw new \InvalidArgumentException('Login request user-agent is invalid.');
         }
-        if ($previousSessionId !== null
-            && (strlen($previousSessionId) > 191
-                || preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]*$/D', $previousSessionId) !== 1)
-        ) {
+        if ($previousSessionId !== null && (strlen($previousSessionId) > 191 || preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]*$/D', $previousSessionId) !== 1)) {
             throw new \InvalidArgumentException('Previous session id is invalid.');
+        }
+        if ($trustedDeviceToken !== null && preg_match('/^td_[a-f0-9]{64}$/D', $trustedDeviceToken) !== 1) {
+            throw new \InvalidArgumentException('Trusted-device token is invalid.');
         }
     }
 }
