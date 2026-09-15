@@ -71,7 +71,8 @@ final class ProfileHttpTest extends TestCase
         self::assertStringContainsString('&lt;b&gt;unsafe&lt;/b&gt;', $response->body());
         self::assertStringNotContainsString('<b>unsafe</b>', $response->body());
         self::assertStringContainsString('https://github.com/example?a=1&amp;b=2', $response->body());
-        self::assertStringContainsString('/forum/members/benjamin17', $response->body());
+        self::assertStringContainsString('href="/forum/"', $response->body());
+        self::assertStringContainsString('href="/forum/members"', $response->body());
         self::assertStringNotContainsString('href="#activity"', $response->body());
     }
 
