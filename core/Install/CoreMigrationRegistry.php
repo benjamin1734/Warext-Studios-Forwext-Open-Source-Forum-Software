@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Core\Install;
 
 use Forwext\Core\Migration\Migration;
+use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
@@ -58,6 +59,7 @@ final class CoreMigrationRegistry
             new CreatePollTables(),
             new CreateDiscussionStateTables(),
             new CreateContentModerationTables(),
+            new CreateAttachmentPipelineTables(),
         ];
     }
 }

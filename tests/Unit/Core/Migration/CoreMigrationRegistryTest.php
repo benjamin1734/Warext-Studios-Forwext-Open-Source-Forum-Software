@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Migration;
 
 use Forwext\Core\Install\CoreMigrationRegistry;
+use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
@@ -54,5 +55,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreatePollTables::class, $classes);
         self::assertContains(CreateDiscussionStateTables::class, $classes);
         self::assertContains(CreateContentModerationTables::class, $classes);
+        self::assertContains(CreateAttachmentPipelineTables::class, $classes);
     }
 }
