@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Migration;
 
 use Forwext\Core\Install\CoreMigrationRegistry;
+use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
@@ -50,5 +51,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreatePostDomainTables::class, $classes);
         self::assertContains(CreateForumMetadataTables::class, $classes);
         self::assertContains(CreatePollTables::class, $classes);
+        self::assertContains(CreateDiscussionStateTables::class, $classes);
     }
 }

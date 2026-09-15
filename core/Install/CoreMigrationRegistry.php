@@ -7,6 +7,7 @@ namespace Forwext\Core\Install;
 use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
+use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
@@ -54,6 +55,7 @@ final class CoreMigrationRegistry
             new CreatePostDomainTables(),
             new CreateForumMetadataTables(),
             new CreatePollTables(),
+            new CreateDiscussionStateTables(),
         ];
     }
 }
