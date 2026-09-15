@@ -6,12 +6,12 @@ This file is the canonical human-readable development pointer for continuing For
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
-LAST_COMPLETED_MAIN_STEP = 04
-LAST_COMPLETED_SUBSTEP = 04.08
-CURRENT_STEP = 05.01
-LAST_COMMIT = git:HEAD
+LAST_COMPLETED_MAIN_STEP = 05
+LAST_COMPLETED_SUBSTEP = 05.01
+CURRENT_STEP = 05.02
+LAST_COMMIT = 48167dad699ecc8dcd19c9fdb8deeeee535dd0c4
 BLOCKERS = none
-NEXT_STEP = 05.01
+NEXT_STEP = 05.02 - Global and node permission engine
 ```
 
 ## Current position
@@ -20,12 +20,11 @@ NEXT_STEP = 05.01
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`
-- Current main step: `05`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`
-- Current sub-step: `05.01 — Role and user-group model`
+- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01`.
+- Current sub-step: `05.02 — Global and node permission engine`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
-- Installation packaging: `GitHub CI builds vendor-inclusive cPanel install/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
+- Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
 - Profile/media: `persisted avatar + banner + about + social links + tab preferences, owner-safe visibility policy, private media storage and native PHP member/profile/media routes completed`
 - Profile web privacy: `viewer identity derives only from validated authentication sessions; hidden profiles/media fail closed as 404 and private media is never exposed through a direct public-storage URL`
@@ -33,10 +32,21 @@ NEXT_STEP = 05.01
 - Profile music permission bridge: `05.x shared role/group engine can replace ProfileMusicPermissionResolver without rewriting profile music domain or HTTP handlers; baseline external/moderation capabilities remain disabled by default`
 - Custom profile URLs: `canonical /u/{slug} routes, configurable reserved names, permanent non-reusable historical claims, privacy-aware 308 redirects, change cooldown/window limits, race-safe uniqueness and CSRF-protected owner settings completed`
 - Custom profile URL permission bridge: `05.x shared role/group engine can replace ProfileUrlPermissionResolver without rewriting URL persistence/service/HTTP handlers`
+- Role/user-group model: `primary and secondary groups are separate from roles; custom/staff/system roles, protected system roles, stable identifiers, normalized persisted memberships/assignments and fail-closed foreign-key constraints completed`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
-`LAST_COMMIT = git:HEAD` intentionally means the current commit on `main`; a Git commit cannot contain its own final SHA without changing that SHA. Each continuation session must resolve and verify `main` HEAD before changing files.
+`LAST_COMMIT` records the implementation commit that completed the last sub-step. The status-only commit that updates this file is intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 05.01
+
+- Added explicit `UserGroup` and `Role` domain models instead of conflating membership and functional/display roles.
+- Added `custom`, `staff`, and protected `system` role kinds with deterministic stable access identifiers.
+- Added user access assignments with one primary group in the authorization context, deduplicated secondary groups, and independent direct role assignments.
+- Added normalized MySQL/MariaDB migration tables for group catalog, role catalog, primary group membership, secondary group membership, and role assignment.
+- Enforced at-most-one persisted primary group row per user structurally, while allowing many secondary groups and roles.
+- Added domain and migration tests plus architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, package-build, and release checks.
 
 ## Progress rules
 
@@ -48,10 +58,10 @@ Before marking a sub-step complete, review its permission, security, audit, migr
 
 Every releasable development version provides both:
 
-- `forwext-X.Y.Z-install.zip`
-- `forwext-X.Y.Z-update.zip`
+- `forwext-vX.Y.Z-full.zip`
+- `forwext-vX.Y.Z-update.zip`
 
-Update ZIPs contain only new/changed packaged application files. They do not include helper/delete/readme manifests. If a previously packaged file must be removed, that deletion is communicated explicitly with the release/update instructions. Normal updates preserve the existing database through migrations and must not blindly overwrite site-specific config/uploads/storage data.
+The full ZIP is suitable for a clean installation. The update ZIP upgrades the previous supported installation and must not reset the database. Update manifests are expected to carry source version, target version, add/replace/delete sets, migrations, rebuild actions, and checksums. Normal updates preserve site-specific config/uploads/storage data and advance existing data through migrations.
 
 ## Continuation protocol
 
