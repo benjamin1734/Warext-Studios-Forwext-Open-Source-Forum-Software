@@ -7,9 +7,11 @@ namespace Forwext\Core\Profile\Url;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\Core\Database\CompiledQuery;
+use Forwext\Core\Database\DatabaseException;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use PDOException;
 
 final readonly class DatabaseProfileUrlStore implements ProfileUrlStore
 {
@@ -58,98 +60,119 @@ final readonly class DatabaseProfileUrlStore implements ProfileUrlStore
         UserId::assert($userId);
         $now = ProfileUrlAssignment::utc($now);
 
-        return $this->database->transaction(function (TransactionalQueryExecutor $database) use (
-            $userId,
-            $slug,
-            $now,
-            $minimumChangeIntervalSeconds,
-            $changeWindowSeconds,
-            $maximumChangesPerWindow,
-        ): ProfileUrlAssignment {
-            $current = $database->fetchOne(new CompiledQuery(
-                'SELECT `slug_key`,`changed_at_utc`,`window_started_at_utc`,`changes_in_window` '
-                . 'FROM `forwext_user_profile_urls` WHERE `user_id`=:user_id FOR UPDATE',
-                ['user_id' => $userId->value()],
-            ));
-            if ($current !== null && (string) $current['slug_key'] === $slug->value()) {
-                return $this->assignment($userId, $current);
-            }
-
-            $claimed = $database->fetchOne(new CompiledQuery(
-                'SELECT `slug_key` FROM `forwext_profile_url_claims` WHERE `slug_key`=:slug_key FOR UPDATE',
-                ['slug_key' => $slug->value()],
-            ));
-            if ($claimed !== null) {
-                throw new ProfileUrlException('Custom profile slug is unavailable.');
-            }
-
-            $changedAt = $now;
-            $windowStartedAt = $now;
-            $changes = 0;
-            if ($current !== null) {
-                $previousChangedAt = self::parse((string) $current['changed_at_utc']);
-                $previousWindow = self::parse((string) $current['window_started_at_utc']);
-                $elapsed = $now->getTimestamp() - $previousChangedAt->getTimestamp();
-                if ($elapsed < 0 || $elapsed < $minimumChangeIntervalSeconds) {
-                    throw new ProfileUrlException('Custom profile URL change cooldown is active.');
+        try {
+            return $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+                $userId,
+                $slug,
+                $now,
+                $minimumChangeIntervalSeconds,
+                $changeWindowSeconds,
+                $maximumChangesPerWindow,
+            ): ProfileUrlAssignment {
+                $owner = $database->fetchOne(new CompiledQuery(
+                    'SELECT `id` FROM `forwext_users` WHERE `id`=:user_id FOR UPDATE',
+                    ['user_id' => $userId->value()],
+                ));
+                if ($owner === null) {
+                    throw new ProfileUrlException('Custom profile URL owner is unavailable.');
                 }
 
-                $windowElapsed = $now->getTimestamp() - $previousWindow->getTimestamp();
-                if ($windowElapsed < 0) {
-                    throw new ProfileUrlException('Custom profile URL change window is invalid.');
+                $current = $database->fetchOne(new CompiledQuery(
+                    'SELECT `slug_key`,`changed_at_utc`,`window_started_at_utc`,`changes_in_window` '
+                    . 'FROM `forwext_user_profile_urls` WHERE `user_id`=:user_id FOR UPDATE',
+                    ['user_id' => $userId->value()],
+                ));
+                if ($current !== null && (string) $current['slug_key'] === $slug->value()) {
+                    return $this->assignment($userId, $current);
                 }
-                if ($windowElapsed >= $changeWindowSeconds) {
-                    $windowStartedAt = $now;
-                    $changes = 1;
-                } else {
-                    $windowStartedAt = $previousWindow;
-                    $changes = ((int) $current['changes_in_window']) + 1;
-                }
-                if ($changes > $maximumChangesPerWindow) {
-                    throw new ProfileUrlException('Custom profile URL change limit has been reached.');
-                }
-            }
 
-            $database->execute(new CompiledQuery(
-                'INSERT INTO `forwext_profile_url_claims` '
-                . '(`slug_key`,`user_id`,`claimed_at_utc`,`retired_at_utc`) '
-                . 'VALUES (:slug_key,:user_id,:claimed_at,NULL)',
-                [
-                    'slug_key' => $slug->value(),
-                    'user_id' => $userId->value(),
-                    'claimed_at' => self::format($now),
-                ],
-            ));
+                $claimed = $database->fetchOne(new CompiledQuery(
+                    'SELECT `slug_key` FROM `forwext_profile_url_claims` WHERE `slug_key`=:slug_key FOR UPDATE',
+                    ['slug_key' => $slug->value()],
+                ));
+                if ($claimed !== null) {
+                    throw new ProfileUrlException('Custom profile slug is unavailable.');
+                }
 
-            if ($current !== null) {
+                $changedAt = $now;
+                $windowStartedAt = $now;
+                $changes = 0;
+                if ($current !== null) {
+                    $previousChangedAt = self::parse((string) $current['changed_at_utc']);
+                    $previousWindow = self::parse((string) $current['window_started_at_utc']);
+                    $elapsed = $now->getTimestamp() - $previousChangedAt->getTimestamp();
+                    if ($elapsed < 0 || $elapsed < $minimumChangeIntervalSeconds) {
+                        throw new ProfileUrlException('Custom profile URL change cooldown is active.');
+                    }
+
+                    $windowElapsed = $now->getTimestamp() - $previousWindow->getTimestamp();
+                    if ($windowElapsed < 0) {
+                        throw new ProfileUrlException('Custom profile URL change window is invalid.');
+                    }
+                    if ($windowElapsed >= $changeWindowSeconds) {
+                        $windowStartedAt = $now;
+                        $changes = 1;
+                    } else {
+                        $windowStartedAt = $previousWindow;
+                        $changes = ((int) $current['changes_in_window']) + 1;
+                    }
+                    if ($changes > $maximumChangesPerWindow) {
+                        throw new ProfileUrlException('Custom profile URL change limit has been reached.');
+                    }
+                }
+
                 $database->execute(new CompiledQuery(
-                    'UPDATE `forwext_profile_url_claims` SET `retired_at_utc`=:retired_at '
-                    . 'WHERE `slug_key`=:old_slug AND `user_id`=:user_id AND `retired_at_utc` IS NULL',
+                    'INSERT INTO `forwext_profile_url_claims` '
+                    . '(`slug_key`,`user_id`,`claimed_at_utc`,`retired_at_utc`) '
+                    . 'VALUES (:slug_key,:user_id,:claimed_at,NULL)',
                     [
-                        'retired_at' => self::format($now),
-                        'old_slug' => (string) $current['slug_key'],
+                        'slug_key' => $slug->value(),
                         'user_id' => $userId->value(),
+                        'claimed_at' => self::format($now),
                     ],
                 ));
+
+                if ($current !== null) {
+                    $database->execute(new CompiledQuery(
+                        'UPDATE `forwext_profile_url_claims` SET `retired_at_utc`=:retired_at '
+                        . 'WHERE `slug_key`=:old_slug AND `user_id`=:user_id AND `retired_at_utc` IS NULL',
+                        [
+                            'retired_at' => self::format($now),
+                            'old_slug' => (string) $current['slug_key'],
+                            'user_id' => $userId->value(),
+                        ],
+                    ));
+                }
+
+                $database->execute(new CompiledQuery(
+                    'INSERT INTO `forwext_user_profile_urls` '
+                    . '(`user_id`,`slug_key`,`changed_at_utc`,`window_started_at_utc`,`changes_in_window`) '
+                    . 'VALUES (:user_id,:slug_key,:changed_at,:window_started_at,:changes) '
+                    . 'ON DUPLICATE KEY UPDATE `slug_key`=VALUES(`slug_key`),`changed_at_utc`=VALUES(`changed_at_utc`),'
+                    . '`window_started_at_utc`=VALUES(`window_started_at_utc`),`changes_in_window`=VALUES(`changes_in_window`)',
+                    [
+                        'user_id' => $userId->value(),
+                        'slug_key' => $slug->value(),
+                        'changed_at' => self::format($changedAt),
+                        'window_started_at' => self::format($windowStartedAt),
+                        'changes' => $changes,
+                    ],
+                ));
+
+                return new ProfileUrlAssignment($userId, $slug, $changedAt, $windowStartedAt, $changes);
+            });
+        } catch (DatabaseException $exception) {
+            $previous = $exception->getPrevious();
+            if (
+                $previous instanceof PDOException
+                && isset($previous->errorInfo[1])
+                && (int) $previous->errorInfo[1] === 1062
+            ) {
+                throw new ProfileUrlException('Custom profile slug is unavailable.', previous: $exception);
             }
 
-            $database->execute(new CompiledQuery(
-                'INSERT INTO `forwext_user_profile_urls` '
-                . '(`user_id`,`slug_key`,`changed_at_utc`,`window_started_at_utc`,`changes_in_window`) '
-                . 'VALUES (:user_id,:slug_key,:changed_at,:window_started_at,:changes) '
-                . 'ON DUPLICATE KEY UPDATE `slug_key`=VALUES(`slug_key`),`changed_at_utc`=VALUES(`changed_at_utc`),'
-                . '`window_started_at_utc`=VALUES(`window_started_at_utc`),`changes_in_window`=VALUES(`changes_in_window`)',
-                [
-                    'user_id' => $userId->value(),
-                    'slug_key' => $slug->value(),
-                    'changed_at' => self::format($changedAt),
-                    'window_started_at' => self::format($windowStartedAt),
-                    'changes' => $changes,
-                ],
-            ));
-
-            return new ProfileUrlAssignment($userId, $slug, $changedAt, $windowStartedAt, $changes);
-        });
+            throw $exception;
+        }
     }
 
     /** @param array<string,mixed> $row */
