@@ -56,7 +56,7 @@ final readonly class CustomProfileUrlHandler implements RequestHandlerInterface
             return Response::text('Not Found', 404);
         }
 
-        if (!$resolution->isCurrent) {
+        if (!$resolution->isCurrent || $slug !== $resolution->requestedSlug->value()) {
             return Response::text('', 308)
                 ->withHeader('Location', $this->basePath->prepend('/u/' . rawurlencode($resolution->currentSlug->value())))
                 ->withHeader('Cache-Control', 'private, no-store');
