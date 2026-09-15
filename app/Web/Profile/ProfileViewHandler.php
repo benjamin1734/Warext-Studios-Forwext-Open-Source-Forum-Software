@@ -13,6 +13,8 @@ use Forwext\Core\Domain\User\Username;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Profile\Music\ProfileMusicService;
+use Forwext\Core\Profile\Music\ProfileMusicSourceType;
 use Forwext\Core\Profile\ProfileAccessPolicy;
 use Forwext\Core\Profile\ProfileService;
 use Forwext\Core\Profile\ProfileTab;
@@ -43,6 +45,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private ProfileAccessPolicy $accessPolicy,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
+        private ?ProfileMusicService $music = null,
     ) {
     }
 
@@ -59,11 +62,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
 
         $viewerId = $this->viewers->resolve($request);
-        $profile = $this->profiles->visibleProfile(
-            $user->id(),
-            $viewerId,
-            new DateTimeImmutable('now', new DateTimeZone('UTC')),
-        );
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $profile = $this->profiles->visibleProfile($user->id(), $viewerId, $now);
         if ($profile === null) {
             return Response::text('Not Found', 404);
         }
@@ -109,10 +109,11 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
 
         $safeName = ProfileHtml::escape($displayName);
+        $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
         $body = '<article class="profile">' . $banner . '<div class="profilebody"><div class="profilehead">'
             . $avatar . '<div class="identity"><h1>' . $safeName
             . '</h1><div class="muted">Forwext üyesi</div></div></div>'
-            . $tabNav . $sections . '</div></article>';
+            . $music . $tabNav . $sections . '</div></article>';
 
         return Response::html(ProfileHtml::page($displayName, $body, $this->basePath));
     }
@@ -191,5 +192,39 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . ProfileHtml::escape($label) . '</a>';
         }
         return $links;
+    }
+
+    private function musicPlayer(
+        EntityId $userId,
+        ?EntityId $viewerId,
+        DateTimeImmutable $now,
+        string $memberPath,
+    ): string {
+        if ($this->music === null) {
+            return '';
+        }
+
+        $settings = $this->music->visiblePlayback($userId, $viewerId, $now);
+        if ($settings === null) {
+            return '';
+        }
+
+        $source = $settings->sourceType === ProfileMusicSourceType::Upload
+            ? $memberPath . '/music'
+            : $this->music->externalUrl($userId, $viewerId, $now);
+        if ($source === null) {
+            return '';
+        }
+
+        $title = $settings->title === '' ? 'Profil müziği' : $settings->title;
+        $autoplay = $settings->autoplay && $this->music->autoplayAllowed($userId);
+        $loop = $settings->loop ? ' loop' : '';
+
+        return '<section class="profilemusic" data-profile-music data-volume="' . $settings->volume
+            . '" data-muted="' . ($settings->muted ? '1' : '0')
+            . '" data-autoplay="' . ($autoplay ? '1' : '0') . '">'
+            . '<div class="profilemusic-title">' . ProfileHtml::escape($title) . '</div>'
+            . '<audio controls preload="metadata"' . $loop . ' src="' . ProfileHtml::escape($source)
+            . '" aria-label="Profil müziği"></audio></section>';
     }
 }

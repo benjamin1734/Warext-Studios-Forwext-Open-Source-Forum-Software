@@ -7,6 +7,7 @@ namespace Forwext\App\Web;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
+use Forwext\App\Web\Profile\ProfileMusicHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
@@ -18,6 +19,10 @@ use Forwext\Core\Database\PdoConnectionFactory;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Profile\DatabaseProfileStore;
+use Forwext\Core\Profile\Music\BaselineProfileMusicPermissionResolver;
+use Forwext\Core\Profile\Music\DatabaseProfileMusicStore;
+use Forwext\Core\Profile\Music\ProfileMusicExternalPolicy;
+use Forwext\Core\Profile\Music\ProfileMusicService;
 use Forwext\Core\Profile\OwnerSafeProfileAccessPolicy;
 use Forwext\Core\Profile\ProfileDirectoryReader;
 use Forwext\Core\Profile\ProfileMediaKind;
@@ -48,10 +53,7 @@ final readonly class WebApplicationFactory
 
     public function create(string $version): Router
     {
-        $config = (new ConfigLoader())->load(
-            $this->projectRoot . '/config/defaults.php',
-            $this->projectRoot . '/config/generated.php',
-        );
+        $config = $this->config();
         $database = $this->database($config);
         $users = new DatabaseUserRepository($database);
         $profileStore = new DatabaseProfileStore($database);
@@ -66,10 +68,23 @@ final readonly class WebApplicationFactory
             $users,
             $config->requireString('authentication.session.cookie_name'),
         );
-        $mediaService = new ProfileMediaService(
-            $profileStore,
-            $this->localStorage($config),
+        $storage = $this->localStorage($config);
+        $mediaService = new ProfileMediaService($profileStore, $storage, $accessPolicy);
+        $musicService = new ProfileMusicService(
+            new DatabaseProfileMusicStore($database),
+            $storage,
+            $profileService,
             $accessPolicy,
+            new BaselineProfileMusicPermissionResolver(
+                $config->requireBool('profile_music.permissions.use'),
+                $config->requireBool('profile_music.permissions.upload'),
+                $config->requireBool('profile_music.permissions.external'),
+                $config->requireBool('profile_music.permissions.autoplay'),
+                $config->requireBool('profile_music.permissions.moderate'),
+            ),
+            $this->externalMusicPolicy($config),
+            $config->requireInt('profile_music.upload_max_bytes'),
+            $config->requireInt('profile_music.default_volume'),
         );
         $basePath = $this->basePath($config);
 
@@ -96,6 +111,7 @@ final readonly class WebApplicationFactory
                 $accessPolicy,
                 $viewerResolver,
                 $basePath,
+                $musicService,
             ),
         ));
         $routes->add(new Route(
@@ -110,8 +126,34 @@ final readonly class WebApplicationFactory
             new PathTemplate('/members/{username}/banner'),
             new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Banner),
         ));
+        $routes->add(new Route(
+            'members.music',
+            [HttpMethod::Get],
+            new PathTemplate('/members/{username}/music'),
+            new ProfileMusicHandler($users, $musicService, $viewerResolver),
+        ));
 
         return new Router($routes, $basePath);
+    }
+
+    public function contentSecurityPolicy(): string
+    {
+        $sources = ["'self'"];
+        foreach ($this->externalMusicPolicy($this->config())->allowedHosts() as $host) {
+            $sources[] = 'https://' . $host;
+        }
+
+        return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            . "img-src 'self' data:; media-src " . implode(' ', $sources) . '; '
+            . "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
+    }
+
+    private function config(): ConfigRepository
+    {
+        return (new ConfigLoader())->load(
+            $this->projectRoot . '/config/defaults.php',
+            $this->projectRoot . '/config/generated.php',
+        );
     }
 
     private function database(ConfigRepository $config): DatabaseConnection
@@ -175,6 +217,20 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('storage.local.public_root')),
             $baseUrl,
         );
+    }
+
+    private function externalMusicPolicy(ConfigRepository $config): ProfileMusicExternalPolicy
+    {
+        $hosts = $config->get('profile_music.external_allowed_hosts', []);
+        if (!is_array($hosts) || !array_is_list($hosts)) {
+            throw new RuntimeException('Profile music external host allowlist must be a list.');
+        }
+        foreach ($hosts as $host) {
+            if (!is_string($host)) {
+                throw new RuntimeException('Profile music external host allowlist contains an invalid entry.');
+            }
+        }
+        return new ProfileMusicExternalPolicy($hosts);
     }
 
     private function basePath(ConfigRepository $config): BasePath

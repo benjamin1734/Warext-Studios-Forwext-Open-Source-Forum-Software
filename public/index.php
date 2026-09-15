@@ -14,7 +14,7 @@ $autoload = $root . '/vendor/autoload.php';
 
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
 
 if (!is_file($autoload)) {
     http_response_code(500);
@@ -36,15 +36,12 @@ $requestMethod = HttpMethod::Get;
 try {
     $request = Request::fromGlobals();
     $requestMethod = $request->method();
-    $application = (new WebApplicationFactory($root))->create($version->value());
+    $factory = new WebApplicationFactory($root);
+    $application = $factory->create($version->value());
     $response = $application->handle($request)
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('Referrer-Policy', 'no-referrer')
-        ->withHeader(
-            'Content-Security-Policy',
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-            . "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
-        );
+        ->withHeader('Content-Security-Policy', $factory->contentSecurityPolicy());
 } catch (Throwable) {
     $response = Response::text('Internal Server Error', 500)
         ->withHeader('X-Content-Type-Options', 'nosniff')

@@ -13,6 +13,7 @@ final class ProfileHtml
         $safeTitle = self::escape($title);
         $home = self::escape($basePath->prepend('/'));
         $members = self::escape($basePath->prepend('/members'));
+        $musicScript = self::escape($basePath->prepend('/assets/profile-music.js'));
 
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -33,11 +34,13 @@ final class ProfileHtml
             . 'margin:22px 0}.tabs a{padding:8px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--muted)}'
             . '.section{padding-top:8px;margin-top:18px}.section h2{font-size:17px;margin:0 0 10px}.about{white-space:pre-wrap;overflow-wrap:anywhere}.social{display:flex;gap:9px;flex-wrap:wrap}'
             . '.social a{padding:7px 10px;border:1px solid var(--line);border-radius:8px;text-decoration:none}.empty{padding:28px;text-align:center;color:var(--muted)}'
+            . '.profilemusic{margin:20px 0 4px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}'
+            . '.profilemusic-title{font-weight:700;margin-bottom:9px;overflow-wrap:anywhere}.profilemusic audio{display:block;width:100%;height:40px;max-width:680px}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
-            . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{height:58px}.nav{gap:10px}}'
+            . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{height:58px}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}}'
             . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon"><a href="' . $members . '">Üyeler</a></nav></div></header>'
-            . '<main class="wrap">' . $content . '</main></body></html>';
+            . '<main class="wrap">' . $content . '</main><script src="' . $musicScript . '" defer></script></body></html>';
     }
 
     public static function escape(string $value): string
