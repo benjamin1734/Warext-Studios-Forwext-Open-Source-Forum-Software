@@ -9,6 +9,7 @@ use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
+use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
@@ -30,6 +31,7 @@ final class CoreMigrationRegistry
             new CreateMfaDeviceSecurityTables(),
             new CreateOAuthConnectedAccountTables(),
             new CreateUserProfileMediaTables(),
+            new CreateProfileMusicTables(),
         ];
     }
 }
