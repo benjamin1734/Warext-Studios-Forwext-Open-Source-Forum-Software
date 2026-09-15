@@ -9,6 +9,7 @@ use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
+use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
 use PHPUnit\Framework\TestCase;
 
 final class CoreMigrationRegistryTest extends TestCase
@@ -40,5 +41,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreatePermissionEngineTables::class, $classes);
         self::assertContains(CreatePermissionTemplateTables::class, $classes);
         self::assertContains(CreateRoleAppearanceTable::class, $classes);
+        self::assertContains(RegisterFirstPartyPermissionNamespaces::class, $classes);
     }
 }

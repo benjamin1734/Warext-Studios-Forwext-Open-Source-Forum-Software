@@ -18,13 +18,17 @@ use Forwext\Core\Config\ConfigRepository;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
+use Forwext\Core\Domain\Access\DatabaseUserAccessAssignmentProvider;
+use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
+use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
+use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Profile\DatabaseProfileStore;
-use Forwext\Core\Profile\Music\BaselineProfileMusicPermissionResolver;
 use Forwext\Core\Profile\Music\DatabaseProfileMusicStore;
+use Forwext\Core\Profile\Music\EngineProfileMusicPermissionResolver;
 use Forwext\Core\Profile\Music\ProfileMusicExternalPolicy;
 use Forwext\Core\Profile\Music\ProfileMusicService;
 use Forwext\Core\Profile\OwnerSafeProfileAccessPolicy;
@@ -32,8 +36,8 @@ use Forwext\Core\Profile\ProfileDirectoryReader;
 use Forwext\Core\Profile\ProfileMediaKind;
 use Forwext\Core\Profile\ProfileMediaService;
 use Forwext\Core\Profile\ProfileService;
-use Forwext\Core\Profile\Url\BaselineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\DatabaseProfileUrlStore;
+use Forwext\Core\Profile\Url\EngineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\ProfileSlugPolicy;
 use Forwext\Core\Profile\Url\ProfileUrlService;
 use Forwext\Core\Routing\BasePath;
@@ -64,6 +68,7 @@ final readonly class WebApplicationFactory
     {
         $config = $this->config();
         $database = $this->database($config);
+        $authorizer = $this->permissionAuthorizer($database);
         $users = new DatabaseUserRepository($database);
         $profileStore = new DatabaseProfileStore($database);
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
@@ -84,13 +89,7 @@ final readonly class WebApplicationFactory
             $storage,
             $profileService,
             $accessPolicy,
-            new BaselineProfileMusicPermissionResolver(
-                $config->requireBool('profile_music.permissions.use'),
-                $config->requireBool('profile_music.permissions.upload'),
-                $config->requireBool('profile_music.permissions.external'),
-                $config->requireBool('profile_music.permissions.autoplay'),
-                $config->requireBool('profile_music.permissions.moderate'),
-            ),
+            new EngineProfileMusicPermissionResolver($authorizer),
             $this->externalMusicPolicy($config),
             $config->requireInt('profile_music.upload_max_bytes'),
             $config->requireInt('profile_music.default_volume'),
@@ -98,7 +97,7 @@ final readonly class WebApplicationFactory
         $profileUrlService = new ProfileUrlService(
             new DatabaseProfileUrlStore($database),
             $accessPolicy,
-            new BaselineProfileUrlPermissionResolver($config->requireBool('profile_url.permissions.use')),
+            new EngineProfileUrlPermissionResolver($authorizer),
             new ProfileSlugPolicy($this->profileUrlReservedNames($config)),
             $config->requireInt('profile_url.minimum_change_interval_seconds'),
             $config->requireInt('profile_url.change_window_seconds'),
@@ -185,6 +184,14 @@ final readonly class WebApplicationFactory
         return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
             . "img-src 'self' data:; media-src " . implode(' ', $sources) . '; '
             . "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
+    }
+
+    private function permissionAuthorizer(DatabaseConnection $database): PermissionAuthorizer
+    {
+        return new PermissionAuthorizer(
+            new PermissionEngine(new DatabasePermissionRuleRepository($database)),
+            new DatabaseUserAccessAssignmentProvider($database),
+        );
     }
 
     private function config(): ConfigRepository

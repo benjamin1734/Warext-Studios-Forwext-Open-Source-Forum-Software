@@ -20,6 +20,7 @@ use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
+use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
 
 final class CoreMigrationRegistry
 {
@@ -42,6 +43,7 @@ final class CoreMigrationRegistry
             new CreatePermissionEngineTables(),
             new CreatePermissionTemplateTables(),
             new CreateRoleAppearanceTable(),
+            new RegisterFirstPartyPermissionNamespaces(),
         ];
     }
 }
