@@ -15,7 +15,7 @@ final readonly class CreateAuthenticationRuntimeTables implements Migration
 {
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260914253000_authentication_runtime');
+        return MigrationId::fromString('20260915013000_authentication_runtime');
     }
 
     public function owner(): MigrationOwner
