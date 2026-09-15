@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 05.05
-CURRENT_STEP = 05.06
-LAST_COMMIT = 79abe8c163bc6514a3b3a6d007789ce4b4cb0c60
+LAST_COMPLETED_SUBSTEP = 06.01
+CURRENT_STEP = 06.02
+LAST_COMMIT = 63c554ee18799fae30784326e403272d393a2de8
 BLOCKERS = none
-NEXT_STEP = 05.06 - Content and system permission namespaces
+NEXT_STEP = 06.02 - Thread domain and thread types
 ```
 
 ## Current position
@@ -20,84 +20,104 @@ NEXT_STEP = 05.06 - Content and system permission namespaces
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` through `05.05` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.05`.
-- Current sub-step: `05.06 — Content and system permission namespaces`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01`.
+- Current sub-step: `06.02 — Thread domain and thread types`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
 - Profile/media: `persisted avatar + banner + about + social links + tab preferences, owner-safe visibility policy, private media storage and native PHP member/profile/media routes completed`
 - Profile web privacy: `viewer identity derives only from validated authentication sessions; hidden profiles/media fail closed as 404 and private media is never exposed through a direct public-storage URL`
-- Profile music: `permission bridge, private uploaded audio, exact-host HTTPS external policy, native mobile-safe player, volume/mute/autoplay/loop preferences, byte-range delivery, CSP media allowlist and moderation audit completed`
-- Profile music permission bridge: `05.x shared role/group engine can replace ProfileMusicPermissionResolver without rewriting profile music domain or HTTP handlers; baseline external/moderation capabilities remain disabled by default`
-- Custom profile URLs: `canonical /u/{slug} routes, configurable reserved names, permanent non-reusable historical claims, privacy-aware 308 redirects, change cooldown/window limits, race-safe uniqueness and CSRF-protected owner settings completed`
-- Custom profile URL permission bridge: `05.x shared role/group engine can replace ProfileUrlPermissionResolver without rewriting URL persistence/service/HTTP handlers`
-- Role/user-group model: `primary and secondary groups are separate from roles; custom/staff/system roles, protected system roles, stable identifiers, normalized persisted memberships/assignments and fail-closed foreign-key constraints completed`
-- Permission engine: `typed flag/numeric definitions, global + node rules, allow/deny/inherit, direct-user overrides, deterministic precedence, restrictive numeric aggregation, parameterized persistence and decision trace completed`
-- Permission templates: `five protected starter profiles, typed template rules, transactional one-click apply, custom-rule preservation and safe core permission seed completed`
-- Permission analyzer: `human-readable decision summaries, ordered precedence visualization, inheritance/fail-closed visibility, numeric-limit explanation and escaped native PHP HTML renderer completed`
-- Role appearance: `safe colors/gradients, built-in icons/patterns/animations, banner text/color, role priority metadata, mobile/profile/post visibility, parameterized persistence and reduced-motion native CSS completed`
-- Installer migration integrity: `05.01–05.05 migrations are explicitly registered and registry tests prevent silent omission from clean installs`
+- Profile music: `private uploaded audio, exact-host HTTPS external policy, native mobile-safe player, byte-range delivery, CSP media allowlist and moderation audit completed; runtime permission now delegates to the shared 05.x engine`
+- Custom profile URLs: `canonical /u/{slug} routes, configurable reserved names, permanent non-reusable historical claims, privacy-aware 308 redirects, abuse controls and shared-engine permission integration completed`
+- Role/user-group model: `primary and secondary groups remain separate from functional/presentation roles; normalized persisted memberships/assignments completed`
+- Permission engine: `typed flag/numeric definitions, global + node rules, allow/deny/inherit, direct-user overrides, deterministic precedence, restrictive numeric aggregation, fail-closed behavior and decision trace completed`
+- Permission templates: `five protected starter profiles, typed template rules, transactional one-click apply and custom-rule preservation completed`
+- Permission analyzer: `human-readable decision summaries, precedence visualization, inheritance/fail-closed visibility and numeric-limit explanation completed`
+- Role appearance: `safe colors/gradients/icons/patterns/animations/banner metadata with mobile/profile/post visibility completed`
+- First-party permission namespaces: `83 typed permissions across 28 core namespaces registered; profile runtime bridges use the common PermissionAuthorizer; permission registration itself never grants access`
+- Permission security matrix: `actor-bound PermissionGate plus mandatory IDOR/BOLA, moderator/admin bypass, inheritance, same-tier deny and UI/backend parity tests completed`
+- Forum node hierarchy: `category/forum/subforum/page/link nodes, deterministic ordering, breadcrumbs, listed/unlisted/disabled visibility, forum settings, hierarchy validation, database persistence and node-scoped forum.view authorization completed`
+- Installer migration integrity: `all current role/permission/forum migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
-`LAST_COMMIT` records the implementation commit that completed the last sub-step. The status-only commit that updates this file is intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+`LAST_COMMIT` records the implementation commit that completed the last sub-step. Status/changelog-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 06.01
+
+- Added first-class `category`, `forum`, `page` and `link` node types with 128-bit node identifiers and globally unique canonical slugs.
+- Added real subforum support by allowing categories/forums to contain children while keeping page/link nodes as leaves.
+- Added deterministic child ordering and root-to-current breadcrumb generation.
+- Added hierarchy validation for duplicate ids/slugs, orphan parents, illegal leaf parents, self-parenting, cycles and excessive depth.
+- Added `listed`, `unlisted` and `disabled` visibility semantics with ancestor propagation while explicitly keeping visibility separate from authorization.
+- Added `ForumNodeAuthorization` on top of the shared actor-bound permission gate using node-scoped `forum.view`; disabled ancestors fail closed before permission lookup.
+- Added bounded forum settings for new-thread/reply policy, approval policy, default thread sort and threads-per-page.
+- Added safe page/link payload rules; external link nodes require credential-free HTTPS and page content remains bounded source text rather than implicit raw HTML.
+- Added transactional `DatabaseForumNodeRepository` with row-locked hierarchy revalidation, parameterized writes, safe type transitions and child-aware deletion refusal.
+- Added migration `20260915235930_forum_nodes` for `forwext_nodes` and `forwext_forum_settings`, global slug uniqueness, parent `RESTRICT` and settings `CASCADE` integrity.
+- Added installer registry integration, domain/repository/authorization/migration tests and architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+
+## Completed in 05.07
+
+- Added an actor-bound `PermissionGate` so UI checks and backend enforcement resolve against the same trusted authenticated actor rather than route/body target ids.
+- Added generic `PermissionDeniedException` behavior without leaking repository/provider internals.
+- Added mandatory security tests for direct-user IDOR, sibling-node BOLA, moderator-to-admin escalation, multi-role deny precedence, node/global override behavior, inheritance fall-through, numeric-limit aggregation and UI/backend allow/deny parity.
+- Kept the security matrix inside the normal PHPUnit test tree, making PHP 8.4/8.5 release packaging fail when a permission-boundary regression appears.
+- Added security documentation describing the actor/target boundary and extension rule for future protected systems.
+- GitHub CI passed all required test, dependency and package/release stages.
+
+## Completed in 05.06
+
+- Added canonical first-party permission namespaces and registered 83 typed permission definitions across 28 namespaces covering forum, moderation, independent audit, ACP, profile, support, FAQ, bug reports, portfolio, invite/referral, AI, spellcheck, user-content management, freshness, giveaway, Easter Egg, trophies, promotions/rewards, marketplace, payment, subscriptions, ads/notices, analytics, appearance and API surfaces.
+- Added `PermissionAuthorizer` plus persisted user access-assignment loading so first-party systems can use one shared runtime authorization boundary.
+- Replaced the temporary native profile music/custom-URL authorization baselines with engine-backed resolvers while preserving existing domain interfaces.
+- Added a narrow `system:unassigned` compatibility state only for real pre-05.x users without persisted primary-group assignments; no new staff/ACP/marketplace/etc. capabilities are granted by compatibility.
+- Added migration `20260915235900_permission_namespaces`, built-in template bridge rules, installer registry integration and catalog/assignment/authorizer/runtime/migration tests.
+- Corrected the migration timestamp after CI rejected an invalid hour-24 identifier; the final migration id is valid and chronological.
+- GitHub CI passed PHPUnit on PHP 8.4/8.5, strict-types, production dependency, full/update packages and release stages.
 
 ## Completed in 05.05
 
 - Added a dedicated role-presentation model that remains separate from authorization and cannot grant, deny or alter permissions.
-- Added canonical six-digit role colors, optional two-color gradients with bounded angles, six built-in icons, five patterns and five animations without accepting arbitrary CSS/HTML/URLs.
-- Added optional banner text/color plus independent mobile, profile and post visibility controls while keeping role name and priority authoritative in the existing `Role` model.
-- Added one-to-one `forwext_role_appearances` persistence with cascading cleanup when a role is deleted and parameterized repository reads/upserts.
-- Added an escaped native PHP renderer that rejects role/appearance identity mismatches and emits stable safe classes/CSS variables only from validated values.
-- Added responsive native CSS, built-in icon glyphs/patterns/animations and `prefers-reduced-motion` handling.
-- Added migration `20260915230000_role_appearance`, installer registry integration, domain/repository/renderer/migration tests and architecture documentation.
-- Fixed an installer registry regression discovered during 05.05 review: the already-completed 05.01 role/group, 05.02 permission engine and 05.03 permission-template migrations are now explicitly registered, with a regression test that requires their presence.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+- Added canonical six-digit role colors, optional two-color gradients with bounded angles, built-in icons/patterns/animations and optional banner text/color without accepting arbitrary CSS/HTML/URLs.
+- Added independent mobile, profile and post visibility controls while keeping role name/priority authoritative in the existing role model.
+- Added one-to-one persisted role appearances, escaped native PHP rendering and reduced-motion responsive CSS.
+- Added migration `20260915230000_role_appearance`, installer registry integration, tests and architecture documentation.
+- Fixed installer migration registration for the already-completed 05.01–05.03 access migrations and added a regression test.
+- GitHub CI passed PHP 8.4/8.5, strict-types, dependency and package/release checks.
 
 ## Completed in 05.04
 
-- Added a permission analyzer that delegates every authorization decision to the existing 05.02 `PermissionEngine` instead of duplicating precedence logic.
-- Added human-readable allow/deny summaries, including effective numeric limits and privacy-safe fail-closed explanations.
-- Added a five-layer visualization model covering node user, global user, node membership, global membership and secure fallback states.
-- Added explicit layer states for not-applicable, no-rule, inherited, allowed, denied, fail-closed and not-reached outcomes.
-- Preserved rule-level trace details for user/group/role subject, effect, node scope, numeric limit and engine outcome.
-- Added an accessible native PHP HTML renderer with escaped dynamic values and stable state/effect/outcome hooks for later ACP styling.
-- Added analyzer/renderer unit tests and architecture documentation without adding a migration or new runtime dependency.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+- Added a permission analyzer that delegates authorization to the existing permission engine rather than duplicating precedence logic.
+- Added human-readable allow/deny summaries, effective numeric-limit explanations and privacy-safe fail-closed messages.
+- Added ordered visualization for node user, global user, node membership, global membership and secure fallback layers.
+- Added explicit states for not-applicable, no-rule, inherited, allowed, denied, fail-closed and not-reached outcomes.
+- Added an escaped accessible native PHP explanation renderer plus analyzer/renderer tests and architecture documentation.
+- GitHub CI passed all required stages.
 
 ## Completed in 05.03
 
-- Added typed permission-template keys, rules, repositories and one-click application service boundaries.
-- Added five protected starter profiles: new user, member, verified member, moderator and administrator.
-- Added transactional template application that upserts only the template-owned global permission keys and preserves unrelated customized rules.
-- Added core starter permission definitions for forum view/content creation, numeric daily content limits, moderation access/management and ACP access/management.
-- Added system-template persistence and deterministic seed migration `20260915220000_permission_templates` with foreign-key integrity and 40 built-in rules.
-- Added domain, transactional writer and migration tests plus architecture documentation.
-- Synchronized root `CHANGELOG.md` with completed 05.01, 05.02 and 05.03 work.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+- Added typed permission-template domain objects, five protected starter profiles and transactional one-click template application while preserving unrelated customized rules.
+- Added safe starter permission definitions for forum, moderation and ACP access plus numeric daily content limits.
+- Added migration `20260915220000_permission_templates`, persistence/verification tests and documentation.
+- GitHub CI passed all required stages.
 
 ## Completed in 05.02
 
-- Added typed permission keys, flag/numeric definitions and `allow` / `deny` / `inherit` rule effects.
-- Added global and generic node/forum-scoped rule persistence without prematurely coupling 05.02 to a forum table that is introduced later.
-- Added deterministic precedence: node user → global user → node group/role membership → global group/role membership → implicit deny.
-- Kept direct per-user overrides stronger than membership policy while preserving node-specific user overrides above global user overrides.
-- Added same-tier deny-over-allow semantics, inheritance fall-through and most-restrictive numeric aggregation for combined group/role limits.
-- Added fail-closed behavior for unknown permissions, malformed rules and repository failures without leaking internal exception details.
-- Added parameterized database rule lookup for user/group/role/node identifiers and a machine-readable decision trace for the later permission analyzer.
-- Added versioned migration `20260915210000_permission_engine`, domain/database/migration tests and architecture documentation.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+- Added typed flag/numeric permission definitions with `allow`, `deny` and `inherit` for user/group/role subjects.
+- Added deterministic precedence: node user → global user → node membership → global membership → implicit deny.
+- Added same-tier deny-over-allow, inheritance fall-through, restrictive numeric aggregation, direct-user overrides, node-scoped rules, fail-closed behavior and parameterized persistence.
+- Added migration `20260915210000_permission_engine`, tests and decision tracing.
+- GitHub CI passed all required stages.
 
 ## Completed in 05.01
 
-- Added explicit `UserGroup` and `Role` domain models instead of conflating membership and functional/display roles.
-- Added `custom`, `staff`, and protected `system` role kinds with deterministic stable access identifiers.
-- Added user access assignments with one primary group in the authorization context, deduplicated secondary groups, and independent direct role assignments.
-- Added normalized MySQL/MariaDB migration tables for group catalog, role catalog, primary group membership, secondary group membership, and role assignment.
-- Enforced at-most-one persisted primary group row per user structurally, while allowing many secondary groups and roles.
-- Added domain and migration tests plus architecture documentation.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, package-build, and release checks.
+- Added explicit user-group and role models with one primary group, multiple secondary groups and independent direct roles.
+- Added custom/staff/protected-system role kinds, stable identifiers, normalized membership/assignment tables and restrictive integrity rules.
+- Added domain/migration tests and architecture documentation.
+- GitHub CI passed all required stages.
 
 ## Progress rules
 
@@ -112,7 +132,7 @@ Every releasable development version provides both:
 - `forwext-vX.Y.Z-full.zip`
 - `forwext-vX.Y.Z-update.zip`
 
-The full ZIP is suitable for a clean installation. The update ZIP upgrades the previous supported installation and must not reset the database. Update manifests are expected to carry source version, target version, add/replace/delete sets, migrations, rebuild actions, and checksums. Normal updates preserve site-specific config/uploads/storage data and advance existing data through migrations.
+The full ZIP is suitable for a clean installation. The update ZIP upgrades the previous supported installation and must not reset the database. Update manifests are expected to carry source version, target version, add/replace/delete sets, migrations, rebuild actions and checksums. Normal updates preserve site-specific config/uploads/storage data and advance existing data through migrations.
 
 ## Continuation protocol
 
