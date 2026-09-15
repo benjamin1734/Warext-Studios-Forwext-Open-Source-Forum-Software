@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 06.04
-CURRENT_STEP = 06.05
-LAST_COMMIT = 43686017253047ad2a71ecfd5296b33ecc08d967
+LAST_COMPLETED_SUBSTEP = 06.06
+CURRENT_STEP = 06.07
+LAST_COMMIT = 17fcf522409e348256ab568c74e86813133ee75d
 BLOCKERS = none
-NEXT_STEP = 06.05 - Poll system
+NEXT_STEP = 06.07 - Rich editor + character/word counter
 ```
 
 ## Current position
@@ -20,118 +20,88 @@ NEXT_STEP = 06.05 - Poll system
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.04` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.04`.
-- Current sub-step: `06.05 — Poll system`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.06` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.06`.
+- Current sub-step: `06.07 — Rich editor + character/word counter`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - Permission system: `shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed`
 - Forum node hierarchy: `category/forum/subforum/page/link nodes, ordering, breadcrumbs, visibility, settings, transaction-safe persistence and node-scoped forum.view authorization completed`
-- Thread domain: `thread identity/lifecycle, locked/sticky/featured/moderated states, protected extensible thread-type registry, optimistic persistence and granular node permissions completed`
-- Post domain: `real first-post identity at position 1, create/edit/history/soft-delete/restore/approve/reject lifecycle, optimistic persistence, serialized per-thread positions, permission-aware services, authoritative derived counters and bounded pagination completed`
-- Thread publication: `canonical ThreadPublishingService wraps thread creation plus first-post creation in one outer database transaction so first-post failure can roll back the new thread`
+- Thread domain: `identity/lifecycle, locked/sticky/featured/moderated states, protected extensible thread types, optimistic persistence and granular node permissions completed`
+- Post domain: `real first-post identity at position 1, create/edit/history/soft-delete/restore/approve/reject lifecycle, optimistic persistence, serialized per-thread positions, authoritative derived counters and bounded pagination completed`
 - Forum metadata: `prefix groups/prefix eligibility, tag policy/autocomplete, typed thread/forum custom fields, forum-scoped configuration, actor-bound own/any editing and atomic metadata replacement completed`
-- Metadata safe defaults: `unconfigured forums have tags disabled/new-tag creation disabled/max tags zero; custom field validation is typed and bounded without arbitrary executable regex/HTML/JS`
-- Installer migration integrity: `all current role/permission/forum/thread/post/metadata migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
+- Poll system: `single/multiple choice, vote changes, open/secret voters, duration/participant limits, actor-bound permissions and result visibility policies completed`
+- Discussion state: `revision-safe autosave drafts, monotonic thread/forum read state, unread resolution, watched forums/threads and subscription preferences completed`
+- Installer migration integrity: `all current role/permission/forum/thread/post/metadata/poll/discussion-state migrations are explicitly registered and regression-tested`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
-`LAST_COMMIT` records the implementation commit that completed the last sub-step. Status/changelog-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+`LAST_COMMIT` records the implementation commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 06.06
+
+- Added bounded per-user autosave drafts for new threads and replies while keeping editor/rendering semantics deferred to 06.07.
+- Added optimistic draft revisions with `FOR UPDATE` serialization so stale browser tabs cannot silently overwrite newer autosaves.
+- Added actor-bound draft access: new-thread drafts reuse `forum.thread.create`; reply drafts reuse `forum.post.create`; forum visibility remains mandatory.
+- Added monotonic per-thread read positions validated against the latest non-deleted visible post.
+- Added forum-level mark-read watermarks and unread resolution based on latest visible post activity rather than mutable thread metadata timestamps.
+- Added watched-thread and watched-forum state with `none`, `in_app`, `email` and `in_app_email` notification modes.
+- Added per-user subscription defaults for created/replied thread auto-watch intent and default thread/forum notification modes.
+- Kept every private state API actor-bound; there is no external target-user parameter for draft/read/watch/preference mutation.
+- Added migration `20260915235959_discussion_state` creating six normalized state tables and ten foreign-key constraints.
+- Registered the migration after the poll migration and extended clean-install registry regression coverage.
+- Added domain, repository, service and migration tests plus architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
+
+## Completed in 06.05
+
+- Added first-class polls attached one-to-one to threads with opaque identities and normalized options/votes/choices.
+- Added single-choice and multiple-choice selection rules, option ownership validation, bounded 2–20 option sets and configurable maximum selections.
+- Added changeable/non-changeable voting with idempotent same-selection resubmission.
+- Added open/secret voter identity policy independent from `always`, `after_vote` and `after_close` result visibility policy.
+- Added scheduled close, manual close and maximum-participant limits under one domain closure rule.
+- Added race-safe vote writes that lock the poll row, reload current poll/options and enforce the final participant slot inside one transaction.
+- Added `forum.poll.create`, `forum.poll.vote`, `forum.poll.view_results`, `forum.poll.view_voters` and `forum.poll.manage` permissions with a complete five-profile starter matrix.
+- Added migration `20260915235958_poll_system` creating poll, option, participant and choice tables with one-poll-per-thread and one-participant-per-user integrity.
+- Added domain/repository/service/migration tests, installer-registry coverage and architecture documentation.
+- GitHub CI passed all PHP 8.4/8.5, dependency, package, artifact and release stages.
 
 ## Completed in 06.04
 
-- Added bounded prefix groups and thread prefixes with deterministic ordering, enable/disable state and explicit forum-group eligibility.
-- Added Unicode-capable tags with case-insensitive database identity, forum-level tag enable/new-tag/max-count policy and parameterized wildcard-safe autocomplete.
-- Added safe-default forum metadata configuration: missing configuration disables tags and new tag creation with a zero tag limit.
-- Added typed `thread` and `forum` custom fields supporting text, integer, boolean and allowlisted choice values with required/min/max validation and a 100000-byte text hard cap.
-- Explicitly avoided arbitrary administrator-supplied executable regex/PHP/HTML/JavaScript validation.
-- Added forum-specific enabled thread-field mappings and typed forum-level field values.
-- Added actor-bound `ThreadMetadataService`: own threads require `forum.thread.edit_own`, other users' threads require `forum.thread.edit_any`, with existing `forum.view` authorization preserved.
-- Added `ForumMetadataAdminService` behind global `acp.manage` for prefix, field-definition, forum-configuration and forum-field administration.
-- Added atomic metadata replacement for prefix/tag/custom-field relations and atomic forum configuration replacement.
-- Added tag-id dedup after database collation resolution so Unicode/case-equivalent names cannot create duplicate thread-tag PK inserts even when Mbstring is unavailable.
-- Added migration `20260915235957_forum_metadata` creating eleven normalized tables, fourteen foreign keys, two thread-edit permissions and ten starter-profile rules.
-- Registered the migration after post-domain persistence in the clean-install registry and extended installer-registry regression coverage.
-- Added domain, repository, service and migration tests plus architecture documentation.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
+- Added bounded prefix groups/prefixes, explicit forum eligibility and deterministic ordering.
+- Added Unicode-capable tags with forum-level enable/new-tag/max-count policy and parameterized wildcard-safe autocomplete.
+- Added typed `thread` and `forum` custom fields for text/integer/boolean/allowlisted-choice values with bounded validation and no executable administrator-supplied validators.
+- Added actor-bound own/any thread metadata editing and ACP-managed forum metadata configuration.
+- Added atomic prefix/tag/custom-field replacement and migration `20260915235957_forum_metadata` with eleven normalized tables and fourteen foreign keys.
+- GitHub CI passed all required PHP 8.4/8.5, dependency, package and release stages.
 
 ## Completed in 06.03
 
-- Added real `Post` entities with opaque ids, bounded source bodies, immutable thread/author/position identity and visible/pending/rejected moderation state.
-- Added thread-local monotonic post positions; `position = 1` is the real first post and remains a `Post`, not embedded thread content.
-- Added row-locked position allocation by locking the owning thread row plus a unique `(thread_id, position)` database constraint.
-- Added create/edit/delete/restore/approve/reject lifecycle with immutable prior-state history snapshots and UTC mutation ordering.
-- Added optimistic post persistence; stale writers fail instead of overwriting newer body/moderation/delete state, and history is appended in the same transaction as the winning update.
-- Added soft delete with separate moderation state so restore never silently converts rejected/pending content into visible content.
-- Added `PostService` authorization for actor-bound own-vs-any edit/delete, dedicated restore/moderate permissions, locked-thread/reply policy and visible first-post requirements.
-- Added `ThreadPublishingService` as the canonical atomic thread + first-post production boundary using an outer database transaction.
-- Added authoritative post counters derived from post rows instead of denormalized mutable counters, plus bounded deterministic pagination with staff visibility switches.
-- Added migration `20260915235955_post_domain` for post/history tables, six new post-management permissions and 30 starter-profile rules without modifying historical 05.x migrations.
-- Registered the post migration after the thread migration in the clean-install registry and extended registry regression coverage.
-- Added domain, repository, service and migration tests plus architecture documentation.
-- Fixed a pre-commit regression test drift so concurrency tests assert the final `SELECT thread_id ... FOR UPDATE` locking model rather than the superseded count-lock query.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
+- Added real `Post` entities, first-post position identity, edit/history/soft-delete/restore/approve/reject lifecycle and optimistic persistence.
+- Added row-locked monotonic post position allocation and authoritative derived active/visible counters.
+- Added actor-bound own-vs-any edit/delete, dedicated restore/moderate permissions and atomic thread + first-post publication boundary.
+- Added migration `20260915235955_post_domain`, tests and architecture documentation.
 
 ## Completed in 06.02
 
-- Added opaque thread ids, bounded titles and immutable registered thread-type keys.
-- Added extensible `ThreadTypeRegistry` with protected core `discussion` type and duplicate-key override rejection.
-- Added thread lifecycle for visible/pending/rejected moderation state plus lock, sticky and featured state with idempotent domain transitions/events.
-- Added optimistic aggregate versioning and transaction-backed `DatabaseThreadRepository`; stale writes fail instead of silently overwriting newer state.
-- Added bounded per-forum listing order with sticky/featured priority and parameterized persistence.
-- Added `ThreadCreationService` enforcing target forum type, resolvable hierarchy, `forum.view`, node-scoped `forum.thread.create`, forum settings and registered thread type. Thread author comes only from the authenticated actor-bound gate.
-- Added `ThreadStateService` with separate node-scoped `forum.thread.lock`, `forum.thread.sticky`, `forum.thread.feature` and `forum.thread.moderate` capabilities.
-- Added migration `20260915235945_thread_domain` for thread types/threads plus four granular permissions and 20 starter-template rules. Historical 05.x migrations were left unchanged.
-- Added explicit deny rules for new-user/member/verified starter profiles and allow rules for moderator/administrator so applying a lower privilege template cannot retain stale thread-management grants.
-- Added domain, registry, database, service, permission, concurrency, migration and installer-registry coverage plus architecture documentation.
-- Kept first-post content out of the thread table so 06.03 can model the first post as a real `Post` as required by the normative glossary.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
+- Added thread identity/lifecycle, extensible protected type registry, locked/sticky/featured/moderated states and optimistic persistence.
+- Added node-scoped thread create/state permissions plus starter-profile downgrade safety.
+- Added migration `20260915235945_thread_domain`, tests and architecture documentation.
 
 ## Completed in 06.01
 
-- Added first-class `category`, `forum`, `page` and `link` node types with 128-bit identifiers and globally unique canonical slugs.
-- Added real subforum support while keeping page/link nodes as leaves.
-- Added deterministic ordering, root-to-current breadcrumbs and fail-fast hierarchy validation for duplicates, orphans, illegal parents, cycles and excessive depth.
-- Added `listed`, `unlisted` and `disabled` visibility with ancestor propagation while keeping visibility separate from authorization.
-- Added node-scoped `forum.view` authorization through the shared actor-bound permission gate.
-- Added bounded forum settings, safe page/link payload rules and transaction/row-lock database persistence.
-- Added migration `20260915235930_forum_nodes`, installer registry integration, tests and architecture documentation.
-- GitHub CI passed all required PHP 8.4/8.5, dependency, package and release stages.
+- Added first-class category/forum/page/link node hierarchy with true subforums, ordering, breadcrumbs, visibility and forum settings.
+- Added node-scoped `forum.view` authorization, transaction-safe persistence and migration `20260915235930_forum_nodes`.
 
-## Completed in 05.07
+## Completed main step 05
 
-- Added actor-bound permission gate and generic denial boundary.
-- Added mandatory IDOR/BOLA, moderator/admin bypass, multi-role deny, inheritance, numeric-limit and UI/backend parity tests inside normal CI.
-- GitHub CI passed all required stages.
-
-## Completed in 05.06
-
-- Registered 83 typed first-party permission definitions across 28 namespaces and added shared `PermissionAuthorizer` runtime integration.
-- Replaced temporary profile music/custom-profile-URL permission baselines with shared-engine resolvers.
-- Added a narrow existing-user compatibility group without introducing staff/ACP/marketplace grants.
-- Added migration `20260915235900_permission_namespaces`, starter-template bridge rules, tests and documentation.
-- GitHub CI passed all required stages.
-
-## Completed in 05.05
-
-- Added safe role appearance/banner model and persistence without allowing presentation metadata to alter authorization.
-- Added reduced-motion responsive rendering and fixed clean-install access migration registration.
-
-## Completed in 05.04
-
-- Added human-readable permission analyzer/visualization that delegates to the shared engine rather than duplicating precedence logic.
-
-## Completed in 05.03
-
-- Added five protected permission starter profiles with transactional one-click application and custom-rule preservation.
-
-## Completed in 05.02
-
-- Added typed global/node permission engine with allow/deny/inherit, direct-user overrides, deterministic precedence, numeric limits, fail-closed behavior and decision traces.
-
-## Completed in 05.01
-
-- Added explicit primary/secondary group and independent role model with normalized persistence.
+- `05.01`: role/user-group model.
+- `05.02`: shared global/node permission engine.
+- `05.03`: permission starter profiles.
+- `05.04`: permission analyzer/explanation UX.
+- `05.05`: safe role appearance/banner system.
+- `05.06`: 83 first-party permission definitions across 28 namespaces and runtime integration.
+- `05.07`: mandatory permission-security matrix covering IDOR/BOLA, bypass, deny precedence, inheritance, numeric limits and UI/backend parity.
 
 ## Progress rules
 
