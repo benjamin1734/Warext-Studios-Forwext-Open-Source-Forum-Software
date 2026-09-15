@@ -15,7 +15,7 @@ final readonly class CreateRegistrationSecurityTables implements Migration
 {
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260914243000_registration_security');
+        return MigrationId::fromString('20260915003000_registration_security');
     }
 
     public function owner(): MigrationOwner
