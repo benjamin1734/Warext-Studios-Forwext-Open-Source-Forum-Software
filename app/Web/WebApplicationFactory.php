@@ -6,6 +6,12 @@ namespace Forwext\App\Web;
 
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
+use Forwext\App\Web\Forum\AttachmentDownloadHandler;
+use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
+use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
+use Forwext\App\Web\Forum\AttachmentServiceResolver;
+use Forwext\App\Web\Forum\AttachmentStageHandler;
+use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
@@ -25,12 +31,21 @@ use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\Forum\Attachment\AttachmentInspector;
+use Forwext\Core\Forum\Attachment\AttachmentQuotaPolicy;
+use Forwext\Core\Forum\Attachment\DatabaseAttachmentRepository;
+use Forwext\Core\Forum\Attachment\GdAttachmentThumbnailGenerator;
+use Forwext\Core\Forum\Attachment\ImageMetadataSanitizer;
 use Forwext\Core\Forum\Editor\BbCodeRenderer;
 use Forwext\Core\Forum\Editor\EditorLimits;
 use Forwext\Core\Forum\Editor\EditorPreviewService;
 use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
 use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
 use Forwext\Core\Forum\Editor\UserMentionResolver;
+use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
+use Forwext\Core\Forum\Post\DatabasePostRepository;
+use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
+use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
@@ -131,72 +146,75 @@ final readonly class WebApplicationFactory
             new EditorLimits(),
         );
 
+        $attachmentQuota = new AttachmentQuotaPolicy();
+        $attachmentServices = new AttachmentServiceResolver(
+            new DatabaseAttachmentRepository($database, $attachmentQuota),
+            new DatabasePostRepository($database),
+            new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults()),
+            new DatabaseForumNodeRepository($database),
+            $storage,
+            new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota),
+            new GdAttachmentThumbnailGenerator($attachmentQuota),
+            $attachmentQuota,
+            $authorizer,
+        );
+        $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
+
         $routes = new RouteCollection();
+        $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
         $routes->add(new Route(
-            'home',
-            [HttpMethod::Get],
-            new PathTemplate('/'),
-            new HomeHandler($version, $basePath),
-        ));
-        $routes->add(new Route(
-            'editor.preview',
-            [HttpMethod::Post],
-            new PathTemplate('/editor/preview'),
+            'editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'),
             new EditorPreviewHandler($editorPreview, $viewerResolver),
         ));
         $routes->add(new Route(
-            'editor.mention',
-            [HttpMethod::Get],
-            new PathTemplate('/editor/mention'),
+            'editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'),
             new EditorMentionLookupHandler($users, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
-            'members.index',
+            'forum.attachment.stage',
+            [HttpMethod::Post],
+            new PathTemplate('/forums/{forumId}/attachments'),
+            new AttachmentStageHandler($attachmentServices, $viewerResolver, new VerifiedUploadedAttachmentReader()),
+            [$attachmentCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.attachment.finalize',
+            [HttpMethod::Post],
+            new PathTemplate('/attachments/{attachmentId}/finalize'),
+            new AttachmentFinalizeHandler($attachmentServices, $viewerResolver),
+            [$attachmentCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.attachment.download',
             [HttpMethod::Get],
-            new PathTemplate('/members'),
+            new PathTemplate('/attachments/{attachmentId}'),
+            new AttachmentDownloadHandler($attachmentServices, $viewerResolver, new AttachmentDownloadResponseFactory()),
+        ));
+        $routes->add(new Route(
+            'members.index', [HttpMethod::Get], new PathTemplate('/members'),
             new MemberDirectoryHandler(new ProfileDirectoryReader($database), $basePath),
         ));
+        $routes->add(new Route('members.profile', [HttpMethod::Get], new PathTemplate('/members/{username}'), $profilePage));
         $routes->add(new Route(
-            'members.profile',
-            [HttpMethod::Get],
-            new PathTemplate('/members/{username}'),
-            $profilePage,
-        ));
-        $routes->add(new Route(
-            'members.avatar',
-            [HttpMethod::Get],
-            new PathTemplate('/members/{username}/avatar'),
+            'members.avatar', [HttpMethod::Get], new PathTemplate('/members/{username}/avatar'),
             new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Avatar),
         ));
         $routes->add(new Route(
-            'members.banner',
-            [HttpMethod::Get],
-            new PathTemplate('/members/{username}/banner'),
+            'members.banner', [HttpMethod::Get], new PathTemplate('/members/{username}/banner'),
             new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Banner),
         ));
         $routes->add(new Route(
-            'members.music',
-            [HttpMethod::Get],
-            new PathTemplate('/members/{username}/music'),
+            'members.music', [HttpMethod::Get], new PathTemplate('/members/{username}/music'),
             new ProfileMusicHandler($users, $musicService, $viewerResolver),
         ));
         $routes->add(new Route(
-            'profiles.custom',
-            [HttpMethod::Get],
-            new PathTemplate('/u/{slug}'),
+            'profiles.custom', [HttpMethod::Get], new PathTemplate('/u/{slug}'),
             new CustomProfileUrlHandler(
-                $profileUrlService,
-                $users,
-                $profileService,
-                $viewerResolver,
-                $profilePage,
-                $basePath,
+                $profileUrlService, $users, $profileService, $viewerResolver, $profilePage, $basePath,
             ),
         ));
         $routes->add(new Route(
-            'account.profile-url',
-            [HttpMethod::Get, HttpMethod::Post],
-            new PathTemplate('/account/profile-url'),
+            'account.profile-url', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/account/profile-url'),
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath),
             [$this->profileUrlCsrfMiddleware($config)],
         ));
@@ -210,7 +228,6 @@ final readonly class WebApplicationFactory
         foreach ($this->externalMusicPolicy($this->config())->allowedHosts() as $host) {
             $sources[] = 'https://' . $host;
         }
-
         return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
             . "img-src 'self' data:; media-src " . implode(' ', $sources) . '; '
             . "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
@@ -239,15 +256,9 @@ final readonly class WebApplicationFactory
             new SecretCipher($this->masterKey($config)),
         );
         $password = $secrets->get($config->requireString('database.password_secret'));
-        if ($password === null) {
-            throw new RuntimeException('Database password secret is unavailable.');
-        }
-
+        if ($password === null) throw new RuntimeException('Database password secret is unavailable.');
         $socket = $config->get('database.unix_socket');
-        if ($socket !== null && !is_string($socket)) {
-            throw new RuntimeException('Database unix socket configuration is invalid.');
-        }
-
+        if ($socket !== null && !is_string($socket)) throw new RuntimeException('Database unix socket configuration is invalid.');
         return (new PdoConnectionFactory())->create(new DatabaseConfig(
             $config->requireString('database.host'),
             $config->requireInt('database.port'),
@@ -262,18 +273,23 @@ final readonly class WebApplicationFactory
 
     private function profileUrlCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
-        $master = $this->masterKey($config);
-        $derived = hash_hmac(
-            'sha256',
-            'forwext.csrf.profile-url.v1',
-            $master->bytesForCrypto(),
-            true,
-        );
-        $csrfKey = SecretKey::fromBase64(base64_encode($derived));
+        return $this->csrfMiddleware($config, 'profile-url', 'forwext.csrf.profile-url.v1');
+    }
 
+    private function attachmentCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'attachment', 'forwext.csrf.attachment.v1');
+    }
+
+    private function csrfMiddleware(ConfigRepository $config, string $purpose, string $context): CsrfMiddleware
+    {
+        $derived = hash_hmac('sha256', $context, $this->masterKey($config)->bytesForCrypto(), true);
         return new CsrfMiddleware(
-            new CsrfTokenManager($csrfKey, $config->requireInt('http_security.csrf.token_ttl_seconds')),
-            'profile-url',
+            new CsrfTokenManager(
+                SecretKey::fromBase64(base64_encode($derived)),
+                $config->requireInt('http_security.csrf.token_ttl_seconds'),
+            ),
+            $purpose,
             $config->requireString('http_security.csrf.cookie_name'),
             true,
             $config->requireInt('http_security.csrf.cookie_max_age'),
@@ -293,25 +309,17 @@ final readonly class WebApplicationFactory
         return match ($config->requireString('session.driver')) {
             'file' => new FileSessionStore($this->projectPath($config->requireString('session.path'))),
             'database' => new DatabaseSessionStore($database),
-            default => throw new RuntimeException(
-                'Configured session driver requires an explicit advanced-runtime composition.',
-            ),
+            default => throw new RuntimeException('Configured session driver requires an explicit advanced-runtime composition.'),
         };
     }
 
     private function localStorage(ConfigRepository $config): LocalStorageDriver
     {
         if ($config->requireString('storage.driver') !== 'local') {
-            throw new RuntimeException(
-                'Configured storage driver requires an explicit advanced-runtime composition.',
-            );
+            throw new RuntimeException('Configured storage driver requires an explicit advanced-runtime composition.');
         }
-
         $baseUrl = $config->get('storage.local.public_base_url');
-        if ($baseUrl !== null && !is_string($baseUrl)) {
-            throw new RuntimeException('Public storage base URL configuration is invalid.');
-        }
-
+        if ($baseUrl !== null && !is_string($baseUrl)) throw new RuntimeException('Public storage base URL configuration is invalid.');
         return new LocalStorageDriver(
             $this->projectPath($config->requireString('storage.local.private_root')),
             $this->projectPath($config->requireString('storage.local.public_root')),
@@ -322,14 +330,8 @@ final readonly class WebApplicationFactory
     private function externalMusicPolicy(ConfigRepository $config): ProfileMusicExternalPolicy
     {
         $hosts = $config->get('profile_music.external_allowed_hosts', []);
-        if (!is_array($hosts) || !array_is_list($hosts)) {
-            throw new RuntimeException('Profile music external host allowlist must be a list.');
-        }
-        foreach ($hosts as $host) {
-            if (!is_string($host)) {
-                throw new RuntimeException('Profile music external host allowlist contains an invalid entry.');
-            }
-        }
+        if (!is_array($hosts) || !array_is_list($hosts)) throw new RuntimeException('Profile music external host allowlist must be a list.');
+        foreach ($hosts as $host) if (!is_string($host)) throw new RuntimeException('Profile music external host allowlist contains an invalid entry.');
         return new ProfileMusicExternalPolicy($hosts);
     }
 
@@ -337,14 +339,8 @@ final readonly class WebApplicationFactory
     private function profileUrlReservedNames(ConfigRepository $config): array
     {
         $names = $config->get('profile_url.reserved_names', []);
-        if (!is_array($names) || !array_is_list($names)) {
-            throw new RuntimeException('Reserved custom profile URL names must be a list.');
-        }
-        foreach ($names as $name) {
-            if (!is_string($name)) {
-                throw new RuntimeException('Reserved custom profile URL names contain an invalid entry.');
-            }
-        }
+        if (!is_array($names) || !array_is_list($names)) throw new RuntimeException('Reserved custom profile URL names must be a list.');
+        foreach ($names as $name) if (!is_string($name)) throw new RuntimeException('Reserved custom profile URL names contain an invalid entry.');
         return $names;
     }
 
@@ -352,23 +348,14 @@ final readonly class WebApplicationFactory
     {
         $canonicalUrl = $config->requireString('routing.canonical_url');
         $path = parse_url($canonicalUrl, PHP_URL_PATH);
-        if ($path === false) {
-            throw new RuntimeException('Canonical URL path is invalid.');
-        }
-
-        $path = is_string($path) ? rtrim($path, '/') : '';
-        return new BasePath($path);
+        if ($path === false) throw new RuntimeException('Canonical URL path is invalid.');
+        return new BasePath(is_string($path) ? rtrim($path, '/') : '');
     }
 
     private function projectPath(string $path): string
     {
-        if ($path === '' || str_contains($path, "\0")) {
-            throw new RuntimeException('Configured project path is invalid.');
-        }
-        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/D', $path) === 1) {
-            return $path;
-        }
-
+        if ($path === '' || str_contains($path, "\0")) throw new RuntimeException('Configured project path is invalid.');
+        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/D', $path) === 1) return $path;
         return $this->projectRoot . '/' . ltrim(str_replace('\\', '/', $path), '/');
     }
 }
