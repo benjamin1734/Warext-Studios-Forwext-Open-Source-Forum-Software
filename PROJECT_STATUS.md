@@ -5,13 +5,13 @@ This file is the canonical human-readable development pointer for continuing For
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.5-dev
-LAST_COMPLETED_MAIN_STEP = 03
-LAST_COMPLETED_SUBSTEP = 04.07
-CURRENT_STEP = 04.08
+CURRENT_VERSION = 0.0.6-dev
+LAST_COMPLETED_MAIN_STEP = 04
+LAST_COMPLETED_SUBSTEP = 04.08
+CURRENT_STEP = 05.01
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 04.08
+NEXT_STEP = 05.01
 ```
 
 ## Current position
@@ -20,10 +20,10 @@ NEXT_STEP = 04.08
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`
-- Current main step: `04`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.07`
-- Current sub-step: `04.08 — Custom profile URL system`
+- Completed main steps: `01`, `02`, `03`, `04`
+- Current main step: `05`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`
+- Current sub-step: `05.01 — Role and user-group model`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel install/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
@@ -31,6 +31,8 @@ NEXT_STEP = 04.08
 - Profile web privacy: `viewer identity derives only from validated authentication sessions; hidden profiles/media fail closed as 404 and private media is never exposed through a direct public-storage URL`
 - Profile music: `permission bridge, private uploaded audio, exact-host HTTPS external policy, native mobile-safe player, volume/mute/autoplay/loop preferences, byte-range delivery, CSP media allowlist and moderation audit completed`
 - Profile music permission bridge: `05.x shared role/group engine can replace ProfileMusicPermissionResolver without rewriting profile music domain or HTTP handlers; baseline external/moderation capabilities remain disabled by default`
+- Custom profile URLs: `canonical /u/{slug} routes, configurable reserved names, permanent non-reusable historical claims, privacy-aware 308 redirects, change cooldown/window limits, race-safe uniqueness and CSRF-protected owner settings completed`
+- Custom profile URL permission bridge: `05.x shared role/group engine can replace ProfileUrlPermissionResolver without rewriting URL persistence/service/HTTP handlers`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
