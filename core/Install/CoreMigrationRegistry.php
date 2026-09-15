@@ -15,6 +15,7 @@ use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
+use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
@@ -40,6 +41,7 @@ final class CoreMigrationRegistry
             new CreateRoleGroupTables(),
             new CreatePermissionEngineTables(),
             new CreatePermissionTemplateTables(),
+            new CreateRoleAppearanceTable(),
         ];
     }
 }

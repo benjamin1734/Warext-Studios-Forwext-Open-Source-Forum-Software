@@ -7,6 +7,7 @@ namespace Forwext\Tests\Unit\Core\Migration;
 use Forwext\Core\Install\CoreMigrationRegistry;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
+use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use PHPUnit\Framework\TestCase;
 
@@ -38,5 +39,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateRoleGroupTables::class, $classes);
         self::assertContains(CreatePermissionEngineTables::class, $classes);
         self::assertContains(CreatePermissionTemplateTables::class, $classes);
+        self::assertContains(CreateRoleAppearanceTable::class, $classes);
     }
 }

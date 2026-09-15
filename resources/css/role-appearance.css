@@ -1,0 +1,129 @@
+.role-appearance {
+    --forwext-role-color: currentColor;
+    --forwext-role-banner-color: rgba(127, 127, 127, 0.18);
+    --forwext-role-gradient-from: var(--forwext-role-color);
+    --forwext-role-gradient-to: var(--forwext-role-color);
+    --forwext-role-gradient-angle: 90deg;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    color: var(--forwext-role-color);
+    vertical-align: middle;
+}
+
+.role-appearance__name,
+.role-appearance__banner {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.role-appearance--gradient .role-appearance__name {
+    background: linear-gradient(
+        var(--forwext-role-gradient-angle),
+        var(--forwext-role-gradient-from),
+        var(--forwext-role-gradient-to)
+    );
+    background-clip: text;
+    color: transparent;
+}
+
+.role-appearance__icon {
+    flex: 0 0 auto;
+    width: 1em;
+    text-align: center;
+    line-height: 1;
+}
+
+.role-appearance__icon--shield::before { content: "◆"; }
+.role-appearance__icon--star::before { content: "★"; }
+.role-appearance__icon--crown::before { content: "♛"; }
+.role-appearance__icon--hammer::before { content: "⚒"; }
+.role-appearance__icon--check::before { content: "✓"; }
+.role-appearance__icon--diamond::before { content: "♦"; }
+
+.role-appearance__banner {
+    position: relative;
+    isolation: isolate;
+    border-radius: 0.35rem;
+    padding: 0.16rem 0.45rem;
+    background-color: var(--forwext-role-banner-color);
+    font-size: 0.82em;
+    font-weight: 600;
+}
+
+.role-appearance--pattern-stripes .role-appearance__banner {
+    background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.14) 0 5px, transparent 5px 10px);
+}
+
+.role-appearance--pattern-dots .role-appearance__banner {
+    background-image: radial-gradient(rgba(255,255,255,.18) 1px, transparent 1px);
+    background-size: 6px 6px;
+}
+
+.role-appearance--pattern-grid .role-appearance__banner {
+    background-image:
+        linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px);
+    background-size: 7px 7px;
+}
+
+.role-appearance--pattern-diagonal .role-appearance__banner {
+    background-image: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.18) 35% 50%, transparent 50%);
+    background-size: 12px 12px;
+}
+
+.role-appearance--animation-pulse {
+    animation: forwext-role-pulse 1.8s ease-in-out infinite;
+}
+
+.role-appearance--animation-glow {
+    animation: forwext-role-glow 2s ease-in-out infinite alternate;
+}
+
+.role-appearance--animation-shimmer .role-appearance__banner {
+    background-size: 220% 100%;
+    animation: forwext-role-shimmer 2.2s linear infinite;
+}
+
+.role-appearance--animation-rainbow {
+    animation: forwext-role-rainbow 5s linear infinite;
+}
+
+@keyframes forwext-role-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.035); }
+}
+
+@keyframes forwext-role-glow {
+    from { filter: drop-shadow(0 0 0 transparent); }
+    to { filter: drop-shadow(0 0 0.35rem currentColor); }
+}
+
+@keyframes forwext-role-shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+}
+
+@keyframes forwext-role-rainbow {
+    from { filter: hue-rotate(0deg); }
+    to { filter: hue-rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .role-appearance {
+        gap: 0.25rem;
+    }
+
+    .role-appearance__banner {
+        padding: 0.12rem 0.35rem;
+        font-size: 0.78em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .role-appearance,
+    .role-appearance__banner {
+        animation: none !important;
+    }
+}
