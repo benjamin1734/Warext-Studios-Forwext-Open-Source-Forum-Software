@@ -6,12 +6,12 @@ This file is the canonical human-readable development pointer for continuing For
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
-LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 06.07
-CURRENT_STEP = 06.08
-LAST_COMMIT = 1d7f30acba458dd86a995d091511713c85e891c4
+LAST_COMPLETED_MAIN_STEP = 06
+LAST_COMPLETED_SUBSTEP = 06.08
+CURRENT_STEP = 07.01
+LAST_COMMIT = 0837ff8ef8f6767c0796665b9e24eb5e773dedc9
 BLOCKERS = none
-NEXT_STEP = 06.08 - Thread/post moderation operations
+NEXT_STEP = 07.01 - Attachment and image pipeline
 ```
 
 ## Current position
@@ -20,9 +20,9 @@ NEXT_STEP = 06.08 - Thread/post moderation operations
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.07` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.07`.
-- Current sub-step: `06.08 — Thread/post moderation operations`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.08`.
+- Current sub-step: `07.01 — Attachment and image pipeline`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - Permission system: `shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed`
@@ -32,29 +32,43 @@ NEXT_STEP = 06.08 - Thread/post moderation operations
 - Forum metadata: `prefix groups/prefix eligibility, tag policy/autocomplete, typed thread/forum custom fields, forum-scoped configuration, actor-bound own/any editing and atomic metadata replacement completed`
 - Poll system: `single/multiple choice, vote changes, open/secret voters, duration/participant limits, actor-bound permissions and result visibility policies completed`
 - Discussion state: `revision-safe autosave drafts, monotonic thread/forum read state, unread resolution, watched forums/threads and subscription preferences completed`
-- Rich editor: `safe bounded BBCode renderer, authenticated preview and mention lookup, stable-id mentions, iframe-free safe embeds, reusable thread/post editor UI and live character/word/byte counters completed`
-- Installer migration integrity: `all current role/permission/forum/thread/post/metadata/poll/discussion-state migrations are explicitly registered and regression-tested`
+- Rich editor: `safe BBCode rendering, authenticated preview/mention APIs, stable-id mentions, safe link/embed handling, reusable thread/post editor UI and live character/word/byte limits completed`
+- Content moderation: `audited move/copy/merge/split/lock/sticky/approve/delete/restore/bulk operations, soft-delete/merge tombstones and actor-bound permission enforcement completed`
+- Installer migration integrity: `all current role/permission/forum/thread/post/metadata/poll/discussion-state/content-moderation migrations are explicitly registered and regression-tested`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
 
+## Completed in 06.08
+
+- Added actor-bound thread/post moderation operations for move, copy, merge, split, lock/unlock, sticky/unsticky, approve, soft-delete, restore and bounded bulk actions.
+- Reused existing granular thread/post permissions where they already existed and added seven structural permissions for move/copy/merge/split/thread delete/thread restore/bulk moderation.
+- Required structural permissions across every affected source/target forum and required bulk permission together with the underlying action permission, preventing bulk-action privilege escalation.
+- Added soft-delete and merge-tombstone thread lifecycle columns; normal thread lookup/list/update paths now exclude inactive tombstones so stale application objects cannot resurrect moderated content.
+- Added transaction-safe structural operations with deterministic row locking, monotonic post re-positioning and first-post invariants.
+- Added split-time read-watermark remapping using the real `last_read_post_position` schema so compacting source post positions cannot mark newer content as already read.
+- Copy creates new thread/post identities and deliberately copies only core content, not destination-policy-sensitive metadata, polls or private watch/read state.
+- Merge preserves source thread identities as soft-deleted `merged_into_thread_id` tombstones instead of hard-deleting their historical identity.
+- Added append-only forum moderation audit events with authenticated actor, action, target, forum, bounded reason code, request/correlation id, curated before/after state and UTC timestamp.
+- Audit append is required inside the same mutation transaction; audit persistence failure therefore prevents the moderation mutation from committing.
+- Added migration `20260916000000_content_moderation`, seven permission definitions and a complete 35-rule five-profile starter matrix.
+- Added domain, service, repository, normal-thread visibility, migration and installer-registry tests plus architecture documentation.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
+- Completed Main Step 06 and advanced the roadmap to `07.01 — Attachment and image pipeline`.
+
 ## Completed in 06.07
 
-- Added Unicode-aware server-side character, word and byte metrics without requiring Mbstring for counting.
-- Added server-authoritative editor min/max assessment aligned with the existing 100000-byte `PostBody` storage hard cap while preserving valid non-word Unicode content such as emoji.
-- Added bounded safe BBCode rendering for bold, italic, underline, strike, quote, code, URL, mention and embed syntax; raw HTML is always escaped.
-- Added a 100000-byte render limit, unsafe-control-byte rejection and a 32-level nesting cap to prevent parser abuse and unbounded recursion.
-- Added credential-free HTTPS/site-relative link policy and fixed ambiguous backslash-path rejection after the first CI run exposed a malformed regex edge case.
-- Added stable-id mentions resolved through the canonical user repository so later username changes do not retarget historical mentions.
-- Added authenticated exact-username mention lookup that exposes only stable id, public label and public profile URL.
-- Added safe first-party embed cards without arbitrary iframe/provider HTML or third-party scripts, preserving the existing CSP.
-- Added `EditorPreviewService` plus authenticated `POST /editor/preview`; preview uses the same renderer/metrics contract and returns sanitized HTML, counts, limits and deterministic violation codes.
-- Added reusable native PHP thread/post editor markup with formatting toolbar, preview controls, live character/word/byte counters and visible min/max indicators.
-- Added same-origin `rich-editor.js` and responsive/reduced-motion `rich-editor.css`; client validity is UX only and server-side validation remains authoritative.
-- Added editor metric, safe-link, BBCode/XSS, preview-service, reusable-view and HTTP handler tests plus architecture documentation.
-- No migration was required because 06.07 adds rendering/editor behavior without introducing new persistent data.
-- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks after the safe-link regex fix.
+- Added a reusable safe BBCode renderer for bold/italic/underline/strike, quotes, code, links, stable-id mentions and safe embed cards without raw HTML passthrough.
+- Added HTTPS/site-relative link policy that rejects credentials, protocol-relative, control-character, backslash-ambiguous and non-HTTPS external targets.
+- Added canonical mention resolution through persisted user identity so rendered labels/links do not trust client-supplied display names.
+- Added authenticated preview and exact-username mention lookup HTTP handlers through the native web router.
+- Added server-side editor assessment and a reusable native thread/post editor component with live character/word/byte counters, min/max indicators, toolbar and preview UI.
+- Added same-origin JavaScript/CSS assets compatible with the existing CSP; no third-party iframe or inline script requirement was introduced.
+- Added 100,000-byte render cap and bounded recursive BBCode nesting to avoid parser resource-exhaustion paths.
+- Added metrics, safe-link, BBCode/XSS, preview/mention handler and reusable editor component tests.
+- Fixed a CI-detected backslash-regex escaping bug so ambiguous paths are rejected without PHP warnings.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
 
 ## Completed in 06.06
 
