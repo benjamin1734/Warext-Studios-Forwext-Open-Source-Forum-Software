@@ -6,6 +6,7 @@ namespace Forwext\Core\Install;
 
 use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
+use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
@@ -32,6 +33,7 @@ final class CoreMigrationRegistry
             new CreateOAuthConnectedAccountTables(),
             new CreateUserProfileMediaTables(),
             new CreateProfileMusicTables(),
+            new CreateCustomProfileUrlTables(),
         ];
     }
 }
