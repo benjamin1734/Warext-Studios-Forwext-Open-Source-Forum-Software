@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use Forwext\App\Web\Editor\EditorMentionLookupHandler;
+use Forwext\App\Web\Editor\EditorPreviewHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
@@ -23,6 +25,12 @@ use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\Forum\Editor\BbCodeRenderer;
+use Forwext\Core\Forum\Editor\EditorLimits;
+use Forwext\Core\Forum\Editor\EditorPreviewService;
+use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
+use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
+use Forwext\Core\Forum\Editor\UserMentionResolver;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
@@ -113,12 +121,34 @@ final readonly class WebApplicationFactory
             $musicService,
         );
 
+        $editorLinks = new SafeEditorLinkPolicy();
+        $editorPreview = new EditorPreviewService(
+            new BbCodeRenderer(
+                $editorLinks,
+                new UserMentionResolver($users, $basePath),
+                new SafeLinkEmbedResolver($editorLinks),
+            ),
+            new EditorLimits(),
+        );
+
         $routes = new RouteCollection();
         $routes->add(new Route(
             'home',
             [HttpMethod::Get],
             new PathTemplate('/'),
             new HomeHandler($version, $basePath),
+        ));
+        $routes->add(new Route(
+            'editor.preview',
+            [HttpMethod::Post],
+            new PathTemplate('/editor/preview'),
+            new EditorPreviewHandler($editorPreview, $viewerResolver),
+        ));
+        $routes->add(new Route(
+            'editor.mention',
+            [HttpMethod::Get],
+            new PathTemplate('/editor/mention'),
+            new EditorMentionLookupHandler($users, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'members.index',
