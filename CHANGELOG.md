@@ -6,6 +6,32 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 05.03 — Permission Templates and Starter Profiles
+
+- Added typed permission-template domain objects, validation and repository boundaries for reusable starter profiles.
+- Added five protected built-in profiles: new user, member, verified member, moderator and administrator.
+- Added a transactional one-click template applier that upserts only template-owned permission keys into normal global rules, preserving unrelated custom rules for later customization.
+- Added safe starter permission definitions for forum access/content creation, numeric daily content limits, moderation access/management and ACP access/management.
+- Added migration `20260915220000_permission_templates` with template/rule persistence, foreign-key integrity and deterministic built-in seed verification.
+- Added template-domain, transactional writer and migration coverage while keeping the cPanel baseline free of new runtime services or PHP extensions.
+
+### 05.02 — Global and Node Permission Engine
+
+- Added typed flag/numeric permission definitions with `allow`, `deny` and `inherit` effects for user, group and role subjects.
+- Added deterministic precedence: node user → global user → node membership → global membership → implicit deny.
+- Added same-tier deny-over-allow handling, inheritance fall-through and most-restrictive numeric aggregation for combined group/role limits.
+- Added direct per-user overrides and generic node/forum-scoped rules without prematurely coupling the engine to a forum table introduced later.
+- Added fail-closed handling for unknown permissions, malformed rules and repository failures without exposing internal exception details.
+- Added parameterized database lookup, migration `20260915210000_permission_engine`, tests and a machine-readable decision trace for the later permission analyzer.
+
+### 05.01 — Role and User-Group Model
+
+- Added explicit user-group and role domain models so membership classification remains separate from functional/presentation roles.
+- Added custom, staff and protected system role kinds with stable identifiers and bounded priority metadata.
+- Added one primary group, multiple secondary groups and independent direct role assignments with domain-level duplicate/invariant protection.
+- Added normalized group, role and membership/assignment tables with restrictive role/group deletion and cascading cleanup on user deletion.
+- Added domain/migration tests and architecture documentation while preserving the minimum cPanel deployment profile.
+
 ### 04.08 — Custom Profile URL System
 
 - Added a dedicated `ProfileUrlPermissionResolver` boundary so the shared 05.x role/group engine can govern custom profile URLs without rewriting URL persistence, services or HTTP handlers.
