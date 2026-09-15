@@ -124,6 +124,25 @@ return [
         ],
         'fingerprint_secret_name' => 'authentication.fingerprint_key',
     ],
+    'oauth' => [
+        'transaction_ttl_seconds' => 600,
+        'http_timeout_seconds' => 10,
+        'maximum_response_bytes' => 1048576,
+        'providers' => [
+            'google' => [
+                'enabled' => false,
+                'client_id' => null,
+                'client_secret_name' => 'oauth.google.client_secret',
+                'redirect_uris' => [],
+            ],
+            'discord' => [
+                'enabled' => false,
+                'client_id' => null,
+                'client_secret_name' => 'oauth.discord.client_secret',
+                'redirect_uris' => [],
+            ],
+        ],
+    ],
     'mfa' => [
         'challenge_ttl_seconds' => 300,
         'trusted_device_ttl_seconds' => 2592000,

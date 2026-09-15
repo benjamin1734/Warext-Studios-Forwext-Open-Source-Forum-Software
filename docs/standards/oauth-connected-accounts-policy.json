@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "step": "04.05",
+  "providers": ["google", "discord"],
+  "defaults": {
+    "enabled": false,
+    "transaction_ttl_seconds": 600,
+    "pkce_method": "S256"
+  },
+  "security": {
+    "state_stored_as_sha256": true,
+    "state_single_use": true,
+    "exact_https_redirect_allowlist": true,
+    "verified_email_only_auto_link": true,
+    "persist_provider_access_tokens": false,
+    "client_secrets_via_secret_store": true,
+    "prevent_cross_user_link": true,
+    "prevent_auth_method_lockout_on_unlink": true,
+    "respect_local_account_status": true
+  }
+}
