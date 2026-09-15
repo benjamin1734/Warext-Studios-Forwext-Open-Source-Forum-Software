@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 05.02
-CURRENT_STEP = 05.03
-LAST_COMMIT = 389e367c023c8a9ef0775528d02288b9965b882e
+LAST_COMPLETED_SUBSTEP = 05.03
+CURRENT_STEP = 05.04
+LAST_COMMIT = f7379e46485b23c28369233103b82c299de35edf
 BLOCKERS = none
-NEXT_STEP = 05.03 - Permission templates and ready-made profiles
+NEXT_STEP = 05.04 - Permission analyzer and explanation UX
 ```
 
 ## Current position
@@ -20,9 +20,9 @@ NEXT_STEP = 05.03 - Permission templates and ready-made profiles
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` and `05.02` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.02`.
-- Current sub-step: `05.03 — Permission templates and ready-made profiles`
+- Completed main steps: `01`, `02`, `03`, `04`; main step `05` is active with `05.01` through `05.03` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, and `05.01` through `05.03`.
+- Current sub-step: `05.04 — Permission analyzer and explanation UX`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - OAuth/connected accounts: `Google + Discord provider abstraction, PKCE/state, verified-email linking, duplicate prevention, unlink safety and encrypted secret references completed`
@@ -34,10 +34,22 @@ NEXT_STEP = 05.03 - Permission templates and ready-made profiles
 - Custom profile URL permission bridge: `05.x shared role/group engine can replace ProfileUrlPermissionResolver without rewriting URL persistence/service/HTTP handlers`
 - Role/user-group model: `primary and secondary groups are separate from roles; custom/staff/system roles, protected system roles, stable identifiers, normalized persisted memberships/assignments and fail-closed foreign-key constraints completed`
 - Permission engine: `typed flag/numeric definitions, global + node rules, allow/deny/inherit, direct-user overrides, deterministic precedence, restrictive numeric aggregation, parameterized persistence and decision trace completed`
+- Permission templates: `five protected starter profiles, typed template rules, transactional one-click apply, custom-rule preservation and safe core permission seed completed`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. The status-only commit that updates this file is intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 05.03
+
+- Added typed permission-template keys, rules, repositories and one-click application service boundaries.
+- Added five protected starter profiles: new user, member, verified member, moderator and administrator.
+- Added transactional template application that upserts only the template-owned global permission keys and preserves unrelated customized rules.
+- Added core starter permission definitions for forum view/content creation, numeric daily content limits, moderation access/management and ACP access/management.
+- Added system-template persistence and deterministic seed migration `20260915220000_permission_templates` with foreign-key integrity and 40 built-in rules.
+- Added domain, transactional writer and migration tests plus architecture documentation.
+- Synchronized root `CHANGELOG.md` with completed 05.01, 05.02 and 05.03 work.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build and release checks.
 
 ## Completed in 05.02
 
