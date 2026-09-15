@@ -115,10 +115,12 @@ final class InstallationService
                 'unix_socket' => null,
                 'password_secret' => self::DATABASE_PASSWORD_SECRET,
             ],
-            'authentication' => [
-                'passkey' => [
+            'mfa' => [
+                'webauthn' => [
+                    'rp_name' => 'Forwext',
                     'rp_id' => $input->relyingPartyId(),
-                    'allowed_origins' => [$input->normalizedCanonicalUrl()],
+                    'host' => $input->normalizedCanonicalUrl(),
+                    'ceremony_ttl_seconds' => 300,
                     'user_verification' => 'required',
                     'attestation' => 'none',
                 ],
