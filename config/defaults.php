@@ -107,6 +107,7 @@ return [
         ],
         'session' => [
             'ttl_seconds' => 7200,
+            'cookie_name' => '__Host-forwext_session',
         ],
         'remember' => [
             'ttl_seconds' => 2592000,
