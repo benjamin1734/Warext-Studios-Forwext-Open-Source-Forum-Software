@@ -268,7 +268,7 @@ jobs:
 
           (
             cd "$UPDATE_ROOT"
-            zip -rq "../../../forwext-${VERSION}-update.zip" .
+            zip -rq "../../forwext-${VERSION}-update.zip" .
           )
           (
             cd dist
