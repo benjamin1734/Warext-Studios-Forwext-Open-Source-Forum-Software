@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "roadmap_step": "04.06",
+  "profile": {
+    "about_max_characters": 5000,
+    "social_link_limit": 10,
+    "visibility": ["public", "members", "private"],
+    "write_policy": "owner_only_until_shared_permission_engine"
+  },
+  "media": {
+    "storage_visibility": "private",
+    "allowed_mime_types": ["image/jpeg", "image/png", "image/webp"],
+    "avatar_max_bytes": 8388608,
+    "banner_max_bytes": 16777216,
+    "avatar_max_dimensions": [4096, 4096],
+    "banner_max_dimensions": [8192, 4096],
+    "content_address": "sha256",
+    "svg_allowed": false
+  },
+  "rendering": {
+    "about_is_plain_text": true,
+    "escape_user_content": true
+  },
+  "runtime": {
+    "node_required": false,
+    "redis_required": false,
+    "daemon_required": false,
+    "image_extension_required": false
+  }
+}
