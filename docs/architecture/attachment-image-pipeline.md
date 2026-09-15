@@ -10,7 +10,7 @@ All forum attachments remain in `StorageVisibility::Private`. Client filenames a
 
 `AttachmentService::stage()` is actor-bound through the shared permission engine. It requires `forum.view` and `forum.attachment.upload`, validates bytes with `AttachmentInspector`, strips supported image metadata, optionally generates a thumbnail, writes private temporary objects and finally creates the metadata row. Storage is deleted again if metadata persistence fails.
 
-Default policy is configurable through `attachments.*`: 25 MiB per file, 100 MiB and 20 objects in temporary state, 512 MiB total stored bytes per user, 40 million image pixels, 24-hour temporary TTL and 480×480 thumbnails.
+The bounded default policy is centralized in `AttachmentQuotaPolicy`: 25 MiB per file, 100 MiB and 20 objects in temporary state, 512 MiB total stored bytes per user, 40 million image pixels, a 24-hour temporary TTL and 480×480 thumbnails. The constructor is the composition boundary for later ACP/site-setting overrides; 07.01 does not pretend that an ACP setting exists before that configuration surface is implemented.
 
 The service performs a fast quota preflight. `DatabaseAttachmentRepository::createTemporary()` then locks the owning `forwext_users` row with `FOR UPDATE`, recomputes usage and rechecks the limits before insert. Concurrent staging requests therefore cannot bypass quota by racing each other.
 
