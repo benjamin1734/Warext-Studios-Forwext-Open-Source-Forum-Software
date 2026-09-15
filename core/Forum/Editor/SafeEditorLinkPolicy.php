@@ -9,7 +9,11 @@ final class SafeEditorLinkPolicy
     public function normalize(string $value): ?string
     {
         $value = trim($value);
-        if ($value === '' || preg_match('/[\x00-\x1F\x7F\\]/', $value) === 1) {
+        if (
+            $value === ''
+            || preg_match('/[\x00-\x1F\x7F]/', $value) === 1
+            || str_contains($value, '\\')
+        ) {
             return null;
         }
 
