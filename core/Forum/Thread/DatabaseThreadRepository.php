@@ -26,7 +26,8 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
     {
         ThreadId::assert($threadId);
         $row = $this->database->fetchOne(new CompiledQuery(
-            $this->selectSql() . ' WHERE `thread_id` = :thread_id LIMIT 1',
+            $this->selectSql()
+            . ' WHERE `thread_id` = :thread_id AND `deleted` = 0 AND `merged_into_thread_id` IS NULL LIMIT 1',
             ['thread_id' => $threadId->value()],
         ));
 
@@ -42,7 +43,7 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
 
         $rows = $this->database->fetchAll(new CompiledQuery(
             $this->selectSql()
-            . ' WHERE `forum_node_id` = :forum_node_id '
+            . ' WHERE `forum_node_id` = :forum_node_id AND `deleted` = 0 AND `merged_into_thread_id` IS NULL '
             . 'ORDER BY `sticky` DESC, `featured` DESC, `updated_at_utc` DESC, `thread_id` DESC '
             . 'LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['forum_node_id' => $forumNodeId->value()],
@@ -94,14 +95,15 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
                         . '`moderation_state` = :moderation_state, `locked` = :locked, '
                         . '`sticky` = :sticky, `featured` = :featured, `version` = :version, '
                         . '`updated_at_utc` = :updated_at '
-                        . 'WHERE `thread_id` = :thread_id AND `version` = :expected_version',
+                        . 'WHERE `thread_id` = :thread_id AND `version` = :expected_version '
+                        . 'AND `deleted` = 0 AND `merged_into_thread_id` IS NULL',
                         $parameters,
                     ));
                 }
 
                 if ($affected !== 1) {
                     throw new ThreadConcurrencyException(
-                        'Thread persistence failed because the stored version changed.',
+                        'Thread persistence failed because the stored version changed or the thread is inactive.',
                     );
                 }
 
