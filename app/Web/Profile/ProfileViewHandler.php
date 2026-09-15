@@ -16,6 +16,7 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Profile\Music\ProfileMusicService;
 use Forwext\Core\Profile\Music\ProfileMusicSourceType;
 use Forwext\Core\Profile\ProfileAccessPolicy;
+use Forwext\Core\Profile\ProfileException;
 use Forwext\Core\Profile\ProfileService;
 use Forwext\Core\Profile\ProfileTab;
 use Forwext\Core\Profile\SocialLink;
@@ -209,9 +210,15 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             return '';
         }
 
-        $source = $settings->sourceType === ProfileMusicSourceType::Upload
-            ? $memberPath . '/music'
-            : $this->music->externalUrl($userId, $viewerId, $now);
+        if ($settings->sourceType === ProfileMusicSourceType::Upload) {
+            $source = $memberPath . '/music';
+        } else {
+            try {
+                $source = $this->music->externalUrl($userId, $viewerId, $now);
+            } catch (ProfileException) {
+                return '';
+            }
+        }
         if ($source === null) {
             return '';
         }
