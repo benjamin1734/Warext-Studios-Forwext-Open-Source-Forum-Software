@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP
+      - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -23,7 +23,7 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Resolve dependencies
+      - name: Resolve dependencies against PHP 8.4.0 baseline
         run: composer update --no-interaction --prefer-dist --no-progress
 
       - name: Validate Composer metadata
@@ -32,13 +32,41 @@ jobs:
       - name: Enforce strict types
         run: php tools/quality/check-strict-types.php
 
-      - name: Run PHPUnit
+      - name: Run PHPUnit on PHP 8.4
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup PHP 8.5 compatibility runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Run PHPUnit on PHP 8.5
         run: vendor/bin/phpunit --configuration=phpunit.xml.dist
 
       - name: Prepare production vendor tree
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
 
-      - name: Build cPanel package
+      - name: Verify production dependencies keep PHP 8.4.0 minimum
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $file = __DIR__ . "/vendor/composer/platform_check.php";
+          $content = file_get_contents($file);
+          if ($content === false) { fwrite(STDERR, "platform_check.php missing\n"); exit(1); }
+          preg_match_all("/PHP_VERSION_ID\\s*>=\\s*(\\d+)/", $content, $matches);
+          foreach ($matches[1] as $minimum) {
+              if ((int) $minimum > 80400) {
+                  fwrite(STDERR, "Production dependency minimum exceeds PHP 8.4.0: {$minimum}\n");
+                  exit(1);
+              }
+          }
+          '
+
+      - name: Build cPanel package without overwriting hosting PHP handler
         shell: bash
         run: |
           set -euo pipefail
@@ -46,12 +74,36 @@ jobs:
           ROOT="forwext-${VERSION}"
           mkdir -p "dist/${ROOT}"
           rsync -a ./ "dist/${ROOT}/" \
+            --exclude '/.htaccess' \
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude 'dist/' \
             --exclude 'tests/' \
             --exclude 'tools/' \
-            --exclude 'node_modules/'
+            --exclude 'node_modules/' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpstan.neon.dist' \
+            --exclude 'psalm.xml' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'PROJECT_STATUS.md'
+
+          GUARD='Options -Indexes
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+              Order allow,deny
+              Deny from all
+          </IfModule>'
+
+          for dir in app core config database modules packages resources storage themes vendor; do
+            if [ -d "dist/${ROOT}/${dir}" ]; then
+              printf '%s\n' "$GUARD" > "dist/${ROOT}/${dir}/.htaccess"
+            fi
+          done
+
           (
             cd dist
             zip -rq "forwext-${VERSION}-install.zip" "${ROOT}"
@@ -85,12 +137,14 @@ jobs:
           cat > "$NOTES" <<EOF
           ## Forwext ${VERSION}
 
-          Development installation package generated from the tested `main` branch.
+          Development installation package generated from the tested \`main\` branch.
 
-          - PHP 8.4+
+          - PHP 8.4.0+ minimum, PHP 8.5 compatibility tested
           - cPanel-compatible installer included
-          - Production Composer dependencies are bundled in `vendor/`
-          - Database migrations run through `/install.php`
+          - Root \`.htaccess\` is not overwritten, preserving cPanel/EA-PHP handlers
+          - Sensitive internal directories receive package-local access guards
+          - Production Composer dependencies are bundled in \`vendor/\`
+          - Database migrations run through \`/install.php\`
           - This is a development prerelease, not Forwext 1.0.0
           EOF
 
