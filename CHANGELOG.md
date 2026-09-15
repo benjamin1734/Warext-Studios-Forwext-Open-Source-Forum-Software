@@ -6,6 +6,25 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 05.05 — Role Appearance and Banner System
+
+- Added a dedicated role-presentation model that remains separate from authorization and cannot grant, deny or alter permissions.
+- Added validated role colors, optional gradients, built-in icons, banners, patterns and animations without accepting arbitrary HTML, CSS declarations or external URLs.
+- Added independent mobile, profile and post visibility controls while keeping role name and priority authoritative in the existing role model.
+- Added parameterized one-to-one role-appearance persistence with cascading cleanup when a role is deleted.
+- Added an escaped native PHP renderer plus responsive CSS with built-in pattern/icon/animation support and reduced-motion handling.
+- Added migration `20260915230000_role_appearance`, installer registration, repository/domain/renderer/migration tests and architecture documentation.
+- Fixed the clean-install migration registry so the previously completed 05.01 role/group, 05.02 permission-engine and 05.03 permission-template migrations are also guaranteed to run and are protected by a regression test.
+
+### 05.04 — Permission Analyzer and Explanation UX
+
+- Added a permission analyzer that delegates authorization to the existing permission engine rather than duplicating precedence logic.
+- Added human-readable allow/deny summaries, effective numeric-limit explanations and privacy-safe fail-closed messages.
+- Added ordered visualization for node user, global user, node membership, global membership and secure fallback layers.
+- Added explicit states for not-applicable, no-rule, inherited, allowed, denied, fail-closed and not-reached outcomes.
+- Added an escaped accessible native PHP explanation renderer with stable state/effect/outcome hooks for later ACP styling.
+- Added analyzer/renderer tests and architecture documentation without adding a migration or new runtime dependency.
+
 ### 05.03 — Permission Templates and Starter Profiles
 
 - Added typed permission-template domain objects, validation and repository boundaries for reusable starter profiles.
