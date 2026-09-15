@@ -23,7 +23,7 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Resolve dependencies against PHP 8.4.0 baseline
+      - name: Resolve development dependencies
         run: composer update --no-interaction --prefer-dist --no-progress
 
       - name: Validate Composer metadata
@@ -46,8 +46,23 @@ jobs:
       - name: Run PHPUnit on PHP 8.5
         run: vendor/bin/phpunit --configuration=phpunit.xml.dist
 
-      - name: Prepare production vendor tree
-        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+      - name: Build production vendor tree against PHP 8.4.0 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $data = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR);
+          unset($data["require-dev"], $data["autoload-dev"], $data["scripts"]);
+          $data["config"] ??= [];
+          $data["config"]["platform"] ??= [];
+          $data["config"]["platform"]["php"] = "8.4.0";
+          file_put_contents(
+              "composer.production.json",
+              json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL
+          );
+          '
+          rm -rf vendor composer.production.lock
+          COMPOSER=composer.production.json composer update --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
 
       - name: Verify production dependencies keep PHP 8.4.0 minimum
         shell: bash
@@ -64,6 +79,7 @@ jobs:
                   exit(1);
               }
           }
+          require __DIR__ . "/vendor/autoload.php";
           '
 
       - name: Build cPanel package without overwriting hosting PHP handler
@@ -81,8 +97,8 @@ jobs:
             --exclude 'tests/' \
             --exclude 'tools/' \
             --exclude 'node_modules/' \
-            --exclude 'composer.json' \
-            --exclude 'composer.lock' \
+            --exclude 'composer*.json' \
+            --exclude 'composer*.lock' \
             --exclude 'phpunit.xml.dist' \
             --exclude 'phpstan.neon.dist' \
             --exclude 'psalm.xml' \
@@ -140,6 +156,7 @@ jobs:
           Development installation package generated from the tested \`main\` branch.
 
           - PHP 8.4.0+ minimum, PHP 8.5 compatibility tested
+          - Production dependencies are resolved separately against a PHP 8.4.0 platform baseline
           - cPanel-compatible installer included
           - Root \`.htaccess\` is not overwritten, preserving cPanel/EA-PHP handlers
           - Sensitive internal directories receive package-local access guards
