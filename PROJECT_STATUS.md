@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.0-dev
 LAST_COMPLETED_MAIN_STEP = 03
-LAST_COMPLETED_SUBSTEP = 04.03
-CURRENT_STEP = 04.04
+LAST_COMPLETED_SUBSTEP = 04.04
+CURRENT_STEP = 04.05
 LAST_COMMIT = git:HEAD
 BLOCKERS = none
-NEXT_STEP = 04.04
+NEXT_STEP = 04.05
 ```
 
 ## Current position
@@ -22,9 +22,9 @@ NEXT_STEP = 04.04
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`
 - Current main step: `04`
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.03`
-- Current sub-step: `04.04`
-- Persistent server installation required yet: `available — user/registration/authentication migrations now cover account identities, credentials, sessions, devices, login history, remember tokens and recovery challenges`
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.04`
+- Current sub-step: `04.05`
+- Persistent server installation required yet: `available — browser installer now applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
