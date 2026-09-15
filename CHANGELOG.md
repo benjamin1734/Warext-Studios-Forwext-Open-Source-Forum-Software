@@ -6,6 +6,20 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.04 — MFA, Passkeys and Device Security
+
+- Added encrypted TOTP enrollment/verification with persisted accepted-counter replay protection.
+- Added CSPRNG recovery codes with digest-only persistence, single-use consumption and regeneration invalidation.
+- Added strictest-wins group MFA policy enforcement plus secure pending enrollment for users newly placed under mandatory MFA.
+- Added credential-version-bound trusted-device tokens with hash-only validators and policy-controlled login bypass.
+- Added login MFA gating so successful primary authentication cannot create a full authenticated session before a required second factor succeeds.
+- Added fresh sensitive-action challenges satisfied by TOTP, recovery code or passkey verification without treating ordinary sessions/trusted-device tokens as fresh proof.
+- Added WebAuthn/passkey registration and assertion through the reviewed `web-auth/webauthn-lib` runtime dependency with required user verification, one-time server challenges and credential-state persistence.
+- Added versioned migration `20260915120000_mfa_device_security` for TOTP, recovery codes, MFA/WebAuthn challenges, passkeys, trusted devices and group-policy membership data.
+- Added MFA login/passkey/TOTP/recovery test coverage and machine-readable MFA security policy documentation.
+- Added cPanel-safe browser installation entrypoints that encrypt DB secrets, run all current core migrations through the 03.03 engine and lock completed installation state.
+- Added GitHub CI installation-package generation so production Composer dependencies are bundled into a downloadable ZIP and Composer is not required on cPanel runtime.
+
 ### 04.03 — Login, Session, Remember-Me and Recovery
 
 - Added Argon2id-preferred password hashing with bcrypt fallback, bounded password policy, dummy verification for unknown identities and rehash without credential-version churn.
