@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Core\Install;
 
 use Forwext\Core\Migration\Migration;
+use Forwext\Database\Migrations\Core\CreateAccessRoleGroupModel;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
@@ -34,6 +35,7 @@ final class CoreMigrationRegistry
             new CreateUserProfileMediaTables(),
             new CreateProfileMusicTables(),
             new CreateCustomProfileUrlTables(),
+            new CreateAccessRoleGroupModel(),
         ];
     }
 }
