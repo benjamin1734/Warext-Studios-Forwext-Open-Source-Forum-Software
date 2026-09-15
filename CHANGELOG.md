@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.07 — Profile Music System
+
+- Added a dedicated `ProfileMusicPermissionResolver` boundary for use, upload, external-source, autoplay and moderation capabilities so the shared 05.x role/group engine can replace baseline permissions without rewriting the music domain.
+- Added persisted per-user music source/preferences for enablement, title, visibility, volume, mute, autoplay and loop, plus append-only moderation history with actor, UTC timestamp and bounded reason codes.
+- Added private content-addressed MP3/Ogg/WAV/M4A uploads with binary-signature validation, bounded size limits, safe replacement ordering and no direct public-storage URLs.
+- Added exact-host HTTPS external-source policy with no credentials, fragments, wildcard inheritance, IP literals or localhost; external music remains disabled by default and requires an explicit host allowlist.
+- Added dynamic CSP `media-src` construction from the normalized external allowlist and fail-closed rendering when a previously stored host is later removed from policy.
+- Added the native `/members/{username}/music` protected endpoint with current account/profile/music permission checks, moderation checks, `private, no-store`, nosniff and single byte-range `206`/`416` delivery.
+- Added a responsive native `<audio>` profile player with persisted volume/mute/loop state and first-party initialization script; HTML never emits the `autoplay` attribute, programmatic autoplay starts muted and coarse-pointer/mobile clients require user interaction.
+- Added versioned migration `20260915140000_profile_music`, domain/persistence tests, HTTP range/player/CSP tests and machine-readable profile-music policy documentation.
+- Kept the cPanel baseline free of Node, Redis, worker daemons, ffmpeg and media-transcoding extensions.
+
 ### 04.06 — Profile and Profile Media System
 
 - Added persisted per-user profile data for about text, avatar/banner references, profile/section visibility, normalized social links and configurable profile tabs.
