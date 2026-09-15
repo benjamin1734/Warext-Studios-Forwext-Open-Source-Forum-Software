@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 05
-LAST_COMPLETED_SUBSTEP = 06.02
-CURRENT_STEP = 06.03
-LAST_COMMIT = 794c2ffdf4a4c65bf32814efbc2c48dfe031ffc9
+LAST_COMPLETED_SUBSTEP = 06.03
+CURRENT_STEP = 06.04
+LAST_COMMIT = 88931da6c23dc10978cf306c1bd07c9c1dcdd9a4
 BLOCKERS = none
-NEXT_STEP = 06.03 - Post domain and message lifecycle
+NEXT_STEP = 06.04 - Prefix/tag/custom fields
 ```
 
 ## Current position
@@ -20,20 +20,39 @@ NEXT_STEP = 06.03 - Post domain and message lifecycle
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` and `06.02` completed.
-- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.02`.
-- Current sub-step: `06.03 — Post domain and message lifecycle`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`; main step `06` is active with `06.01` through `06.03` completed.
+- Completed sub-steps: `01.01` through `01.06`, `02.01` through `02.07`, `03.01` through `03.07`, `04.01` through `04.08`, `05.01` through `05.07`, and `06.01` through `06.03`.
+- Current sub-step: `06.04 — Prefix/tag/custom fields`
 - Persistent server installation: `available — browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state`
 - Installation packaging: `GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks`
 - Permission system: `shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed`
 - Forum node hierarchy: `category/forum/subforum/page/link nodes, ordering, breadcrumbs, visibility, settings, transaction-safe persistence and node-scoped forum.view authorization completed`
-- Thread domain: `thread identity/lifecycle, locked/sticky/featured/moderated states, extensible protected thread-type registry, optimistic persistence, creation/state application services and granular node permissions completed`
-- Thread permission profiles: `new_user/member/verified explicitly deny thread state-management permissions; moderator/administrator explicitly allow them so template downgrade cannot leave stale privilege grants`
-- Installer migration integrity: `all current role/permission/forum/thread migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
+- Thread domain: `thread identity/lifecycle, locked/sticky/featured/moderated states, protected extensible thread-type registry, optimistic persistence and granular node permissions completed`
+- Post domain: `real first-post identity at position 1, create/edit/history/soft-delete/restore/approve/reject lifecycle, optimistic persistence, serialized per-thread positions, permission-aware services, authoritative derived counters and bounded pagination completed`
+- Thread publication: `canonical ThreadPublishingService wraps thread creation plus first-post creation in one outer database transaction so first-post failure can roll back the new thread`
+- Post permission profiles: `new_user/member/verified allow own edit/delete but deny edit-any/delete-any/restore/moderate; moderator/administrator allow all six post-management capabilities`
+- Installer migration integrity: `all current role/permission/forum/thread/post migrations are explicitly registered and regression-tested so clean installs cannot silently omit them`
 - First persistent install milestone: `03.03 completed`
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0)
 
 `LAST_COMMIT` records the implementation commit that completed the last sub-step. Status/changelog-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must still resolve and verify the current `main` HEAD before changing files.
+
+## Completed in 06.03
+
+- Added real `Post` entities with opaque ids, bounded source bodies, immutable thread/author/position identity and visible/pending/rejected moderation state.
+- Added thread-local monotonic post positions; `position = 1` is the real first post and remains a `Post`, not embedded thread content.
+- Added row-locked position allocation by locking the owning thread row plus a unique `(thread_id, position)` database constraint.
+- Added create/edit/delete/restore/approve/reject lifecycle with immutable prior-state history snapshots and UTC mutation ordering.
+- Added optimistic post persistence; stale writers fail instead of overwriting newer body/moderation/delete state, and history is appended in the same transaction as the winning update.
+- Added soft delete with separate moderation state so restore never silently converts rejected/pending content into visible content.
+- Added `PostService` authorization for actor-bound own-vs-any edit/delete, dedicated restore/moderate permissions, locked-thread/reply policy and visible first-post requirements.
+- Added `ThreadPublishingService` as the canonical atomic thread + first-post production boundary using an outer database transaction.
+- Added authoritative post counters derived from post rows instead of denormalized mutable counters, plus bounded deterministic pagination with staff visibility switches.
+- Added migration `20260915235955_post_domain` for post/history tables, six new post-management permissions and 30 starter-profile rules without modifying historical 05.x migrations.
+- Registered the post migration after the thread migration in the clean-install registry and extended registry regression coverage.
+- Added domain, repository, service and migration tests plus architecture documentation.
+- Fixed a pre-commit regression test drift so concurrency tests assert the final `SELECT thread_id ... FOR UPDATE` locking model rather than the superseded count-lock query.
+- GitHub CI passed PHPUnit on PHP 8.4 and PHP 8.5 together with strict-types, Composer metadata, production dependency, full/update package-build, artifact and release checks.
 
 ## Completed in 06.02
 
