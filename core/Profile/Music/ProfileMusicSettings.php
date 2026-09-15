@@ -110,19 +110,15 @@ final readonly class ProfileMusicSettings
 
     private function assertModeration(): void
     {
-        if (($this->moderatedByUserId === null) !== ($this->moderatedAt === null)) {
-            throw new ProfileException('Profile music moderation actor and timestamp must be stored together.');
+        if ($this->moderatedByUserId !== null && $this->moderatedAt === null) {
+            throw new ProfileException('Profile music moderation actor requires a moderation timestamp.');
         }
         if ($this->moderatedAt !== null && $this->moderatedAt->getTimezone()->getName() !== 'UTC') {
             throw new ProfileException('Profile music moderation timestamps must use UTC.');
         }
 
         if ($this->moderationStatus === ProfileMusicModerationStatus::Blocked) {
-            if (
-                $this->moderationReasonCode === null
-                || $this->moderatedByUserId === null
-                || $this->moderatedAt === null
-            ) {
+            if ($this->moderationReasonCode === null || $this->moderatedAt === null) {
                 throw new ProfileException('Blocked profile music requires moderation metadata.');
             }
             if (preg_match('/^[a-z0-9][a-z0-9._-]{0,63}$/D', $this->moderationReasonCode) !== 1) {

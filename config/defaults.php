@@ -144,6 +144,18 @@ return [
             ],
         ],
     ],
+    'profile_music' => [
+        'upload_max_bytes' => 20971520,
+        'default_volume' => 70,
+        'external_allowed_hosts' => [],
+        'permissions' => [
+            'use' => true,
+            'upload' => true,
+            'external' => false,
+            'autoplay' => true,
+            'moderate' => false,
+        ],
+    ],
     'mfa' => [
         'challenge_ttl_seconds' => 300,
         'trusted_device_ttl_seconds' => 2592000,
