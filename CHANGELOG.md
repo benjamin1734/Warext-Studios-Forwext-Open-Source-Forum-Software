@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 04.08 — Custom Profile URL System
+
+- Added a dedicated `ProfileUrlPermissionResolver` boundary so the shared 05.x role/group engine can govern custom profile URLs without rewriting URL persistence, services or HTTP handlers.
+- Added canonical 3–32 character lowercase ASCII profile slugs with single-hyphen rules and a configurable case-insensitive reserved-name policy for system, staff and brand namespaces.
+- Added permanent custom-URL claim history plus one-current-slug-per-user persistence through migration `20260915143000_custom_profile_urls`; retired slugs are never reassigned, including after account deletion.
+- Added transaction-safe owner serialization, row-locked claim checks, database uniqueness constraints and duplicate-key race mapping so competing claims fail as a normal unavailable-slug result instead of a database 500.
+- Added configurable abuse controls with a 24-hour default change cooldown, a 30-day default window and three actual changes per window while keeping same-slug submissions idempotent.
+- Added native `/u/{slug}` profile routing with privacy-aware `308` historical/case canonicalization only after profile visibility is authorized; hidden profiles remain `404` without leaking the current URL.
+- Added authenticated `/account/profile-url` GET/POST settings with shared CSRF middleware, a dedicated CSRF scope, domain-separated key derivation and generic non-disclosing assignment failures.
+- Added an owner-only profile link to the custom-URL settings surface while keeping backend ownership/permission enforcement authoritative.
+- Added domain/store race-limit-history tests, migration-schema tests, HTTP privacy/canonicalization tests, a real CSRF cookie/token round trip and architecture/security documentation.
+- Completed Main Step 04 and advanced the roadmap to `05.01 — Role and user-group model`.
+
 ### 04.07 — Profile Music System
 
 - Added a dedicated `ProfileMusicPermissionResolver` boundary for use, upload, external-source, autoplay and moderation capabilities so the shared 05.x role/group engine can replace baseline permissions without rewriting the music domain.
