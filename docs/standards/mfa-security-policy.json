@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "policy_id": "forwext.mfa_device_security",
+  "roadmap_step": "04.04",
+  "login": {
+    "primary_auth_before_mfa": true,
+    "authenticated_session_before_required_mfa": false,
+    "pre_auth_session_revoked_before_pending_mfa": true,
+    "pending_challenge_ttl_seconds": 300,
+    "enforced_enrollment_supported": true
+  },
+  "totp": {
+    "period_seconds": 30,
+    "window": 1,
+    "secret_at_rest": "aes-256-gcm",
+    "accepted_counter_persisted": true,
+    "counter_replay_rejected": true
+  },
+  "recovery_codes": {
+    "default_count": 10,
+    "entropy_bits_per_code": 80,
+    "raw_code_persisted": false,
+    "single_use": true,
+    "regeneration_invalidates_previous_set": true
+  },
+  "webauthn": {
+    "runtime_library": "web-auth/webauthn-lib",
+    "version_constraint": "^5.3.9",
+    "challenge_minimum_bytes": 32,
+    "challenge_single_use": true,
+    "challenge_ttl_seconds": 300,
+    "user_verification": "required",
+    "attestation": "none",
+    "rp_id_from_confirmed_configuration": true,
+    "expected_origin_from_confirmed_configuration": true,
+    "updated_credential_state_persisted": true
+  },
+  "trusted_device": {
+    "default_ttl_seconds": 2592000,
+    "raw_validator_persisted": false,
+    "credential_version_bound": true,
+    "login_bypass_requires_policy": true,
+    "sensitive_action_bypass": false
+  },
+  "group_policy": {
+    "resolution": "strictest_wins",
+    "backend_enforced": true
+  },
+  "sensitive_action": {
+    "fresh_challenge_supported": true,
+    "challenge_single_use": true,
+    "accepted_factors": ["totp", "recovery_code", "passkey"]
+  },
+  "migration": "20260915120000_mfa_device_security"
+}
