@@ -12,6 +12,7 @@ final readonly class BbCodeRenderer
     private const MAX_SOURCE_BYTES = 100000;
     private const MAX_NESTING_DEPTH = 32;
     private const MAX_PLAIN64_BYTES = 65536;
+    private const MAX_PLAIN64_ATTRIBUTE_BYTES = 87382;
 
     public function __construct(
         private SafeEditorLinkPolicy $links,
@@ -136,7 +137,10 @@ final readonly class BbCodeRenderer
 
     private function renderPlain64(?string $attribute): string
     {
-        if ($attribute === null || preg_match('/\A[A-Za-z0-9_-]{1,87382}\z/D', $attribute) !== 1) {
+        if ($attribute === null
+            || strlen($attribute) > self::MAX_PLAIN64_ATTRIBUTE_BYTES
+            || preg_match('/\A[A-Za-z0-9_-]+\z/D', $attribute) !== 1
+        ) {
             return '<span class="fx-bbcode-plain fx-bbcode-plain--invalid"></span>';
         }
         $padded = strtr($attribute, '-_', '+/');

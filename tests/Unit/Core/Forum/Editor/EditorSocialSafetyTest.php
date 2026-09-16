@@ -55,23 +55,25 @@ final class EditorSocialSafetyTest extends TestCase
         self::assertSame(443, $approved->port);
     }
 
-    /** @dataProvider blockedAddressProvider */
-    public function testLinkPreviewPolicyRejectsPrivateReservedOrMixedResolution(array $addresses): void
+    public function testLinkPreviewPolicyRejectsPrivateReservedOrMixedResolution(): void
     {
-        $policy = new LinkPreviewUrlPolicy(new MapAddressResolver(['blocked.example.com' => $addresses]));
+        $cases = [
+            ['127.0.0.1'],
+            ['10.0.0.1'],
+            ['169.254.169.254'],
+            ['::1'],
+            ['93.184.216.34', '10.1.2.3'],
+        ];
 
-        $this->expectException(LinkPreviewException::class);
-        $policy->approve('https://blocked.example.com/resource');
-    }
-
-    /** @return iterable<string,array{0:list<string>}> */
-    public static function blockedAddressProvider(): iterable
-    {
-        yield 'loopback' => [['127.0.0.1']];
-        yield 'private' => [['10.0.0.1']];
-        yield 'metadata' => [['169.254.169.254']];
-        yield 'ipv6-loopback' => [['::1']];
-        yield 'mixed-rebinding' => [['93.184.216.34', '10.1.2.3']];
+        foreach ($cases as $addresses) {
+            $policy = new LinkPreviewUrlPolicy(new MapAddressResolver(['blocked.example.com' => $addresses]));
+            try {
+                $policy->approve('https://blocked.example.com/resource');
+                self::fail('Expected non-public or mixed DNS result to be rejected.');
+            } catch (LinkPreviewException) {
+                self::assertTrue(true);
+            }
+        }
     }
 
     public function testLinkPreviewPolicyRejectsIpLiteralAndCredentialedUrls(): void
