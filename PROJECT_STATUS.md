@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.02
-CURRENT_STEP = 07.03
-LAST_COMMIT = fdd38b4a72e42fa2e6fee467ed4dbeadcb920cb4
+LAST_COMPLETED_SUBSTEP = 07.03
+CURRENT_STEP = 07.04
+LAST_COMMIT = 32a7b7456a088dc3db06ff976e352c60c5c4b16d
 BLOCKERS = none
-NEXT_STEP = 07.03 - Reactions/bookmarks/follow/ignore
+NEXT_STEP = 07.04 - Profile posts and activity feed
 ```
 
 ## Current position
@@ -21,46 +21,53 @@ NEXT_STEP = 07.03 - Reactions/bookmarks/follow/ignore
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.02`.
-- Current sub-step: `07.03 — Reactions/bookmarks/follow/ignore`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.03`.
+- Current sub-step: `07.04 — Profile posts ve activity feed`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
-- Interaction foundation: private attachments plus mention autocomplete, cross-thread quotes, safe embeds, SSRF-hardened link previews and local emoji/smileys completed.
+- Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore and authored-content filtering completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
 
+## Completed in 07.03
+
+- Added reaction type catalog with bounded keys/labels/scores and six seeded core reactions.
+- Added one-reaction-per-user-per-post persistence with aggregate reaction counts and score calculation from enabled reaction definitions.
+- Added node-scoped `forum.reaction.use` and blocked reactions on the actor's own post.
+- Added private post bookmarks with bounded private notes, private pagination and per-entry current visibility rechecks.
+- Added user follow and ignore relationships with self-relation rejection and active-target enforcement for follows.
+- Made ignore override follow: applying ignore atomically removes follow and follow/ignore writes serialize through an actor-row `FOR UPDATE` lock to prevent contradictory concurrent state.
+- Added server-side ignored-author filters for thread and post collections without replacing normal permission/moderation visibility checks.
+- Added four first-party interaction permissions, five-table migration `20260916002000_social_interactions`, explicit starter-profile rules and installer-registry coverage.
+- Added authenticated native routes for reaction summary/mutation, bookmark management/listing, follow/unfollow and ignore/unignore; interaction mutations use a dedicated CSRF scope and actor-bound backend authorization.
+- Added domain/repository/service/migration/web-surface regression tests and architecture documentation.
+- Feature commit: `32a7b7456a088dc3db06ff976e352c60c5c4b16d`.
+- Final CI run `35150065939` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
+
 ## Completed in 07.02
 
-- Replaced exact-only mention UX with authenticated bounded prefix autocomplete while preserving stable user-id mention tokens and the previous exact-lookup API.
-- Added source-forum-authorized cross-thread quoting with privacy-preserving unavailable responses for hidden/deleted/pending content.
-- Added opaque base64url `plain64` quote payload rendering so quoted BBCode/HTML cannot break out of the quote container or become executable formatting.
-- Preserved the iframe-free safe embed contract instead of introducing provider HTML/script execution.
-- Added SSRF-resistant HTTPS link previews: public-host DNS validation, all-address fail-closed checks, private/reserved/IP-literal rejection, port 443 restriction, pinned-IP TLS transport, redirect revalidation, response/timeout bounds and curated text-only metadata.
-- Added authenticated editor-header gating before outbound preview work and kept remote preview metadata out of `innerHTML`.
-- Added first-party emoji/smiley catalog, `[emoji=...]` rendering and code-block literal behavior.
-- Added native editor UI for debounced mention suggestions, post quoting, link-preview cards and emoji selection, including responsive styles.
-- Added domain/database/HTTP/security regression tests covering mention wildcard handling, cross-thread authorization, quote breakout containment, mixed-DNS/rebinding/private-address SSRF cases and editor-header gating.
-- Added architecture documentation; no migration was required because 07.02 introduces no persistent data.
+- Added authenticated bounded mention autocomplete while preserving stable user-id mention tokens.
+- Added source-forum-authorized cross-thread quotes with opaque `plain64` quoted payloads so quoted BBCode cannot break out of the quote container.
+- Preserved iframe-free safe embed rendering.
+- Added SSRF-resistant HTTPS link previews with public-host DNS validation, private/reserved-address rejection, pinned-IP TLS transport, redirect revalidation and response/time bounds.
+- Added local emoji/smiley rendering and native editor UI integration.
+- Added regression tests covering mention wildcard handling, quote breakout containment, SSRF cases and editor-header gating.
 - Feature commit: `bc6164cbd5cdc9a6bc1f14c7afcfd909096d8c55`; hardening fix: `fdd38b4a72e42fa2e6fee467ed4dbeadcb920cb4`.
-- Final CI run `35064782254` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
+- Final CI run `35064782254` passed all release gates.
 
 ## Completed in 07.01
 
-- Added actor-bound private temporary attachment staging with `forum.view` + `forum.attachment.upload` authorization.
-- Added server-side byte-signature/MIME inspection for JPEG, PNG, GIF, WebP, PDF, ZIP and bounded UTF-8 text instead of trusting client MIME.
-- Added image decode/pixel limits and pure-PHP privacy stripping for JPEG EXIF/XMP/IPTC/comment metadata, PNG metadata chunks and WebP EXIF/XMP.
-- Added optional GD thumbnail generation without making GD a minimum cPanel requirement.
-- Added service preflight quotas plus database owner-row locking and in-transaction quota recheck so concurrent uploads cannot race past user limits.
-- Added temporary-to-attached finalization with owner binding, active post/thread/forum validation, SHA-256/byte-length revalidation and collision-safe permanent storage paths.
-- Added private authenticated download routes with persisted integrity checks, `nosniff`, private/no-store caching and correct generated-thumbnail extension handling.
-- Added `AttachmentCleanupService`, hourly maintenance task definition and a bounded cleanup job handler that do not invent a privileged system user.
-- Added migration `20260916001000_attachment_pipeline`, three attachment permissions, complete starter-profile rules and installer-registry coverage.
-- Added domain/repository/service/migration/security tests and architecture documentation.
-- Final CI run `35029822766` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
+- Added actor-bound private temporary attachment staging with byte-signature/MIME inspection, quota controls and image safety checks.
+- Added privacy stripping for supported image metadata and optional-GD thumbnails without making GD a minimum cPanel dependency.
+- Added temporary-to-attached finalization, persisted hash/size integrity verification and private secure downloads.
+- Added race-safe quota rechecks, orphan cleanup maintenance service/task/handler and migration `20260916001000_attachment_pipeline`.
+- Added three attachment permissions, starter-profile rules, installer coverage and domain/repository/service/migration/security tests.
+- Final implementation HEAD: `8530e79c62cf2bcb4334d1706eb59c782a39960d`.
+- Final CI run `35029822766` passed all release gates.
 
 ## Completed main step 06
 
