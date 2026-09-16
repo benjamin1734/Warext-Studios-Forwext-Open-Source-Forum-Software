@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
+use Forwext\App\Web\Editor\EditorQuoteHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
@@ -37,8 +39,14 @@ use Forwext\Core\Forum\Attachment\DatabaseAttachmentRepository;
 use Forwext\Core\Forum\Attachment\GdAttachmentThumbnailGenerator;
 use Forwext\Core\Forum\Attachment\ImageMetadataSanitizer;
 use Forwext\Core\Forum\Editor\BbCodeRenderer;
+use Forwext\Core\Forum\Editor\CrossThreadQuoteService;
+use Forwext\Core\Forum\Editor\DatabaseMentionSuggestionProvider;
 use Forwext\Core\Forum\Editor\EditorLimits;
 use Forwext\Core\Forum\Editor\EditorPreviewService;
+use Forwext\Core\Forum\Editor\LinkPreviewService;
+use Forwext\Core\Forum\Editor\LinkPreviewUrlPolicy;
+use Forwext\Core\Forum\Editor\NativeHostAddressResolver;
+use Forwext\Core\Forum\Editor\PinnedHttpsLinkPreviewTransport;
 use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
 use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
 use Forwext\Core\Forum\Editor\UserMentionResolver;
@@ -145,13 +153,22 @@ final readonly class WebApplicationFactory
             ),
             new EditorLimits(),
         );
+        $mentionSuggestions = new DatabaseMentionSuggestionProvider($database);
+        $posts = new DatabasePostRepository($database);
+        $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
+        $nodes = new DatabaseForumNodeRepository($database);
+        $quotes = new CrossThreadQuoteService($posts, $threads, $users);
+        $linkPreviews = new LinkPreviewService(
+            new LinkPreviewUrlPolicy(new NativeHostAddressResolver()),
+            new PinnedHttpsLinkPreviewTransport(),
+        );
 
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
-            new DatabasePostRepository($database),
-            new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults()),
-            new DatabaseForumNodeRepository($database),
+            $posts,
+            $threads,
+            $nodes,
             $storage,
             new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota),
             new GdAttachmentThumbnailGenerator($attachmentQuota),
@@ -168,7 +185,15 @@ final readonly class WebApplicationFactory
         ));
         $routes->add(new Route(
             'editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'),
-            new EditorMentionLookupHandler($users, $viewerResolver, $basePath),
+            new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions),
+        ));
+        $routes->add(new Route(
+            'editor.quote', [HttpMethod::Get], new PathTemplate('/editor/quote'),
+            new EditorQuoteHandler($quotes, $viewerResolver, $authorizer),
+        ));
+        $routes->add(new Route(
+            'editor.link-preview', [HttpMethod::Post], new PathTemplate('/editor/link-preview'),
+            new EditorLinkPreviewHandler($linkPreviews, $viewerResolver),
         ));
         $routes->add(new Route(
             'forum.attachment.stage',

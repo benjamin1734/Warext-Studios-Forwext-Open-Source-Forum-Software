@@ -1,12 +1,11 @@
 .fx-editor {
+    position: relative;
     display: grid;
     gap: .75rem;
     width: 100%;
 }
 
-.fx-editor__label {
-    font-weight: 700;
-}
+.fx-editor__label { font-weight: 700; }
 
 .fx-editor__toolbar {
     display: flex;
@@ -15,7 +14,10 @@
 }
 
 .fx-editor__toolbar button,
-.fx-editor__actions button {
+.fx-editor__actions button,
+.fx-editor__emoji button,
+.fx-editor__mention-option,
+.fx-editor__link-actions button {
     min-height: 2.25rem;
     padding: .45rem .7rem;
     border: 1px solid currentColor;
@@ -27,6 +29,9 @@
 
 .fx-editor__toolbar button:focus-visible,
 .fx-editor__actions button:focus-visible,
+.fx-editor__emoji button:focus-visible,
+.fx-editor__mention-option:focus-visible,
+.fx-editor__link-actions button:focus-visible,
 .fx-editor textarea:focus-visible {
     outline: 3px solid currentColor;
     outline-offset: 2px;
@@ -46,8 +51,83 @@
     color: inherit;
 }
 
-.fx-editor--invalid textarea {
-    border-style: dashed;
+.fx-editor--invalid textarea { border-style: dashed; }
+
+.fx-editor__emoji {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+    gap: .35rem;
+    max-width: 32rem;
+    padding: .55rem;
+    border: 1px solid currentColor;
+    border-radius: .55rem;
+}
+
+.fx-editor__emoji[hidden],
+.fx-editor__mention-menu[hidden],
+.fx-editor__link-preview[hidden],
+.fx-editor__preview[hidden] { display: none; }
+
+.fx-editor__emoji button {
+    padding: .35rem;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.fx-editor__mention-menu {
+    position: absolute;
+    z-index: 20;
+    top: 100%;
+    inset-inline-start: 0;
+    display: grid;
+    width: min(24rem, 100%);
+    max-height: 18rem;
+    overflow: auto;
+    padding: .35rem;
+    border: 1px solid currentColor;
+    border-radius: .55rem;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .18);
+}
+
+.fx-editor__mention-option {
+    width: 100%;
+    border-color: transparent;
+    text-align: start;
+}
+
+.fx-editor__mention-option:hover,
+.fx-editor__mention-option:focus-visible { border-color: currentColor; }
+
+.fx-editor__link-preview,
+.fx-editor__preview {
+    padding: 1rem;
+    border: 1px solid currentColor;
+    border-radius: .55rem;
+    overflow-wrap: anywhere;
+}
+
+.fx-editor__link-card {
+    display: grid;
+    gap: .35rem;
+}
+
+.fx-editor__link-card > span {
+    font-size: .85rem;
+    opacity: .75;
+}
+
+.fx-editor__link-card p {
+    margin: .25rem 0;
+    line-height: 1.45;
+}
+
+.fx-editor__link-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .35rem;
 }
 
 .fx-editor__meta {
@@ -65,24 +145,8 @@
     gap: .75rem;
 }
 
-.fx-editor__status {
-    font-size: .9rem;
-}
-
-.fx-editor__preview {
-    padding: 1rem;
-    border: 1px solid currentColor;
-    border-radius: .55rem;
-    overflow-wrap: anywhere;
-}
-
-.fx-editor__preview[hidden] {
-    display: none;
-}
-
-.fx-rich-text {
-    line-height: 1.6;
-}
+.fx-editor__status { font-size: .9rem; }
+.fx-rich-text { line-height: 1.6; }
 
 .fx-bbcode-quote {
     margin: 1rem 0;
@@ -94,6 +158,9 @@
     margin-bottom: .45rem;
     font-weight: 700;
 }
+
+.fx-bbcode-plain { white-space: pre-wrap; overflow-wrap: anywhere; }
+.fx-bbcode-plain--invalid { opacity: .7; }
 
 .fx-bbcode-code {
     max-width: 100%;
@@ -112,8 +179,13 @@
     opacity: .7;
 }
 
-.fx-mention {
-    font-weight: 700;
+.fx-mention { font-weight: 700; }
+
+.fx-emoji {
+    display: inline-block;
+    font-family: system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    line-height: 1;
+    vertical-align: -.08em;
 }
 
 .fx-embed {
@@ -130,10 +202,7 @@
     text-decoration: none;
 }
 
-.fx-embed__label {
-    font-weight: 700;
-}
-
+.fx-embed__label { font-weight: 700; }
 .fx-embed__url {
     font-size: .85rem;
     opacity: .75;
@@ -141,18 +210,13 @@
 }
 
 @media (max-width: 640px) {
-    .fx-editor__toolbar button {
-        flex: 1 1 auto;
-    }
-
+    .fx-editor__toolbar button { flex: 1 1 auto; }
     .fx-editor__meta {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .fx-editor__meta [data-fx-editor-limits] {
-        grid-column: 1 / -1;
-    }
+    .fx-editor__meta [data-fx-editor-limits] { grid-column: 1 / -1; }
+    .fx-editor__mention-menu { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

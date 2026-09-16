@@ -11,6 +11,7 @@ final readonly class BbCodeRenderer
 {
     private const MAX_SOURCE_BYTES = 100000;
     private const MAX_NESTING_DEPTH = 32;
+    private const MAX_PLAIN64_BYTES = 65536;
 
     public function __construct(
         private SafeEditorLinkPolicy $links,
@@ -53,7 +54,7 @@ final readonly class BbCodeRenderer
                 $offset = $next;
             }
 
-            if (preg_match('/\G\[(\/?)\s*([a-z]+)(?:=([^\]\r\n]+))?\]/i', $source, $match, 0, $offset) !== 1) {
+            if (preg_match('/\G\[(\/?)\s*([a-z0-9]+)(?:=([^\]\r\n]+))?\]/i', $source, $match, 0, $offset) !== 1) {
                 $html .= '&#91;';
                 ++$offset;
                 continue;
@@ -73,6 +74,11 @@ final readonly class BbCodeRenderer
                 continue;
             }
 
+            if ($tag === 'plain64') {
+                $html .= $this->renderPlain64($attribute);
+                continue;
+            }
+
             if ($tag === 'code') {
                 $close = stripos($source, '[/code]', $offset);
                 if ($close === false) {
@@ -87,6 +93,12 @@ final readonly class BbCodeRenderer
 
             if ($tag === 'mention') {
                 $html .= $this->renderMention($attribute);
+                continue;
+            }
+
+            if ($tag === 'emoji') {
+                $key = $attribute === null ? '' : strtolower(trim($attribute, " \t\n\r\0\x0B\"'"));
+                $html .= EmojiCatalog::tag($key) ?? '<span class="fx-emoji fx-emoji--missing">�</span>';
                 continue;
             }
 
@@ -120,6 +132,27 @@ final readonly class BbCodeRenderer
         }
 
         return [$html, false];
+    }
+
+    private function renderPlain64(?string $attribute): string
+    {
+        if ($attribute === null || preg_match('/\A[A-Za-z0-9_-]{1,87382}\z/D', $attribute) !== 1) {
+            return '<span class="fx-bbcode-plain fx-bbcode-plain--invalid"></span>';
+        }
+        $padded = strtr($attribute, '-_', '+/');
+        $padding = strlen($padded) % 4;
+        if ($padding !== 0) {
+            $padded .= str_repeat('=', 4 - $padding);
+        }
+        $decoded = base64_decode($padded, true);
+        if (!is_string($decoded)
+            || strlen($decoded) > self::MAX_PLAIN64_BYTES
+            || preg_match('//u', $decoded) !== 1
+            || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $decoded) === 1
+        ) {
+            return '<span class="fx-bbcode-plain fx-bbcode-plain--invalid"></span>';
+        }
+        return '<span class="fx-bbcode-plain">' . $this->escapeText($decoded) . '</span>';
     }
 
     private function wrapContainer(string $tag, ?string $attribute, string $inner): string
@@ -215,7 +248,9 @@ final readonly class BbCodeRenderer
 
     private function escapeText(string $value): string
     {
-        return str_replace("\n", "<br>\n", $this->escape(str_replace("\r\n", "\n", str_replace("\r", "\n", $value))));
+        $normalized = str_replace("\r\n", "\n", str_replace("\r", "\n", $value));
+        $escaped = EmojiCatalog::renderAliases($this->escape($normalized));
+        return str_replace("\n", "<br>\n", $escaped);
     }
 
     private function escape(string $value): string
