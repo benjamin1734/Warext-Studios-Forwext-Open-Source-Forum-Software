@@ -25,6 +25,7 @@ use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
+use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
 use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
@@ -60,6 +61,7 @@ final class CoreMigrationRegistry
             new CreateDiscussionStateTables(),
             new CreateContentModerationTables(),
             new CreateAttachmentPipelineTables(),
+            new CreateSocialInteractionTables(),
         ];
     }
 }

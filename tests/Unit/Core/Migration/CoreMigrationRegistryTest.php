@@ -16,6 +16,7 @@ use Forwext\Database\Migrations\Core\CreatePollTables;
 use Forwext\Database\Migrations\Core\CreatePostDomainTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
+use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
 use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
 use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
 use PHPUnit\Framework\TestCase;
@@ -56,5 +57,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateDiscussionStateTables::class, $classes);
         self::assertContains(CreateContentModerationTables::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
+        self::assertContains(CreateSocialInteractionTables::class, $classes);
     }
 }
