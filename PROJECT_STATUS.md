@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.01
-CURRENT_STEP = 07.02
-LAST_COMMIT = 8530e79c62cf2bcb4334d1706eb59c782a39960d
+LAST_COMPLETED_SUBSTEP = 07.02
+CURRENT_STEP = 07.03
+LAST_COMMIT = fdd38b4a72e42fa2e6fee467ed4dbeadcb920cb4
 BLOCKERS = none
-NEXT_STEP = 07.02 - Mention/quote/embed/link preview
+NEXT_STEP = 07.03 - Reactions/bookmarks/follow/ignore
 ```
 
 ## Current position
@@ -21,17 +21,32 @@ NEXT_STEP = 07.02 - Mention/quote/embed/link preview
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01`.
-- Current sub-step: `07.02 — Mention/quote/embed/link preview`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.02`.
+- Current sub-step: `07.03 — Reactions/bookmarks/follow/ignore`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
-- Attachment pipeline: private temporary uploads, signature/MIME checks, quotas, metadata stripping, optional-GD thumbnails, secure finalization/download and bounded orphan cleanup completed.
+- Interaction foundation: private attachments plus mention autocomplete, cross-thread quotes, safe embeds, SSRF-hardened link previews and local emoji/smileys completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
-`LAST_COMMIT` records the implementation/documentation commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+`LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 07.02
+
+- Replaced exact-only mention UX with authenticated bounded prefix autocomplete while preserving stable user-id mention tokens and the previous exact-lookup API.
+- Added source-forum-authorized cross-thread quoting with privacy-preserving unavailable responses for hidden/deleted/pending content.
+- Added opaque base64url `plain64` quote payload rendering so quoted BBCode/HTML cannot break out of the quote container or become executable formatting.
+- Preserved the iframe-free safe embed contract instead of introducing provider HTML/script execution.
+- Added SSRF-resistant HTTPS link previews: public-host DNS validation, all-address fail-closed checks, private/reserved/IP-literal rejection, port 443 restriction, pinned-IP TLS transport, redirect revalidation, response/timeout bounds and curated text-only metadata.
+- Added authenticated editor-header gating before outbound preview work and kept remote preview metadata out of `innerHTML`.
+- Added first-party emoji/smiley catalog, `[emoji=...]` rendering and code-block literal behavior.
+- Added native editor UI for debounced mention suggestions, post quoting, link-preview cards and emoji selection, including responsive styles.
+- Added domain/database/HTTP/security regression tests covering mention wildcard handling, cross-thread authorization, quote breakout containment, mixed-DNS/rebinding/private-address SSRF cases and editor-header gating.
+- Added architecture documentation; no migration was required because 07.02 introduces no persistent data.
+- Feature commit: `bc6164cbd5cdc9a6bc1f14c7afcfd909096d8c55`; hardening fix: `fdd38b4a72e42fa2e6fee467ed4dbeadcb920cb4`.
+- Final CI run `35064782254` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
 
 ## Completed in 07.01
 
