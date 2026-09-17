@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Forwext\App\Web\Community\CommunityApplicationFactory;
 use Forwext\App\Web\ResponseEmitter;
 use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
@@ -42,10 +43,17 @@ try {
     $response = $seoFactory->handle($request);
 
     if ($response === null) {
-        $factory = new WebApplicationFactory($root);
-        $application = $factory->create($version->value());
-        $response = $seoFactory->decorate($request, $application->handle($request))
-            ->withHeader('Content-Security-Policy', $factory->contentSecurityPolicy());
+        $communityFactory = new CommunityApplicationFactory($root);
+        $response = $communityFactory->handle($request);
+        $webFactory = new WebApplicationFactory($root);
+
+        if ($response === null) {
+            $application = $webFactory->create($version->value());
+            $response = $application->handle($request);
+        }
+
+        $response = $seoFactory->decorate($request, $response)
+            ->withHeader('Content-Security-Policy', $webFactory->contentSecurityPolicy());
     }
 
     $response = $response
