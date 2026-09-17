@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.05
-CURRENT_STEP = 07.06
-LAST_COMMIT = c9c70266c02e4a26b0329f288b465bdf3f439818
+LAST_COMPLETED_SUBSTEP = 07.06
+CURRENT_STEP = 07.07
+LAST_COMMIT = a138065805e01088277f193338a3388043da4fb9
 BLOCKERS = none
-NEXT_STEP = 07.06 - Notification sound system
+NEXT_STEP = 07.07 - Realtime notification delivery
 ```
 
 ## Current position
@@ -21,18 +21,36 @@ NEXT_STEP = 07.06 - Notification sound system
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.05`.
-- Current sub-step: `07.06 — Bildirim sesi sistemi`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.06`.
+- Current sub-step: `07.07 — Realtime bildirim teslimi`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
 - Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore, profile-wall activity and privacy-filtered unified activity feed completed.
-- Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates and first-party/add-on notification registry completed.
+- Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates, first-party/add-on notification registry, and user-controlled accessible notification sound preferences completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 07.06
+
+- Added per-user notification sound settings with global mute, bounded `0–100` volume and a selectable default sound preset.
+- Added per-category sound overrides with independent enable/disable, optional category-specific preset and reset-to-inherited behavior.
+- Added four safe first-party Web Audio presets: `soft`, `chime`, `pulse` and `minimal`; no user upload, external URL or remote media source is accepted by the sound engine.
+- Reused the shared 07.05 permission engine through `notification.alert.view` and `notification.preference.manage`; no parallel authorization model or frontend-only permission check was introduced.
+- Added server-side playback-plan resolution so mute, zero-volume, category disable, stale preset fallback and effective volume are deterministic before browser playback.
+- Added native authenticated sound-settings/category routes plus a dedicated `notification-sound` CSRF scope and base-path-aware asset/API paths for subdirectory/cPanel installations.
+- Added `public/assets/notification-sound.js` using Web Audio only after a real pointer/keyboard/touch interaction; pre-unlock notifications are not queued for surprise delayed playback.
+- Kept notification sound strictly supplementary: visual/in-app notification delivery remains independent and callers treat unavailable/blocked audio as a normal silent path.
+- Added migration `20260917002000_notification_sound` with global and category preference tables, cascading user ownership and verification of the shared notification permission dependency.
+- Added clean-install registry coverage, service behavior tests, migration tests, web-surface/autoplay safety tests and architecture documentation.
+- Self-service sound preference changes intentionally do not create moderation/security audit events; only bounded preference state and update timestamps are stored, with no secrets or sensitive provider data involved.
+- Feature commit: `a138065805e01088277f193338a3388043da4fb9`.
+- Blob verification matched the locally validated source for the factory, migration registry, playback asset, sound service and migration exactly.
+- Local verification passed PHP 8.4 syntax checks and a real-autoload 07.06 smoke covering defaults, mute/volume, category override/disable/reset, preset rejection, migration verification and autoplay/remote-media constraints.
+- Final GitHub Actions run `35221907037` passed Composer validation, strict-types enforcement, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, full/update package builds, artifact upload and GitHub Release.
 
 ## Completed in 07.05
 
