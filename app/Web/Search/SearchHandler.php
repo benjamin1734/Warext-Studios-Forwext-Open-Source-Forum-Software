@@ -13,6 +13,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Search\AdvancedSearchFilters;
+use Forwext\Core\Search\DiscoveryUx\GlobalDiscoveryRegistry;
 use Forwext\Core\Search\PermissionAwareSearchService;
 use Forwext\Core\Search\SearchException;
 use InvalidArgumentException;
@@ -27,22 +28,44 @@ final readonly class SearchHandler implements RequestHandlerInterface
 
     public function handle(Request $request): Response
     {
+        $registry = GlobalDiscoveryRegistry::withCoreDefaults();
         $query = $request->query();
-        $text = self::scalar($query, 'q');
-        if ($text === null || trim($text) === '') {
-            return Response::html(SearchHtml::page($this->basePath, '', [], [], null, $this->search->savedQueryKeys()));
-        }
-
-        $actor = $this->viewers->resolve($request);
-        if ($actor === null) {
-            return Response::html(SearchHtml::page(
-                $this->basePath, trim($text), [], $query,
-                'Arama yapmak için oturum açmalısınız.', $this->search->savedQueryKeys(),
-            ), 401)->withHeader('Cache-Control', 'private, no-store');
-        }
+        $text = '';
+        $tab = GlobalDiscoveryRegistry::ALL;
 
         try {
-            $types = self::list($query, 'type');
+            $text = self::scalar($query, 'q') ?? '';
+            $tab = self::scalar($query, 'tab') ?? GlobalDiscoveryRegistry::ALL;
+            $registry->resolveDocumentTypes($tab);
+
+            if (trim($text) === '') {
+                return Response::html(SearchHtml::page(
+                    $this->basePath,
+                    '',
+                    [],
+                    $query,
+                    null,
+                    $this->search->savedQueryKeys(),
+                    discovery: $registry,
+                    selectedTab: $tab,
+                ));
+            }
+
+            $actor = $this->viewers->resolve($request);
+            if ($actor === null) {
+                return Response::html(SearchHtml::page(
+                    $this->basePath,
+                    trim($text),
+                    [],
+                    $query,
+                    'Arama yapmak için oturum açmalısınız.',
+                    $this->search->savedQueryKeys(),
+                    discovery: $registry,
+                    selectedTab: $tab,
+                ), 401)->withHeader('Cache-Control', 'private, no-store');
+            }
+
+            $requestedTypes = self::list($query, 'type');
             $filters = new AdvancedSearchFilters(
                 forumIds: self::list($query, 'forum'),
                 userIds: self::list($query, 'user'),
@@ -57,23 +80,60 @@ final readonly class SearchHandler implements RequestHandlerInterface
             $limit = 20;
             $offset = ($page - 1) * $limit;
             $saved = self::scalar($query, 'saved');
-            $hits = $saved !== null && $saved !== ''
-                ? $this->search->searchSaved($actor, $saved, $text, $limit, $offset)
-                : $this->search->search($actor, $text, $types, null, $limit, $offset, $filters);
+
+            if ($saved !== null && $saved !== '') {
+                if ($tab !== GlobalDiscoveryRegistry::ALL || $requestedTypes !== []) {
+                    throw new SearchException(
+                        'Saved searches cannot be combined with a discovery tab or explicit type filter.',
+                    );
+                }
+                $hits = $this->search->searchSaved($actor, $saved, $text, $limit, $offset);
+            } else {
+                $documentTypes = $registry->resolveDocumentTypes($tab, $requestedTypes);
+                $hits = $this->search->search(
+                    $actor,
+                    $text,
+                    $documentTypes,
+                    null,
+                    $limit,
+                    $offset,
+                    $filters,
+                );
+            }
 
             return Response::html(SearchHtml::page(
-                $this->basePath, trim($text), $hits, $query, null,
-                $this->search->savedQueryKeys(), $page,
+                $this->basePath,
+                trim($text),
+                $hits,
+                $query,
+                null,
+                $this->search->savedQueryKeys(),
+                $page,
+                $registry,
+                $tab,
+                true,
             ))->withHeader('Cache-Control', 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::html(SearchHtml::page(
-                $this->basePath, trim($text), [], $query,
-                'Bu hesap için arama izni bulunmuyor.', $this->search->savedQueryKeys(),
+                $this->basePath,
+                trim($text),
+                [],
+                $query,
+                'Bu hesap için arama izni bulunmuyor.',
+                $this->search->savedQueryKeys(),
+                discovery: $registry,
+                selectedTab: self::safeTab($registry, $tab),
             ), 403)->withHeader('Cache-Control', 'private, no-store');
-        } catch (SearchException|InvalidArgumentException $exception) {
+        } catch (SearchException|InvalidArgumentException) {
             return Response::html(SearchHtml::page(
-                $this->basePath, trim($text), [], $query,
-                'Arama filtrelerinden biri geçersiz.', $this->search->savedQueryKeys(),
+                $this->basePath,
+                trim($text),
+                [],
+                $query,
+                'Arama sekmesi veya filtrelerinden biri geçersiz.',
+                $this->search->savedQueryKeys(),
+                discovery: $registry,
+                selectedTab: self::safeTab($registry, $tab),
             ), 400)->withHeader('Cache-Control', 'private, no-store');
         }
     }
@@ -83,7 +143,9 @@ final readonly class SearchHandler implements RequestHandlerInterface
     {
         $value = $query[$key] ?? null;
         if ($value === null) return null;
-        if (!is_string($value) || strlen($value) > 500) throw new InvalidArgumentException('Search query parameter is invalid.');
+        if (!is_string($value) || strlen($value) > 500) {
+            throw new InvalidArgumentException('Search query parameter is invalid.');
+        }
         return trim($value);
     }
 
@@ -92,8 +154,13 @@ final readonly class SearchHandler implements RequestHandlerInterface
     {
         $value = self::scalar($query, $key);
         if ($value === null || $value === '') return [];
-        $parts = array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $item): bool => $item !== ''));
-        if (count($parts) > 32) throw new InvalidArgumentException('Search filter has too many values.');
+        $parts = array_values(array_filter(
+            array_map('trim', explode(',', $value)),
+            static fn (string $item): bool => $item !== '',
+        ));
+        if (count($parts) > 32) {
+            throw new InvalidArgumentException('Search filter has too many values.');
+        }
         return $parts;
     }
 
@@ -113,9 +180,20 @@ final readonly class SearchHandler implements RequestHandlerInterface
     {
         $value = self::scalar($query, 'page');
         if ($value === null || $value === '') return 1;
-        if (preg_match('/^[1-9][0-9]{0,2}$/D', $value) !== 1) throw new InvalidArgumentException('Search page is invalid.');
+        if (preg_match('/^[1-9][0-9]{0,2}$/D', $value) !== 1) {
+            throw new InvalidArgumentException('Search page is invalid.');
+        }
         $page = (int) $value;
-        if ($page > 51) throw new InvalidArgumentException('Search page is outside the supported range.');
+        if ($page > 51) {
+            throw new InvalidArgumentException('Search page is outside the supported range.');
+        }
         return $page;
+    }
+
+    private static function safeTab(GlobalDiscoveryRegistry $registry, string $tab): string
+    {
+        return $tab === GlobalDiscoveryRegistry::ALL || $registry->find($tab) !== null
+            ? $tab
+            : GlobalDiscoveryRegistry::ALL;
     }
 }
