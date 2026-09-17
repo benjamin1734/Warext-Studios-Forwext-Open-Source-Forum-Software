@@ -75,6 +75,7 @@ final class WorkerMemoryRepository implements NotificationRepository
     public ?DateTimeImmutable $nextAttemptAt = null;
     public ?string $errorCode = null;
 
+    public function withRecipientLock(EntityId $recipientUserId, \Closure $callback): mixed { return $callback(); }
     public function findByDedupe(EntityId $recipientUserId, string $dedupeKey): ?Notification { return null; }
     public function findOpenGroup(EntityId $recipientUserId, string $typeKey, string $groupKey): ?Notification { return null; }
     public function insert(Notification $notification, ?string $groupKey): void {}

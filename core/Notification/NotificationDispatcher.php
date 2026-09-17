@@ -19,11 +19,20 @@ final readonly class NotificationDispatcher
 
     public function dispatch(NotificationRequest $request, ?DateTimeImmutable $now = null): ?Notification
     {
+        $now ??= new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+        return $this->repository->withRecipientLock(
+            $request->recipientUserId,
+            fn (): ?Notification => $this->dispatchLocked($request, $now),
+        );
+    }
+
+    private function dispatchLocked(NotificationRequest $request, DateTimeImmutable $now): ?Notification
+    {
         $definition = $this->registry->require($request->typeKey);
         $channels = $this->effectiveChannels($request->recipientUserId, $definition);
         if ($channels === []) return null;
 
-        $now ??= new DateTimeImmutable('now', new DateTimeZone('UTC'));
         if ($request->dedupeKey !== null) {
             $existing = $this->repository->findByDedupe($request->recipientUserId, $request->dedupeKey);
             if ($existing !== null) return $existing;

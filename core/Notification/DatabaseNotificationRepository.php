@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Notification;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\Core\Database\CompiledQuery;
-use Forwext\Core\Database\QueryExecutor;
+use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
 use JsonException;
@@ -15,8 +16,25 @@ use ValueError;
 
 final readonly class DatabaseNotificationRepository implements NotificationRepository
 {
-    public function __construct(private QueryExecutor $database)
+    public function __construct(private TransactionalQueryExecutor $database)
     {
+    }
+
+    public function withRecipientLock(EntityId $recipientUserId, Closure $callback): mixed
+    {
+        UserId::assert($recipientUserId);
+
+        return $this->database->transaction(function (TransactionalQueryExecutor $_database) use ($recipientUserId, $callback): mixed {
+            $lockedUserId = $this->database->fetchValue(new CompiledQuery(
+                'SELECT `user_id` FROM `forwext_users` WHERE `user_id` = :user_id FOR UPDATE',
+                ['user_id' => $recipientUserId->value()],
+            ));
+            if (!is_string($lockedUserId) || !hash_equals($recipientUserId->value(), $lockedUserId)) {
+                throw new NotificationException('Notification recipient is unavailable.');
+            }
+
+            return $callback();
+        });
     }
 
     public function findByDedupe(EntityId $recipientUserId, string $dedupeKey): ?Notification

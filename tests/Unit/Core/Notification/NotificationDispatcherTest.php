@@ -49,6 +49,7 @@ final class NotificationDispatcherTest extends TestCase
         self::assertTrue($notification->inAppVisible);
         self::assertSame([NotificationChannel::Email], $repository->queuedChannels);
         self::assertSame($notification->id->value(), $repository->dedupes['post:99:user:a']?->value());
+        self::assertSame(1, $repository->recipientLocks);
     }
 
     public function testDedupeReturnsExistingNotificationWithoutAdditionalDelivery(): void
@@ -71,6 +72,7 @@ final class NotificationDispatcherTest extends TestCase
         self::assertSame($existing, $result);
         self::assertSame([], $repository->queuedChannels);
         self::assertSame([], $repository->inserted);
+        self::assertSame(1, $repository->recipientLocks);
     }
 
     public function testGroupingUpdatesUnreadAlertAndRespectsChannelPreferenceOverride(): void
@@ -100,6 +102,7 @@ final class NotificationDispatcherTest extends TestCase
         self::assertSame(2, $result->occurrences);
         self::assertSame([NotificationChannel::Email], $repository->queuedChannels);
         self::assertSame([], $repository->inserted);
+        self::assertSame(1, $repository->recipientLocks);
     }
 
     public function testRequestRejectsExternalOrProtocolRelativeActionUrl(): void
@@ -124,7 +127,9 @@ final class NotificationMemoryRepository implements NotificationRepository
     /** @var array<string, bool> */ public array $preferences = [];
     public ?Notification $existingDedupe = null;
     public ?Notification $existingGroup = null;
+    public int $recipientLocks = 0;
 
+    public function withRecipientLock(EntityId $recipientUserId, \Closure $callback): mixed { ++$this->recipientLocks; return $callback(); }
     public function findByDedupe(EntityId $recipientUserId, string $dedupeKey): ?Notification { return $this->existingDedupe; }
     public function findOpenGroup(EntityId $recipientUserId, string $typeKey, string $groupKey): ?Notification { return $this->existingGroup; }
     public function insert(Notification $notification, ?string $groupKey): void { $this->inserted[] = $notification; }

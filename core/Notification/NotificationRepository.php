@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Notification;
 
+use Closure;
 use DateTimeImmutable;
 use Forwext\Core\Domain\Entity\EntityId;
 
 interface NotificationRepository
 {
+    /**
+     * Serialize notification mutations for one recipient so dedupe/group decisions remain race-safe.
+     *
+     * @template T
+     * @param Closure(): T $callback
+     * @return T
+     */
+    public function withRecipientLock(EntityId $recipientUserId, Closure $callback): mixed;
+
     public function findByDedupe(EntityId $recipientUserId, string $dedupeKey): ?Notification;
     public function findOpenGroup(EntityId $recipientUserId, string $typeKey, string $groupKey): ?Notification;
     public function insert(Notification $notification, ?string $groupKey): void;
