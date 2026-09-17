@@ -14,6 +14,8 @@ final class ProfileHtml
         $home = self::escape($basePath->prepend('/'));
         $members = self::escape($basePath->prepend('/members'));
         $musicScript = self::escape($basePath->prepend('/assets/profile-music.js'));
+        $notificationSoundScript = self::escape($basePath->prepend('/assets/notification-sound.js'));
+        $notificationRealtimeScript = self::escape($basePath->prepend('/assets/notification-realtime.js'));
 
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -40,7 +42,10 @@ final class ProfileHtml
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{height:58px}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}}'
             . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon"><a href="' . $members . '">Üyeler</a></nav></div></header>'
-            . '<main class="wrap">' . $content . '</main><script src="' . $musicScript . '" defer></script></body></html>';
+            . '<main class="wrap">' . $content . '</main>'
+            . '<script src="' . $musicScript . '" defer></script>'
+            . '<script src="' . $notificationSoundScript . '" defer></script>'
+            . '<script src="' . $notificationRealtimeScript . '" defer></script></body></html>';
     }
 
     public static function escape(string $value): string

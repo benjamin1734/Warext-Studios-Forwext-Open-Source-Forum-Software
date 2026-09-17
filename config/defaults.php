@@ -69,6 +69,10 @@ return [
     'realtime' => [
         'mode' => 'polling',
         'poll_limit' => 100,
+        'poll_interval_ms' => 3000,
+        'hidden_poll_interval_ms' => 15000,
+        'sse_retry_ms' => 4000,
+        'websocket_path' => null,
         'message_retention_seconds' => 86400,
     ],
     'search' => [

@@ -7,6 +7,8 @@ namespace Forwext\Core\Notification;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Notification\Realtime\NotificationRealtimeException;
+use Forwext\Core\Notification\Realtime\NotificationRealtimePublisher;
 
 final readonly class NotificationDispatcher
 {
@@ -14,6 +16,7 @@ final readonly class NotificationDispatcher
         private NotificationRegistry $registry,
         private NotificationRepository $repository,
         private NotificationTemplateRenderer $renderer = new NotificationTemplateRenderer(),
+        private ?NotificationRealtimePublisher $realtimePublisher = null,
     ) {
     }
 
@@ -23,11 +26,22 @@ final readonly class NotificationDispatcher
 
         return $this->repository->withRecipientLock(
             $request->recipientUserId,
-            fn (): ?Notification => $this->dispatchLocked($request, $now),
+            function () use ($request, $now): ?Notification {
+                $changed = false;
+                $notification = $this->dispatchLocked($request, $now, $changed);
+                if ($changed && $notification !== null && $this->realtimePublisher !== null && $notification->inAppVisible) {
+                    try {
+                        $this->realtimePublisher->publish($notification, $now);
+                    } catch (NotificationRealtimeException) {
+                        // Realtime is an acceleration path. Durable notification persistence must still succeed.
+                    }
+                }
+                return $notification;
+            },
         );
     }
 
-    private function dispatchLocked(NotificationRequest $request, DateTimeImmutable $now): ?Notification
+    private function dispatchLocked(NotificationRequest $request, DateTimeImmutable $now, bool &$changed): ?Notification
     {
         $definition = $this->registry->require($request->typeKey);
         $channels = $this->effectiveChannels($request->recipientUserId, $definition);
@@ -84,6 +98,7 @@ final readonly class NotificationDispatcher
                 $this->repository->queueDelivery($notification->id, $channel, $now);
             }
         }
+        $changed = true;
         return $notification;
     }
 

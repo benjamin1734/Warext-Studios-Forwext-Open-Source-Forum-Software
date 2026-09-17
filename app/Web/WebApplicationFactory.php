@@ -14,6 +14,8 @@ use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
 use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
+use Forwext\App\Web\Notification\NotificationRealtimeHandler;
+use Forwext\App\Web\Notification\NotificationRealtimeSseHandler;
 use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
 use Forwext\App\Web\Notification\NotificationSoundCsrfTokenHandler;
 use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
@@ -72,11 +74,16 @@ use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Notification\Realtime\DatabaseNotificationRealtimeReader;
+use Forwext\Core\Notification\Realtime\NotificationRealtimeService;
 use Forwext\Core\Notification\Sound\DatabaseNotificationSoundRepository;
 use Forwext\Core\Notification\Sound\EngineNotificationSoundPermissionResolver;
 use Forwext\Core\Notification\Sound\NotificationSoundCatalog;
 use Forwext\Core\Notification\Sound\NotificationSoundService;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
+use Forwext\Core\Realtime\DatabaseRealtimeMessageStore;
+use Forwext\Core\Realtime\PollingRealtimeTransport;
+use Forwext\Core\Realtime\RealtimeMode;
 use Forwext\Core\Profile\Activity\DatabaseActivityFeedRepository;
 use Forwext\Core\Profile\Activity\DatabaseProfileActivityRepository;
 use Forwext\Core\Profile\Activity\ProfileActivityService;
@@ -207,6 +214,13 @@ final readonly class WebApplicationFactory
             new EngineNotificationSoundPermissionResolver($authorizer),
             NotificationSoundCatalog::coreDefaults(),
         );
+        $notificationRealtime = new NotificationRealtimeService(
+            new PollingRealtimeTransport(new DatabaseRealtimeMessageStore($database)),
+            new DatabaseNotificationRealtimeReader($database),
+            $authorizer,
+        );
+        $realtimeMode = $this->realtimeMode($config);
+        $websocketPath = $this->realtimeWebsocketPath($config);
 
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentServices = new AttachmentServiceResolver(
@@ -303,6 +317,29 @@ final readonly class WebApplicationFactory
         ));
 
         $routes->add(new Route(
+            'account.notifications.realtime', [HttpMethod::Get], new PathTemplate('/account/notifications/realtime'),
+            new NotificationRealtimeHandler(
+                $notificationRealtime,
+                $viewerResolver,
+                $basePath,
+                $realtimeMode,
+                $config->requireInt('realtime.poll_interval_ms'),
+                $config->requireInt('realtime.hidden_poll_interval_ms'),
+                min(100, $config->requireInt('realtime.poll_limit')),
+                $websocketPath,
+            ),
+        ));
+        $routes->add(new Route(
+            'account.notifications.realtime.sse', [HttpMethod::Get], new PathTemplate('/account/notifications/realtime/sse'),
+            new NotificationRealtimeSseHandler(
+                $notificationRealtime,
+                $viewerResolver,
+                min(100, $config->requireInt('realtime.poll_limit')),
+                $config->requireInt('realtime.sse_retry_ms'),
+            ),
+        ));
+
+        $routes->add(new Route(
             'notification-sound.csrf', [HttpMethod::Get], new PathTemplate('/account/notification-sound/csrf'),
             new NotificationSoundCsrfTokenHandler($viewerResolver), [$notificationSoundCsrf],
         ));
@@ -338,7 +375,7 @@ final readonly class WebApplicationFactory
         $sources = ["'self'"];
         foreach ($this->externalMusicPolicy($this->config())->allowedHosts() as $host) $sources[] = 'https://' . $host;
         return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-            . "img-src 'self' data:; media-src " . implode(' ', $sources) . '; '
+            . "img-src 'self' data:; media-src " . implode(' ', $sources) . "; connect-src 'self'; "
             . "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
     }
 
@@ -370,6 +407,29 @@ final readonly class WebApplicationFactory
             $config->requireString('database.username'), $password, $config->requireString('database.charset'),
             $config->requireInt('database.connect_timeout_seconds'), $socket,
         ));
+    }
+
+    private function realtimeMode(ConfigRepository $config): RealtimeMode
+    {
+        try {
+            return RealtimeMode::from($config->requireString('realtime.mode'));
+        } catch (\ValueError $exception) {
+            throw new RuntimeException('Configured realtime mode is invalid.', previous: $exception);
+        }
+    }
+
+    private function realtimeWebsocketPath(ConfigRepository $config): ?string
+    {
+        $path = $config->get('realtime.websocket_path');
+        if ($path === null || $path === '') return null;
+        if (!is_string($path) || !str_starts_with($path, '/') || str_starts_with($path, '//') || str_contains($path, '?') || str_contains($path, '#')) {
+            throw new RuntimeException('Realtime websocket path must be a same-origin absolute path.');
+        }
+        if (preg_match('/[\x00-\x1F\x7F]/', $path) === 1) throw new RuntimeException('Realtime websocket path contains control characters.');
+        foreach (explode('/', trim($path, '/')) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
+        }
+        return $path;
     }
 
     private function profileUrlCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
