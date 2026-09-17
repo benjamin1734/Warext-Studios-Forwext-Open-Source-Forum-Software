@@ -189,7 +189,7 @@ jobs:
           require __DIR__ . "/vendor/autoload.php";
           '
 
-      - name: Build cPanel full installation package
+      - name: Build cPanel full package
         shell: bash
         run: |
           set -euo pipefail
@@ -229,8 +229,8 @@ jobs:
 
           (
             cd dist
-            zip -rq "forwext-${VERSION}-install.zip" "${ROOT}"
-            sha256sum "forwext-${VERSION}-install.zip" > "forwext-${VERSION}-install.zip.sha256"
+            zip -rq "forwext-v${VERSION}-full.zip" "${ROOT}"
+            sha256sum "forwext-v${VERSION}-full.zip" > "forwext-v${VERSION}-full.zip.sha256"
           )
 
       - name: Build differential update package
@@ -250,18 +250,26 @@ jobs:
           UPDATE_ROOT="${WORK}/payload"
           mkdir -p "$PREVIOUS_DIR" "$OLD_UNPACK" "$NEW_UNPACK" "$UPDATE_ROOT"
 
-          gh release download "$PREVIOUS_TAG" \
-            --pattern 'forwext-*-install.zip' \
-            --dir "$PREVIOUS_DIR"
+          if ! gh release download "$PREVIOUS_TAG" \
+            --pattern 'forwext-v*-full.zip' \
+            --dir "$PREVIOUS_DIR"; then
+            echo "Previous release predates the full.zip naming contract; using the immutable legacy install.zip asset as source." >&2
+            gh release download "$PREVIOUS_TAG" \
+              --pattern 'forwext-*-install.zip' \
+              --dir "$PREVIOUS_DIR"
+          fi
 
-          PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-*-install.zip' | head -n 1)"
+          PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-v*-full.zip' | head -n 1)"
           if [ -z "$PREVIOUS_ZIP" ]; then
-            echo "Previous installation ZIP was not found for ${PREVIOUS_TAG}." >&2
+            PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-*-install.zip' | head -n 1)"
+          fi
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            echo "Previous full package was not found for ${PREVIOUS_TAG}." >&2
             exit 1
           fi
 
           unzip -q "$PREVIOUS_ZIP" -d "$OLD_UNPACK"
-          unzip -q "dist/forwext-${VERSION}-install.zip" -d "$NEW_UNPACK"
+          unzip -q "dist/forwext-v${VERSION}-full.zip" -d "$NEW_UNPACK"
 
           OLD_ROOT="$(find "$OLD_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
           NEW_ROOT="$(find "$NEW_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
@@ -275,6 +283,7 @@ jobs:
           from __future__ import annotations
 
           import hashlib
+          import json
           import os
           import shutil
           from pathlib import Path
@@ -300,17 +309,17 @@ jobs:
                   if not path.is_file():
                       continue
                   relative = path.relative_to(root).as_posix()
-                  result[relative] = {
-                      "path": path,
-                      "sha256": sha256(path),
-                  }
+                  result[relative] = {"path": path, "sha256": sha256(path)}
               return result
 
           old_files = inventory(old_root)
           new_files = inventory(new_root)
           update_root.mkdir(parents=True, exist_ok=True)
 
-          changed = 0
+          added: list[str] = []
+          replaced: list[str] = []
+          checksums: dict[str, str] = {}
+
           for relative, metadata in new_files.items():
               old_metadata = old_files.get(relative)
               if old_metadata is not None and old_metadata["sha256"] == metadata["sha256"]:
@@ -319,23 +328,48 @@ jobs:
               destination = update_root / relative
               destination.parent.mkdir(parents=True, exist_ok=True)
               shutil.copy2(metadata["path"], destination)
-              changed += 1
+              checksums[relative] = str(metadata["sha256"])
+              if old_metadata is None:
+                  added.append(relative)
+              else:
+                  replaced.append(relative)
 
           deleted = sorted(set(old_files) - set(new_files))
-          print(f"Update from {from_version} to {to_version}: {changed} add/replace, {len(deleted)} delete")
-          if deleted:
-              print("Deleted packaged files (report to the user; do not add helper files to the ZIP):")
-              for relative in deleted:
-                  print(f"DELETE: {relative}")
+          migrations = sorted(
+              path for path in [*added, *replaced]
+              if path.startswith("database/migrations/") and path.endswith(".php")
+          )
+          manifest = {
+              "schema": 1,
+              "source_version": from_version,
+              "target_version": to_version,
+              "add": sorted(added),
+              "replace": sorted(replaced),
+              "delete": deleted,
+              "migrations": migrations,
+              "rebuild": [],
+              "checksum_algorithm": "sha256",
+              "checksum": dict(sorted(checksums.items())),
+          }
+          (update_root / "update-manifest.json").write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          print(
+              f"Update from {from_version} to {to_version}: "
+              f"{len(added)} add, {len(replaced)} replace, {len(deleted)} delete, "
+              f"{len(migrations)} migration file(s)"
+          )
           PY
 
           (
             cd "$UPDATE_ROOT"
-            zip -rq "../../forwext-${VERSION}-update.zip" .
+            zip -rq "../../forwext-v${VERSION}-update.zip" .
           )
           (
             cd dist
-            sha256sum "forwext-${VERSION}-update.zip" > "forwext-${VERSION}-update.zip.sha256"
+            sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
           )
 
       - name: Upload CI package artifact
@@ -343,10 +377,10 @@ jobs:
         with:
           name: forwext-packages-${{ steps.release_meta.outputs.version }}-${{ github.run_number }}
           path: |
-            dist/forwext-*-install.zip
-            dist/forwext-*-install.zip.sha256
-            dist/forwext-*-update.zip
-            dist/forwext-*-update.zip.sha256
+            dist/forwext-v*-full.zip
+            dist/forwext-v*-full.zip.sha256
+            dist/forwext-v*-update.zip
+            dist/forwext-v*-update.zip.sha256
           if-no-files-found: error
           retention-days: 30
 
@@ -374,10 +408,10 @@ jobs:
             TITLE="${TITLE} — Side Update"
           fi
 
-          ZIP="dist/forwext-${VERSION}-install.zip"
-          SHA="dist/forwext-${VERSION}-install.zip.sha256"
-          UPDATE_ZIP="dist/forwext-${VERSION}-update.zip"
-          UPDATE_SHA="dist/forwext-${VERSION}-update.zip.sha256"
+          ZIP="dist/forwext-v${VERSION}-full.zip"
+          SHA="dist/forwext-v${VERSION}-full.zip.sha256"
+          UPDATE_ZIP="dist/forwext-v${VERSION}-update.zip"
+          UPDATE_SHA="dist/forwext-v${VERSION}-update.zip.sha256"
           NOTES="dist/release-notes.md"
 
           if [[ "$RELEASE_KIND" == "main" ]]; then
@@ -397,14 +431,13 @@ jobs:
               echo "- Differential predecessor: \`${PREVIOUS_TAG}\`"
             fi
             echo "- PHP 8.4.0+ minimum; PHP 8.5 compatibility tested"
-            echo "- Full cPanel installation package: \`forwext-${VERSION}-install.zip\`"
+            echo "- Full cPanel package: \`forwext-v${VERSION}-full.zip\`"
             if [[ -f "$UPDATE_ZIP" ]]; then
-              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-${VERSION}-update.zip\`"
+              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-v${VERSION}-update.zip\`"
+              echo "- Update package includes \`update-manifest.json\` with add/replace/delete, migrations, rebuild actions, source/target versions and SHA-256 payload checksums."
             fi
             echo "- Published release tags and assets are immutable. A correction requires the next side-update or main version."
-            echo "- Update ZIP contains only real added/changed site files; obsolete packaged files are reported separately."
-            echo "- Root \`.htaccess\` is preserved for cPanel/EA-PHP handlers."
-            echo "- Production Composer dependencies are bundled in \`vendor/\`."
+            echo "- Root \`.htaccess\` handling and bundled production dependencies follow the tested cPanel package profile."
             echo "- This is a development prerelease, not Forwext 1.0.0."
           } > "$NOTES"
 
