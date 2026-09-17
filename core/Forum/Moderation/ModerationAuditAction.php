@@ -22,4 +22,6 @@ enum ModerationAuditAction: string
     case PostRestore = 'post.restore';
     case BulkThread = 'bulk.thread';
     case BulkPost = 'bulk.post';
+    case WorkspaceTaskCreate = 'workspace.task_create';
+    case WorkspaceTaskStatus = 'workspace.task_status';
 }

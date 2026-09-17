@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Forwext\App\Web\Community\CommunityApplicationFactory;
+use Forwext\App\Web\Moderation\ModerationApplicationFactory;
 use Forwext\App\Web\ResponseEmitter;
 use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
@@ -43,10 +44,15 @@ try {
     $response = $seoFactory->handle($request);
 
     if ($response === null) {
-        $communityFactory = new CommunityApplicationFactory($root);
-        $response = $communityFactory->handle($request);
-        $webFactory = new WebApplicationFactory($root);
+        $moderationFactory = new ModerationApplicationFactory($root);
+        $response = $moderationFactory->handle($request);
 
+        if ($response === null) {
+            $communityFactory = new CommunityApplicationFactory($root);
+            $response = $communityFactory->handle($request);
+        }
+
+        $webFactory = new WebApplicationFactory($root);
         if ($response === null) {
             $application = $webFactory->create($version->value());
             $response = $application->handle($request);

@@ -15,6 +15,7 @@ use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
+use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
 use Forwext\Database\Migrations\Core\CreateNotificationAlertTables;
 use Forwext\Database\Migrations\Core\CreateNotificationSoundTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
@@ -76,6 +77,7 @@ final class CoreMigrationRegistry
             new CreateSearchAdvancedFilterTables(),
             new AddDiscoveryQueryIndexes(),
             new CreateUserPresenceTables(),
+            new CreateModerationWorkspaceTables(),
         ];
     }
 }
