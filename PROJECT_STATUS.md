@@ -6,12 +6,12 @@ This file is the canonical human-readable development pointer for continuing For
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
-LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.06
-CURRENT_STEP = 07.07
-LAST_COMMIT = a138065805e01088277f193338a3388043da4fb9
+LAST_COMPLETED_MAIN_STEP = 07
+LAST_COMPLETED_SUBSTEP = 07.07
+CURRENT_STEP = 08.01
+LAST_COMMIT = e9b166f9755ccf6c2e2e71a7152b9978f5373e49
 BLOCKERS = none
-NEXT_STEP = 07.07 - Realtime notification delivery
+NEXT_STEP = 08.01 - Native search/index lifecycle
 ```
 
 ## Current position
@@ -20,19 +20,38 @@ NEXT_STEP = 07.07 - Realtime notification delivery
 - Binding roadmap: **20 main steps / 138 real sub-steps**
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.06`.
-- Current sub-step: `07.07 — Realtime bildirim teslimi`
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`; main step `08` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`.
+- Current sub-step: `08.01 — Native search/index lifecycle`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
 - Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore, profile-wall activity and privacy-filtered unified activity feed completed.
-- Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates, first-party/add-on notification registry, and user-controlled accessible notification sound preferences completed.
+- Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates, first-party/add-on notification registry, user-controlled accessible notification sounds, and polling/SSE/WebSocket realtime fallback delivery completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 07.07
+
+- Connected the 07.05 notification engine to the existing 03.06 realtime infrastructure instead of introducing a parallel queue/WebSocket stack.
+- Added the browser fallback chain `WebSocket → SSE → database-backed polling`; minimum cPanel remains fully functional with polling and requires no Node.js, Redis, Supervisor or daemon.
+- Reused durable `forwext_realtime_messages.sequence_id` values as resume cursors so grouped notification updates cannot be lost by timestamp/id cursor ambiguity.
+- Added recipient-derived realtime channels in the form `notification.user.<user-id>`; clients cannot provide an arbitrary user id or channel name to read another account's events.
+- Realtime wake payloads contain only `notification_id`; title, body, action path and private notification payload are never broadcast through the external gateway payload.
+- Added actor-scoped canonical snapshot reads that re-check `recipient_user_id` and `in_app_visible = 1`, keeping knowledge of a notification id/channel/cursor insufficient for IDOR/BOLA access.
+- Added realtime publishing after durable notification mutation and delivery enqueue; dedupe hits do not emit duplicate wake events, while new/grouped in-app changes do.
+- Contained realtime provider failures so notification persistence remains the source of truth and delivery gracefully falls back instead of breaking forum/profile writes.
+- Added bootstrap semantics that establish the current sequence without replaying historical notifications; stale/invalid wake records still advance the cursor to prevent replay loops.
+- Added authenticated polling and SSE HTTP surfaces, bounded cursor/limit validation, private/no-store responses and base-path-aware URLs for subdirectory/cPanel installations.
+- Added same-origin WebSocket path validation and kept CSP network permission at `connect-src 'self'`; advanced gateways must independently authenticate the session and authorize the derived user channel.
+- Added native browser delivery with a visual/ARIA live notice plus `forwext:notification` DOM event. The 07.06 sound player remains supplementary and still respects mute/volume/category/autoplay constraints.
+- Added architecture documentation plus realtime publisher privacy, recipient-scoped reader/IDOR and native WebSocket→SSE→polling surface regression tests.
+- No 07.07 migration was required because the durable sequence store and transport abstraction were already delivered by 03.06.
+- Feature commit: `e9b166f9755ccf6c2e2e71a7152b9978f5373e49`.
+- Final GitHub Actions run `35229594491` passed Composer validation, strict-types enforcement, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, full/update package builds, artifact upload and GitHub Release.
 
 ## Completed in 07.06
 
@@ -117,6 +136,16 @@ NEXT_STEP = 07.07 - Realtime notification delivery
 - Added race-safe quota rechecks, orphan cleanup maintenance service/task/handler and migration `20260916001000_attachment_pipeline`.
 - Final implementation HEAD: `8530e79c62cf2bcb4334d1706eb59c782a39960d`.
 - Final CI run `35029822766` passed all release gates.
+
+## Completed main step 07
+
+- `07.01`: secure attachment pipeline.
+- `07.02`: mentions, quotes, embeds, link previews and emoji integration.
+- `07.03`: reactions, bookmarks, follow and ignore.
+- `07.04`: profile posts/comments and unified activity feed.
+- `07.05`: notification/alert engine.
+- `07.06`: user-controlled notification sound system.
+- `07.07`: polling/SSE/WebSocket realtime notification delivery.
 
 ## Completed main step 06
 
