@@ -18,6 +18,110 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Resolve immutable release metadata
+        id: release_meta
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION)"
+          MAIN_RE='^[0-9]+\.[0-9]+\.[0-9]+-dev$'
+          SIDE_RE='^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]{2}-dev$'
+
+          if [[ "$VERSION" =~ $MAIN_RE ]]; then
+            RELEASE_KIND="main"
+            BASE_VERSION="$VERSION"
+          elif [[ "$VERSION" =~ $SIDE_RE ]]; then
+            RELEASE_KIND="side-update"
+            CORE="${VERSION%-dev}"
+            IFS='.' read -r MAJOR MINOR PATCH SIDE <<< "$CORE"
+            if (( 10#$SIDE < 1 )); then
+              echo "Side-update suffix must start at .01." >&2
+              exit 1
+            fi
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+          else
+            echo "Invalid Forwext development version: ${VERSION}" >&2
+            echo "Expected X.Y.Z-dev or X.Y.Z.NN-dev (NN starts at 01)." >&2
+            exit 1
+          fi
+
+          SHOULD_PUBLISH="false"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            SHOULD_PUBLISH="true"
+          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+            SHOULD_PUBLISH="true"
+          fi
+
+          TAG="v${VERSION}"
+          PREVIOUS_TAG=""
+          if [[ "$SHOULD_PUBLISH" == "true" ]]; then
+            if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+              echo "Release tag ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "GitHub Release ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+
+            PREVIOUS_TAG="$(python3 - "$VERSION" <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d{2}))?-dev$")
+
+          def parse(value: str):
+              match = pattern.fullmatch(value.strip())
+              if match is None:
+                  return None
+              major, minor, patch, side = match.groups()
+              return (int(major), int(minor), int(patch), int(side or "0"))
+
+          current = parse(sys.argv[1])
+          if current is None:
+              raise SystemExit("Current VERSION could not be parsed.")
+
+          raw_tags = subprocess.check_output(
+              ["git", "tag", "--list", "v*-dev"],
+              text=True,
+          ).splitlines()
+          valid = []
+          for tag in raw_tags:
+              parsed = parse(tag)
+              if parsed is not None:
+                  valid.append((parsed, tag))
+
+          if valid:
+              latest_version, latest_tag = max(valid)
+              if latest_version >= current:
+                  raise SystemExit(
+                      f"VERSION must advance beyond latest release {latest_tag}; "
+                      "published versions are immutable."
+                  )
+              print(latest_tag)
+          PY
+          )"
+          fi
+
+          PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "kind=${RELEASE_KIND}" >> "$GITHUB_OUTPUT"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "should_publish=${SHOULD_PUBLISH}" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREVIOUS_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Version: ${VERSION}"
+          echo "Release kind: ${RELEASE_KIND}"
+          echo "Publish: ${SHOULD_PUBLISH}"
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "Previous release: ${PREVIOUS_TAG}"
+          fi
+
       - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
@@ -130,22 +234,15 @@ jobs:
           )
 
       - name: Build differential update package
-        if: github.ref == 'refs/heads/main'
+        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
         run: |
           set -euo pipefail
-          VERSION="$(tr -d '\r\n' < VERSION)"
-          CURRENT_TAG="v${VERSION}"
-          PREVIOUS_TAG="$(git tag --list 'v*' --sort=-version:refname | grep -Fxv "$CURRENT_TAG" | head -n 1 || true)"
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous release tag found; update package will be skipped."
-            exit 0
-          fi
-
-          FROM_VERSION="${PREVIOUS_TAG#v}"
           WORK="dist/update-work"
           PREVIOUS_DIR="${WORK}/previous-release"
           OLD_UNPACK="${WORK}/old"
@@ -241,10 +338,10 @@ jobs:
             sha256sum "forwext-${VERSION}-update.zip" > "forwext-${VERSION}-update.zip.sha256"
           )
 
-      - name: Upload release packages artifact
+      - name: Upload CI package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: forwext-release-packages
+          name: forwext-packages-${{ steps.release_meta.outputs.version }}-${{ github.run_number }}
           path: |
             dist/forwext-*-install.zip
             dist/forwext-*-install.zip.sha256
@@ -253,52 +350,71 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub Release
-        if: github.ref == 'refs/heads/main'
+      - name: Publish immutable GitHub Release
+        if: steps.release_meta.outputs.should_publish == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          RELEASE_KIND: ${{ steps.release_meta.outputs.kind }}
+          BASE_VERSION: ${{ steps.release_meta.outputs.base_version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          PREVIOUS_VERSION: ${{ steps.release_meta.outputs.previous_version }}
         run: |
           set -euo pipefail
-          VERSION="$(tr -d '\r\n' < VERSION)"
-          TAG="v${VERSION}"
+
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}" || gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Refusing to overwrite immutable release ${TAG}. Bump VERSION instead." >&2
+            exit 1
+          fi
+
           TITLE="Forwext ${VERSION}"
+          if [[ "$RELEASE_KIND" == "side-update" ]]; then
+            TITLE="${TITLE} — Side Update"
+          fi
+
           ZIP="dist/forwext-${VERSION}-install.zip"
           SHA="dist/forwext-${VERSION}-install.zip.sha256"
           UPDATE_ZIP="dist/forwext-${VERSION}-update.zip"
           UPDATE_SHA="dist/forwext-${VERSION}-update.zip.sha256"
           NOTES="dist/release-notes.md"
-          PREVIOUS_TAG="$(git tag --list 'v*' --sort=-version:refname | grep -Fxv "$TAG" | head -n 1 || true)"
-          PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
 
-          cat > "$NOTES" <<EOF
-          ## Forwext ${VERSION}
+          if [[ "$RELEASE_KIND" == "main" ]]; then
+            KIND_TEXT="Main development milestone"
+          else
+            KIND_TEXT="Side update / hotfix"
+          fi
 
-          Development release generated from the tested \`main\` branch.
-
-          - PHP 8.4.0+ minimum, PHP 8.5 compatibility tested
-          - Production dependencies are resolved separately against a PHP 8.4.0 platform baseline
-          - Full cPanel installation package: \`forwext-${VERSION}-install.zip\`
-          - Differential update package from ${PREVIOUS_VERSION}: \`forwext-${VERSION}-update.zip\`
-          - Update ZIP contains only real added/changed site files; no update/delete/readme/manifest helper files are injected
-          - Any obsolete packaged files are reported separately and are not represented by files inside the ZIP
-          - Root \`.htaccess\` is not overwritten by the full package, preserving cPanel/EA-PHP handlers
-          - Production Composer dependencies are bundled in \`vendor/\`
-          - This is a development prerelease, not Forwext 1.0.0
-          EOF
+          {
+            echo "## Forwext ${VERSION}"
+            echo
+            echo "${KIND_TEXT}, generated from the tested \`main\` branch."
+            echo
+            echo "- Release type: \`${RELEASE_KIND}\`"
+            echo "- Main line: \`${BASE_VERSION}\`"
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "- Differential predecessor: \`${PREVIOUS_TAG}\`"
+            fi
+            echo "- PHP 8.4.0+ minimum; PHP 8.5 compatibility tested"
+            echo "- Full cPanel installation package: \`forwext-${VERSION}-install.zip\`"
+            if [[ -f "$UPDATE_ZIP" ]]; then
+              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-${VERSION}-update.zip\`"
+            fi
+            echo "- Published release tags and assets are immutable. A correction requires the next side-update or main version."
+            echo "- Update ZIP contains only real added/changed site files; obsolete packaged files are reported separately."
+            echo "- Root \`.htaccess\` is preserved for cPanel/EA-PHP handlers."
+            echo "- Production Composer dependencies are bundled in \`vendor/\`."
+            echo "- This is a development prerelease, not Forwext 1.0.0."
+          } > "$NOTES"
 
           ASSETS=("$ZIP" "$SHA")
-          if [ -f "$UPDATE_ZIP" ]; then
+          if [[ -f "$UPDATE_ZIP" ]]; then
             ASSETS+=("$UPDATE_ZIP" "$UPDATE_SHA")
           fi
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${ASSETS[@]}" --clobber
-            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES" --prerelease
-          else
-            gh release create "$TAG" "${ASSETS[@]}" \
-              --target "$GITHUB_SHA" \
-              --title "$TITLE" \
-              --notes-file "$NOTES" \
-              --prerelease
-          fi
+          gh release create "$TAG" "${ASSETS[@]}" \
+            --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes-file "$NOTES" \
+            --prerelease
