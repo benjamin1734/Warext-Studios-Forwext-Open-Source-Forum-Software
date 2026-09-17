@@ -9,6 +9,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Migration\MigrationContext;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
+use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use PHPUnit\Framework\TestCase;
 
 final class CustomProfileUrlMigrationTest extends TestCase
@@ -29,8 +30,25 @@ final class CustomProfileUrlMigrationTest extends TestCase
         self::assertStringContainsString('UNIQUE KEY `uq_profile_url_current_slug` (`slug_key`)', $sql);
         self::assertStringContainsString('ON DELETE SET NULL', $sql);
         self::assertStringContainsString('ON DELETE CASCADE', $sql);
+        self::assertSame(2, substr_count($sql, 'REFERENCES `forwext_users` (`user_id`)'));
+        self::assertStringNotContainsString('REFERENCES `forwext_users` (`id`)', $sql);
         self::assertFalse($migration->isTransactional());
         self::assertTrue($migration->isIdempotent());
+    }
+
+    public function testForeignKeysMatchCanonicalUserDomainPrimaryKey(): void
+    {
+        $userDatabase = new ProfileUrlMigrationExecutor();
+        (new CreateUserDomainTables())->up(new MigrationContext($userDatabase));
+        $userSql = implode("\n", $userDatabase->executedSql);
+        self::assertStringContainsString('PRIMARY KEY (`user_id`)', $userSql);
+
+        $profileDatabase = new ProfileUrlMigrationExecutor();
+        (new CreateCustomProfileUrlTables())->up(new MigrationContext($profileDatabase));
+        $profileSql = implode("\n", $profileDatabase->executedSql);
+
+        self::assertSame(2, substr_count($profileSql, 'REFERENCES `forwext_users` (`user_id`)'));
+        self::assertStringNotContainsString('REFERENCES `forwext_users` (`id`)', $profileSql);
     }
 
     public function testMigrationVerificationRequiresBothTables(): void
