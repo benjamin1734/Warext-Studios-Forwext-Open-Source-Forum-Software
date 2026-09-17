@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\Core\Migration;
 
+use Closure;
 use Forwext\Core\Database\CompiledQuery;
-use Forwext\Core\Database\QueryExecutor;
+use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Migration\MigrationContext;
 use Forwext\Database\Migrations\Core\CreateSearchAdvancedFilterTables;
 use PHPUnit\Framework\TestCase;
@@ -35,12 +36,25 @@ final class SearchAdvancedFilterMigrationTest extends TestCase
     }
 }
 
-final class SearchAdvancedFilterMigrationDatabase implements QueryExecutor
+final class SearchAdvancedFilterMigrationDatabase implements TransactionalQueryExecutor
 {
     /** @var list<CompiledQuery> */ public array $queries = [];
     /** @var list<mixed> */ public array $values = [];
+    private int $transactionDepth = 0;
+
     public function execute(CompiledQuery $query): int { $this->queries[] = $query; return 1; }
     public function fetchOne(CompiledQuery $query): ?array { $this->queries[] = $query; return null; }
     public function fetchAll(CompiledQuery $query): array { $this->queries[] = $query; return []; }
     public function fetchValue(CompiledQuery $query): mixed { $this->queries[] = $query; return array_shift($this->values); }
+    public function inTransaction(): bool { return $this->transactionDepth > 0; }
+
+    public function transaction(Closure $callback): mixed
+    {
+        ++$this->transactionDepth;
+        try {
+            return $callback($this);
+        } finally {
+            --$this->transactionDepth;
+        }
+    }
 }

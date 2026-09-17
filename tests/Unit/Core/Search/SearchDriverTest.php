@@ -118,7 +118,7 @@ final class RecordingSearchDatabase implements TransactionalQueryExecutor
 
     public function fetchAll(CompiledQuery $query): array
     {
-        if (str_contains($query->sql, 'MATCH(`d`.`title`, `d`.`body`)')) {
+        if (str_contains($query->sql, 'MATCH(`d`.`title`,`d`.`body`)')) {
             $this->lastSearchQuery = $query;
             return $this->searchRows;
         }

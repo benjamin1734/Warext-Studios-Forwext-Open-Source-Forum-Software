@@ -17,7 +17,7 @@ final class SearchWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("new PathTemplate('/search')", $factory);
         self::assertStringContainsString('new PermissionAwareSearchService', $factory);
-        self::assertStringNotContainsString("scalar($query, 'scope')", $handler);
+        self::assertStringNotContainsString('scalar($query, \'scope\')', $handler);
         self::assertStringNotContainsString('name="scope"', $html);
         self::assertStringContainsString('name="prefix"', $html);
         self::assertStringContainsString('name="tag"', $html);
