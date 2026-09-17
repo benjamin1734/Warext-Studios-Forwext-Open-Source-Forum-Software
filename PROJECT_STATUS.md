@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.04
-CURRENT_STEP = 07.05
-LAST_COMMIT = 1bbe905cfb75d293166c7c50f6ae9f8483af8a6e
+LAST_COMPLETED_SUBSTEP = 07.05
+CURRENT_STEP = 07.06
+LAST_COMMIT = c9c70266c02e4a26b0329f288b465bdf3f439818
 BLOCKERS = none
-NEXT_STEP = 07.05 - Notification/alert engine
+NEXT_STEP = 07.06 - Notification sound system
 ```
 
 ## Current position
@@ -21,17 +21,35 @@ NEXT_STEP = 07.05 - Notification/alert engine
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.04`.
-- Current sub-step: `07.05 — Notification/alert motoru`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.05`.
+- Current sub-step: `07.06 — Bildirim sesi sistemi`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
 - Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore, profile-wall activity and privacy-filtered unified activity feed completed.
+- Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates and first-party/add-on notification registry completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 07.05
+
+- Added a shared `NotificationRegistry`/`NotificationDefinition` API so first-party modules and future third-party add-ons register stable notification types without writing storage tables directly.
+- Added persisted `in_app`, `email` and `push` channel handling with category/channel preferences and safe per-definition defaults.
+- Added producer-level dedupe keys and unread group keys with occurrence aggregation.
+- Added recipient-scoped transaction + `FOR UPDATE` serialization so concurrent notification dispatches cannot race dedupe/group decisions into duplicate records.
+- Added deterministic placeholder template rendering without PHP/expression evaluation and bounded scalar notification payloads.
+- Restricted notification action targets to same-origin absolute paths and rejected full/protocol-relative URLs to prevent notification-driven open redirects.
+- Added retryable external delivery rows, provider-neutral channel transports, exception containment, bounded machine-safe error codes and exponential backoff capped at eight attempts.
+- Kept the minimum cPanel profile daemon-free: database persistence plus cron-invokable delivery remains sufficient, while advanced deployments can call the same worker from dedicated workers.
+- Added owner-scoped inbox/read operations and shared permission-engine checks through `notification.alert.view` and `notification.preference.manage`; read-state SQL remains recipient-bound against IDOR/BOLA.
+- Added migration `20260917001000_notification_alerts` with four tables, five foreign keys, two notification permissions, ten starter-profile rules and installer-registry verification.
+- Added architecture documentation plus migration, registry, dispatcher, delivery-worker, retry, safe-URL and recipient-scope regression coverage.
+- Feature commit: `6b955722f9c2c3766ca544decb613c08bdc4e393`; concurrency hardening fix: `c9c70266c02e4a26b0329f288b465bdf3f439818`.
+- Verification performed in the working runtime: PHP 8.4 syntax checks passed; 13 focused 07.05 test methods passed against the prior vendor-inclusive release baseline with the new source overlaid; a real-autoload runtime smoke passed dispatch, dedupe, recipient row locking and retry/backoff paths.
+- GitHub Actions did not auto-create a workflow run for the connector-authored Git commits, so no CI-success claim is recorded for 07.05. The repository test files remain part of the normal PHP 8.4/8.5 workflow and will execute on the next workflow-triggering push/dispatch.
 
 ## Completed in 07.04
 
