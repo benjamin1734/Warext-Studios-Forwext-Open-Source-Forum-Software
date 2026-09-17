@@ -41,7 +41,7 @@ final readonly class CreateCustomProfileUrlTables implements Migration
             . '`user_id` CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,'
             . '`claimed_at_utc` DATETIME(6) NOT NULL,`retired_at_utc` DATETIME(6) NULL,'
             . 'PRIMARY KEY (`slug_key`),KEY `idx_profile_url_claim_user` (`user_id`,`retired_at_utc`),'
-            . 'CONSTRAINT `fk_profile_url_claim_user` FOREIGN KEY (`user_id`) REFERENCES `forwext_users` (`id`) ON DELETE SET NULL'
+            . 'CONSTRAINT `fk_profile_url_claim_user` FOREIGN KEY (`user_id`) REFERENCES `forwext_users` (`user_id`) ON DELETE SET NULL'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
         $context->execute(new CompiledQuery(
@@ -51,7 +51,7 @@ final readonly class CreateCustomProfileUrlTables implements Migration
             . '`changed_at_utc` DATETIME(6) NOT NULL,`window_started_at_utc` DATETIME(6) NOT NULL,'
             . '`changes_in_window` SMALLINT UNSIGNED NOT NULL DEFAULT 0,'
             . 'PRIMARY KEY (`user_id`),UNIQUE KEY `uq_profile_url_current_slug` (`slug_key`),'
-            . 'CONSTRAINT `fk_profile_url_current_user` FOREIGN KEY (`user_id`) REFERENCES `forwext_users` (`id`) ON DELETE CASCADE,'
+            . 'CONSTRAINT `fk_profile_url_current_user` FOREIGN KEY (`user_id`) REFERENCES `forwext_users` (`user_id`) ON DELETE CASCADE,'
             . 'CONSTRAINT `fk_profile_url_current_claim` FOREIGN KEY (`slug_key`) REFERENCES `forwext_profile_url_claims` (`slug_key`) ON DELETE RESTRICT'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
