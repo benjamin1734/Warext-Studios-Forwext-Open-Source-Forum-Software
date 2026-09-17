@@ -63,7 +63,7 @@ final class CorrectedRetryMigration implements Migration
 
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260917009999_retry_corrected');
+        return MigrationId::fromString('20260917235959_retry_corrected');
     }
 
     public function owner(): MigrationOwner
