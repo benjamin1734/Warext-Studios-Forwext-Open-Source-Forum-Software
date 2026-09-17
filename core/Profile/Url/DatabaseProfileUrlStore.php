@@ -70,7 +70,7 @@ final readonly class DatabaseProfileUrlStore implements ProfileUrlStore
                 $maximumChangesPerWindow,
             ): ProfileUrlAssignment {
                 $owner = $database->fetchOne(new CompiledQuery(
-                    'SELECT `id` FROM `forwext_users` WHERE `id`=:user_id FOR UPDATE',
+                    'SELECT `user_id` FROM `forwext_users` WHERE `user_id`=:user_id FOR UPDATE',
                     ['user_id' => $userId->value()],
                 ));
                 if ($owner === null) {
