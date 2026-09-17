@@ -6,12 +6,12 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
-LAST_COMPLETED_MAIN_STEP = 07
-LAST_COMPLETED_SUBSTEP = 08.05
-CURRENT_STEP = 08.06
-LAST_COMMIT = 0514625c7a6a7abc35adab46098a4d19f7fdcfc1
+LAST_COMPLETED_MAIN_STEP = 08
+LAST_COMPLETED_SUBSTEP = 08.06
+CURRENT_STEP = 09.01
+LAST_COMMIT = 8e9a8dacef66d51d32be9c4c2e57392e3d85aa11
 BLOCKERS = none
-NEXT_STEP = 08.06 - Global content discovery UX
+NEXT_STEP = 09.01 - Moderation workspace
 ```
 
 ## Current position
@@ -20,13 +20,28 @@ NEXT_STEP = 08.06 - Global content discovery UX
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`; main step `08` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.05`.
-- Current sub-step: `08.06 — Global content discovery UX`.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`.
+- Current sub-step: `09.01 — Moderation workspace`.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 08.06
+
+- Added a shared `GlobalDiscoveryRegistry` that owns user-facing discovery categories and their exact backend `SearchDocument` type contracts.
+- Added stable core categories for Forum, Support, SSS, Portfolio, Marketplace and Members, plus contributor support for later first-party/module integrations.
+- Upgraded the native PHP search surface into a single global discovery UX with simple type tabs, grouped `all` results and advanced filters behind progressive disclosure.
+- Kept `PermissionAwareSearchService` authoritative: discovery tabs and explicit type filters can only narrow search document types and never create or widen permission scopes.
+- Added fail-closed validation for unknown, duplicate and cross-category document type filters. Saved searches cannot be combined with non-`all` discovery tabs or explicit type filters.
+- Preserved escaped search rendering and existing member links while deliberately avoiding invented Support/SSS/Portfolio/Marketplace routes before those later modules provide real canonical surfaces.
+- Reserved first-party search type contracts for later modules without generating fake records, fake URLs or placeholder results; empty/unimplemented categories simply return no authorized results.
+- Added regression tests for category/type ownership, tab-bound type narrowing, duplicate/unknown rejection, grouped rendering, route non-fabrication and HTML escaping.
+- No migration was required and no new cPanel runtime daemon/dependency was introduced.
+- Feature commit: `8e9a8dacef66d51d32be9c4c2e57392e3d85aa11`.
+- GitHub Actions build run `35276227997` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, `forwext-v...-full.zip` package generation and artifact upload.
+- MySQL 8.4 migration smoke run `35276227907` passed the complete clean-install migration chain and idempotent second pass.
 
 ## Completed in 08.05
 
@@ -109,7 +124,7 @@ Commit `6939aae56bfc89cd5ec6dc01ca640664383be853` restored the binding package c
 - Forum foundation includes node hierarchy, thread/post lifecycle, prefixes/tags/custom fields, polls, drafts/read/watch state, rich editor/live metrics and audited thread/post moderation operations.
 - Media/social foundation includes secure attachments, mentions/quotes/safe embeds/SSRF-protected previews, reactions, bookmarks, follow/ignore and profile activity.
 - Notification foundation includes persisted in-app/email/push alerts, preferences, dedupe/grouping, retry, safe templates, sound preferences and polling/SSE/WebSocket fallback delivery.
-- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`) and navigation/member/presence/stats UX (`08.05`).
+- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`), navigation/member/presence/stats UX (`08.05`) and global content discovery UX (`08.06`).
 - Detailed historical implementation notes remain under `docs/changelog/` and repository history.
 
 ## Completion rules
