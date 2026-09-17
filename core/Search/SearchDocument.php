@@ -11,9 +11,12 @@ final readonly class SearchDocument
 {
     /** @var non-empty-list<string> */
     public array $accessScopes;
+    /** @var array<string,list<string>> */
+    public array $attributes;
 
     /**
      * @param non-empty-list<string> $accessScopes
+     * @param array<string,list<string>> $attributes
      */
     public function __construct(
         public string $documentType,
@@ -23,6 +26,7 @@ final readonly class SearchDocument
         array $accessScopes,
         public DateTimeImmutable $updatedAt,
         public ?string $locale = null,
+        array $attributes = [],
     ) {
         self::validateIdentifier($documentType, 'document type');
         self::validateIdentifier($documentId, 'document id');
@@ -41,16 +45,36 @@ final readonly class SearchDocument
 
         $normalized = [];
         foreach ($accessScopes as $scope) {
+            if (!is_string($scope)) throw new InvalidArgumentException('Search document access scopes must be strings.');
             self::validateScope($scope);
             $normalized[$scope] = true;
         }
         if (count($normalized) !== count($accessScopes)) {
             throw new InvalidArgumentException('Search document access scopes must be unique.');
         }
-
         /** @var non-empty-list<string> $scopes */
         $scopes = array_keys($normalized);
         $this->accessScopes = $scopes;
+
+        if (count($attributes) > 32) throw new InvalidArgumentException('Search document may contain at most 32 attribute keys.');
+        $normalizedAttributes = [];
+        $valueCount = 0;
+        foreach ($attributes as $key => $values) {
+            if (!is_string($key) || !is_array($values)) throw new InvalidArgumentException('Search document attributes are malformed.');
+            SearchAttribute::validateKey($key);
+            if (count($values) > 64) throw new InvalidArgumentException('Search document attribute contains too many values.');
+            $valueMap = [];
+            foreach ($values as $value) {
+                if (!is_string($value)) throw new InvalidArgumentException('Search document attribute values must be strings.');
+                SearchAttribute::validateValue($value);
+                $valueMap[$value] = true;
+                ++$valueCount;
+            }
+            if (count($valueMap) !== count($values)) throw new InvalidArgumentException('Search document attribute values must be unique.');
+            if ($valueMap !== []) $normalizedAttributes[$key] = array_keys($valueMap);
+        }
+        if ($valueCount > 256) throw new InvalidArgumentException('Search document contains too many attribute values.');
+        $this->attributes = $normalizedAttributes;
     }
 
     public function key(): string

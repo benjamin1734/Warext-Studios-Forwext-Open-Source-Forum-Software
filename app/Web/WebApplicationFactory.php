@@ -38,6 +38,7 @@ use Forwext\App\Web\Social\InteractionCsrfTokenHandler;
 use Forwext\App\Web\Social\PostBookmarkHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
+use Forwext\App\Web\Search\SearchHandler;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Config\ConfigLoader;
@@ -110,6 +111,11 @@ use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
 use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
+use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
+use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
+use Forwext\Core\Search\NativeDatabaseSearchDriver;
+use Forwext\Core\Search\PermissionAwareSearchService;
+use Forwext\Core\Search\Saved\SavedSearchQueryRegistry;
 use Forwext\Core\Session\DatabaseSessionStore;
 use Forwext\Core\Session\FileSessionStore;
 use Forwext\Core\Session\SessionStore;
@@ -180,6 +186,12 @@ final readonly class WebApplicationFactory
         $posts = new DatabasePostRepository($database);
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
         $nodes = new DatabaseForumNodeRepository($database);
+        $searchService = new PermissionAwareSearchService(
+            new NativeDatabaseSearchDriver($database),
+            $authorizer,
+            [new PublicSearchAccessScopeProvider(), new ForumSearchAccessScopeProvider($nodes, $authorizer)],
+            new SavedSearchQueryRegistry(),
+        );
         $quotes = new CrossThreadQuoteService($posts, $threads, $users);
         $linkPreviews = new LinkPreviewService(
             new LinkPreviewUrlPolicy(new NativeHostAddressResolver()),
@@ -241,6 +253,7 @@ final readonly class WebApplicationFactory
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
+        $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));
         $routes->add(new Route('editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'), new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions)));
         $routes->add(new Route('editor.quote', [HttpMethod::Get], new PathTemplate('/editor/quote'), new EditorQuoteHandler($quotes, $viewerResolver, $authorizer)));
