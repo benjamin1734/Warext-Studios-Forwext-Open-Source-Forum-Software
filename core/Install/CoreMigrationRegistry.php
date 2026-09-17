@@ -15,6 +15,7 @@ use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateNotificationAlertTables;
+use Forwext\Database\Migrations\Core\CreateNotificationSoundTables;
 use Forwext\Database\Migrations\Core\CreateOAuthConnectedAccountTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
@@ -66,6 +67,7 @@ final class CoreMigrationRegistry
             new CreateSocialInteractionTables(),
             new CreateProfileActivityTables(),
             new CreateNotificationAlertTables(),
+            new CreateNotificationSoundTables(),
         ];
     }
 }

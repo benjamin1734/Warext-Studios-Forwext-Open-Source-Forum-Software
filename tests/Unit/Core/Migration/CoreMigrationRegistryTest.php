@@ -11,6 +11,7 @@ use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateNotificationAlertTables;
+use Forwext\Database\Migrations\Core\CreateNotificationSoundTables;
 use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreatePollTables;
@@ -55,5 +56,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);
         self::assertContains(CreateNotificationAlertTables::class, $classes);
+        self::assertContains(CreateNotificationSoundTables::class, $classes);
     }
 }

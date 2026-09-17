@@ -14,6 +14,9 @@ use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
 use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
+use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
+use Forwext\App\Web\Notification\NotificationSoundCsrfTokenHandler;
+use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -69,6 +72,10 @@ use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Notification\Sound\DatabaseNotificationSoundRepository;
+use Forwext\Core\Notification\Sound\EngineNotificationSoundPermissionResolver;
+use Forwext\Core\Notification\Sound\NotificationSoundCatalog;
+use Forwext\Core\Notification\Sound\NotificationSoundService;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
 use Forwext\Core\Profile\Activity\DatabaseActivityFeedRepository;
 use Forwext\Core\Profile\Activity\DatabaseProfileActivityRepository;
@@ -195,6 +202,12 @@ final readonly class WebApplicationFactory
             $authorizer,
         );
 
+        $notificationSound = new NotificationSoundService(
+            new DatabaseNotificationSoundRepository($database),
+            new EngineNotificationSoundPermissionResolver($authorizer),
+            NotificationSoundCatalog::coreDefaults(),
+        );
+
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
@@ -210,6 +223,7 @@ final readonly class WebApplicationFactory
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
+        $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -288,6 +302,20 @@ final readonly class WebApplicationFactory
             new ActivityFeedHandler($activityFeed, $viewerResolver),
         ));
 
+        $routes->add(new Route(
+            'notification-sound.csrf', [HttpMethod::Get], new PathTemplate('/account/notification-sound/csrf'),
+            new NotificationSoundCsrfTokenHandler($viewerResolver), [$notificationSoundCsrf],
+        ));
+        $routes->add(new Route(
+            'account.notification-sound', [HttpMethod::Get, HttpMethod::Put], new PathTemplate('/account/notification-sound'),
+            new NotificationSoundSettingsHandler($notificationSound, $viewerResolver, $basePath), [$notificationSoundCsrf],
+        ));
+        $routes->add(new Route(
+            'account.notification-sound.category', [HttpMethod::Put, HttpMethod::Delete],
+            new PathTemplate('/account/notification-sound/categories/{categoryKey}', ['categoryKey' => '[a-z][a-z0-9_.-]{1,95}']),
+            new NotificationSoundCategoryHandler($notificationSound, $viewerResolver), [$notificationSoundCsrf],
+        ));
+
         $routes->add(new Route('members.index', [HttpMethod::Get], new PathTemplate('/members'), new MemberDirectoryHandler(new ProfileDirectoryReader($database), $basePath)));
         $routes->add(new Route('members.profile', [HttpMethod::Get], new PathTemplate('/members/{username}'), $profilePage));
         $routes->add(new Route('members.avatar', [HttpMethod::Get], new PathTemplate('/members/{username}/avatar'), new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Avatar)));
@@ -362,6 +390,11 @@ final readonly class WebApplicationFactory
     private function profileActivityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'profile-activity', 'forwext.csrf.profile-activity.v1');
+    }
+
+    private function notificationSoundCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'notification-sound', 'forwext.csrf.notification-sound.v1');
     }
 
     private function csrfMiddleware(ConfigRepository $config, string $purpose, string $context): CsrfMiddleware
