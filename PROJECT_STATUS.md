@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.6-dev
 LAST_COMPLETED_MAIN_STEP = 06
-LAST_COMPLETED_SUBSTEP = 07.03
-CURRENT_STEP = 07.04
-LAST_COMMIT = 32a7b7456a088dc3db06ff976e352c60c5c4b16d
+LAST_COMPLETED_SUBSTEP = 07.04
+CURRENT_STEP = 07.05
+LAST_COMMIT = 1bbe905cfb75d293166c7c50f6ae9f8483af8a6e
 BLOCKERS = none
-NEXT_STEP = 07.04 - Profile posts and activity feed
+NEXT_STEP = 07.05 - Notification/alert engine
 ```
 
 ## Current position
@@ -21,17 +21,33 @@ NEXT_STEP = 07.04 - Profile posts and activity feed
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`; main step `07` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.03`.
-- Current sub-step: `07.04 — Profile posts ve activity feed`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.04`.
+- Current sub-step: `07.05 — Notification/alert motoru`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
 - Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
-- Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore and authored-content filtering completed.
+- Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore, profile-wall activity and privacy-filtered unified activity feed completed.
 - Installer migration integrity: all current migrations are explicitly registered and regression-tested.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 07.04
+
+- Added profile-wall view/post privacy scopes: `everyone`, `followers` and `owner_only`, enforced server-side using the existing first-party follow relations.
+- Added bounded UTF-8 profile posts and comments with visible/pending/rejected moderation state plus soft-delete timestamps.
+- Added five profile-activity permissions; normal interaction permissions are explicitly granted by starter profiles while `profile.post.moderate` is denied to normal profiles and allowed to moderator/administrator.
+- Added profile-post reactions that reuse the 07.03 shared reaction catalog instead of creating a parallel reaction definition system.
+- Added owner/author/staff management rules and bidirectional ignore checks for cross-user post/comment/reaction writes.
+- Added a unified activity candidate stream over active threads, forum posts, profile posts/comments and profile reactions.
+- Added viewer-specific activity filtering for ignored actors, node-scoped `forum.view`, profile privacy and current profile-post visibility.
+- Explicitly kept private bookmark/note data outside the activity-feed source query.
+- Added native authenticated profile post/comment/reaction/privacy/activity routes with dedicated `profile-activity` CSRF scope.
+- Added migration `20260916003000_profile_activity`, four tables, five permissions, 25 starter-profile rules and installer-registry coverage.
+- Added service/privacy, feed, SQL-source, migration and web-surface tests plus architecture documentation.
+- Feature commit: `1bbe905cfb75d293166c7c50f6ae9f8483af8a6e`.
+- Final CI run `35207746110` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
 
 ## Completed in 07.03
 
@@ -44,9 +60,8 @@ NEXT_STEP = 07.04 - Profile posts and activity feed
 - Added server-side ignored-author filters for thread and post collections without replacing normal permission/moderation visibility checks.
 - Added four first-party interaction permissions, five-table migration `20260916002000_social_interactions`, explicit starter-profile rules and installer-registry coverage.
 - Added authenticated native routes for reaction summary/mutation, bookmark management/listing, follow/unfollow and ignore/unignore; interaction mutations use a dedicated CSRF scope and actor-bound backend authorization.
-- Added domain/repository/service/migration/web-surface regression tests and architecture documentation.
 - Feature commit: `32a7b7456a088dc3db06ff976e352c60c5c4b16d`.
-- Final CI run `35150065939` passed PHP 8.4/8.5 PHPUnit, strict-types, Composer metadata, production dependency baseline, full/update package builds, artifact upload and GitHub Release.
+- Final CI run `35150065939` passed all release gates.
 
 ## Completed in 07.02
 
@@ -55,7 +70,6 @@ NEXT_STEP = 07.04 - Profile posts and activity feed
 - Preserved iframe-free safe embed rendering.
 - Added SSRF-resistant HTTPS link previews with public-host DNS validation, private/reserved-address rejection, pinned-IP TLS transport, redirect revalidation and response/time bounds.
 - Added local emoji/smiley rendering and native editor UI integration.
-- Added regression tests covering mention wildcard handling, quote breakout containment, SSRF cases and editor-header gating.
 - Feature commit: `bc6164cbd5cdc9a6bc1f14c7afcfd909096d8c55`; hardening fix: `fdd38b4a72e42fa2e6fee467ed4dbeadcb920cb4`.
 - Final CI run `35064782254` passed all release gates.
 
@@ -65,7 +79,6 @@ NEXT_STEP = 07.04 - Profile posts and activity feed
 - Added privacy stripping for supported image metadata and optional-GD thumbnails without making GD a minimum cPanel dependency.
 - Added temporary-to-attached finalization, persisted hash/size integrity verification and private secure downloads.
 - Added race-safe quota rechecks, orphan cleanup maintenance service/task/handler and migration `20260916001000_attachment_pipeline`.
-- Added three attachment permissions, starter-profile rules, installer coverage and domain/repository/service/migration/security tests.
 - Final implementation HEAD: `8530e79c62cf2bcb4334d1706eb59c782a39960d`.
 - Final CI run `35029822766` passed all release gates.
 
