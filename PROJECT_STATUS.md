@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 08.06
-CURRENT_STEP = 09.01
-LAST_COMMIT = 8e9a8dacef66d51d32be9c4c2e57392e3d85aa11
+LAST_COMPLETED_SUBSTEP = 09.01
+CURRENT_STEP = 09.02
+LAST_COMMIT = 812d2b8267e83560287af1ffe117977293ac10b7
 BLOCKERS = none
-NEXT_STEP = 09.01 - Moderation workspace
+NEXT_STEP = 09.02 - Report system
 ```
 
 ## Current position
@@ -21,12 +21,30 @@ NEXT_STEP = 09.01 - Moderation workspace
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`.
-- Current sub-step: `09.01 — Moderation workspace`.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01`.
+- Current sub-step: `09.02 — Report system`.
+- Remaining roadmap work after 09.01: **81 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.01
+
+- Added one authenticated internal moderation workspace for reports, approval/pending content, warnings, bans and moderator tasks without creating parallel permission or authentication systems.
+- Added a provider/read-model contract so later moderation domains can contribute real records to the same workspace. Report, warning and ban sections remain honest empty integration points until their dedicated roadmap steps implement those domains.
+- Added a real forum approval source for existing pending threads/posts. Forum candidates are derived server-side and require both `forum.view` and the existing node-scoped `forum.thread.moderate` / `forum.post.moderate` permissions.
+- Pending-content queries exclude deleted/merged content and expose only bounded identifiers, titles/positions and timestamps needed by the workspace; post bodies are not selected into the dashboard read model.
+- Added persistent moderator tasks with priority, open/in-progress/done state, creator, optional assignee and optional UTC due date.
+- Task creation/status mutations require `moderation.manage` and are recorded transactionally through the existing moderation audit store with dedicated workspace audit actions.
+- Added same-origin mutation protection based on the configured canonical origin, `Sec-Fetch-Site` and `X-Forwext-Moderation`; actor identity is always resolved from the authenticated session.
+- Added `/moderation` native PHP composition, escaped rendering, 401/403/404/400 handling, `no-store` and `noindex,nofollow` response controls.
+- Added idempotent data-preserving migration `20260918001000_moderation_workspace_tasks` and migration registry integration.
+- Added regression coverage for fail-closed workspace access, complete section composition, HTML escaping, same-origin mutation guard, task model and migration registration.
+- No new mandatory Node/Redis/Docker/Supervisor/worker dependency was introduced for cPanel runtime.
+- Feature commit: `812d2b8267e83560287af1ffe117977293ac10b7`.
+- GitHub Actions build run `35279919780` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production dependency-baseline verification and cPanel package generation.
+- MySQL 8.4 migration smoke run `35279919775` passed the complete clean-install migration chain and idempotent second pass.
 
 ## Completed in 08.06
 
@@ -124,7 +142,8 @@ Commit `6939aae56bfc89cd5ec6dc01ca640664383be853` restored the binding package c
 - Forum foundation includes node hierarchy, thread/post lifecycle, prefixes/tags/custom fields, polls, drafts/read/watch state, rich editor/live metrics and audited thread/post moderation operations.
 - Media/social foundation includes secure attachments, mentions/quotes/safe embeds/SSRF-protected previews, reactions, bookmarks, follow/ignore and profile activity.
 - Notification foundation includes persisted in-app/email/push alerts, preferences, dedupe/grouping, retry, safe templates, sound preferences and polling/SSE/WebSocket fallback delivery.
-- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`), navigation/member/presence/stats UX (`08.05`) and global content discovery UX (`08.06`).
+- Search/discovery foundation includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`), navigation/member/presence/stats UX (`08.05`) and global content discovery UX (`08.06`).
+- Moderation foundation now includes the single internal workspace/read-model composition and persistent moderator tasks (`09.01`); report lifecycle, cross-domain approval queue and discipline/ban systems continue in `09.02–09.04`.
 - Detailed historical implementation notes remain under `docs/changelog/` and repository history.
 
 ## Completion rules
