@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Forwext\App\Web\ResponseEmitter;
+use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
@@ -36,15 +37,24 @@ $requestMethod = HttpMethod::Get;
 try {
     $request = Request::fromGlobals();
     $requestMethod = $request->method();
-    $factory = new WebApplicationFactory($root);
-    $application = $factory->create($version->value());
-    $response = $application->handle($request)
+
+    $seoFactory = new SeoApplicationFactory($root);
+    $response = $seoFactory->handle($request);
+
+    if ($response === null) {
+        $factory = new WebApplicationFactory($root);
+        $application = $factory->create($version->value());
+        $response = $seoFactory->decorate($request, $application->handle($request))
+            ->withHeader('Content-Security-Policy', $factory->contentSecurityPolicy());
+    }
+
+    $response = $response
         ->withHeader('X-Content-Type-Options', 'nosniff')
-        ->withHeader('Referrer-Policy', 'no-referrer')
-        ->withHeader('Content-Security-Policy', $factory->contentSecurityPolicy());
+        ->withHeader('Referrer-Policy', 'no-referrer');
 } catch (Throwable) {
     $response = Response::text('Internal Server Error', 500)
         ->withHeader('X-Content-Type-Options', 'nosniff')
+        ->withHeader('X-Robots-Tag', 'noindex, nofollow')
         ->withHeader('Cache-Control', 'no-store');
 }
 
