@@ -32,14 +32,14 @@ final readonly class MigrationEngine
             $checksum = MigrationFingerprint::calculate($migration);
             $existing = $this->history->find($migration->owner(), $migration->id());
 
-            if ($existing !== null && !hash_equals($existing->checksum, $checksum)) {
-                throw new MigrationIntegrityException(sprintf(
-                    'Previously recorded migration "%s" no longer matches its source fingerprint.',
-                    $key,
-                ));
-            }
-
             if ($existing?->status === MigrationStatus::Applied) {
+                if (!hash_equals($existing->checksum, $checksum)) {
+                    throw new MigrationIntegrityException(sprintf(
+                        'Previously applied migration "%s" no longer matches its source fingerprint.',
+                        $key,
+                    ));
+                }
+
                 $skipped[] = $key;
                 continue;
             }
