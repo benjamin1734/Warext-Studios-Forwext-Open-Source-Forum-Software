@@ -14,6 +14,7 @@ use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreatePollTables;
 use Forwext\Database\Migrations\Core\CreatePostDomainTables;
+use Forwext\Database\Migrations\Core\CreateProfileActivityTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
@@ -26,10 +27,7 @@ final class CoreMigrationRegistryTest extends TestCase
     public function testInstallerMigrationIdsAreValidUniqueAndChronological(): void
     {
         $ids = [];
-        foreach (CoreMigrationRegistry::all() as $migration) {
-            $ids[] = $migration->id()->value();
-        }
-
+        foreach (CoreMigrationRegistry::all() as $migration) $ids[] = $migration->id()->value();
         self::assertNotEmpty($ids);
         self::assertCount(count($ids), array_unique($ids));
         $sorted = $ids;
@@ -39,11 +37,7 @@ final class CoreMigrationRegistryTest extends TestCase
 
     public function testInstallerIncludesCurrentRolePermissionAndForumMigrations(): void
     {
-        $classes = array_map(
-            static fn (object $migration): string => $migration::class,
-            CoreMigrationRegistry::all(),
-        );
-
+        $classes = array_map(static fn (object $migration): string => $migration::class, CoreMigrationRegistry::all());
         self::assertContains(CreateRoleGroupTables::class, $classes);
         self::assertContains(CreatePermissionEngineTables::class, $classes);
         self::assertContains(CreatePermissionTemplateTables::class, $classes);
@@ -58,5 +52,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateContentModerationTables::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
+        self::assertContains(CreateProfileActivityTables::class, $classes);
     }
 }

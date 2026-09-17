@@ -14,11 +14,18 @@ use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
 use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
+use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
+use Forwext\App\Web\Profile\ProfileActivityCsrfTokenHandler;
+use Forwext\App\Web\Profile\ProfileActivityDeleteHandler;
+use Forwext\App\Web\Profile\ProfileActivitySettingsHandler;
+use Forwext\App\Web\Profile\ProfileCommentsHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
 use Forwext\App\Web\Profile\ProfileMusicHandler;
+use Forwext\App\Web\Profile\ProfilePostReactionHandler;
+use Forwext\App\Web\Profile\ProfilePostsHandler;
 use Forwext\App\Web\Profile\ProfileUrlSettingsHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
 use Forwext\App\Web\Social\BookmarkListHandler;
@@ -62,6 +69,10 @@ use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Profile\Activity\ActivityFeedService;
+use Forwext\Core\Profile\Activity\DatabaseActivityFeedRepository;
+use Forwext\Core\Profile\Activity\DatabaseProfileActivityRepository;
+use Forwext\Core\Profile\Activity\ProfileActivityService;
 use Forwext\Core\Profile\DatabaseProfileStore;
 use Forwext\Core\Profile\Music\DatabaseProfileMusicStore;
 use Forwext\Core\Profile\Music\EngineProfileMusicPermissionResolver;
@@ -160,11 +171,27 @@ final readonly class WebApplicationFactory
             new LinkPreviewUrlPolicy(new NativeHostAddressResolver()),
             new PinnedHttpsLinkPreviewTransport(),
         );
+
+        $socialRepository = new DatabaseSocialInteractionRepository($database);
         $socialInteractions = new SocialInteractionService(
-            new DatabaseSocialInteractionRepository($database),
+            $socialRepository,
             $posts,
             $threads,
             $users,
+            $authorizer,
+        );
+        $profileActivityRepository = new DatabaseProfileActivityRepository($database);
+        $profileActivity = new ProfileActivityService(
+            $profileActivityRepository,
+            $socialRepository,
+            $users,
+            $authorizer,
+        );
+        $activityFeed = new ActivityFeedService(
+            new DatabaseActivityFeedRepository($database),
+            $profileActivityRepository,
+            $profileActivity,
+            $socialRepository,
             $authorizer,
         );
 
@@ -182,6 +209,7 @@ final readonly class WebApplicationFactory
         );
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
+        $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -225,6 +253,39 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'user.ignore', [HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/ignore'),
             new UserRelationshipHandler($socialInteractions, $viewerResolver, true), [$interactionCsrf],
+        ));
+
+        $routes->add(new Route(
+            'profile-activity.csrf', [HttpMethod::Get], new PathTemplate('/account/profile-activity/csrf'),
+            new ProfileActivityCsrfTokenHandler($viewerResolver), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'profile.posts', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/users/{userId}/profile-posts'),
+            new ProfilePostsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'profile.comments', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/profile-posts/{profilePostId}/comments'),
+            new ProfileCommentsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'profile.reactions', [HttpMethod::Get, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}/reactions'),
+            new ProfilePostReactionHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'profile.post.delete', [HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}'),
+            new ProfileActivityDeleteHandler($profileActivity, $viewerResolver, false), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'profile.comment.delete', [HttpMethod::Delete], new PathTemplate('/profile-comments/{commentId}'),
+            new ProfileActivityDeleteHandler($profileActivity, $viewerResolver, true), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'account.profile-activity', [HttpMethod::Get, HttpMethod::Put], new PathTemplate('/account/profile-activity'),
+            new ProfileActivitySettingsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'activity.feed', [HttpMethod::Get], new PathTemplate('/activity'),
+            new ActivityFeedHandler($activityFeed, $viewerResolver),
         ));
 
         $routes->add(new Route('members.index', [HttpMethod::Get], new PathTemplate('/members'), new MemberDirectoryHandler(new ProfileDirectoryReader($database), $basePath)));
@@ -296,6 +357,11 @@ final readonly class WebApplicationFactory
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'interaction', 'forwext.csrf.interaction.v1');
+    }
+
+    private function profileActivityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'profile-activity', 'forwext.csrf.profile-activity.v1');
     }
 
     private function csrfMiddleware(ConfigRepository $config, string $purpose, string $context): CsrfMiddleware

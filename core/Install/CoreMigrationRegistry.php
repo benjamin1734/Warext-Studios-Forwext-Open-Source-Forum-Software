@@ -19,6 +19,7 @@ use Forwext\Database\Migrations\Core\CreatePermissionEngineTables;
 use Forwext\Database\Migrations\Core\CreatePermissionTemplateTables;
 use Forwext\Database\Migrations\Core\CreatePollTables;
 use Forwext\Database\Migrations\Core\CreatePostDomainTables;
+use Forwext\Database\Migrations\Core\CreateProfileActivityTables;
 use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
@@ -62,6 +63,7 @@ final class CoreMigrationRegistry
             new CreateContentModerationTables(),
             new CreateAttachmentPipelineTables(),
             new CreateSocialInteractionTables(),
+            new CreateProfileActivityTables(),
         ];
     }
 }
