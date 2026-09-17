@@ -5,13 +5,13 @@ This file is the canonical human-readable development pointer for continuing For
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.6-dev
+CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 07
-LAST_COMPLETED_SUBSTEP = 07.07
-CURRENT_STEP = 08.01
-LAST_COMMIT = e9b166f9755ccf6c2e2e71a7152b9978f5373e49
+LAST_COMPLETED_SUBSTEP = 08.01
+CURRENT_STEP = 08.02
+LAST_COMMIT = 455b8d8d68b865a846c0f0be11c890662367573f
 BLOCKERS = none
-NEXT_STEP = 08.01 - Native search/index lifecycle
+NEXT_STEP = 08.02 - Advanced search filters
 ```
 
 ## Current position
@@ -21,18 +21,36 @@ NEXT_STEP = 08.01 - Native search/index lifecycle
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`
 - Project license: **Apache-2.0**
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`; main step `08` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`.
-- Current sub-step: `08.01 — Native search/index lifecycle`
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01`.
+- Current sub-step: `08.02 — Advanced search filters`
 - Persistent server installation: browser installer applies all current core migrations, writes protected configuration/secrets and locks completed installation state.
-- Installation packaging: GitHub CI builds vendor-inclusive cPanel full/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks.
+- Installation packaging: GitHub CI builds vendor-inclusive cPanel installation/update ZIPs after PHP 8.4 and PHP 8.5 PHPUnit checks. Published main and side-update release tags are immutable.
 - Permission system: shared global/node engine, starter profiles, analyzer, actor-bound gate, first-party namespace integration and mandatory security matrix completed.
 - Forum/content foundation: node hierarchy, thread/post lifecycle, polls, discussion state, metadata, rich editor and audited moderation operations completed.
 - Interaction foundation: private attachments, mention/quote/embed/link-preview editor integration, reactions, private bookmarks, follow/ignore, profile-wall activity and privacy-filtered unified activity feed completed.
 - Notification foundation: persisted in-app alerts, email/push delivery queue, channel preferences, grouping/dedupe, bounded retry/backoff, safe templates, first-party/add-on notification registry, user-controlled accessible notification sounds, and polling/SSE/WebSocket realtime fallback delivery completed.
-- Installer migration integrity: all current migrations are explicitly registered and regression-tested.
+- Search foundation: native MySQL FULLTEXT indexing now has durable permission-aware lifecycle processing for forum/thread/post/user sources, source-driven scopes, lifecycle triggers, retryable outbox draining and cPanel-friendly maintenance integration.
+- Installer migration integrity: all current migrations are explicitly registered and regression-tested; a real MySQL 8.4 clean-install/idempotency workflow also gates migration changes.
 - Binding roadmap: `forwext_master_gelistirme_plani_v2.txt` (v2.0).
 
-`LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+`LAST_COMMIT` records the implementation/fix commit that completed the last sub-step. Status-only/test-only/documentation commits are intentionally not self-referenced because a Git commit cannot contain its own final SHA without changing that SHA. Every continuation session must resolve and verify current `main` before changing files.
+
+## Completed in 08.01
+
+- Kept the existing native MySQL FULLTEXT search driver and added a production lifecycle layer instead of creating a parallel search system.
+- Added first-party index sources for forum nodes, threads, posts and users with source-state checks that exclude pending/rejected/deleted content and private profile fields.
+- Added stable search scope tokens and actor-side scope resolution so node-bound search results require the same `forum.view` authorization as normal forum browsing; scope tokens are not accepted from clients as authority.
+- Kept unlisted forum nodes out of search discovery while still supporting visible permission-aware forum content.
+- Added a durable search-index outbox with lease-based batch ownership, retry/backoff, idempotent upsert/delete processing and rebuild queue support.
+- Added MySQL lifecycle triggers for forum nodes, threads, posts and users. Thread node/title/moderation/visibility changes requeue dependent posts so old content or permission scopes cannot remain searchable.
+- Added explicit pre-delete handling for thread-owned post index rows so MySQL cascade deletion cannot leave stale search documents.
+- Added shared `search.use` permission registration and permission-catalog coverage.
+- Added cPanel-friendly maintenance/task wiring to drain the outbox without requiring Redis, Supervisor, Node.js or a persistent worker.
+- Added migration `20260917003000_search_index_lifecycle`, migration-registry coverage and architecture documentation.
+- Added lifecycle, visibility/privacy, access-scope, migration/trigger and registry regression coverage.
+- Feature commit: `455b8d8d68b865a846c0f0be11c890662367573f`; final permission-catalog test alignment: `628f5607b9a104039e53fe145e2a0b7b1cbff06d`.
+- GitHub Actions build run `35244712126` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production dependency-baseline verification and cPanel package generation.
+- Real MySQL 8.4 migration smoke run `35244712274` passed the full clean-install migration chain and idempotent second migration pass.
 
 ## Completed in 07.07
 
@@ -176,12 +194,12 @@ Before marking a sub-step complete, review its permission, security, audit, migr
 
 ## Permanent release rule
 
-Every releasable development version provides both:
+Every releasable development version provides both an installation ZIP and an update ZIP. Development releases are immutable once published:
 
-- `forwext-vX.Y.Z-full.zip`
-- `forwext-vX.Y.Z-update.zip`
+- Main-step release: `vX.Y.Z-dev`, with `forwext-X.Y.Z-dev-install.zip` and `forwext-X.Y.Z-dev-update.zip`.
+- Side update: `vX.Y.Z.NN-dev` (`NN` starts at `01`), with its own installation/update ZIP pair.
 
-The full ZIP is suitable for a clean installation. The update ZIP upgrades the previous supported installation and must not reset the database. Update manifests carry source version, target version, add/replace/delete sets, migrations, rebuild actions and checksums. Normal updates preserve site-specific config/uploads/storage data and advance existing data through migrations.
+A published tag/release is never overwritten. Further fixes/features increment the side-update suffix (`.01`, `.02`, `.03` …) until the next main-step version. The installation ZIP is suitable for a clean installation. The update ZIP upgrades the previous supported release and must not reset the database. Update manifests carry source version, target version, add/replace/delete sets, migrations, rebuild actions and checksums. Normal updates preserve site-specific config/uploads/storage data and advance existing data through migrations.
 
 ## Continuation protocol
 
