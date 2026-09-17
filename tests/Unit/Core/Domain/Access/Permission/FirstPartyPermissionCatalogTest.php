@@ -25,7 +25,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             FirstPartyPermissionCatalog::namespaces(),
         );
 
-        self::assertCount(83, $entries);
+        self::assertCount(84, $entries);
         self::assertCount(count($keys), array_unique($keys));
         self::assertSame([
             'acp',
@@ -52,6 +52,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             'promotion',
             'referral',
             'reward',
+            'search',
             'spellcheck',
             'subscription',
             'support',
@@ -77,6 +78,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             'analytics.export',
             'appearance.advanced',
             'api.manage',
+            'search.use',
         ] as $requiredKey) {
             self::assertContains($requiredKey, $keys);
         }
