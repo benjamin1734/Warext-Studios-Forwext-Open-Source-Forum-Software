@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 07
-LAST_COMPLETED_SUBSTEP = 08.03
-CURRENT_STEP = 08.04
-LAST_COMMIT = 0f9848bd0c11a9ffd026c493bf7757fc58854aae
+LAST_COMPLETED_SUBSTEP = 08.04
+CURRENT_STEP = 08.05
+LAST_COMMIT = a738bed96fcee2dfaddb14434cb9de1f79013ef8
 BLOCKERS = none
-NEXT_STEP = 08.04 - SEO and structured data
+NEXT_STEP = 08.05 - Navigation/member directory/stats
 ```
 
 ## Current position
@@ -21,12 +21,27 @@ NEXT_STEP = 08.04 - SEO and structured data
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`; main step `08` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.03`.
-- Current sub-step: `08.04 — SEO and structured data`.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.04`.
+- Current sub-step: `08.05 — Navigation/member directory/stats`.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 08.04
+
+- Added canonical/meta/OpenGraph/Twitter/JSON-LD rendering with absolute URLs derived only from configured canonical origin/base path, never request Host/forwarded input.
+- Added fail-closed SEO handling: only explicitly public routes can be indexable; unknown/private HTML routes receive `noindex,nofollow`, and non-indexable non-HTML responses receive `X-Robots-Tag`.
+- Added independently verified public-profile SEO reads restricted to active users with effective `public` profile visibility. The SEO query does not select private email/about/social/media content.
+- Added canonical public-profile convergence: current `/u/{slug}` when a custom URL exists, otherwise `/members/{username}`.
+- Added base-path-aware `robots.txt`, bounded XML sitemap, RSS and Atom endpoints through a shared public-discovery source contract.
+- Added JSON-LD script-breakout hardening with JSON hex escaping and XML escaping for sitemap/feed payloads.
+- Kept private/member-only profiles out of metadata, sitemap and feeds even when an authenticated viewer can legitimately render them.
+- Added extension boundaries for future public forum/FAQ/portfolio/marketplace routes without inventing URLs before those public surfaces exist.
+- No migration was required; existing user/profile/custom-URL state is reused and minimum cPanel runtime gains no daemon/Node/Redis dependency.
+- Feature commit: `a738bed96fcee2dfaddb14434cb9de1f79013ef8`.
+- GitHub Actions build run `35272514113` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, `forwext-v...-full.zip` package generation and artifact upload.
+- MySQL 8.4 migration smoke run `35272514162` passed the complete clean-install migration chain and idempotent second pass.
 
 ## Completed in 08.03
 
@@ -79,7 +94,7 @@ Commit `6939aae56bfc89cd5ec6dc01ca640664383be853` restored the binding package c
 - Forum foundation includes node hierarchy, thread/post lifecycle, prefixes/tags/custom fields, polls, drafts/read/watch state, rich editor/live metrics and audited thread/post moderation operations.
 - Media/social foundation includes secure attachments, mentions/quotes/safe embeds/SSRF-protected previews, reactions, bookmarks, follow/ignore and profile activity.
 - Notification foundation includes persisted in-app/email/push alerts, preferences, dedupe/grouping, retry, safe templates, sound preferences and polling/SSE/WebSocket fallback delivery.
-- Search foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`) and permission-aware discovery (`08.03`).
+- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`) and SEO/public-discovery feeds (`08.04`).
 - Detailed historical implementation notes remain under `docs/changelog/` and repository history.
 
 ## Completion rules
