@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 07
-LAST_COMPLETED_SUBSTEP = 08.04
-CURRENT_STEP = 08.05
-LAST_COMMIT = a738bed96fcee2dfaddb14434cb9de1f79013ef8
+LAST_COMPLETED_SUBSTEP = 08.05
+CURRENT_STEP = 08.06
+LAST_COMMIT = 0514625c7a6a7abc35adab46098a4d19f7fdcfc1
 BLOCKERS = none
-NEXT_STEP = 08.05 - Navigation/member directory/stats
+NEXT_STEP = 08.06 - Global content discovery UX
 ```
 
 ## Current position
@@ -21,12 +21,27 @@ NEXT_STEP = 08.05 - Navigation/member directory/stats
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`; main step `08` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.04`.
-- Current sub-step: `08.05 — Navigation/member directory/stats`.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.05`.
+- Current sub-step: `08.06 — Global content discovery UX`.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 08.05
+
+- Added a shared ordered `NavigationRegistry` with stable same-origin paths, public/member audience metadata and first-party module-owned contribution support; navigation remains UX and never replaces backend permission checks.
+- Added responsive registry-backed native PHP navigation and reusable escaped breadcrumb trails.
+- Reused the existing `ForumNodeHierarchy::breadcrumb()` implementation and added per-node `forum.view` rechecks through `ForumBreadcrumbBuilder` instead of duplicating hierarchy logic.
+- Upgraded `/members` from a fixed latest-user list to bounded public member search, newest/name sorting, counts and pagination; only active users with public profiles are returned and LIKE wildcard input is escaped while values remain parameterized.
+- Added a dedicated presence model rather than treating long-lived authentication sessions as online status. Online activity uses a five-minute window and database heartbeats are throttled to one write per minute per user.
+- Added presence visibility values `hidden`, `members` and `public`; the privacy-safe default is member-only. Anonymous visitors only see explicit public presence, while hidden users never appear.
+- Added same-origin guarded heartbeat/preference writes and a native online-user page with user-controlled visibility. Online discovery also requires active account + public profile and therefore cannot bypass profile privacy.
+- Added actor-specific forum stats. Forum/thread/post counts reuse server-derived `forum.view` scopes and exclude non-forum nodes, deleted/merged threads and non-visible content; client-supplied forum ids are never accepted as authority.
+- Added migration `20260917233000_user_presence` with a cascading user foreign key and online lookup index, plus clean-install registry integration.
+- Feature commit: `0514625c7a6a7abc35adab46098a4d19f7fdcfc1`.
+- GitHub Actions build run `35273596810` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, `forwext-v...-full.zip` package generation and artifact upload.
+- MySQL 8.4 migration smoke run `35273596912` passed the complete clean-install migration chain and idempotent second pass.
 
 ## Completed in 08.04
 
@@ -94,7 +109,7 @@ Commit `6939aae56bfc89cd5ec6dc01ca640664383be853` restored the binding package c
 - Forum foundation includes node hierarchy, thread/post lifecycle, prefixes/tags/custom fields, polls, drafts/read/watch state, rich editor/live metrics and audited thread/post moderation operations.
 - Media/social foundation includes secure attachments, mentions/quotes/safe embeds/SSRF-protected previews, reactions, bookmarks, follow/ignore and profile activity.
 - Notification foundation includes persisted in-app/email/push alerts, preferences, dedupe/grouping, retry, safe templates, sound preferences and polling/SSE/WebSocket fallback delivery.
-- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`) and SEO/public-discovery feeds (`08.04`).
+- Search/discovery foundation now includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`) and navigation/member/presence/stats UX (`08.05`).
 - Detailed historical implementation notes remain under `docs/changelog/` and repository history.
 
 ## Completion rules
