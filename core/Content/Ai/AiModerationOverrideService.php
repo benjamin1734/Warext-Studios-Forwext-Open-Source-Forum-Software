@@ -39,7 +39,6 @@ final readonly class AiModerationOverrideService
         $this->gate->require(PermissionKey::fromString(self::PERMISSION));
         $at = self::utc($now);
         $fingerprint = AiModerationFingerprint::forContent($contentType, $text);
-        $previous = $this->overrides->active($fingerprint, $at);
         $override = new AiModerationHumanOverride(
             $fingerprint,
             $action,
@@ -49,7 +48,8 @@ final readonly class AiModerationOverrideService
             $expiresAt,
         );
 
-        return $this->database->transaction(function () use ($previous, $override, $at): AiModerationHumanOverride {
+        return $this->database->transaction(function () use ($override, $at): AiModerationHumanOverride {
+            $previous = $this->overrides->active($override->contentFingerprint, $at);
             $this->overrides->save($override);
             $this->audit->append(new AuditEvent(
                 AuditEvent::generateId(),
@@ -85,13 +85,10 @@ final readonly class AiModerationOverrideService
         $this->gate->require(PermissionKey::fromString(self::PERMISSION));
         $at = self::utc($now);
         $fingerprint = AiModerationFingerprint::forContent($contentType, $text);
-        $previous = $this->overrides->active($fingerprint, $at);
-        if ($previous === null) {
-            return false;
-        }
 
-        return $this->database->transaction(function () use ($fingerprint, $previous, $at): bool {
-            if (!$this->overrides->delete($fingerprint)) {
+        return $this->database->transaction(function () use ($fingerprint, $at): bool {
+            $previous = $this->overrides->active($fingerprint, $at);
+            if ($previous === null || !$this->overrides->delete($fingerprint)) {
                 return false;
             }
             $this->audit->append(new AuditEvent(
