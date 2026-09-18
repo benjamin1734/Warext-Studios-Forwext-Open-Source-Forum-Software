@@ -27,7 +27,6 @@ final class AnthropicAiModerationProvider extends AbstractPromptAiModerationProv
         return [
             'model'=>$this->providerModel,
             'max_tokens'=>400,
-            'temperature'=>0,
             'system'=>PromptJsonModerationParser::SYSTEM_PROMPT,
             'messages'=>[[
                 'role'=>'user',
