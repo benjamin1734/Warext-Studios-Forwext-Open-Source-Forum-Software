@@ -6,12 +6,12 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
-LAST_COMPLETED_MAIN_STEP = 09
-LAST_COMPLETED_SUBSTEP = 10.05
-CURRENT_STEP = 10.06
-LAST_COMMIT = d0d8f5b0b64f45576ac1722b79bcd51e684991d1
+LAST_COMPLETED_MAIN_STEP = 10
+LAST_COMPLETED_SUBSTEP = 10.06
+CURRENT_STEP = 11.01
+LAST_COMMIT = 3d95c790037c60bbe4f17311c14262c5c7be8d16
 BLOCKERS = none
-NEXT_STEP = 10.06 - Destek paneli, kullanıcı taleplerim ve raporlama
+NEXT_STEP = 11.01 - Hata raporu domain ve workflow
 ```
 
 ## Current position
@@ -20,14 +20,32 @@ NEXT_STEP = 10.06 - Destek paneli, kullanıcı taleplerim ve raporlama
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.05`.
-- Current sub-step: `10.06 — Destek paneli, kullanıcı taleplerim ve raporlama`.
-- Remaining roadmap work after 10.05: **70 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`; main step `11` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`.
+- Current sub-step: `11.01 — Hata raporu domain ve workflow`.
+- Remaining roadmap work after 10.06: **69 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 10.06
+
+- Added a permission-aware user `/support/tickets` "Taleplerim" surface backed by the existing requester-scoped support repository.
+- Added a staff support dashboard with active queue, SLA/response-time summary metrics and per-category aggregate reporting.
+- Added support reporting DTO/repository/service boundaries so UI rendering does not embed raw reporting SQL.
+- Added response-time and resolution-SLA calculations from persisted ticket timestamps without background workers.
+- Added category totals/open/resolved/SLA-breach metrics for operational reporting.
+- Added support audit entries for ticket create/reply/note/assignment/status/escalation/merge/split/canned-response and FAQ-draft workflow mutations.
+- Integrated support audit with the shared first-party audit scope rather than creating an unrelated logging silo.
+- Added granular support reporting/audit permissions and safe built-in template defaults.
+- Added native `/support/staff` dashboard and linked ticket flows while preserving backend authorization as the source of truth.
+- Added additive idempotent migration `20260918016000_support_reporting_audit`.
+- Added regression coverage for reporting calculations, permission boundaries, HTML escaping and support audit recording.
+- Feature commit: `3d95c790037c60bbe4f17311c14262c5c7be8d16`.
+- GitHub Actions build run `35369479835`: success.
+- MySQL migration smoke run `35369479951`: success.
+- Main roadmap step 10 is now complete; work advances to 11.01.
 
 ## Completed in 10.05
 
