@@ -46,6 +46,11 @@ use Forwext\Core\Moderation\Discipline\DisciplineActionType;
 use Forwext\Core\Moderation\Discipline\DisciplineOperationException;
 use Forwext\Core\Moderation\Discipline\DisciplineService;
 use Forwext\Core\Moderation\Discipline\NotificationDisciplineNotifier;
+use Forwext\Core\Moderation\Oversight\DatabaseModerationOversightStore;
+use Forwext\Core\Moderation\Oversight\DatabaseOversightReviewRepository;
+use Forwext\Core\Moderation\Oversight\ModerationOversightService;
+use Forwext\Core\Moderation\Oversight\ModerationOversightVerifier;
+use Forwext\Core\Moderation\Oversight\OversightOperationException;
 use Forwext\Core\Moderation\Report\DatabaseReportRepository;
 use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
 use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
@@ -116,8 +121,17 @@ final class ModerationApplicationFactory
         $reportRepository = new DatabaseReportRepository($database);
         $nodes = new DatabaseForumNodeRepository($database);
         $users = new DatabaseUserRepository($database);
-        $audit = new DatabaseModerationAuditStore($database);
+        $oversightStore = new DatabaseModerationOversightStore($database);
+        $audit = new DatabaseModerationAuditStore($database, $oversightStore);
         $coreAudit = new CoreAuditService(new DatabaseAuditEventStore($database), $gate);
+        $oversightReviews = new DatabaseOversightReviewRepository($database);
+        $oversightService = new ModerationOversightService(
+            $database,
+            $oversightStore,
+            $oversightReviews,
+            new ModerationOversightVerifier($oversightStore),
+            $gate,
+        );
         $disciplineRepository = new DatabaseDisciplineRepository($database);
         $abuseRepository = new DatabaseAbuseRepository($database);
         $disciplineNotifications = new NotificationRegistry();
@@ -184,6 +198,12 @@ final class ModerationApplicationFactory
             $canViewAudit,
         );
         $auditHandler = new CoreAuditHandler($coreAudit, $this->basePath);
+        $oversightHandler = new OversightHandler(
+            $oversightService,
+            $guard,
+            $this->basePath,
+            new OversightCapabilities($gate->allows(PermissionKey::fromString('audit.review'))),
+        );
         $reportHandler = new ReportModerationHandler(
             ReportServiceFactory::create($database, $this->permissionAuthorizer(), $gate),
             $guard,
@@ -225,6 +245,41 @@ final class ModerationApplicationFactory
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
                 }
                 return $handler->view();
+            }
+
+            if ($routePath === '/moderation/oversight') {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $oversightHandler->view($request);
+            }
+
+            if ($routePath === '/moderation/oversight/cases') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $oversightHandler->openCase($request);
+            }
+
+            if (preg_match('#^/moderation/oversight/cases/([0-9a-f]{32})/resolve$#D', $routePath, $matches) === 1) {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $oversightHandler->resolveCase($request, $matches[1]);
+            }
+
+            if ($routePath === '/moderation/oversight/flags') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $oversightHandler->flag($request);
+            }
+
+            if (preg_match('#^/moderation/oversight/flags/([0-9a-f]{32})/resolve$#D', $routePath, $matches) === 1) {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $oversightHandler->resolveFlag($request, $matches[1]);
             }
 
             if ($routePath === '/moderation/audit') {
@@ -330,11 +385,11 @@ final class ModerationApplicationFactory
             }
 
             return $this->secure(Response::text('Not Found', 404));
-        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException|AbuseMutationGuardException) {
+        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException|AbuseMutationGuardException|OversightMutationGuardException) {
             return $this->secure(Response::text('Forbidden', 403));
         } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
             return $this->secure(Response::text('Not Found', 404));
-        } catch (ModerationOperationException|DisciplineOperationException|AbuseOperationException) {
+        } catch (ModerationOperationException|DisciplineOperationException|AbuseOperationException|OversightOperationException) {
             return $this->secure(Response::text('Conflict', 409));
         } catch (InvalidArgumentException|ValueError) {
             return $this->secure(Response::text('Bad Request', 400));

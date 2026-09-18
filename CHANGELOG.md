@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 09.07 — Independent Moderation Oversight
+
+- Added a separate append-only SHA-256 moderation hash chain with monotonic sequence and row-locked chain state.
+- Added explicit paged integrity verification covering payload, sequence, previous-link, chain hash and final state.
+- Added review cases and anomaly flags without allowing chained moderation entries to be edited or deleted.
+- Enforced backend self-review protection even for users holding `audit.review`.
+- Added native `/moderation/oversight` UI and additive migration `20260918006000_independent_moderation_oversight`.
+- The tamper-evident chain begins at 09.07 activation; older operational audit events are not falsely presented as retroactively verified.
+
 ### 09.06 — Core Moderator/Admin Audit
 
 - Added a central moderator/admin audit event model with scope, actor, action, target, request-id and before/after snapshots.

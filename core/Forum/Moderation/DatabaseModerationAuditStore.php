@@ -11,15 +11,21 @@ use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Audit\SensitiveAuditRedactor;
 use Forwext\Core\Database\TransactionalQueryExecutor;
+use Forwext\Core\Moderation\Oversight\DatabaseModerationOversightStore;
+use Forwext\Core\Moderation\Oversight\ModerationOversightStore;
 use RuntimeException;
 
 final readonly class DatabaseModerationAuditStore implements ModerationAuditStore
 {
     private DatabaseAuditEventStore $central;
+    private ModerationOversightStore $oversight;
 
-    public function __construct(private TransactionalQueryExecutor $database)
-    {
+    public function __construct(
+        private TransactionalQueryExecutor $database,
+        ?ModerationOversightStore $oversight = null,
+    ) {
         $this->central = new DatabaseAuditEventStore($this->database, new SensitiveAuditRedactor());
+        $this->oversight = $oversight ?? new DatabaseModerationOversightStore($this->database);
     }
 
     public function append(ModerationAuditEvent $event): void
@@ -38,6 +44,7 @@ final readonly class DatabaseModerationAuditStore implements ModerationAuditStor
             $event->after,
             $event->occurredAt,
         ));
+        $this->oversight->append($event);
     }
 
     public function recentForTarget(string $targetType, string $targetId, int $limit = 100): array

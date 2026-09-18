@@ -53,7 +53,8 @@ final class ModerationWorkspaceHtml
         }
 
         $auditLink = $canViewAudit
-            ? '<p><a href="' . self::e($basePath->prepend('/moderation/audit')) . '">Core Audit Stream</a></p>'
+            ? '<p><a href="' . self::e($basePath->prepend('/moderation/audit')) . '">Core Audit Stream</a>'
+                . ' · <a href="' . self::e($basePath->prepend('/moderation/oversight')) . '">Bağımsız Moderasyon Denetimi</a></p>'
             : '';
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
         $content = '<div class="card"><h1 style="margin:0">Moderasyon çalışma alanı</h1>'

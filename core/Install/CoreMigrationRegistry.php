@@ -16,6 +16,7 @@ use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
+use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
@@ -86,6 +87,7 @@ final class CoreMigrationRegistry
             new CreateDisciplineTables(),
             new CreateAbusePreventionTables(),
             new CreateCoreAuditStream(),
+            new CreateIndependentModerationOversight(),
         ];
     }
 }

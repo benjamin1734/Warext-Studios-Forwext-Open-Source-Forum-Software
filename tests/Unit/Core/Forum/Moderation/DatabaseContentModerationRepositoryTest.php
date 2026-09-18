@@ -17,6 +17,9 @@ use Forwext\Core\Forum\Moderation\ModerationAuditContext;
 use Forwext\Core\Forum\Moderation\ModerationReasonCode;
 use Forwext\Core\Forum\Moderation\ModerationRequestId;
 use Forwext\Core\Forum\Thread\ThreadTitle;
+use Forwext\Core\Moderation\Oversight\ModerationOversightStore;
+use Forwext\Core\Moderation\Oversight\OversightChainState;
+use Forwext\Core\Moderation\Oversight\OversightEntry;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -26,9 +29,10 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
     {
         $database = new ModerationRepositoryRecordingDatabase();
         $database->fetchOneQueue[] = $this->threadRow('a', 'b');
+        $oversight = new ModerationRepositoryOversightStore();
         $repository = new DatabaseContentModerationRepository(
             $database,
-            new DatabaseModerationAuditStore($database),
+            new DatabaseModerationAuditStore($database, $oversight),
         );
 
         $repository->moveThread(
@@ -47,6 +51,7 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         self::assertSame('moderation', $database->executedQueries[1]->parameters['scope']);
         self::assertSame('thread.move', $database->executedQueries[1]->parameters['action']);
         self::assertSame($this->id('1')->value(), $database->executedQueries[1]->parameters['actor_user_id']);
+        self::assertSame(1, $oversight->appends);
     }
 
     public function testSplitRejectsMovingSourceFirstPostWithoutMutationOrAudit(): void
@@ -59,7 +64,7 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         ];
         $repository = new DatabaseContentModerationRepository(
             $database,
-            new DatabaseModerationAuditStore($database),
+            new DatabaseModerationAuditStore($database, new ModerationRepositoryOversightStore()),
         );
 
         $this->expectException(RuntimeException::class);
@@ -88,7 +93,7 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         $database->fetchOneQueue[] = $row;
         $repository = new DatabaseContentModerationRepository(
             $database,
-            new DatabaseModerationAuditStore($database),
+            new DatabaseModerationAuditStore($database, new ModerationRepositoryOversightStore()),
         );
 
         $repository->bulkThreads(
@@ -114,7 +119,7 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         $database->fetchOneQueue[] = $this->threadRow('a', 'b');
         $repository = new DatabaseContentModerationRepository(
             $database,
-            new DatabaseModerationAuditStore($database),
+            new DatabaseModerationAuditStore($database, new ModerationRepositoryOversightStore()),
         );
 
         $this->expectException(RuntimeException::class);
@@ -133,7 +138,7 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
     public function testAuditStoreRefusesOutOfTransactionAppend(): void
     {
         $database = new ModerationRepositoryRecordingDatabase();
-        $store = new DatabaseModerationAuditStore($database);
+        $store = new DatabaseModerationAuditStore($database, new ModerationRepositoryOversightStore());
 
         $event = new \Forwext\Core\Forum\Moderation\ModerationAuditEvent(
             \Forwext\Core\Forum\Moderation\ModerationAuditEvent::generateId(),
@@ -266,4 +271,35 @@ final class ModerationRepositoryRecordingDatabase implements TransactionalQueryE
             $this->inside = $wasInside;
         }
     }
+}
+
+
+final class ModerationRepositoryOversightStore implements ModerationOversightStore
+{
+    public int $appends = 0;
+
+    public function append(ModerationAuditEvent $event): OversightEntry
+    {
+        $this->appends++;
+        $hash = str_repeat('a', 64);
+        return new OversightEntry(
+            $this->appends,
+            $event->auditId,
+            $event->actorUserId,
+            $event->action->value,
+            $event->targetType,
+            $event->targetId,
+            $event->requestId->value(),
+            '{}',
+            $hash,
+            str_repeat('0', 64),
+            $hash,
+            $event->occurredAt,
+        );
+    }
+
+    public function findByAuditId(EntityId $auditId): ?OversightEntry { return null; }
+    public function pageAfter(int $sequence, int $limit = 500): array { return []; }
+    public function recent(int $limit = 100): array { return []; }
+    public function chainState(): OversightChainState { return OversightChainState::genesis(); }
 }

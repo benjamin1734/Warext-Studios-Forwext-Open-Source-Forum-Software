@@ -37,7 +37,8 @@ final class CoreAuditHtml
 
         $content = '<div class="card"><h1 style="margin:0">Core Audit Stream</h1>'
             . '<p class="muted">Moderasyon ve yönetim eylemleri actor, target, action, request-id ve redacted before/after '
-            . 'snapshotlarıyla tek merkezi akışta tutulur.</p></div>'
+            . 'snapshotlarıyla tek merkezi akışta tutulur.</p>'
+            . '<p><a href="' . self::e($basePath->prepend('/moderation/oversight')) . '">Bağımsız Moderasyon Denetimi</a></p></div>'
             . '<section class="card section">' . $filters . '</section>'
             . '<section class="card section"><h2>Son olaylar</h2>' . $rows . '</section>';
 
