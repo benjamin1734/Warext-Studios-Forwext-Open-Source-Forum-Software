@@ -83,6 +83,9 @@ final readonly class AiModerationEndpointPolicy
 
         $path = isset($parts['path']) && $parts['path'] !== '' ? (string) $parts['path'] : '/';
         $query = isset($parts['query']) ? '?' . (string) $parts['query'] : '';
+        if (preg_match('/[\x00-\x20\x7F]/', $path . $query) === 1) {
+            throw new AiModerationProviderException('AI provider endpoint request target contains unsafe whitespace.');
+        }
         return new AiModerationEndpoint(
             'https://' . $host . $path . $query,
             $host,
