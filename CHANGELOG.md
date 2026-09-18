@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.01 — Internal Support/Ticket Domain
+
+- Added typed support category, priority, lifecycle and SLA metadata domain models.
+- Added requester/staff permission boundaries with backend own-vs-all ticket checks and assignee eligibility validation.
+- Added optimistic-lock ticket persistence and additive migration `20260918011000_support_ticket_domain`.
+- Added editable category SLA defaults whose due dates are snapshotted onto each ticket.
+- Added regression coverage for SLA calculation, IDOR/BOLA boundaries, lifecycle transitions and staff assignment policy.
+- Dynamic forms, conversation tools, FAQ integration and support dashboard/reporting remain in their dedicated 10.02-10.06 steps.
+
 ### 09.07 — Independent Moderation Oversight
 
 - Added a separate append-only SHA-256 moderation hash chain with monotonic sequence and row-locked chain state.

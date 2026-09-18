@@ -10,6 +10,7 @@ use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
 use Forwext\Database\Migrations\Core\CreateCoreAuditStream;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
+use Forwext\Database\Migrations\Core\CreateSupportTicketDomain;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
@@ -60,6 +61,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateAbusePreventionTables::class, $classes);
         self::assertContains(CreateCoreAuditStream::class, $classes);
         self::assertContains(CreateIndependentModerationOversight::class, $classes);
+        self::assertContains(CreateSupportTicketDomain::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);
