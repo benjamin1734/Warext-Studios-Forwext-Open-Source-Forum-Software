@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.01
-CURRENT_STEP = 09.02
-LAST_COMMIT = 812d2b8267e83560287af1ffe117977293ac10b7
+LAST_COMPLETED_SUBSTEP = 09.02
+CURRENT_STEP = 09.03
+LAST_COMMIT = 9709c84abf019a9eb39737a8ce3302cbac02bf5c
 BLOCKERS = none
-NEXT_STEP = 09.02 - Report system
+NEXT_STEP = 09.03 - Approval/moderation queue
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 09.02 - Report system
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01`.
-- Current sub-step: `09.02 — Report system`.
-- Remaining roadmap work after 09.01: **81 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.02`.
+- Current sub-step: `09.03 — Approval/moderation queue`.
+- Remaining roadmap work after 09.02: **80 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.02
+
+- Added the first-party permission-aware content report pipeline with a typed `ReportableContentRegistry`; client target type/id values cannot establish visibility or existence.
+- Added forum thread/post report resolvers that re-read the content, require visible/non-deleted state and re-check node-scoped `forum.view` for the reporting actor.
+- Added configurable report reasons with five seeded starter reasons: spam, harassment/insult, privacy, potentially illegal content and other.
+- Added active duplicate grouping keyed by target type + target id + reason, protected by a unique database fingerprint; each reporter may submit only once per active group.
+- Closing a report group clears the active dedupe key so a later incident can create a new independent case without rewriting report history.
+- Added report assignment, open/in-review/resolved/rejected state, grouped reporter submissions and private moderator comments.
+- Integrated active report cases into the existing `/moderation` workspace and added dedicated moderator detail/assignment/status/comment routes.
+- Added same-origin report submission protection with `X-Forwext-Report`, configured Origin and Sec-Fetch-Site validation; moderator mutations reuse the existing moderation same-origin guard.
+- Added `report.create` to the first-party permission catalog and also seed it in the new migration so upgrades do not depend on replaying an already-applied permission migration.
+- Reused the durable notification subsystem for report receipt, moderator assignment and reporter-visible status changes with dedupe keys.
+- Reused the moderation audit store for report assignment, status and internal-comment mutations.
+- Added additive idempotent migration `20260918002000_report_system` for reasons, groups, submissions and moderator comments; no database reset is performed.
+- Added native PHP report form/history UI, escaped moderator report review UI, architecture/changelog documentation and regression tests for target ownership, same-origin guards, escaping, notification registration, migration registration and safe workspace action paths.
+- Feature commit: `9709c84abf019a9eb39737a8ce3302cbac02bf5c`.
+- GitHub Actions build run `35322608889` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency baseline and cPanel full-package generation.
+- MySQL 8.4 migration smoke run `35322608883` passed the complete clean-install migration chain and idempotent second pass.
+- No new mandatory Node/Redis/Docker/Supervisor/worker dependency was introduced for cPanel runtime.
 
 ## Completed in 09.01
 
@@ -143,7 +163,7 @@ Commit `6939aae56bfc89cd5ec6dc01ca640664383be853` restored the binding package c
 - Media/social foundation includes secure attachments, mentions/quotes/safe embeds/SSRF-protected previews, reactions, bookmarks, follow/ignore and profile activity.
 - Notification foundation includes persisted in-app/email/push alerts, preferences, dedupe/grouping, retry, safe templates, sound preferences and polling/SSE/WebSocket fallback delivery.
 - Search/discovery foundation includes index lifecycle (`08.01`), advanced filters (`08.02`), permission-aware discovery (`08.03`), SEO/public-discovery feeds (`08.04`), navigation/member/presence/stats UX (`08.05`) and global content discovery UX (`08.06`).
-- Moderation foundation now includes the single internal workspace/read-model composition and persistent moderator tasks (`09.01`); report lifecycle, cross-domain approval queue and discipline/ban systems continue in `09.02–09.04`.
+- Moderation foundation now includes the single internal workspace/read-model composition and persistent moderator tasks (`09.01`) plus the permission-aware report lifecycle (`09.02`); cross-domain approval queue and discipline/ban systems continue in `09.03–09.04`.
 - Detailed historical implementation notes remain under `docs/changelog/` and repository history.
 
 ## Completion rules
