@@ -93,6 +93,52 @@ final class BugStaffServiceTest extends TestCase
         self::assertSame(1,$notifier->statusChanged);
     }
 
+    public function testDirectDuplicateStatusIsRejectedAndCanonicalUnlinkReopens(): void
+    {
+        $database=new StaffTransactionDatabase();
+        $staff=EntityId::fromString(str_repeat('1',32));
+        $reporter=EntityId::fromString(str_repeat('2',32));
+        $source=$this->report('a',$reporter,BugReportStatus::New);
+        $canonical=$this->report('b',$reporter,BugReportStatus::InReview);
+
+        $reports=new StaffReportRepository();
+        $reports->reports[$source->reportId->value()]=$source;
+        $reports->reports[$canonical->reportId->value()]=$canonical;
+        $staffRepository=new StaffRepository([$source,$canonical]);
+        $authorizer=$this->authorizer($staff,['bug.report.view_all','bug.report.manage']);
+        $audit=new StaffAuditRecorder($database);
+        $notifier=new StaffNotifier();
+        $service=new BugStaffService(
+            $database,
+            new BugReportService(
+                $database,
+                $reports,
+                new PermissionGate($authorizer,$staff),
+                $authorizer,
+            ),
+            $staffRepository,
+            new PermissionGate($authorizer,$staff),
+            $audit,
+            AuditRequestId::fromString('request-12345678'),
+            $notifier,
+        );
+
+        try{
+            $service->changeStatus($source->reportId,BugReportStatus::Duplicate);
+            self::fail('Direct duplicate status must be rejected.');
+        }catch(\InvalidArgumentException){
+            self::assertSame(BugReportStatus::New,$reports->find($source->reportId)?->status);
+        }
+
+        $service->linkDuplicate($source->reportId,$canonical->reportId,$this->time('2026-09-18 21:00:00.000000'));
+        $reopened=$service->unlinkDuplicate($source->reportId,$this->time('2026-09-18 21:05:00.000000'));
+
+        self::assertSame(BugReportStatus::New,$reopened->status);
+        self::assertNull($staffRepository->duplicateLink($source->reportId));
+        self::assertSame('bug.report.duplicate.unlink',$audit->events[array_key_last($audit->events)]->action->value());
+        self::assertSame(2,$notifier->statusChanged);
+    }
+
     private function authorizer(EntityId $actor,array $permissions):PermissionAuthorizer
     {
         return new PermissionAuthorizer(
