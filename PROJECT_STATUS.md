@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.03
-CURRENT_STEP = 09.04
-LAST_COMMIT = 7a1e825e11aa4d5375dde35f5c1b4bca99ed7b70
+LAST_COMPLETED_SUBSTEP = 09.04
+CURRENT_STEP = 09.05
+LAST_COMMIT = dc5e5d04e627f6706064acdc3166acdf08abfb0c
 BLOCKERS = none
-NEXT_STEP = 09.04 - Warning/discipline/ban
+NEXT_STEP = 09.05 - Anti-spam/abuse araçları
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 09.04 - Warning/discipline/ban
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.03`.
-- Current sub-step: `09.04 — Warning/discipline/ban`.
-- Remaining roadmap work after 09.03: **79 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.04`.
+- Current sub-step: `09.05 — Anti-spam/abuse araçları`.
+- Remaining roadmap work after 09.04: **78 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.04
+
+- Added persisted warning definitions with configurable points, optional expiry, active state and ordering; issued warnings snapshot point/expiry semantics so definition edits do not rewrite history.
+- Added append-only discipline actions for warnings, posting/content restrictions, temporary suspensions and temporary/permanent bans, plus explicit row-locked revocation metadata.
+- Added granular permissions: `moderation.discipline.view`, `moderation.warning.issue`, `moderation.warning.manage`, `moderation.restriction.manage`, `moderation.ban.manage` and `moderation.discipline.revoke`.
+- Integrated posting/content restrictions into the common permission repository as synthetic user-level denies for forum posting, profile posting/comments and planned first-party content creation surfaces; frontend hiding is not relied on for authorization.
+- Added `UserAuthenticationAvailability` and database discipline availability enforcement so active suspension/ban actions reject normal login and ordinary authenticated-session resolution; temporary expiry becomes effective directly from UTC time predicates without a mandatory worker.
+- Added `/moderation/discipline` native PHP management UI, real Warning/Ban moderation-workspace sources, same-origin guarded mutations, escaped rendering and controlled conflict handling for stale/double revocation.
+- Added `/account/discipline` for an affected user with an otherwise valid existing session to inspect their own action history, active warning points, expiry and stable appeal reference.
+- Added stable `discipline:<action-id>` references and `moderation.discipline.appeal_available` domain events for later Support/Ticket integration without inventing a placeholder support route.
+- Reused the durable notification system and existing moderation audit/request-id infrastructure for issue, definition change and revoke operations.
+- Added additive idempotent migration `20260918003000_discipline_system` with three tables, four starter warning definitions, six permissions and built-in template defaults; no database reset is performed.
+- Corrected the previously latent `ReportWorkspaceSource` interface mismatch before continuing: `latest()` now matches the shared workspace source contract. Compatibility fix commit: `f0bf4bd97ba549994b5c7a179f22976a56aa4a3d`.
+- Feature commit: `ecf64e1b94bcb976cb644484fbea1b9192f46486`.
+- Test-import/final implementation pointer: `dc5e5d04e627f6706064acdc3166acdf08abfb0c`.
+- GitHub Actions build run `35338877155` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, cPanel full-package generation and artifact upload.
+- Differential update-package/release publication was intentionally skipped by the immutable release workflow because `VERSION` did not change in this roadmap commit; it runs when a version bump or explicit release dispatch occurs.
+- MySQL 8.4 migration smoke run `35338877117` passed the complete clean-install migration chain and idempotent second pass.
+- No new mandatory Node/Redis/Docker/Supervisor/worker dependency was introduced for cPanel runtime.
 
 ## Completed in 09.03
 
