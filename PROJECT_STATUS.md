@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 09
-LAST_COMPLETED_SUBSTEP = 09.07
-CURRENT_STEP = 10.01
-LAST_COMMIT = d99a81f92083981f504c81648776c5b7c445fe08
+LAST_COMPLETED_SUBSTEP = 10.01
+CURRENT_STEP = 10.02
+LAST_COMMIT = 452ec301f160cb1e548763763978af521dbe01a8
 BLOCKERS = none
-NEXT_STEP = 10.01 - Dahili destek/ticket domain
+NEXT_STEP = 10.02 - Talep açma UX ve form sistemi
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 10.01 - Dahili destek/ticket domain
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`.
-- Current sub-step: `10.01 — Dahili destek/ticket domain`.
-- Remaining roadmap work after 09.07: **75 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01`.
+- Current sub-step: `10.02 — Talep açma UX ve form sistemi`.
+- Remaining roadmap work after 10.01: **74 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 10.01
+
+- Added typed support-ticket priority and lifecycle states with explicit transition rules.
+- Added support categories with editable default priority plus optional first-response and resolution SLA policy.
+- Added immutable ticket entities containing requester, optional assignee, subject, priority, status, SLA snapshot, timestamps and optimistic-lock version.
+- Added `SupportTicketService` for category access/management, ticket creation, own-vs-all retrieval, active staff queue, assignment, priority, lifecycle and first-response SLA marker.
+- Enforced backend IDOR/BOLA boundaries: another user's ticket requires `support.ticket.view_all`; UI visibility is not used as authorization.
+- Enforced assignee eligibility through the shared permission engine.
+- Added `DatabaseSupportTicketRepository` with prepared SQL and version-checked optimistic writes.
+- Added additive migration `20260918011000_support_ticket_domain` with category/ticket tables, requester/assignee/category foreign keys, queue/SLA indexes and safe built-in permission-template defaults.
+- Seeded an editable general support category with 24-hour first-response and 72-hour resolution defaults; migration insertion does not overwrite later administrator edits.
+- Added regression tests for SLA snapshot calculation, own-vs-other access, lifecycle resolve/reopen behavior, assignee permissions and SLA breach calculations.
+- Feature commit: `452ec301f160cb1e548763763978af521dbe01a8`.
+- GitHub Actions build run `35355388929`: success.
+- MySQL migration smoke run `35355388937`: success.
+- Dynamic category fields, attachment/form UX and anti-spam/rate limiting remain scoped to 10.02; conversation/staff tools remain 10.03; support dashboard/reporting/audit remains 10.06.
 
 ## Completed in 09.07
 
