@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### cPanel/subfolder routing hotfix — 0.0.7.07-dev
+
+- Fixed navigation 404s when Forwext is served from a URL subfolder such as `/public`.
+- Runtime web factories now reconcile an empty configured canonical path with the actual front-controller script directory without overriding an explicitly configured canonical base path.
+- The installer now includes its own URL directory in the suggested canonical Site URL, so `/public/install.php` proposes a canonical URL ending in `/public`.
+- Added post-install smoke coverage for `/`, `/search`, `/members`, `/faq`, `/members/online` and `/stats` at both document-root and `/public` deployment paths.
+- Added mandatory `php -l` validation for all first-party PHP sources before PHPUnit and packaging.
+
 ### Post-install web bootstrap hotfix — 0.0.7.06-dev
 
 - Fixed the production route contract for `DisciplineAccountHandler`, which caused every post-install web bootstrap to fail with a `TypeError` and return HTTP 500.
