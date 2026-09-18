@@ -34,6 +34,13 @@ use Forwext\Core\Forum\Thread\ThreadStateService;
 use Forwext\Core\Forum\Thread\ThreadTitle;
 use Forwext\Core\Forum\Thread\ThreadTypeKey;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Moderation\Abuse\AbuseAction;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
+use Forwext\Core\Moderation\Abuse\AbuseEvent;
+use Forwext\Core\Moderation\Abuse\AbuseEventType;
+use Forwext\Core\Moderation\Abuse\AbuseRepository;
+use Forwext\Core\Moderation\Abuse\AbuseRule;
+use Forwext\Core\Moderation\Abuse\AbuseSignal;
 use PHPUnit\Framework\TestCase;
 
 final class ThreadServiceTest extends TestCase
@@ -70,6 +77,48 @@ final class ThreadServiceTest extends TestCase
         self::assertSame(ThreadModerationState::Pending, $thread->moderationState());
         self::assertCount(1, $threads->saved);
         self::assertSame(1, $thread->version());
+    }
+
+    public function testAbuseReviewForcesOtherwiseVisibleThreadIntoApprovalQueue(): void
+    {
+        $actor = $this->id('1');
+        $forum = ForumNode::forum(
+            $this->id('a'),
+            null,
+            'Forum',
+            ForumNodeSlug::fromString('forum'),
+            new ForumSettings(requireThreadApproval: false),
+        );
+        $threads = new ThreadServiceRepository();
+        $abuseRepository = new ThreadAbuseRepository(new AbuseRule(
+            'thread.user.review',
+            'Thread flood review',
+            AbuseEventType::Thread,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $service = new ThreadCreationService(
+            new ThreadServiceNodeRepository([$forum]),
+            $threads,
+            ThreadTypeRegistry::withCoreDefaults(),
+            $this->gate($actor, $forum->id(), ['forum.view', 'forum.thread.create']),
+            new AbuseEngine($abuseRepository),
+        );
+
+        $thread = $service->create(
+            $forum->id(),
+            ThreadTypeKey::fromString('discussion'),
+            ThreadTitle::fromString('Abuse reviewed thread'),
+            $this->time('2026-09-15 19:00:00.000000'),
+        );
+
+        self::assertSame(ThreadModerationState::Pending, $thread->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.thread', $abuseRepository->events[0]->targetType);
+        self::assertSame($thread->id()->value(), $abuseRepository->events[0]->targetId?->value());
     }
 
     public function testCreationFailsWhenForumDisablesNewThreadsEvenWithPermission(): void
@@ -351,5 +400,66 @@ final class ThreadServicePermissionRepository implements PermissionRuleRepositor
             PermissionEffect::Allow,
             $this->nodeId,
         )];
+    }
+}
+
+
+final class ThreadAbuseRepository implements AbuseRepository
+{
+    /** @var list<AbuseEvent> */
+    public array $events = [];
+
+    public function __construct(private AbuseRule $rule)
+    {
+    }
+
+    public function rules(AbuseEventType $eventType): array
+    {
+        return $eventType === $this->rule->eventType ? [$this->rule] : [];
+    }
+
+    public function allRules(): array
+    {
+        return [$this->rule];
+    }
+
+    public function rule(string $key): ?AbuseRule
+    {
+        return $this->rule->key === $key ? $this->rule : null;
+    }
+
+    public function saveRule(AbuseRule $rule, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
+    }
+
+    public function consume(AbuseRule $rule, string $fingerprint, DateTimeImmutable $at): int
+    {
+        return $rule->limit + 1;
+    }
+
+    public function insertEvent(AbuseEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function event(EntityId $eventId): ?AbuseEvent
+    {
+        return null;
+    }
+
+    public function unresolved(int $limit = 100): array
+    {
+        return array_slice($this->events, 0, $limit);
+    }
+
+    public function unresolvedCount(): int
+    {
+        return count($this->events);
+    }
+
+    public function resolve(EntityId $eventId, EntityId $actorUserId, string $resolution, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
     }
 }

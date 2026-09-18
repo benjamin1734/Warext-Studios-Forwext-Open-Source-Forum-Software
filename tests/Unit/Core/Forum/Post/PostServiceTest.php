@@ -39,6 +39,13 @@ use Forwext\Core\Forum\Thread\ThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTitle;
 use Forwext\Core\Forum\Thread\ThreadTypeKey;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Moderation\Abuse\AbuseAction;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
+use Forwext\Core\Moderation\Abuse\AbuseEvent;
+use Forwext\Core\Moderation\Abuse\AbuseEventType;
+use Forwext\Core\Moderation\Abuse\AbuseRepository;
+use Forwext\Core\Moderation\Abuse\AbuseRule;
+use Forwext\Core\Moderation\Abuse\AbuseSignal;
 use PHPUnit\Framework\TestCase;
 
 final class PostServiceTest extends TestCase
@@ -60,6 +67,44 @@ final class PostServiceTest extends TestCase
         self::assertTrue($post->isFirstPost());
         self::assertSame($actor->value(), $post->authorUserId()?->value());
         self::assertSame(PostModerationState::Pending, $post->moderationState());
+    }
+
+    public function testAbuseReviewForcesReplyIntoApprovalQueue(): void
+    {
+        $actor = $this->id('1');
+        $forum = $this->forum(false, true);
+        $thread = $this->thread($forum->id(), $actor, ThreadModerationState::Visible, false);
+        $first = $this->post($thread->id(), $actor, 1, false);
+        $posts = new PostServicePostRepository([$first]);
+        $abuseRepository = new PostAbuseRepository(new AbuseRule(
+            'post.user.review',
+            'Post flood review',
+            AbuseEventType::Post,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $service = $this->service(
+            $actor,
+            $forum,
+            $thread,
+            $posts,
+            ['forum.view', 'forum.post.create'],
+            new AbuseEngine($abuseRepository),
+        );
+
+        $reply = $service->reply(
+            $thread->id(),
+            PostBody::fromString('Review this reply'),
+            $this->time('2026-09-15 21:01:00.000000'),
+        );
+
+        self::assertSame(PostModerationState::Pending, $reply->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.post', $abuseRepository->events[0]->targetType);
+        self::assertSame($reply->id()->value(), $abuseRepository->events[0]->targetId?->value());
     }
 
     public function testReplyIsBlockedWhenThreadIsLocked(): void
@@ -134,6 +179,7 @@ final class PostServiceTest extends TestCase
         Thread $thread,
         PostServicePostRepository $posts,
         array $permissions,
+        ?AbuseEngine $abuse = null,
     ): PostService {
         $assignment = new UserAccessAssignment($actor, $this->id('c'));
         $gate = new PermissionGate(
@@ -150,6 +196,7 @@ final class PostServiceTest extends TestCase
             ThreadTypeRegistry::withCoreDefaults(),
             $posts,
             $gate,
+            $abuse,
         );
     }
 
@@ -409,5 +456,66 @@ final class PostServicePermissionRepository implements PermissionRuleRepository
             PermissionEffect::Allow,
             $this->nodeId,
         )];
+    }
+}
+
+
+final class PostAbuseRepository implements AbuseRepository
+{
+    /** @var list<AbuseEvent> */
+    public array $events = [];
+
+    public function __construct(private AbuseRule $rule)
+    {
+    }
+
+    public function rules(AbuseEventType $eventType): array
+    {
+        return $eventType === $this->rule->eventType ? [$this->rule] : [];
+    }
+
+    public function allRules(): array
+    {
+        return [$this->rule];
+    }
+
+    public function rule(string $key): ?AbuseRule
+    {
+        return $this->rule->key === $key ? $this->rule : null;
+    }
+
+    public function saveRule(AbuseRule $rule, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
+    }
+
+    public function consume(AbuseRule $rule, string $fingerprint, DateTimeImmutable $at): int
+    {
+        return $rule->limit + 1;
+    }
+
+    public function insertEvent(AbuseEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function event(EntityId $eventId): ?AbuseEvent
+    {
+        return null;
+    }
+
+    public function unresolved(int $limit = 100): array
+    {
+        return array_slice($this->events, 0, $limit);
+    }
+
+    public function unresolvedCount(): int
+    {
+        return count($this->events);
+    }
+
+    public function resolve(EntityId $eventId, EntityId $actorUserId, string $resolution, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
     }
 }

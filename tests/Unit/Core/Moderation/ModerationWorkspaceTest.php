@@ -69,6 +69,7 @@ final class ModerationWorkspaceTest extends TestCase
         self::assertSame(0, $snapshot->count(ModerationWorkspaceSection::Reports));
         self::assertSame(0, $snapshot->count(ModerationWorkspaceSection::Warnings));
         self::assertSame(0, $snapshot->count(ModerationWorkspaceSection::Bans));
+        self::assertSame(0, $snapshot->count(ModerationWorkspaceSection::Abuse));
         self::assertSame(0, $snapshot->count(ModerationWorkspaceSection::Tasks));
         self::assertSame('Pending topic', $snapshot->itemsFor(ModerationWorkspaceSection::Approval)[0]->title);
     }

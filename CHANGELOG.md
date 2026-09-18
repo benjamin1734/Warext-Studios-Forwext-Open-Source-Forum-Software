@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 09.05 — Anti-Spam / Abuse Tools
+
+- Added privacy-safe fixed-window automated rules for registration, thread and post abuse using user/identity/IP/device/content signals.
+- Integrated registration review/reject with account admission and thread/post review with the existing approval queue; reject decisions stop persistence.
+- Added native `/moderation/abuse` rule/event management plus a dedicated Moderation Workspace Anti-spam section.
+- Added transactional spam cleanup through the existing content moderation soft-delete, permission and audit paths.
+- Added `moderation.abuse.view`, `moderation.abuse.manage_rules` and `moderation.abuse.cleanup`.
+- Added additive idempotent migration `20260918004000_abuse_prevention`; no database reset or mandatory advanced runtime service is introduced.
+- Added bounded daily retention cleanup for stale fixed-window counters and old resolved abuse events; unresolved review items are preserved.
+
 ### 09.04 — Warning / Discipline / Ban
 
 - Added configurable warning definitions with points and optional expiry, durable warning/restriction/suspension/ban history, and typed revocation.

@@ -20,9 +20,16 @@ final readonly class RegistrationRequest
         public ?string $inviteCode = null,
         public array $acceptedLegalVersions = [],
         #[SensitiveParameter] public ?string $password = null,
+        public ?string $clientUserAgent = null,
     ) {
         if (filter_var($clientIp, FILTER_VALIDATE_IP) === false) {
             throw new InvalidArgumentException('Registration client IP is invalid.');
+        }
+        if ($this->clientUserAgent !== null
+            && (trim($this->clientUserAgent) === '' || strlen($this->clientUserAgent) > 1024
+                || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $this->clientUserAgent) === 1)
+        ) {
+            throw new InvalidArgumentException('Registration client user agent is invalid.');
         }
         foreach ($acceptedLegalVersions as $type => $version) {
             if (!is_string($type) || !is_string($version)) {

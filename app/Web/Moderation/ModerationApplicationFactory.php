@@ -35,6 +35,9 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Approval\ApprovalQueueRegistry;
 use Forwext\Core\Moderation\Approval\ApprovalQueueService;
 use Forwext\Core\Moderation\Approval\ForumApprovalQueueProvider;
+use Forwext\Core\Moderation\Abuse\AbuseModerationService;
+use Forwext\Core\Moderation\Abuse\AbuseOperationException;
+use Forwext\Core\Moderation\Abuse\DatabaseAbuseRepository;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
 use Forwext\Core\Moderation\Discipline\DisciplineActionType;
@@ -46,6 +49,7 @@ use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
 use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
 use Forwext\Core\Moderation\Task\ModerationTaskNotFoundException;
 use Forwext\Core\Moderation\Task\ModerationTaskService;
+use Forwext\Core\Moderation\Workspace\AbuseWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ApprovalQueueWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\DisciplineWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ModerationTaskWorkspaceSource;
@@ -112,6 +116,7 @@ final class ModerationApplicationFactory
         $users = new DatabaseUserRepository($database);
         $audit = new DatabaseModerationAuditStore($database);
         $disciplineRepository = new DatabaseDisciplineRepository($database);
+        $abuseRepository = new DatabaseAbuseRepository($database);
         $disciplineNotifications = new NotificationRegistry();
         NotificationDisciplineNotifier::registerDefinitions($disciplineNotifications);
         $disciplineService = new DisciplineService(
@@ -135,6 +140,13 @@ final class ModerationApplicationFactory
             new ForumApprovalQueueProvider($database, $nodes, $gate, $contentModeration),
         ]);
         $approvalService = new ApprovalQueueService($approvalRegistry, $gate);
+        $abuseService = new AbuseModerationService(
+            $database,
+            $abuseRepository,
+            $contentModeration,
+            $gate,
+            $audit,
+        );
         $guard = new ModerationRequestGuard($this->canonicalUrl);
         $canManage = $gate->allows(PermissionKey::fromString('moderation.manage'));
         $handler = new ModerationWorkspaceHandler(
@@ -153,6 +165,7 @@ final class ModerationApplicationFactory
                     \Forwext\Core\Moderation\Workspace\ModerationWorkspaceSection::Bans,
                     [DisciplineActionType::Suspension, DisciplineActionType::Ban],
                 ),
+                new AbuseWorkspaceSource($abuseRepository, $gate),
                 new ModerationTaskWorkspaceSource($taskRepository),
             ]),
             new ModerationTaskService(
@@ -188,6 +201,15 @@ final class ModerationApplicationFactory
                 $gate->allows(PermissionKey::fromString(DisciplineService::RESTRICTION_MANAGE_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(DisciplineService::BAN_MANAGE_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(DisciplineService::REVOKE_PERMISSION)),
+            ),
+        );
+        $abuseHandler = new AbuseHandler(
+            $abuseService,
+            $guard,
+            $this->basePath,
+            new AbuseCapabilities(
+                $gate->allows(PermissionKey::fromString(AbuseModerationService::MANAGE_RULES_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(AbuseModerationService::CLEANUP_PERMISSION)),
             ),
         );
 
@@ -241,6 +263,27 @@ final class ModerationApplicationFactory
                 return $disciplineHandler->revoke($request, $matches[1]);
             }
 
+            if ($routePath === '/moderation/abuse') {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $abuseHandler->view();
+            }
+
+            if ($routePath === '/moderation/abuse/rules') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $abuseHandler->saveRule($request);
+            }
+
+            if ($routePath === '/moderation/abuse/events') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $abuseHandler->bulk($request);
+            }
+
             if ($routePath === '/moderation/tasks') {
                 if ($request->method() !== HttpMethod::Post) {
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
@@ -274,11 +317,11 @@ final class ModerationApplicationFactory
             }
 
             return $this->secure(Response::text('Not Found', 404));
-        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException) {
+        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException|AbuseMutationGuardException) {
             return $this->secure(Response::text('Forbidden', 403));
         } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
             return $this->secure(Response::text('Not Found', 404));
-        } catch (ModerationOperationException|DisciplineOperationException) {
+        } catch (ModerationOperationException|DisciplineOperationException|AbuseOperationException) {
             return $this->secure(Response::text('Conflict', 409));
         } catch (InvalidArgumentException|ValueError) {
             return $this->secure(Response::text('Bad Request', 400));

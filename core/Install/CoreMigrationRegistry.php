@@ -6,6 +6,7 @@ namespace Forwext\Core\Install;
 
 use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\AddDiscoveryQueryIndexes;
+use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
@@ -82,6 +83,7 @@ final class CoreMigrationRegistry
             new CreateModerationWorkspaceTables(),
             new CreateReportSystemTables(),
             new CreateDisciplineTables(),
+            new CreateAbusePreventionTables(),
         ];
     }
 }

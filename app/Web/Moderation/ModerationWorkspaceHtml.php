@@ -53,7 +53,7 @@ final class ModerationWorkspaceHtml
 
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
         $content = '<div class="card"><h1 style="margin:0">Moderasyon çalışma alanı</h1>'
-            . '<p class="muted">Raporlar, onay bekleyen içerikler, disiplin kayıtları ve ekip görevleri tek dahili görünümde toplanır.</p></div>'
+            . '<p class="muted">Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevleri tek dahili görünümde toplanır.</p></div>'
             . '<div class="stats-grid section">' . $cards . '</div>'
             . $create . $sections . $script;
 

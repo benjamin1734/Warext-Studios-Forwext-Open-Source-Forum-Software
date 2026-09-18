@@ -10,6 +10,7 @@ enum ModerationWorkspaceSection: string
     case Approval = 'approval';
     case Warnings = 'warnings';
     case Bans = 'bans';
+    case Abuse = 'abuse';
     case Tasks = 'tasks';
 
     public function label(): string
@@ -19,6 +20,7 @@ enum ModerationWorkspaceSection: string
             self::Approval => 'Onay kuyruğu',
             self::Warnings => 'Uyarılar',
             self::Bans => 'Banlar',
+            self::Abuse => 'Anti-spam',
             self::Tasks => 'Görevler',
         };
     }

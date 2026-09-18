@@ -11,6 +11,10 @@ use Forwext\Core\Forum\Node\ForumNodeAuthorization;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Moderation\Abuse\AbuseContentContext;
+use Forwext\Core\Moderation\Abuse\AbuseContext;
+use Forwext\Core\Moderation\Abuse\AbuseDecision;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
 
 final readonly class ThreadCreationService
 {
@@ -19,6 +23,7 @@ final readonly class ThreadCreationService
         private ThreadRepository $threads,
         private ThreadTypeRegistry $types,
         private PermissionGate $gate,
+        private ?AbuseEngine $abuse = null,
     ) {
     }
 
@@ -27,6 +32,7 @@ final readonly class ThreadCreationService
         ThreadTypeKey $typeKey,
         ThreadTitle $title,
         DateTimeImmutable $now,
+        ?AbuseContext $abuseContext = null,
     ): Thread {
         $hierarchy = new ForumNodeHierarchy($this->nodes->all());
         $node = $hierarchy->find($forumNodeId);
@@ -43,16 +49,31 @@ final readonly class ThreadCreationService
         }
 
         $type = $this->types->require($typeKey);
+        $decision = AbuseDecision::allow();
+        $context = null;
+        if ($this->abuse !== null) {
+            $context = AbuseContentContext::thread($this->gate->actorId(), $title->value(), $abuseContext);
+            $decision = $this->abuse->evaluate($context, $now);
+            if ($decision->isRejected()) {
+                $this->abuse->record($context, $decision, null, null, $now);
+                throw new ThreadOperationException('Thread creation was blocked by anti-abuse policy.');
+            }
+        }
+
         $thread = Thread::create(
             ThreadId::generate(),
             $forumNodeId,
             $this->gate->actorId(),
             $type->key(),
             $title,
-            $settings->requireThreadApproval(),
+            $settings->requireThreadApproval() || $decision->requiresReview(),
             $now,
         );
         $this->threads->save($thread);
+
+        if ($this->abuse !== null && $context !== null && $decision->requiresReview()) {
+            $this->abuse->record($context, $decision, 'forum.thread', $thread->id(), $now);
+        }
 
         return $thread;
     }

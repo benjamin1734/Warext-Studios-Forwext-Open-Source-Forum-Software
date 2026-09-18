@@ -21,6 +21,13 @@ use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Domain\User\UserStatus;
 use Forwext\Core\Domain\User\UserTimezone;
 use Forwext\Core\Infrastructure\Clock;
+use Forwext\Core\Moderation\Abuse\AbuseAction;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
+use Forwext\Core\Moderation\Abuse\AbuseEvent;
+use Forwext\Core\Moderation\Abuse\AbuseEventType;
+use Forwext\Core\Moderation\Abuse\AbuseRepository;
+use Forwext\Core\Moderation\Abuse\AbuseRule;
+use Forwext\Core\Moderation\Abuse\AbuseSignal;
 use Forwext\Core\Registration\Captcha\CaptchaVerification;
 use Forwext\Core\Registration\Captcha\CaptchaVerifier;
 use Forwext\Core\Registration\DisposableEmailChecker;
@@ -84,6 +91,59 @@ final class RegistrationServiceTest extends TestCase
         self::assertSame(1, $captcha->calls);
         self::assertSame(1, $database->transactions);
         self::assertSame('user@example.com', $users->find($result->userId)?->email()->value());
+    }
+
+    public function testAntiAbuseReviewForcesRegistrationIntoApprovalAndRecordsPrivacySafeSignals(): void
+    {
+        $repository = new RegistrationAbuseRepository([
+            new AbuseRule(
+                'registration.ip.review',
+                'IP review',
+                AbuseEventType::Registration,
+                AbuseSignal::Ip,
+                1,
+                3600,
+                AbuseAction::Review,
+                true,
+                10,
+            ),
+        ], forcedHits: 2);
+        $tokens = new MemoryEmailVerificationTokenStore();
+        $service = $this->service(
+            new RegistrationTransactionDatabase(),
+            new MemoryRegistrationUserRepository(),
+            new RegistrationPolicy(
+                mode: RegistrationMode::Open,
+                emailVerificationRequired: true,
+                captchaRequired: false,
+            ),
+            new SuccessfulCaptchaVerifier(),
+            new NeverDisposableChecker(),
+            new AllowingRateLimiter(),
+            new MemoryInviteStore(),
+            new MemoryLegalAcceptanceStore(),
+            $tokens,
+            new MemoryRegistrationCredentialProvisioner(),
+            new AbuseEngine($repository),
+        );
+
+        $result = $service->register(new RegistrationRequest(
+            username: 'abuse_review',
+            email: 'abuse-review@example.com',
+            locale: 'tr-TR',
+            timezone: 'Europe/Istanbul',
+            clientIp: '203.0.113.44',
+            password: 'Correct Horse Battery Staple 1!',
+            clientUserAgent: 'Forwext Browser Test/1.0',
+        ));
+
+        self::assertSame(UserStatus::PendingEmailVerification, $result->status);
+        self::assertSame(UserStatus::PendingApproval, $tokens->issuedTarget);
+        self::assertCount(1, $repository->events);
+        self::assertSame('user.account', $repository->events[0]->targetType);
+        self::assertNotNull($repository->events[0]->ipFingerprint);
+        self::assertNotNull($repository->events[0]->deviceFingerprint);
+        self::assertNull($repository->events[0]->actorUserId);
     }
 
     public function testInviteOnlyWithoutEmailVerificationConsumesInviteAndCreatesActiveAccount(): void
@@ -249,6 +309,7 @@ final class RegistrationServiceTest extends TestCase
         LegalAcceptanceStore $legal,
         EmailVerificationTokenStore $tokens,
         CredentialProvisioner $credentials,
+        ?AbuseEngine $abuse = null,
     ): RegistrationService {
         return new RegistrationService(
             $database,
@@ -265,6 +326,7 @@ final class RegistrationServiceTest extends TestCase
             $tokens,
             $credentials,
             new FrozenRegistrationClock('2026-09-14 21:00:00'),
+            $abuse,
         );
     }
 }
@@ -511,5 +573,76 @@ final class RegistrationSecretStore implements SecretStore
     public function all(): array
     {
         return $this->values;
+    }
+}
+
+
+final class RegistrationAbuseRepository implements AbuseRepository
+{
+    /** @var list<AbuseRule> */
+    private array $rules;
+    /** @var list<AbuseEvent> */
+    public array $events = [];
+
+    /** @param list<AbuseRule> $rules */
+    public function __construct(array $rules, private int $forcedHits = 1)
+    {
+        $this->rules = $rules;
+    }
+
+    public function rules(AbuseEventType $eventType): array
+    {
+        return array_values(array_filter(
+            $this->rules,
+            static fn (AbuseRule $rule): bool => $rule->active && $rule->eventType === $eventType,
+        ));
+    }
+
+    public function allRules(): array
+    {
+        return $this->rules;
+    }
+
+    public function rule(string $key): ?AbuseRule
+    {
+        foreach ($this->rules as $rule) {
+            if ($rule->key === $key) return $rule;
+        }
+        return null;
+    }
+
+    public function saveRule(AbuseRule $rule, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
+    }
+
+    public function consume(AbuseRule $rule, string $fingerprint, DateTimeImmutable $at): int
+    {
+        return $this->forcedHits;
+    }
+
+    public function insertEvent(AbuseEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function event(EntityId $eventId): ?AbuseEvent
+    {
+        return null;
+    }
+
+    public function unresolved(int $limit = 100): array
+    {
+        return array_slice($this->events, 0, $limit);
+    }
+
+    public function unresolvedCount(): int
+    {
+        return count($this->events);
+    }
+
+    public function resolve(EntityId $eventId, EntityId $actorUserId, string $resolution, DateTimeImmutable $at): void
+    {
+        throw new \LogicException('Not used.');
     }
 }

@@ -29,6 +29,15 @@ final readonly class RegistrationFingerprint
         return $this->hash('email:' . $email->key());
     }
 
+    public function device(string $userAgent): string
+    {
+        $userAgent = trim($userAgent);
+        if ($userAgent === '' || strlen($userAgent) > 1024) {
+            throw new RegistrationException('Registration device signal is invalid.');
+        }
+        return $this->hash('device:' . $userAgent);
+    }
+
     private function hash(string $value): string
     {
         $secret = $this->secrets->get($this->secretName);

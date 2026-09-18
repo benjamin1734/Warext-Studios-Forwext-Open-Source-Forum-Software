@@ -16,6 +16,10 @@ use Forwext\Core\Domain\User\UserStatus;
 use Forwext\Core\Domain\User\UserTimezone;
 use Forwext\Core\Infrastructure\Clock;
 use Forwext\Core\Infrastructure\SystemClock;
+use Forwext\Core\Moderation\Abuse\AbuseContext;
+use Forwext\Core\Moderation\Abuse\AbuseDecision;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
+use Forwext\Core\Moderation\Abuse\AbuseEventType;
 use Forwext\Core\Registration\Captcha\CaptchaVerifier;
 
 final readonly class RegistrationService
@@ -33,6 +37,7 @@ final readonly class RegistrationService
         private EmailVerificationTokenStore $verificationTokens,
         private CredentialProvisioner $credentials,
         private Clock $clock = new SystemClock(),
+        private ?AbuseEngine $abuse = null,
     ) {
     }
 
@@ -70,6 +75,23 @@ final readonly class RegistrationService
             throw new RegistrationException('Registration rate limit exceeded.');
         }
 
+        $abuseContext = null;
+        $abuseDecision = AbuseDecision::allow();
+        if ($this->abuse !== null) {
+            $abuseContext = new AbuseContext(
+                AbuseEventType::Registration,
+                null,
+                $emailFingerprint,
+                $ipFingerprint,
+                $request->clientUserAgent === null ? null : $this->fingerprint->device($request->clientUserAgent),
+            );
+            $abuseDecision = $this->abuse->evaluate($abuseContext, $now);
+            if ($abuseDecision->isRejected()) {
+                $this->abuse->record($abuseContext, $abuseDecision, null, null, $now);
+                throw new RegistrationException('Registration was blocked by anti-abuse policy.');
+            }
+        }
+
         if ($this->policy->captchaRequired) {
             $token = $request->captchaToken ?? '';
             $verification = $this->captcha->verify($token, $request->clientIp);
@@ -92,6 +114,8 @@ final readonly class RegistrationService
             $timezone,
             $now,
             $ipFingerprint,
+            $abuseContext,
+            $abuseDecision,
         ): RegistrationResult {
             if ($this->users->findByUsername($username) !== null || $this->users->findByEmail($email) !== null) {
                 throw new RegistrationException('Registration identity is unavailable.');
@@ -103,7 +127,7 @@ final readonly class RegistrationService
                 }
             }
 
-            $postVerificationStatus = $this->policy->mode->requiresApproval()
+            $postVerificationStatus = ($this->policy->mode->requiresApproval() || $abuseDecision->requiresReview())
                 ? UserStatus::PendingApproval
                 : UserStatus::Active;
             $initialStatus = $this->policy->emailVerificationRequired
@@ -121,6 +145,10 @@ final readonly class RegistrationService
             );
             $this->users->save($user);
             $this->credentials->provision($user->id(), $password, $now);
+
+            if ($this->abuse !== null && $abuseContext !== null && $abuseDecision->requiresReview()) {
+                $this->abuse->record($abuseContext, $abuseDecision, 'user.account', $user->id(), $now);
+            }
 
             foreach ($this->policy->legalDocuments() as $document) {
                 $this->legalAcceptances->record($user->id(), $document, $now, $ipFingerprint);

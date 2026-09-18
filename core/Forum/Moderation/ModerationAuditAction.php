@@ -35,4 +35,6 @@ enum ModerationAuditAction: string
     case SuspensionApply = 'discipline.suspension.apply';
     case BanApply = 'discipline.ban.apply';
     case DisciplineRevoke = 'discipline.revoke';
+    case AbuseRuleSave = 'abuse.rule.save';
+    case AbuseEventResolve = 'abuse.event.resolve';
 }

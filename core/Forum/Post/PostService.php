@@ -16,6 +16,10 @@ use Forwext\Core\Forum\Thread\Thread;
 use Forwext\Core\Forum\Thread\ThreadModerationState;
 use Forwext\Core\Forum\Thread\ThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Moderation\Abuse\AbuseContentContext;
+use Forwext\Core\Moderation\Abuse\AbuseContext;
+use Forwext\Core\Moderation\Abuse\AbuseDecision;
+use Forwext\Core\Moderation\Abuse\AbuseEngine;
 
 final readonly class PostService
 {
@@ -25,10 +29,16 @@ final readonly class PostService
         private ThreadTypeRegistry $types,
         private PostRepository $posts,
         private PermissionGate $gate,
+        private ?AbuseEngine $abuse = null,
     ) {
     }
 
-    public function createFirstPost(EntityId $threadId, PostBody $body, DateTimeImmutable $now): Post
+    public function createFirstPost(
+        EntityId $threadId,
+        PostBody $body,
+        DateTimeImmutable $now,
+        ?AbuseContext $abuseContext = null,
+    ): Post
     {
         [$thread, $hierarchy] = $this->threadContext($threadId);
         $actor = $this->gate->actorId();
@@ -48,13 +58,24 @@ final readonly class PostService
             throw new PostOperationException('Thread forum is not available.');
         }
 
+        [$decision, $context] = $this->evaluateCreate($body, $now, $abuseContext);
         $requiresApproval = $settings->requirePostApproval()
-            || $thread->moderationState() !== ThreadModerationState::Visible;
+            || $thread->moderationState() !== ThreadModerationState::Visible
+            || $decision->requiresReview();
 
-        return $this->posts->create($threadId, $actor, $body, $requiresApproval, true, $now);
+        $post = $this->posts->create($threadId, $actor, $body, $requiresApproval, true, $now);
+        if ($this->abuse !== null && $context !== null && $decision->requiresReview()) {
+            $this->abuse->record($context, $decision, 'forum.post', $post->id(), $now);
+        }
+        return $post;
     }
 
-    public function reply(EntityId $threadId, PostBody $body, DateTimeImmutable $now): Post
+    public function reply(
+        EntityId $threadId,
+        PostBody $body,
+        DateTimeImmutable $now,
+        ?AbuseContext $abuseContext = null,
+    ): Post
     {
         [$thread, $hierarchy] = $this->threadContext($threadId);
         $forum = $hierarchy->find($thread->forumNodeId());
@@ -84,14 +105,19 @@ final readonly class PostService
             throw new PostOperationException('Thread first post is not currently available.');
         }
 
-        return $this->posts->create(
+        [$decision, $context] = $this->evaluateCreate($body, $now, $abuseContext);
+        $post = $this->posts->create(
             $threadId,
             $this->gate->actorId(),
             $body,
-            $settings->requirePostApproval(),
+            $settings->requirePostApproval() || $decision->requiresReview(),
             false,
             $now,
         );
+        if ($this->abuse !== null && $context !== null && $decision->requiresReview()) {
+            $this->abuse->record($context, $decision, 'forum.post', $post->id(), $now);
+        }
+        return $post;
     }
 
     public function edit(EntityId $postId, PostBody $body, DateTimeImmutable $at): Post
@@ -175,6 +201,24 @@ final readonly class PostService
         [$thread, $hierarchy] = $this->threadContext($post->threadId());
         (new ForumNodeAuthorization($this->gate))->requireView($hierarchy, $thread->forumNodeId());
         return [$post, $thread, $hierarchy];
+    }
+
+    /** @return array{0:AbuseDecision,1:?AbuseContext} */
+    private function evaluateCreate(
+        PostBody $body,
+        DateTimeImmutable $now,
+        ?AbuseContext $requestContext,
+    ): array {
+        if ($this->abuse === null) {
+            return [AbuseDecision::allow(), null];
+        }
+        $context = AbuseContentContext::post($this->gate->actorId(), $body->source(), $requestContext);
+        $decision = $this->abuse->evaluate($context, $now);
+        if ($decision->isRejected()) {
+            $this->abuse->record($context, $decision, null, null, $now);
+            throw new PostOperationException('Post creation was blocked by anti-abuse policy.');
+        }
+        return [$decision, $context];
     }
 
     private function requireOwnOrAny(
