@@ -11,4 +11,6 @@ enum BugHistoryEventType: string
     case Assigned = 'assigned';
     case SeverityChanged = 'severity_changed';
     case CategoryChanged = 'category_changed';
+    case ReporterInfoAdded = 'reporter_info_added';
+    case StaffResponse = 'staff_response';
 }
