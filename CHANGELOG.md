@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.02 — Automatic Bug Diagnostic Context
+
+- Added privacy-safe URL path, route, user, forum/thread/post, theme/module, browser/device and request-id capture.
+- Raw query strings, request bodies, cookies, IP addresses and User-Agent text are not persisted.
+- Added HMAC User-Agent fingerprinting and bounded browser/OS/device classification.
+- Added atomic bug-report + diagnostic-context submission and migration `20260918022000_bug_diagnostic_context`.
+- Added regression coverage for privacy stripping, route context, fallbacks and transaction participation.
+
 ### 11.01 — Bug Report Domain and Workflow
 
 - Added typed bug-report severity, category and `new/in_review/resolved/rejected/duplicate` lifecycle states.
