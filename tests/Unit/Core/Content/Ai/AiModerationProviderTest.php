@@ -15,6 +15,7 @@ use Forwext\Core\Content\Ai\Transport\AiModerationEndpoint;
 use Forwext\Core\Content\Ai\Transport\AiModerationEndpointPolicy;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpResponse;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpTransport;
+use Forwext\Core\Content\Ai\Transport\PinnedHttpsAiModerationTransport;
 use Forwext\Core\Forum\Editor\HostAddressResolver;
 use PHPUnit\Framework\TestCase;
 
@@ -105,6 +106,24 @@ final class AiModerationProviderTest extends TestCase
         self::assertSame('provider.example', $approved->host);
         self::assertSame('/v1/moderate?mode=strict', $approved->requestTarget);
         self::assertSame(['93.184.216.34'], $approved->addresses);
+    }
+
+    public function testPinnedTransportRejectsInjectedPrivateEndpointBeforeNetworkAccess(): void
+    {
+        $transport = new PinnedHttpsAiModerationTransport();
+        $this->expectException(AiModerationProviderException::class);
+        $transport->postJson(
+            new AiModerationEndpoint(
+                'https://provider.example/v1/moderate',
+                'provider.example',
+                443,
+                '/v1/moderate',
+                ['127.0.0.1'],
+            ),
+            [],
+            '{}',
+            1000,
+        );
     }
 
     private function endpoint(): AiModerationEndpoint
