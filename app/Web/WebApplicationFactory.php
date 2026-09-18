@@ -141,6 +141,7 @@ use Forwext\Core\Profile\Url\EngineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\ProfileSlugPolicy;
 use Forwext\Core\Profile\Url\ProfileUrlService;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Routing\PathTemplate;
 use Forwext\Core\Routing\Route;
 use Forwext\Core\Routing\RouteCollection;
@@ -890,7 +891,9 @@ final readonly class WebApplicationFactory
 
     private function basePath(ConfigRepository $config): BasePath
     {
-        $canonicalUrl = $config->requireString('routing.canonical_url');
+        $canonicalUrl = RuntimeCanonicalUrlResolver::resolve(
+            $config->requireString('routing.canonical_url'),
+        );
         $path = parse_url($canonicalUrl, PHP_URL_PATH);
         if ($path === false) throw new RuntimeException('Canonical URL path is invalid.');
         return new BasePath(is_string($path) ? rtrim($path, '/') : '');
