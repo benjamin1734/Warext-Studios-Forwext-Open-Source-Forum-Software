@@ -37,6 +37,15 @@ final class ProfileHtml
         $presenceScript = self::escape($basePath->prepend('/assets/presence-heartbeat.js'));
         $presenceEndpoint = self::escape($basePath->prepend('/account/presence/heartbeat'));
         $presenceSettingsScript = self::escape($basePath->prepend('/assets/presence-settings.js'));
+        $bugReportScript = self::escape($basePath->prepend('/assets/bug-report-entry.js'));
+        $bugEntry = $authenticated
+            ? '<a class="bug-report-entry" data-bug-report-entry href="'
+                . self::escape($basePath->prepend('/bugs/new'))
+                . '" aria-label="Hata bildir" title="Hata bildir">'
+                . '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+                . '<path d="M9 3h6l1 2h3v2h-2.2c.5.9.8 1.9.9 3H21v2h-3.3c-.1.7-.3 1.4-.6 2H21v2h-5.1c-1 1.2-2.3 2-3.9 2s-2.9-.8-3.9-2H3v-2h3.9c-.3-.6-.5-1.3-.6-2H3v-2h3.3c.1-1.1.4-2.1.9-3H5V5h3l1-2Zm3 4a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0v-3a3 3 0 0 0-3-3Z"/>'
+                . '</svg></a>'
+            : '';
 
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -63,22 +72,25 @@ final class ProfileHtml
             . '.profilemusic-title{font-weight:700;margin-bottom:9px;overflow-wrap:anywhere}.profilemusic audio{display:block;width:100%;height:40px;max-width:680px}'
             . '.search-head h1,.search-result-head h2,.member-directory-head h1{margin:0}.search-form,.member-directory-form{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}'
             . '.search-form label,.member-directory-form label{display:grid;gap:6px}.search-form label span,.member-directory-form label span{font-size:13px;color:var(--muted);font-weight:700}.search-wide{grid-column:1/-1}'
-            . '.search-form input,.search-form select,.member-directory-form input,.member-directory-form select,.presence-settings select{width:100%;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:9px;padding:10px 11px;font:inherit}'
+            . '.search-form input,.search-form select,.search-form textarea,.member-directory-form input,.member-directory-form select,.presence-settings select{width:100%;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:9px;padding:10px 11px;font:inherit}'
             . '.search-actions{grid-column:1/-1;display:flex;align-items:center;gap:12px}.search-actions button,.member-directory-form button,.presence-settings button{border:0;border-radius:9px;background:var(--accent);color:#111;padding:10px 18px;font-weight:800;cursor:pointer;align-self:end}'
             . '.search-alert{margin-top:18px;padding:12px 14px;border:1px solid #7d3030;background:#321719;border-radius:10px}.search-results{margin-top:25px}.search-result-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}'
             . '.search-hit{padding:14px 0;border-top:1px solid var(--line)}.search-hit h3{margin:2px 0;font-size:17px}.search-hit h3 a{text-decoration:none}.search-hit-type{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:800}.search-hit-id{font-size:12px;overflow-wrap:anywhere}'
             . '.pagination{display:flex;gap:8px;margin-top:18px}.pagination a{padding:7px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none}.pagination a[aria-current=page]{border-color:var(--accent);color:var(--accent)}'
             . '.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{padding:18px}.stat strong{display:block;font-size:26px}.presence-settings{margin-top:18px;display:flex;gap:12px;align-items:end;flex-wrap:wrap}.presence-settings label{display:grid;gap:6px;min-width:220px}'
+            . '.bug-report-entry{position:fixed;right:22px;bottom:22px;width:46px;height:46px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--panel2);color:var(--muted);text-decoration:none;box-shadow:0 10px 30px rgba(0,0,0,.28);z-index:40}.bug-report-entry:hover,.bug-report-entry:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-entry svg{width:22px;height:22px;fill:currentColor}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
-            . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
+            . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bug-report-entry{right:14px;bottom:14px}}'
             . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
             . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>'
+            . $bugEntry
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
             . '<script src="' . $notificationRealtimeScript . '" defer></script>'
             . '<script src="' . $presenceScript . '" defer></script>'
-            . '<script src="' . $presenceSettingsScript . '" defer></script></body></html>';
+            . '<script src="' . $presenceSettingsScript . '" defer></script>'
+            . '<script src="' . $bugReportScript . '" defer></script></body></html>';
     }
 
     public static function escape(string $value): string
