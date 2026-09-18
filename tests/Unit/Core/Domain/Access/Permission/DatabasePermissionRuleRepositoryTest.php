@@ -8,6 +8,8 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
+use Forwext\Core\Domain\Access\Permission\PermissionEffect;
+use Forwext\Core\Domain\Access\Permission\PermissionSubjectType;
 use Forwext\Core\Domain\Access\UserAccessAssignment;
 use Forwext\Core\Domain\Entity\EntityId;
 use PHPUnit\Framework\TestCase;
