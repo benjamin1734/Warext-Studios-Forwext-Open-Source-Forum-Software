@@ -8,6 +8,8 @@ use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
 use Forwext\App\Web\Editor\EditorQuoteHandler;
+use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
+use Forwext\App\Web\Bug\BugReportFormHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
@@ -52,8 +54,14 @@ use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
+use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
+use Forwext\Core\Bug\Diagnostic\BugBrowserDeviceClassifier;
+use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextCollector;
+use Forwext\Core\Bug\Diagnostic\DatabaseBugDiagnosticContextRepository;
+use Forwext\Core\Bug\Intake\DatabaseBugReportIntakeRepository;
+use Forwext\Core\Bug\Report\DatabaseBugReportRepository;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
 use Forwext\Core\Database\DatabaseConfig;
@@ -324,9 +332,19 @@ final readonly class WebApplicationFactory
             new AccountSupportContextResolver($users, $authorizer),
             new MarketplaceSupportContextResolver(),
         ]);
+        $bugReports = new DatabaseBugReportRepository($database);
+        $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
+        $bugIntake = new DatabaseBugReportIntakeRepository($database);
+        $bugCollector = new BugDiagnosticContextCollector(new BugBrowserDeviceClassifier(
+            new AuthenticationFingerprint(
+                $this->secretStore($config),
+                $config->requireString('authentication.fingerprint_secret_name'),
+            ),
+        ));
 
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $supportCsrf = $this->supportCsrfMiddleware($config);
+        $bugCsrf = $this->bugCsrfMiddleware($config);
         $faqCsrf = $this->faqCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
@@ -372,6 +390,43 @@ final readonly class WebApplicationFactory
             ),
             new FaqArticleHandler($faq, $viewerResolver, $basePath),
             [$faqCsrf],
+        ));
+        $routes->add(new Route(
+            'bug.report.new',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/bugs/new'),
+            new BugReportFormHandler(
+                $database,
+                $bugReports,
+                $bugDiagnostics,
+                $bugIntake,
+                $storage,
+                $attachmentInspector,
+                $attachmentQuota,
+                $viewerResolver,
+                $authorizer,
+                new VerifiedUploadedAttachmentReader(),
+                $basePath,
+                $bugCollector,
+            ),
+            [$bugCsrf],
+        ));
+        $routes->add(new Route(
+            'bug.report.attachment',
+            [HttpMethod::Get],
+            new PathTemplate(
+                '/bugs/{reportId}/attachments/{attachmentId}',
+                ['reportId'=>'[0-9a-f]{32}','attachmentId'=>'[0-9a-f]{32}'],
+            ),
+            new BugAttachmentDownloadHandler(
+                $database,
+                $bugReports,
+                $bugIntake,
+                $storage,
+                $viewerResolver,
+                $authorizer,
+                new AttachmentDownloadResponseFactory(),
+            ),
         ));
         $routes->add(new Route(
             'support.ticket.new',
@@ -615,10 +670,7 @@ final readonly class WebApplicationFactory
 
     private function database(ConfigRepository $config): DatabaseConnection
     {
-        $secrets = new EncryptedFileSecretStore(
-            $this->projectPath($config->requireString('security.secret_store_path')),
-            new SecretCipher($this->masterKey($config)),
-        );
+        $secrets = $this->secretStore($config);
         $password = $secrets->get($config->requireString('database.password_secret'));
         if ($password === null) throw new RuntimeException('Database password secret is unavailable.');
         $socket = $config->get('database.unix_socket');
@@ -628,6 +680,14 @@ final readonly class WebApplicationFactory
             $config->requireString('database.username'), $password, $config->requireString('database.charset'),
             $config->requireInt('database.connect_timeout_seconds'), $socket,
         ));
+    }
+
+    private function secretStore(ConfigRepository $config): EncryptedFileSecretStore
+    {
+        return new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
     }
 
     private function realtimeMode(ConfigRepository $config): RealtimeMode
@@ -666,6 +726,11 @@ final readonly class WebApplicationFactory
     private function supportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'support-ticket', 'forwext.csrf.support-ticket.v1');
+    }
+
+    private function bugCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'bug-report', 'forwext.csrf.bug-report.v1');
     }
 
     private function faqCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
