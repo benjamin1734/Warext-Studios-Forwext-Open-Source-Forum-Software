@@ -100,15 +100,26 @@ final class BugReportDetailHtml
 
         $status='';
         if($capabilities->canManageStatus){
-            $status='<section class="card section"><h2>Durum</h2><form method="post" action="'
-                .self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
-                .self::csrf($csrfToken).'<input type="hidden" name="action" value="status">'
-                .'<label><span>Yeni durum</span><select name="status">';
-            foreach(BugReportStatus::cases() as $candidate){
-                $status.='<option value="'.self::e($candidate->value).'"'
-                    .($candidate===$report->status?' selected':'').'>'.self::e($candidate->label()).'</option>';
+            if($report->status===BugReportStatus::Duplicate&&$staffContext?->duplicateLink!==null){
+                $status='<section class="card section"><h2>Durum</h2>'
+                    .'<p class="muted">Canonical duplicate bağı varken durum doğrudan değiştirilemez. '
+                    .'Kaydı yeniden açmak için duplicate bağını kaldırın.</p></section>';
+            }else{
+                $status='<section class="card section"><h2>Durum</h2><form method="post" action="'
+                    .self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
+                    .self::csrf($csrfToken).'<input type="hidden" name="action" value="status">'
+                    .'<label><span>Yeni durum</span><select name="status">';
+                foreach(BugReportStatus::cases() as $candidate){
+                    if(!$report->status->canTransitionTo($candidate)
+                        ||($candidate===BugReportStatus::Duplicate&&$report->status!==BugReportStatus::Duplicate)
+                    ){
+                        continue;
+                    }
+                    $status.='<option value="'.self::e($candidate->value).'"'
+                        .($candidate===$report->status?' selected':'').'>'.self::e($candidate->label()).'</option>';
+                }
+                $status.='</select></label><button type="submit">Durumu güncelle</button></form></section>';
             }
-            $status.='</select></label><button type="submit">Durumu güncelle</button></form></section>';
         }
 
         $staffControls='';
@@ -149,7 +160,10 @@ final class BugReportDetailHtml
                 if($staffContext->duplicateLink!==null){
                     $canonical=$staffContext->duplicateLink->canonicalReportId->value();
                     $staffControls.='<p>Canonical kayıt: <a href="'
-                        .self::e($basePath->prepend('/bugs/'.rawurlencode($canonical))).'">#'.self::e($canonical).'</a></p>';
+                        .self::e($basePath->prepend('/bugs/'.rawurlencode($canonical))).'">#'.self::e($canonical).'</a></p>'
+                        .'<form method="post" action="'.self::action($report->reportId->value(),$basePath).'">'
+                        .self::csrf($csrfToken).'<input type="hidden" name="action" value="duplicate_unlink">'
+                        .'<button type="submit">Duplicate bağını kaldır ve yeniden aç</button></form>';
                 }elseif($staffContext->duplicateSuggestions===[]){
                     $staffControls.='<div class="empty">Yeterli benzerlikte aday bulunamadı.</div>';
                 }else{
