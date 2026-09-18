@@ -16,6 +16,7 @@ final class FirstPartyPermissionCatalog
             self::numeric('forum.content.daily_limit', 'Maximum daily forum content creation baseline.'),
 
             self::flag('search.use', 'Use permission-aware native search.'),
+            self::flag('report.create', 'Report accessible content for moderation review.'),
 
             self::flag('moderation.access', 'Access moderation workspace surfaces.'),
             self::flag('moderation.manage', 'Perform moderation management actions.'),

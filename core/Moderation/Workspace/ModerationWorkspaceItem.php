@@ -20,6 +20,7 @@ final readonly class ModerationWorkspaceItem
         public string $status,
         DateTimeImmutable $updatedAt,
         public ?string $summary = null,
+        public ?string $actionPath = null,
     ) {
         if (preg_match('/^[a-z][a-z0-9._-]{1,47}$/D', $this->sourceType) !== 1) {
             throw new InvalidArgumentException('Moderation workspace source type is invalid.');
@@ -37,6 +38,15 @@ final readonly class ModerationWorkspaceItem
         }
         if ($this->summary !== null && strlen($this->summary) > 1000) {
             throw new InvalidArgumentException('Moderation workspace summary is too long.');
+        }
+        if ($this->actionPath !== null && (
+            $this->actionPath === ''
+            || strlen($this->actionPath) > 1000
+            || !str_starts_with($this->actionPath, '/')
+            || str_starts_with($this->actionPath, '//')
+            || preg_match('/[\x00-\x1F\x7F]/', $this->actionPath) === 1
+        )) {
+            throw new InvalidArgumentException('Moderation workspace action path must be a safe same-origin path.');
         }
         $this->updatedAt = $updatedAt->setTimezone(new DateTimeZone('UTC'));
     }

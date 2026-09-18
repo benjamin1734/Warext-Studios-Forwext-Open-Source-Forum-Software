@@ -24,4 +24,7 @@ enum ModerationAuditAction: string
     case BulkPost = 'bulk.post';
     case WorkspaceTaskCreate = 'workspace.task_create';
     case WorkspaceTaskStatus = 'workspace.task_status';
+    case ReportAssign = 'report.assign';
+    case ReportStatus = 'report.status';
+    case ReportComment = 'report.comment';
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Forwext\App\Web\Community\CommunityApplicationFactory;
 use Forwext\App\Web\Moderation\ModerationApplicationFactory;
+use Forwext\App\Web\Report\ReportApplicationFactory;
 use Forwext\App\Web\ResponseEmitter;
 use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
@@ -46,6 +47,11 @@ try {
     if ($response === null) {
         $moderationFactory = new ModerationApplicationFactory($root);
         $response = $moderationFactory->handle($request);
+
+        if ($response === null) {
+            $reportFactory = new ReportApplicationFactory($root);
+            $response = $reportFactory->handle($request);
+        }
 
         if ($response === null) {
             $communityFactory = new CommunityApplicationFactory($root);

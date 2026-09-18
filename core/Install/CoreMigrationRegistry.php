@@ -27,6 +27,7 @@ use Forwext\Database\Migrations\Core\CreateProfileActivityTables;
 use Forwext\Database\Migrations\Core\CreateProfileMusicTables;
 use Forwext\Database\Migrations\Core\CreateQueueSchedulerRealtimeTables;
 use Forwext\Database\Migrations\Core\CreateRegistrationSecurityTables;
+use Forwext\Database\Migrations\Core\CreateReportSystemTables;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSearchAdvancedFilterTables;
@@ -78,6 +79,7 @@ final class CoreMigrationRegistry
             new AddDiscoveryQueryIndexes(),
             new CreateUserPresenceTables(),
             new CreateModerationWorkspaceTables(),
+            new CreateReportSystemTables(),
         ];
     }
 }

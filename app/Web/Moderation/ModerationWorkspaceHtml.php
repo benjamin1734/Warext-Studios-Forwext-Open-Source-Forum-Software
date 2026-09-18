@@ -63,6 +63,10 @@ final class ModerationWorkspaceHtml
     private static function item(ModerationWorkspaceItem $item, BasePath $basePath, bool $canManage): string
     {
         $summary = $item->summary === null ? '' : '<div class="muted">' . self::e($item->summary) . '</div>';
+        $title = self::e($item->title);
+        if ($item->actionPath !== null) {
+            $title = '<a href="' . self::e($basePath->prepend($item->actionPath)) . '">' . $title . '</a>';
+        }
         $actions = '';
         if ($canManage && $item->section === ModerationWorkspaceSection::Tasks) {
             $action = $basePath->prepend('/moderation/tasks/' . rawurlencode($item->sourceId) . '/status');
@@ -75,7 +79,7 @@ final class ModerationWorkspaceHtml
         }
 
         return '<article class="search-hit"><span class="search-hit-type">' . self::e($item->sourceType) . '</span>'
-            . '<h3>' . self::e($item->title) . '</h3>' . $summary
+            . '<h3>' . $title . '</h3>' . $summary
             . '<div class="search-hit-id muted">Durum: ' . self::e($item->status)
             . ' · Güncelleme: ' . self::e($item->updatedAt->format('Y-m-d H:i')) . ' UTC</div>'
             . $actions . '</article>';

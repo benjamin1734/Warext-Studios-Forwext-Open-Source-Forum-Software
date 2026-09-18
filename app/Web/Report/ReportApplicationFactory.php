@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Forwext\App\Web\Moderation;
+namespace Forwext\App\Web\Report;
 
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
-use Forwext\App\Web\Report\ReportServiceFactory;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Config\ConfigLoader;
@@ -20,23 +19,12 @@ use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
-use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
-use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
-use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
-use Forwext\Core\Moderation\Report\DatabaseReportRepository;
-use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
-use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
-use Forwext\Core\Moderation\Task\ModerationTaskNotFoundException;
-use Forwext\Core\Moderation\Task\ModerationTaskService;
-use Forwext\Core\Moderation\Workspace\ForumApprovalWorkspaceSource;
-use Forwext\Core\Moderation\Workspace\ModerationTaskWorkspaceSource;
-use Forwext\Core\Moderation\Workspace\ModerationWorkspaceService;
-use Forwext\Core\Moderation\Workspace\ReportWorkspaceSource;
+use Forwext\Core\Moderation\Report\ReportTargetUnavailableException;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
@@ -49,7 +37,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use ValueError;
 
-final class ModerationApplicationFactory
+final class ReportApplicationFactory
 {
     private ConfigRepository $config;
     private CanonicalUrl $canonicalUrl;
@@ -78,7 +66,7 @@ final class ModerationApplicationFactory
             return null;
         }
         $routePath = $this->basePath->strip($path);
-        if ($routePath === null || ($routePath !== '/moderation' && !str_starts_with($routePath, '/moderation/'))) {
+        if ($routePath === null || !in_array($routePath, ['/reports/new', '/reports', '/account/reports'], true)) {
             return null;
         }
 
@@ -86,84 +74,33 @@ final class ModerationApplicationFactory
         if ($actorId === null) {
             return $this->secure(Response::text('Unauthorized', 401));
         }
-
         $gate = new PermissionGate($this->permissionAuthorizer(), $actorId);
-        $database = $this->database();
-        $taskRepository = new DatabaseModerationTaskRepository($database);
-        $reportRepository = new DatabaseReportRepository($database);
-        $guard = new ModerationRequestGuard($this->canonicalUrl);
-        $canManage = $gate->allows(PermissionKey::fromString('moderation.manage'));
-        $handler = new ModerationWorkspaceHandler(
-            new ModerationWorkspaceService($gate, [
-                new ReportWorkspaceSource($database, $reportRepository),
-                new ForumApprovalWorkspaceSource(
-                    $database,
-                    new DatabaseForumNodeRepository($database),
-                    $gate,
-                ),
-                new ModerationTaskWorkspaceSource($taskRepository),
-            ]),
-            new ModerationTaskService(
-                $database,
-                $taskRepository,
-                $gate,
-                new DatabaseModerationAuditStore($database),
-            ),
-            $guard,
+        $handler = new ReportHandler(
+            ReportServiceFactory::create($this->database(), $this->permissionAuthorizer(), $gate),
+            new ReportRequestGuard($this->canonicalUrl),
             $this->basePath,
-            $canManage,
-        );
-        $reportHandler = new ReportModerationHandler(
-            ReportServiceFactory::create($database, $this->permissionAuthorizer(), $gate),
-            $guard,
-            $this->basePath,
-            $canManage,
         );
 
         try {
-            if ($routePath === '/moderation') {
+            if ($routePath === '/reports/new') {
                 if ($request->method() !== HttpMethod::Get) {
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
                 }
-                return $handler->view();
+                return $handler->form($request);
             }
-
-            if ($routePath === '/moderation/tasks') {
+            if ($routePath === '/reports') {
                 if ($request->method() !== HttpMethod::Post) {
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
                 }
-                return $handler->createTask($request);
+                return $handler->submit($request);
             }
-
-            if (preg_match('#^/moderation/tasks/([0-9a-f]{32})/status$#D', $routePath, $matches) === 1) {
-                if ($request->method() !== HttpMethod::Post) {
-                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
-                }
-                return $handler->updateTaskStatus($request, $matches[1]);
+            if ($request->method() !== HttpMethod::Get) {
+                return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
             }
-
-            if (preg_match('#^/moderation/reports/([0-9a-f]{32})$#D', $routePath, $matches) === 1) {
-                if ($request->method() !== HttpMethod::Get) {
-                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
-                }
-                return $reportHandler->view($matches[1]);
-            }
-
-            if (preg_match('#^/moderation/reports/([0-9a-f]{32})/(assign|status|comments)$#D', $routePath, $matches) === 1) {
-                if ($request->method() !== HttpMethod::Post) {
-                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
-                }
-                return match ($matches[2]) {
-                    'assign' => $reportHandler->assign($request, $matches[1]),
-                    'status' => $reportHandler->status($request, $matches[1]),
-                    'comments' => $reportHandler->comment($request, $matches[1]),
-                };
-            }
-
-            return $this->secure(Response::text('Not Found', 404));
-        } catch (PermissionDeniedException|ReportMutationGuardException) {
+            return $handler->history($request);
+        } catch (PermissionDeniedException) {
             return $this->secure(Response::text('Forbidden', 403));
-        } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
+        } catch (ReportTargetUnavailableException) {
             return $this->secure(Response::text('Not Found', 404));
         } catch (InvalidArgumentException|ValueError) {
             return $this->secure(Response::text('Bad Request', 400));
@@ -200,7 +137,7 @@ final class ModerationApplicationFactory
             'file' => new FileSessionStore($this->projectPath($this->config->requireString('session.path'))),
             'database' => new DatabaseSessionStore($this->database()),
             default => throw new RuntimeException(
-                'Configured session driver requires an explicit advanced-runtime moderation composition.',
+                'Configured session driver requires an explicit advanced-runtime report composition.',
             ),
         };
     }
