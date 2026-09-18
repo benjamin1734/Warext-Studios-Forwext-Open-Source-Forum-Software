@@ -46,7 +46,9 @@ final class SeoApplicationFactory
             $this->projectRoot . '/config/defaults.php',
             $this->projectRoot . '/config/generated.php',
         );
-        $canonical = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(\n            $this->config->requireString('routing.canonical_url'),\n        ));
+        $canonical = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(
+            $this->config->requireString('routing.canonical_url'),
+        ));
         $siteName = $this->config->get('seo.site_name', 'Forwext');
         $siteDescription = $this->config->get(
             'seo.site_description',

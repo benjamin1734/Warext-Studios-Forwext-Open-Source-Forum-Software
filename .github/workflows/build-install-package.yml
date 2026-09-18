@@ -150,6 +150,14 @@ jobs:
       - name: Enforce strict types
         run: php tools/quality/check-strict-types.php
 
+      - name: Lint PHP sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app core config database modules packages public resources tests themes tools \
+            -type f -name '*.php' -print0 \
+            | xargs -0 -r -n1 php -l >/dev/null
+
       - name: Run PHPUnit on PHP 8.4
         run: vendor/bin/phpunit --configuration=phpunit.xml.dist
 

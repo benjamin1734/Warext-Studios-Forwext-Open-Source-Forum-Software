@@ -97,7 +97,9 @@ final class ModerationApplicationFactory
             $this->projectRoot . '/config/defaults.php',
             $this->projectRoot . '/config/generated.php',
         );
-        $this->canonicalUrl = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(\n            $this->config->requireString('routing.canonical_url'),\n        ));
+        $this->canonicalUrl = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(
+            $this->config->requireString('routing.canonical_url'),
+        ));
         $this->basePath = $this->canonicalUrl->basePath();
     }
 
