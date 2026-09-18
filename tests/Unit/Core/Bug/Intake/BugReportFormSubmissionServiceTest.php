@@ -13,6 +13,7 @@ use Forwext\Core\Bug\Diagnostic\BugDiagnosticContext;
 use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextCollector;
 use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextRepository;
 use Forwext\Core\Bug\Diagnostic\BugReportSubmissionService;
+use Forwext\Core\Bug\Intake\BugAttachmentDownloadService;
 use Forwext\Core\Bug\Intake\BugAttachmentRecord;
 use Forwext\Core\Bug\Intake\BugReportFormSubmissionService;
 use Forwext\Core\Bug\Intake\BugReportIntake;
@@ -21,6 +22,7 @@ use Forwext\Core\Bug\Intake\BugUpload;
 use Forwext\Core\Bug\Report\BugReport;
 use Forwext\Core\Bug\Report\BugReportCategory;
 use Forwext\Core\Bug\Report\BugReportHistoryEntry;
+use Forwext\Core\Bug\Report\BugReportOperationException;
 use Forwext\Core\Bug\Report\BugReportRepository;
 use Forwext\Core\Bug\Report\BugReportService;
 use Forwext\Core\Bug\Report\BugReportSeverity;
@@ -118,6 +120,27 @@ final class BugReportFormSubmissionServiceTest extends TestCase
         self::assertSame('text/plain',$receipt->attachments[0]->mediaType);
         self::assertSame('plain evidence',array_values($storage->objects)[0]);
         self::assertSame($receipt->submission->report->reportId->value(),$receipt->intake->reportId->value());
+
+        $downloadService = new BugAttachmentDownloadService($reportService, $intake, $storage);
+        $download = $downloadService->download(
+            $receipt->submission->report->reportId,
+            $receipt->attachments[0]->attachmentId,
+        );
+        self::assertSame('plain evidence', $download->contents);
+        self::assertSame('evidence.txt', $download->filename);
+
+        $storageKey = array_key_first($storage->objects);
+        self::assertIsString($storageKey);
+        $storage->objects[$storageKey] = 'tampered';
+        try {
+            $downloadService->download(
+                $receipt->submission->report->reportId,
+                $receipt->attachments[0]->attachmentId,
+            );
+            self::fail('Tampered bug attachment must fail integrity verification.');
+        } catch (BugReportOperationException) {
+            self::assertTrue(true);
+        }
     }
 
     public function testIntakeRejectsQueryBearingSourcePathWhenConstructedDirectly(): void
