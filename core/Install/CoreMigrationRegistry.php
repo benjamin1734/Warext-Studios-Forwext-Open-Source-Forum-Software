@@ -7,6 +7,7 @@ namespace Forwext\Core\Install;
 use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\AddDiscoveryQueryIndexes;
 use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
+use Forwext\Database\Migrations\Core\CreateAiModerationOverrides;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
@@ -110,6 +111,7 @@ final class CoreMigrationRegistry
             new CreateBugReportFormIntake(),
             new CreateBugReportConversation(),
             new CreateBugStaffWorkflow(),
+            new CreateAiModerationOverrides(),
         ];
     }
 }
