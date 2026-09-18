@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Forwext\Core\Install\InstallationFailureReporter;
 use Forwext\Core\Install\InstallationInput;
 use Forwext\Core\Install\InstallationService;
+use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 
 $root = dirname(__DIR__);
 $autoload = $root . '/vendor/autoload.php';
@@ -104,7 +105,13 @@ if (!isset($_SESSION['install_csrf']) || !is_string($_SESSION['install_csrf'])) 
 $host = isset($_SERVER['HTTP_HOST']) && is_string($_SERVER['HTTP_HOST'])
     ? preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'])
     : '';
-$defaultUrl = ($secure ? 'https://' : 'http://') . ($host !== '' ? $host : 'example.com');
+$scriptName = isset($_SERVER['SCRIPT_NAME']) && is_string($_SERVER['SCRIPT_NAME'])
+    ? $_SERVER['SCRIPT_NAME']
+    : null;
+$installBasePath = RuntimeCanonicalUrlResolver::scriptBasePath($scriptName);
+$defaultUrl = ($secure ? 'https://' : 'http://')
+    . ($host !== '' ? $host : 'example.com')
+    . $installBasePath;
 
 function field(string $name, bool $trim = true): string
 {
