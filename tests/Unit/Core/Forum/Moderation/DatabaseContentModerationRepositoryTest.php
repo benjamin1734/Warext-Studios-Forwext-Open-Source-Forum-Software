@@ -14,6 +14,7 @@ use Forwext\Core\Forum\Moderation\BulkThreadAction;
 use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Moderation\ModerationAuditContext;
+use Forwext\Core\Forum\Moderation\ModerationAuditEvent;
 use Forwext\Core\Forum\Moderation\ModerationReasonCode;
 use Forwext\Core\Forum\Moderation\ModerationRequestId;
 use Forwext\Core\Forum\Thread\ThreadTitle;
