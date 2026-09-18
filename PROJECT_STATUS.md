@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.04
-CURRENT_STEP = 09.05
-LAST_COMMIT = dc5e5d04e627f6706064acdc3166acdf08abfb0c
+LAST_COMPLETED_SUBSTEP = 09.05
+CURRENT_STEP = 09.06
+LAST_COMMIT = 403d48ea4c54a94fdf06ea718b9d2ec92772c47b
 BLOCKERS = none
-NEXT_STEP = 09.05 - Anti-spam/abuse araçları
+NEXT_STEP = 09.06 - Core moderator/admin audit
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 09.05 - Anti-spam/abuse araçları
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.04`.
-- Current sub-step: `09.05 — Anti-spam/abuse araçları`.
-- Remaining roadmap work after 09.04: **78 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.05`.
+- Current sub-step: `09.06 — Core moderator/admin audit`.
+- Remaining roadmap work after 09.05: **77 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.05
+
+- Added a typed shared anti-abuse engine for registration, thread and post events with user, identity, IP, device and content signals.
+- Added privacy-safe fixed-window automated rules with `allow < review < reject` severity; normal allow activity only advances counters while review/reject decisions create moderation events.
+- Reused existing HMAC registration/authentication fingerprinting so raw IP, e-mail and user-agent values are not stored in anti-abuse tables.
+- Added conservative default rules for registration IP/device abuse, thread user/device/content flood and post user/device/content flood; migration re-runs preserve administrator-edited rule values.
+- Integrated registration review decisions into `PendingApproval` and rejection before account persistence while retaining existing CAPTCHA/Turnstile, disposable-email and registration rate-limit layers.
+- Integrated thread/post review decisions with the existing pending moderation state and 09.03 approval queue; reject decisions stop content persistence instead of creating a parallel spam lifecycle.
+- Added `moderation.abuse.view`, `moderation.abuse.manage_rules` and `moderation.abuse.cleanup` permissions with built-in template defaults.
+- Added native `/moderation/abuse` rule/event management and a dedicated Anti-spam Moderation Workspace section with escaped output and same-origin mutation protection.
+- Added spam cleanup through the existing `ContentModerationService` soft-delete path. Forum view/bulk/delete permissions remain mandatory and mixed thread/post cleanup plus abuse-event resolution/audit share one outer transaction.
+- Added bounded retention maintenance for stale fixed-window counters and old resolved abuse events; unresolved review events are preserved.
+- Added additive idempotent migration `20260918004000_abuse_prevention`; existing forum data is not reset.
+- Feature/final implementation commit: `403d48ea4c54a94fdf06ea718b9d2ec92772c47b`.
+- GitHub Actions build run `35341140370` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, cPanel full-package generation and artifact upload.
+- Differential update-package/release publication was intentionally skipped because `VERSION` did not change; immutable update output remains release/version-bump driven.
+- MySQL 8.4 migration smoke run `35341140452` passed the complete clean-install migration chain and idempotent second pass.
+- No new mandatory Node/Redis/Docker/Supervisor/daemon dependency was introduced for minimum cPanel runtime.
 
 ## Completed in 09.04
 
