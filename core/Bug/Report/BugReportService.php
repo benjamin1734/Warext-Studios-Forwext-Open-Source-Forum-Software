@@ -27,6 +27,7 @@ final readonly class BugReportService
         private BugReportRepository $reports,
         private PermissionGate $gate,
         private PermissionAuthorizer $authorizer,
+        private BugReportNotifier $notifier = new NullBugReportNotifier(),
     ) {
     }
 
@@ -201,6 +202,7 @@ final readonly class BugReportService
                 ['from'=>$current->status->value,'to'=>$updated->status->value],
                 $at,
             );
+            $this->notifier->statusChanged($updated);
             return $updated;
         });
     }
@@ -233,6 +235,65 @@ final readonly class BugReportService
                 $at,
             );
             return $updated;
+        });
+    }
+
+    public function addReporterInfo(
+        EntityId $reportId,
+        string $body,
+        ?DateTimeImmutable $now = null,
+    ): BugReportHistoryEntry {
+        $report = $this->report($reportId);
+        if (!$report->isReporter($this->gate->actorId())) {
+            throw new BugReportOperationException('Only the bug reporter can add reporter information.');
+        }
+        if ($report->status->isTerminal()) {
+            throw new BugReportOperationException('Terminal bug reports must be reopened before adding information.');
+        }
+
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 10000) {
+            throw new InvalidArgumentException('Bug report additional information must contain 1-10000 UTF-8 bytes.');
+        }
+        $at = self::utc($now);
+
+        return $this->atomic(function () use ($report, $body, $at): BugReportHistoryEntry {
+            $entry = $this->appendHistory(
+                $report->reportId,
+                BugHistoryEventType::ReporterInfoAdded,
+                BugHistoryVisibility::Public,
+                ['body'=>$body],
+                $at,
+            );
+            $this->notifier->reporterInfoAdded($report, $entry);
+            return $entry;
+        });
+    }
+
+    public function staffRespond(
+        EntityId $reportId,
+        string $body,
+        ?DateTimeImmutable $now = null,
+    ): BugReportHistoryEntry {
+        $this->requireStaff(self::MANAGE_PERMISSION);
+        $report = $this->required($reportId);
+
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 10000) {
+            throw new InvalidArgumentException('Bug report staff response must contain 1-10000 UTF-8 bytes.');
+        }
+        $at = self::utc($now);
+
+        return $this->atomic(function () use ($report, $body, $at): BugReportHistoryEntry {
+            $entry = $this->appendHistory(
+                $report->reportId,
+                BugHistoryEventType::StaffResponse,
+                BugHistoryVisibility::Public,
+                ['body'=>$body],
+                $at,
+            );
+            $this->notifier->staffResponse($report, $entry);
+            return $entry;
         });
     }
 
@@ -293,8 +354,8 @@ final readonly class BugReportService
         BugHistoryVisibility $visibility,
         array $payload,
         DateTimeImmutable $at,
-    ): void {
-        $this->reports->appendHistory(new BugReportHistoryEntry(
+    ): BugReportHistoryEntry {
+        $entry = new BugReportHistoryEntry(
             BugReportHistoryEntry::generateId(),
             $reportId,
             $this->gate->actorId(),
@@ -302,7 +363,9 @@ final readonly class BugReportService
             $visibility,
             $payload,
             $at,
-        ));
+        );
+        $this->reports->appendHistory($entry);
+        return $entry;
     }
 
     private function atomic(Closure $callback): mixed
