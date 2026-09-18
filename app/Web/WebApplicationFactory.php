@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use Forwext\App\Web\Bug\BugReportFormHandler;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
@@ -52,8 +53,14 @@ use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
+use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
+use Forwext\Core\Bug\Diagnostic\BugBrowserDeviceClassifier;
+use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextCollector;
+use Forwext\Core\Bug\Diagnostic\DatabaseBugDiagnosticContextRepository;
+use Forwext\Core\Bug\Intake\DatabaseBugReportIntakeRepository;
+use Forwext\Core\Bug\Report\DatabaseBugReportRepository;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
 use Forwext\Core\Database\DatabaseConfig;
@@ -297,6 +304,19 @@ final readonly class WebApplicationFactory
 
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
+        $secretStore = new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
+        $bugReports = new DatabaseBugReportRepository($database);
+        $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
+        $bugIntake = new DatabaseBugReportIntakeRepository($database);
+        $bugDiagnosticCollector = new BugDiagnosticContextCollector(new BugBrowserDeviceClassifier(
+            new AuthenticationFingerprint(
+                $secretStore,
+                $config->requireString('authentication.fingerprint_secret_name'),
+            ),
+        ));
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
             $posts,
@@ -327,6 +347,7 @@ final readonly class WebApplicationFactory
 
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $supportCsrf = $this->supportCsrfMiddleware($config);
+        $bugCsrf = $this->bugCsrfMiddleware($config);
         $faqCsrf = $this->faqCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
@@ -334,6 +355,26 @@ final readonly class WebApplicationFactory
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
+        $routes->add(new Route(
+            'bug.report.create',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/bugs/report'),
+            new BugReportFormHandler(
+                $database,
+                $bugReports,
+                $bugDiagnostics,
+                $bugIntake,
+                $bugDiagnosticCollector,
+                $storage,
+                $attachmentInspector,
+                $attachmentQuota,
+                $viewerResolver,
+                $authorizer,
+                new VerifiedUploadedAttachmentReader(),
+                $basePath,
+            ),
+            [$bugCsrf],
+        ));
         $routes->add(new Route(
             'faq.index',
             [HttpMethod::Get],
@@ -666,6 +707,11 @@ final readonly class WebApplicationFactory
     private function supportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'support-ticket', 'forwext.csrf.support-ticket.v1');
+    }
+
+    private function bugCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'bug-report', 'forwext.csrf.bug-report.v1');
     }
 
     private function faqCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

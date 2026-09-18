@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.03 — Bug Report Form and Attachments
+
+- Added global authenticated bug-report access and native CSRF-protected `/bugs/report` GET/POST UX.
+- Added reproduction steps, expected/actual results and path-only source-page context.
+- Added private screenshot/file uploads using the shared hardened upload inspection pipeline.
+- Preserved 11.02 server-derived diagnostic context as authoritative rather than trusting hidden form data.
+- Added additive migration `20260918023000_bug_report_form_intake` plus atomic submission/storage-compensation tests.
+
 ### 11.02 — Automatic Bug Diagnostic Context
 
 - Added privacy-safe URL path, route, user, forum/thread/post, theme/module, browser/device and request-id capture.

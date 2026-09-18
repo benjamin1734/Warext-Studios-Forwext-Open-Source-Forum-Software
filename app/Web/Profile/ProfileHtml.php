@@ -37,6 +37,11 @@ final class ProfileHtml
         $presenceScript = self::escape($basePath->prepend('/assets/presence-heartbeat.js'));
         $presenceEndpoint = self::escape($basePath->prepend('/account/presence/heartbeat'));
         $presenceSettingsScript = self::escape($basePath->prepend('/assets/presence-settings.js'));
+        $bugReportScript = self::escape($basePath->prepend('/assets/bug-report-link.js'));
+        $bugReportLink = $authenticated
+            ? '<a class="bug-report-fab" data-bug-report-link href="' . self::escape($basePath->prepend('/bugs/report'))
+                . '" aria-label="Hata bildir">Hata bildir</a>'
+            : '';
 
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -69,16 +74,19 @@ final class ProfileHtml
             . '.search-hit{padding:14px 0;border-top:1px solid var(--line)}.search-hit h3{margin:2px 0;font-size:17px}.search-hit h3 a{text-decoration:none}.search-hit-type{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:800}.search-hit-id{font-size:12px;overflow-wrap:anywhere}'
             . '.pagination{display:flex;gap:8px;margin-top:18px}.pagination a{padding:7px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none}.pagination a[aria-current=page]{border-color:var(--accent);color:var(--accent)}'
             . '.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{padding:18px}.stat strong{display:block;font-size:26px}.presence-settings{margin-top:18px;display:flex;gap:12px;align-items:end;flex-wrap:wrap}.presence-settings label{display:grid;gap:6px;min-width:220px}'
+            . '.presence-settings input,.presence-settings textarea,.presence-settings select{width:100%;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:9px;padding:10px 11px;font:inherit}.presence-settings textarea{resize:vertical}'
+            . '.bug-report-fab{position:fixed;right:20px;bottom:20px;z-index:50;padding:10px 14px;border-radius:999px;background:var(--accent);color:#111;text-decoration:none;font-weight:800;box-shadow:0 8px 30px #0008}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
             . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
-            . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>'
+            . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
             . '<script src="' . $notificationRealtimeScript . '" defer></script>'
             . '<script src="' . $presenceScript . '" defer></script>'
-            . '<script src="' . $presenceSettingsScript . '" defer></script></body></html>';
+            . '<script src="' . $presenceSettingsScript . '" defer></script>'
+            . '<script src="' . $bugReportScript . '" defer></script></body></html>';
     }
 
     public static function escape(string $value): string
