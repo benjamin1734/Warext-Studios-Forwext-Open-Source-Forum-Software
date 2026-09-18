@@ -16,6 +16,22 @@ use Forwext\Core\Migration\FileInstalledVersionStore;
 $root = dirname(__DIR__);
 $autoload = $root . '/vendor/autoload.php';
 
+if (PHP_VERSION_ID < 80400) {
+    http_response_code(500);
+    header('Content-Type: text/html; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+    echo '<!doctype html><html lang="tr"><meta charset="utf-8"><title>Forwext sunucu gereksinimi</title>';
+    echo '<body style="font:16px/1.55 system-ui,sans-serif;max-width:760px;margin:48px auto;padding:0 20px">';
+    echo '<h1>PHP 8.4 veya üzeri gerekli</h1>';
+    echo '<p>Bu Forwext sürümü PHP 8.4+ gerektirir. Sunucuda çalışan PHP sürümü: <strong>'
+        . htmlspecialchars(PHP_VERSION, ENT_QUOTES, 'UTF-8') . '</strong>.</p>';
+    echo '<p>cPanel kullanıyorsanız MultiPHP Manager üzerinden bu alan adını PHP 8.4 veya daha yeni bir sürüme alın.</p>';
+    echo '</body></html>';
+    exit;
+}
+
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
 header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
@@ -71,7 +87,7 @@ try {
     $response = $response
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('Referrer-Policy', 'no-referrer');
-} catch (Throwable) {
+} catch (Throwable $exception) {
     $response = Response::text('Internal Server Error', 500)
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('X-Robots-Tag', 'noindex, nofollow')
