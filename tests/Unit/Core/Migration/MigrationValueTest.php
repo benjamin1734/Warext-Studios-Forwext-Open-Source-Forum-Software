@@ -54,6 +54,25 @@ final class MigrationValueTest extends TestCase
         self::assertFalse($right->isGreaterThan($left));
     }
 
+    public function testForwextDevelopmentSideUpdateVersionsAreAcceptedAndOrdered(): void
+    {
+        $base = SemanticVersion::parse('0.0.7-dev');
+        $first = SemanticVersion::parse('0.0.7.01-dev');
+        $second = SemanticVersion::parse('0.0.7.02-dev');
+        $stable = SemanticVersion::parse('0.0.7');
+
+        self::assertSame('0.0.7.01-dev', $first->value());
+        self::assertTrue($first->isGreaterThan($base));
+        self::assertTrue($second->isGreaterThan($first));
+        self::assertTrue($stable->isGreaterThan($second));
+    }
+
+    public function testZeroSideUpdateVersionIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        SemanticVersion::parse('0.0.7.00-dev');
+    }
+
     public function testFailedVerificationRequiresDiagnostic(): void
     {
         $this->expectException(InvalidArgumentException::class);
