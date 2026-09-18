@@ -48,9 +48,7 @@ final readonly class ContentPipeline
     }
 
     /**
-     * @template T of object
      * @param Closure(ContentPipelineContext): ContentPipelinePersisted $persist
-     * @return T
      */
     public function execute(
         ContentPipelineContext $context,
@@ -84,8 +82,6 @@ final readonly class ContentPipeline
             return $persisted;
         });
 
-        /** @var T $value */
-        $value = $persisted->value;
-        return $value;
+        return $persisted->value;
     }
 }
