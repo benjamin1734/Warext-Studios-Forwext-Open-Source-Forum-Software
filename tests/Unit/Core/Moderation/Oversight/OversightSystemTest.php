@@ -37,7 +37,7 @@ use Forwext\Core\Moderation\Oversight\OversightChainState;
 use Forwext\Core\Moderation\Oversight\OversightEntry;
 use Forwext\Core\Moderation\Oversight\OversightReviewCase;
 use Forwext\Core\Moderation\Oversight\OversightReviewRepository;
-use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
+use Forwext\Core\Moderation\Oversight\OversightSelfReviewDeniedException;
 use PHPUnit\Framework\TestCase;
 
 final class OversightSystemTest extends TestCase
@@ -125,11 +125,11 @@ final class OversightSystemTest extends TestCase
         try {
             $service->openCase($entry->sourceAuditId, 'Own action must not be self-reviewed.');
             self::fail('Self review must be denied.');
-        } catch (PermissionDeniedException) {
+        } catch (OversightSelfReviewDeniedException) {
             self::assertSame([], $reviews->cases);
         }
 
-        $this->expectException(PermissionDeniedException::class);
+        $this->expectException(OversightSelfReviewDeniedException::class);
         try {
             $service->flag(
                 $entry->sourceAuditId,

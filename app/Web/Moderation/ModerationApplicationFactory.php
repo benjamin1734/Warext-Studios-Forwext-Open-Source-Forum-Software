@@ -51,6 +51,7 @@ use Forwext\Core\Moderation\Oversight\DatabaseOversightReviewRepository;
 use Forwext\Core\Moderation\Oversight\ModerationOversightService;
 use Forwext\Core\Moderation\Oversight\ModerationOversightVerifier;
 use Forwext\Core\Moderation\Oversight\OversightOperationException;
+use Forwext\Core\Moderation\Oversight\OversightSelfReviewDeniedException;
 use Forwext\Core\Moderation\Report\DatabaseReportRepository;
 use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
 use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
@@ -385,7 +386,7 @@ final class ModerationApplicationFactory
             }
 
             return $this->secure(Response::text('Not Found', 404));
-        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException|AbuseMutationGuardException|OversightMutationGuardException) {
+        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException|AbuseMutationGuardException|OversightMutationGuardException|OversightSelfReviewDeniedException) {
             return $this->secure(Response::text('Forbidden', 403));
         } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
             return $this->secure(Response::text('Not Found', 404));

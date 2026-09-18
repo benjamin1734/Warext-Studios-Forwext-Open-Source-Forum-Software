@@ -10,7 +10,6 @@ use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
-use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use InvalidArgumentException;
 
 final readonly class ModerationOversightService
@@ -122,7 +121,7 @@ final readonly class ModerationOversightService
         $entry = $this->store->findByAuditId($sourceAuditId)
             ?? throw new OversightOperationException('Oversight source audit entry was not found.');
         if ($entry->actorUserId->equals($this->gate->actorId())) {
-            throw new PermissionDeniedException('Reviewers cannot review, flag or resolve their own moderation audit entry.');
+            throw new OversightSelfReviewDeniedException('Reviewers cannot review, flag or resolve their own moderation audit entry.');
         }
         return $entry;
     }
