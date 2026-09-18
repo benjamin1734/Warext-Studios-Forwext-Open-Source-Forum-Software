@@ -35,6 +35,7 @@ final class InstallationService
     public function install(InstallationInput $input): MigrationRunReport
     {
         $this->assertProjectLayout();
+        $targetVersion = $this->projectVersion();
         $lockPath = $this->projectRoot . '/storage/install.lock';
         $this->ensureDirectory(dirname($lockPath));
         $lock = @fopen($lockPath, 'c+b');
@@ -81,9 +82,7 @@ final class InstallationService
                 new MigrationEngine($database, new MySqlMigrationHistoryStore($database)),
                 $versions,
             );
-            $version = trim((string) file_get_contents($this->projectRoot . '/VERSION'));
-
-            return $engine->install(SemanticVersion::parse($version), CoreMigrationRegistry::all());
+            return $engine->install($targetVersion, CoreMigrationRegistry::all());
         } finally {
             flock($lock, LOCK_UN);
             fclose($lock);
@@ -154,6 +153,16 @@ final class InstallationService
     private function installedVersionPath(): string
     {
         return $this->projectRoot . '/storage/install/installed-version.json';
+    }
+
+    private function projectVersion(): SemanticVersion
+    {
+        $contents = @file_get_contents($this->projectRoot . '/VERSION');
+        if (!is_string($contents)) {
+            throw new RuntimeException('Unable to read the Forwext VERSION file.');
+        }
+
+        return SemanticVersion::parse(trim($contents));
     }
 
     private function assertProjectLayout(): void
