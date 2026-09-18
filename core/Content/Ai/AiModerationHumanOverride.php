@@ -12,6 +12,7 @@ use InvalidArgumentException;
 
 final readonly class AiModerationHumanOverride
 {
+    public string $reason;
     public DateTimeImmutable $createdAt;
     public ?DateTimeImmutable $expiresAt;
 
@@ -19,7 +20,7 @@ final readonly class AiModerationHumanOverride
         public string $contentFingerprint,
         public AiModerationAction $action,
         public ?EntityId $actorUserId,
-        public string $reason,
+        string $reason,
         DateTimeImmutable $createdAt,
         ?DateTimeImmutable $expiresAt = null,
     ) {
@@ -27,10 +28,11 @@ final readonly class AiModerationHumanOverride
         if ($this->actorUserId !== null) {
             UserId::assert($this->actorUserId);
         }
-        $reason = trim($this->reason);
+        $reason = trim($reason);
         if ($reason === '' || strlen($reason) > 255 || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $reason) === 1) {
             throw new InvalidArgumentException('AI moderation override reason is invalid.');
         }
+        $this->reason = $reason;
         $this->createdAt = $createdAt->setTimezone(new DateTimeZone('UTC'));
         $this->expiresAt = $expiresAt?->setTimezone(new DateTimeZone('UTC'));
         if ($this->expiresAt !== null && $this->expiresAt <= $this->createdAt) {
