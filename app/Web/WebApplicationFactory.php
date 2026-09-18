@@ -7,6 +7,8 @@ namespace Forwext\App\Web;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
+use Forwext\App\Web\Bug\BugStaffDashboardHandler;
+use Forwext\App\Web\Bug\BugStaffExportHandler;
 use Forwext\App\Web\Bug\MyBugReportsHandler;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
@@ -66,6 +68,7 @@ use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextCollector;
 use Forwext\Core\Bug\Diagnostic\DatabaseBugDiagnosticContextRepository;
 use Forwext\Core\Bug\Intake\DatabaseBugReportIntakeRepository;
 use Forwext\Core\Bug\Report\DatabaseBugReportRepository;
+use Forwext\Core\Bug\Staff\DatabaseBugStaffRepository;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
 use Forwext\Core\Database\DatabaseConfig;
@@ -317,6 +320,8 @@ final readonly class WebApplicationFactory
         $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
         $bugIntake = new DatabaseBugReportIntakeRepository($database);
         $bugConversation = new DatabaseBugReportConversationRepository($database);
+        $bugStaff = new DatabaseBugStaffRepository($database);
+        $bugAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $bugNotificationRegistry = new NotificationRegistry();
         NotificationBugReportNotifier::registerDefinitions($bugNotificationRegistry);
         $bugNotifier = new NotificationBugReportNotifier(new NotificationDispatcher(
@@ -400,6 +405,37 @@ final readonly class WebApplicationFactory
             ),
         ));
         $routes->add(new Route(
+            'bug.staff.dashboard',
+            [HttpMethod::Get],
+            new PathTemplate('/bugs/staff'),
+            new BugStaffDashboardHandler(
+                $database,
+                $bugReports,
+                $bugStaff,
+                $viewerResolver,
+                $authorizer,
+                $users,
+                $bugNotifier,
+                $bugAudit,
+                $basePath,
+            ),
+        ));
+        $routes->add(new Route(
+            'bug.staff.export',
+            [HttpMethod::Get],
+            new PathTemplate('/bugs/staff/export.csv'),
+            new BugStaffExportHandler(
+                $database,
+                $bugReports,
+                $bugStaff,
+                $viewerResolver,
+                $authorizer,
+                $users,
+                $bugNotifier,
+                $bugAudit,
+            ),
+        ));
+        $routes->add(new Route(
             'bug.report.detail',
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/bugs/{reportId}', ['reportId'=>'[0-9a-f]{32}']),
@@ -408,9 +444,12 @@ final readonly class WebApplicationFactory
                 $bugReports,
                 $bugIntake,
                 $bugConversation,
+                $bugStaff,
                 $viewerResolver,
                 $authorizer,
+                $users,
                 $bugNotifier,
+                $bugAudit,
                 $basePath,
             ),
             [$bugCsrf],
