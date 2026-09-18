@@ -55,5 +55,6 @@ final class CsvStaffRepository implements BugStaffRepository
     public function duplicateCandidates(BugReport $source,int $limit=100):array{return [];}
     public function duplicateLink(EntityId $duplicateReportId):?BugDuplicateLink{return null;}
     public function saveDuplicateLink(BugDuplicateLink $link):void{}
+    public function deleteDuplicateLink(EntityId $duplicateReportId):bool{return false;}
     public function recentAudit(int $limit=50):array{return [];}
 }
