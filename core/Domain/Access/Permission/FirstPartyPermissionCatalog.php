@@ -82,6 +82,7 @@ final class FirstPartyPermissionCatalog
 
             self::flag('ai.assist.use', 'Use AI writing assistance.'),
             self::flag('ai.moderation.use', 'Run AI moderation checks.'),
+            self::flag('ai.moderation.override', 'Override AI moderation decisions for exact content fingerprints.'),
             self::flag('ai.manage', 'Manage AI policies, prompts and providers.'),
             self::flag('spellcheck.use', 'Use writing and spelling assistance.'),
             self::flag('spellcheck.dictionary.manage_own', 'Manage own spellcheck dictionary entries.'),
