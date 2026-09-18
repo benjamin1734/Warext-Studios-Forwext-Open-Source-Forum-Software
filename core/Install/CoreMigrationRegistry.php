@@ -27,6 +27,7 @@ use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
 use Forwext\Database\Migrations\Core\CreateBugReportConversation;
+use Forwext\Database\Migrations\Core\CreateBugStaffWorkflow;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
@@ -108,6 +109,7 @@ final class CoreMigrationRegistry
             new CreateBugDiagnosticContext(),
             new CreateBugReportFormIntake(),
             new CreateBugReportConversation(),
+            new CreateBugStaffWorkflow(),
         ];
     }
 }
