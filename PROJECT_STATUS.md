@@ -6,12 +6,12 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
-LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.06
-CURRENT_STEP = 09.07
-LAST_COMMIT = 07a14555069e87ce169392ccfce028eda5f8c4b8
+LAST_COMPLETED_MAIN_STEP = 09
+LAST_COMPLETED_SUBSTEP = 09.07
+CURRENT_STEP = 10.01
+LAST_COMMIT = d99a81f92083981f504c81648776c5b7c445fe08
 BLOCKERS = none
-NEXT_STEP = 09.07 - Bağımsız moderasyon denetimi
+NEXT_STEP = 10.01 - Dahili destek/ticket domain
 ```
 
 ## Current position
@@ -20,14 +20,31 @@ NEXT_STEP = 09.07 - Bağımsız moderasyon denetimi
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.06`.
-- Current sub-step: `09.07 — Bağımsız moderasyon denetimi`.
-- Remaining roadmap work after 09.06: **76 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`.
+- Current sub-step: `10.01 — Dahili destek/ticket domain`.
+- Remaining roadmap work after 09.07: **75 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.07
+
+- Added a separate independent moderation oversight stream alongside the operational 09.06 Core Audit Stream.
+- Added canonical redacted moderation payloads with payload SHA-256, previous hash, monotonic sequence and chained SHA-256 integrity values.
+- Serialized concurrent moderation append operations through a row-locked chain state so two valid events cannot branch from the same previous hash.
+- Kept the independent oversight append in the same moderation mutation transaction as the operational audit write; a failed oversight append therefore rolls back the moderation mutation.
+- Added paged full-chain verification for sequence continuity, stored payload hash, previous-link integrity, chain hash and final chain-state consistency.
+- Added review cases and anomaly flags as separate annotations without adding update/delete APIs for chained entries.
+- Added backend self-review protection so an actor cannot open/resolve review cases or add/resolve anomaly flags for their own moderation event even when they hold `audit.review`.
+- Added native `/moderation/oversight` UI, explicit full-chain verification and same-origin guarded review/flag mutations.
+- Added additive idempotent migration `20260918010000_independent_moderation_oversight` with chain state, chained entries, review cases, anomaly flags and `audit.review` built-in template defaults.
+- Existing pre-09.07 audit records are deliberately not backfilled into the tamper-evident chain because a retroactive hash cannot prove historical immutability.
+- Feature commit: `6fc94d9e3a00c4c0752f705767a2d7b9c8dfd798`.
+- CI fixes: `eca38cee3d15af414bf95bf6b100be2c2c3339bc` (test namespace import), `206d144ea7e4034c1c52608cdaff90506b34afce` (valid migration timestamp), `d99a81f92083981f504c81648776c5b7c445fe08` (typed self-review denial).
+- Final GitHub Actions build run `35353769849` passed and final MySQL migration smoke run `35353769826` passed.
+- Main roadmap step 09 is now complete; work advances to 10.01.
 
 ## Completed in 09.06
 
