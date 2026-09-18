@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 10
-LAST_COMPLETED_SUBSTEP = 11.01
-CURRENT_STEP = 11.02
-LAST_COMMIT = 48c7c8ef5f84e89ab6e239676872bfda65a482bd
+LAST_COMPLETED_SUBSTEP = 11.02
+CURRENT_STEP = 11.03
+LAST_COMMIT = a6c3ba384187cd6258aeb77020dae1029d8c1694
 BLOCKERS = none
-NEXT_STEP = 11.02 - Otomatik teknik bağlam toplama
+NEXT_STEP = 11.03 - Hata bildirim formu ve attachment
 ```
 
 ## Current position
@@ -21,13 +21,28 @@ NEXT_STEP = 11.02 - Otomatik teknik bağlam toplama
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`; main step `11` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01`.
-- Current sub-step: `11.02 — Otomatik teknik bağlam toplama`.
-- Remaining roadmap work after 11.01: **68 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.02`.
+- Current sub-step: `11.03 — Hata bildirim formu ve attachment`.
+- Remaining roadmap work after 11.02: **67 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 11.02
+
+- Added privacy-safe automatic bug diagnostic context capture for query-free URL path, matched route, authenticated user id, forum/thread/post route ids, theme/module, browser/OS/device summary and request-id.
+- Raw query strings, request bodies, cookies, IP addresses and User-Agent text are deliberately not persisted.
+- Reused the existing secret-backed authentication fingerprint engine for HMAC User-Agent fingerprints.
+- Added bounded browser/device classification so oversized User-Agent headers cannot block bug reporting.
+- Added one-to-one diagnostic persistence with report/user foreign keys and indexes for route/module/entity/request/client correlation.
+- Added `BugReportSubmissionService` so bug report creation, creation history and diagnostic persistence share one database transaction and participate safely in an already-open transaction.
+- Added additive idempotent migration `20260918022000_bug_diagnostic_context`.
+- Added regression coverage for query-secret removal, canonical route entity extraction, theme/module fallback, request-id, browser/device classification and atomic submission.
+- Feature commit: `a6c3ba384187cd6258aeb77020dae1029d8c1694`.
+- GitHub Actions build run `35375056105`: success.
+- MySQL migration smoke run `35375056111`: success.
+- Page-level form, reproduction steps, expected/actual fields and screenshots/files remain scoped to 11.03.
 
 ## Completed in 11.01
 
