@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 09
-LAST_COMPLETED_SUBSTEP = 10.03
-CURRENT_STEP = 10.04
-LAST_COMMIT = 1ca50f71b63da3d187aeb51089595fbbe022f3d9
+LAST_COMPLETED_SUBSTEP = 10.04
+CURRENT_STEP = 10.05
+LAST_COMMIT = 89346cc833153eba142689f51f984cd4ecd406fc
 BLOCKERS = none
-NEXT_STEP = 10.04 - SSS sistemi
+NEXT_STEP = 10.05 - SSS ↔ destek bağlantısı
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 10.04 - SSS sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.03`.
-- Current sub-step: `10.04 — SSS sistemi`.
-- Remaining roadmap work after 10.03: **72 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.04`.
+- Current sub-step: `10.05 — SSS ↔ destek bağlantısı`.
+- Remaining roadmap work after 10.04: **71 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 10.04
+
+- Added typed FAQ categories/articles with language, ordering, public/member/staff visibility and active state.
+- Added article tags, unique language-local SEO slugs and optional SEO title/description.
+- Effective FAQ visibility always uses the stricter category/article level and is enforced consistently in page access and search indexing.
+- Added authenticated one-vote-per-user helpful analytics with aggregate vote count/helpful ratio and no user identities in export.
+- Added versioned, permission-gated JSON import/export with domain validation, bounded payload limits and atomic persistence.
+- Added native `faq.article` search content source, server-derived `faq.members`/`faq.staff` scopes and permission-aware global-search result redirects.
+- Category policy changes queue all affected existing articles for search re-indexing, preventing stale visibility scopes.
+- Added public `/faq`, canonical `/faq/{language}/{slug}`, id redirect and `/faq/manage` native surfaces with dedicated CSRF scope and escaped output.
+- Added FAQPage/CollectionPage SEO metadata plus public FAQ sitemap and RSS/Atom discovery.
+- Added public SSS main-navigation entry.
+- Added additive idempotent migration `20260918014000_faq_system` with FAQ tables, indexes, FKs and built-in permission defaults.
+- Feature commit: `89346cc833153eba142689f51f984cd4ecd406fc`.
+- GitHub Actions build run `35364781069`: success.
+- MySQL migration smoke run `35364780993`: success.
+- Ticket-to-FAQ recommendations, post-resolution FAQ guidance and staff-reply-to-draft workflow remain scoped to 10.05.
 
 ## Completed in 10.03
 
