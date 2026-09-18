@@ -24,6 +24,7 @@ use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Presence\DatabasePresenceRepository;
 use Forwext\Core\Presence\PresenceService;
 use Forwext\Core\Routing\BasePath;
@@ -145,6 +146,7 @@ final class CommunityApplicationFactory
                 ),
                 new DatabaseUserRepository($this->database()),
                 $this->config->requireString('authentication.session.cookie_name'),
+                new DatabaseDisciplineAuthenticationAvailability($this->database()),
             );
         }
         return $this->viewers;

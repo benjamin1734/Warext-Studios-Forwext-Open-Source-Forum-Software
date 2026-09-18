@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 09.04 — Warning / Discipline / Ban
+
+- Added configurable warning definitions with points and optional expiry, durable warning/restriction/suspension/ban history, and typed revocation.
+- Added temporary suspension plus temporary/permanent ban enforcement for login and ordinary authenticated sessions.
+- Added posting/content restrictions as backend permission-engine user denies for current and planned first-party content creation permissions.
+- Added granular discipline permissions, moderation audit events, durable user notifications, native moderation/account UI and real moderation-workspace sources.
+- Added a stable `discipline:<action-id>` appeal reference and `moderation.discipline.appeal_available` domain hook for later Support integration.
+- Added additive idempotent migration `20260918003000_discipline_system`; no database reset or mandatory advanced runtime service is introduced.
+
 ### 09.03 — Approval / Moderation Queue
 
 - Added a typed first-party approval queue registry/provider contract so current and future moderated content domains share one queue instead of parallel moderation applications.

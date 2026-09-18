@@ -9,6 +9,7 @@ use Forwext\Database\Migrations\Core\AddDiscoveryQueryIndexes;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
+use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
@@ -80,6 +81,7 @@ final class CoreMigrationRegistry
             new CreateUserPresenceTables(),
             new CreateModerationWorkspaceTables(),
             new CreateReportSystemTables(),
+            new CreateDisciplineTables(),
         ];
     }
 }

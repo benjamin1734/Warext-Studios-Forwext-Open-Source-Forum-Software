@@ -19,6 +19,7 @@ use Forwext\App\Web\Notification\NotificationRealtimeSseHandler;
 use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
 use Forwext\App\Web\Notification\NotificationSoundCsrfTokenHandler;
 use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
+use Forwext\App\Web\Moderation\DisciplineAccountHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -81,6 +82,8 @@ use Forwext\Core\Notification\Sound\DatabaseNotificationSoundRepository;
 use Forwext\Core\Notification\Sound\EngineNotificationSoundPermissionResolver;
 use Forwext\Core\Notification\Sound\NotificationSoundCatalog;
 use Forwext\Core\Notification\Sound\NotificationSoundService;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
 use Forwext\Core\Realtime\DatabaseRealtimeMessageStore;
 use Forwext\Core\Realtime\PollingRealtimeTransport;
@@ -137,17 +140,25 @@ final readonly class WebApplicationFactory
         $database = $this->database($config);
         $authorizer = $this->permissionAuthorizer($database);
         $users = new DatabaseUserRepository($database);
+        $discipline = new DatabaseDisciplineRepository($database);
         $profileStore = new DatabaseProfileStore($database);
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
         $profileService = new ProfileService($profileStore, $accessPolicy);
-        $viewerResolver = new AuthSessionProfileViewerResolver(
-            new AuthSessionManager(
-                $this->sessionStore($config, $database),
-                new DatabaseCredentialStore($database),
-                $config->requireInt('authentication.session.ttl_seconds'),
-            ),
+        $sessions = new AuthSessionManager(
+            $this->sessionStore($config, $database),
+            new DatabaseCredentialStore($database),
+            $config->requireInt('authentication.session.ttl_seconds'),
+        );
+        $disciplineAccountViewerResolver = new AuthSessionProfileViewerResolver(
+            $sessions,
             $users,
             $config->requireString('authentication.session.cookie_name'),
+        );
+        $viewerResolver = new AuthSessionProfileViewerResolver(
+            $sessions,
+            $users,
+            $config->requireString('authentication.session.cookie_name'),
+            new DatabaseDisciplineAuthenticationAvailability($database),
         );
         $storage = $this->localStorage($config);
         $mediaService = new ProfileMediaService($profileStore, $storage, $accessPolicy);
@@ -327,6 +338,11 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'activity.feed', [HttpMethod::Get], new PathTemplate('/activity'),
             new ActivityFeedHandler($activityFeed, $viewerResolver),
+        ));
+
+        $routes->add(new Route(
+            'account.discipline', [HttpMethod::Get], new PathTemplate('/account/discipline'),
+            new DisciplineAccountHandler($discipline, $disciplineAccountViewerResolver, $basePath),
         ));
 
         $routes->add(new Route(

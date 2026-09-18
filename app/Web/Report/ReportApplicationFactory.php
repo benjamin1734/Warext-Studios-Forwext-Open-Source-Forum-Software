@@ -24,6 +24,7 @@ use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Moderation\Report\ReportTargetUnavailableException;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
@@ -118,6 +119,7 @@ final class ReportApplicationFactory
                 ),
                 new DatabaseUserRepository($this->database()),
                 $this->config->requireString('authentication.session.cookie_name'),
+                new DatabaseDisciplineAuthenticationAvailability($this->database()),
             );
         }
         return $this->viewers;

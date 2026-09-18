@@ -43,6 +43,52 @@ final class DatabasePermissionRuleRepositoryTest extends TestCase
         self::assertSame('forum:10', $database->fetchAllQueries[1]->parameters['node_id']);
     }
 
+    public function testActiveDisciplineRestrictionAddsUserDenyAtRequestedNodeScope(): void
+    {
+        $database = new PermissionRuleRecordingDatabase();
+        $database->fetchValueResult = 1;
+        $repository = new DatabasePermissionRuleRepository($database);
+        $assignment = new UserAccessAssignment(
+            EntityId::fromString('user:1'),
+            EntityId::fromString('group:member'),
+        );
+        $nodeId = EntityId::fromString('forum:10');
+
+        $rules = $repository->rules(
+            PermissionKey::fromString('forum.thread.create'),
+            $assignment,
+            $nodeId,
+        );
+
+        self::assertCount(1, $rules);
+        self::assertSame(PermissionSubjectType::User, $rules[0]->subjectType());
+        self::assertSame(PermissionEffect::Deny, $rules[0]->effect());
+        self::assertSame('user:1', $rules[0]->subjectId()->value());
+        self::assertSame('forum:10', $rules[0]->nodeId()?->value());
+        self::assertCount(1, $database->fetchValueQueries);
+        self::assertSame('user:1', $database->fetchValueQueries[0]->parameters['user_id']);
+        self::assertSame('posting', $database->fetchValueQueries[0]->parameters['restriction_0']);
+        self::assertSame('content', $database->fetchValueQueries[0]->parameters['restriction_1']);
+    }
+
+    public function testNonContentPermissionDoesNotQueryDisciplineRestrictions(): void
+    {
+        $database = new PermissionRuleRecordingDatabase();
+        $repository = new DatabasePermissionRuleRepository($database);
+        $assignment = new UserAccessAssignment(
+            EntityId::fromString('user:1'),
+            EntityId::fromString('group:member'),
+        );
+
+        $repository->rules(
+            PermissionKey::fromString('moderation.access'),
+            $assignment,
+            null,
+        );
+
+        self::assertSame([], $database->fetchValueQueries);
+    }
+
     public function testDefinitionHydratesTypedPermissionMetadata(): void
     {
         $database = new PermissionRuleRecordingDatabase();
@@ -68,6 +114,11 @@ final class PermissionRuleRecordingDatabase implements QueryExecutor
     /** @var array<string, mixed>|null */
     public ?array $fetchOneResult = null;
 
+    /** @var list<CompiledQuery> */
+    public array $fetchValueQueries = [];
+
+    public mixed $fetchValueResult = null;
+
     public function execute(CompiledQuery $query): int
     {
         return 0;
@@ -86,6 +137,7 @@ final class PermissionRuleRecordingDatabase implements QueryExecutor
 
     public function fetchValue(CompiledQuery $query): mixed
     {
-        return null;
+        $this->fetchValueQueries[] = $query;
+        return $this->fetchValueResult;
     }
 }

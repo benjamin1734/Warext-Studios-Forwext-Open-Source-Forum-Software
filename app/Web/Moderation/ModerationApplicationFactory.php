@@ -21,6 +21,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
+use Forwext\Core\Domain\Event\DomainEventDispatcher;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
 use Forwext\Core\Forum\Moderation\ContentModerationService;
 use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
@@ -34,15 +35,25 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Approval\ApprovalQueueRegistry;
 use Forwext\Core\Moderation\Approval\ApprovalQueueService;
 use Forwext\Core\Moderation\Approval\ForumApprovalQueueProvider;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
+use Forwext\Core\Moderation\Discipline\DisciplineActionType;
+use Forwext\Core\Moderation\Discipline\DisciplineOperationException;
+use Forwext\Core\Moderation\Discipline\DisciplineService;
+use Forwext\Core\Moderation\Discipline\NotificationDisciplineNotifier;
 use Forwext\Core\Moderation\Report\DatabaseReportRepository;
 use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
 use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
 use Forwext\Core\Moderation\Task\ModerationTaskNotFoundException;
 use Forwext\Core\Moderation\Task\ModerationTaskService;
 use Forwext\Core\Moderation\Workspace\ApprovalQueueWorkspaceSource;
+use Forwext\Core\Moderation\Workspace\DisciplineWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ModerationTaskWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ModerationWorkspaceService;
 use Forwext\Core\Moderation\Workspace\ReportWorkspaceSource;
+use Forwext\Core\Notification\DatabaseNotificationRepository;
+use Forwext\Core\Notification\NotificationDispatcher;
+use Forwext\Core\Notification\NotificationRegistry;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
@@ -98,7 +109,23 @@ final class ModerationApplicationFactory
         $taskRepository = new DatabaseModerationTaskRepository($database);
         $reportRepository = new DatabaseReportRepository($database);
         $nodes = new DatabaseForumNodeRepository($database);
+        $users = new DatabaseUserRepository($database);
         $audit = new DatabaseModerationAuditStore($database);
+        $disciplineRepository = new DatabaseDisciplineRepository($database);
+        $disciplineNotifications = new NotificationRegistry();
+        NotificationDisciplineNotifier::registerDefinitions($disciplineNotifications);
+        $disciplineService = new DisciplineService(
+            $database,
+            $disciplineRepository,
+            $users,
+            $gate,
+            $audit,
+            new NotificationDisciplineNotifier(new NotificationDispatcher(
+                $disciplineNotifications,
+                new DatabaseNotificationRepository($database),
+            )),
+            new DomainEventDispatcher(),
+        );
         $contentModeration = new ContentModerationService(
             $nodes,
             new DatabaseContentModerationRepository($database, $audit),
@@ -114,6 +141,18 @@ final class ModerationApplicationFactory
             new ModerationWorkspaceService($gate, [
                 new ReportWorkspaceSource($database, $reportRepository),
                 new ApprovalQueueWorkspaceSource($approvalRegistry),
+                new DisciplineWorkspaceSource(
+                    $disciplineRepository,
+                    $gate,
+                    \Forwext\Core\Moderation\Workspace\ModerationWorkspaceSection::Warnings,
+                    [DisciplineActionType::Warning, DisciplineActionType::Restriction],
+                ),
+                new DisciplineWorkspaceSource(
+                    $disciplineRepository,
+                    $gate,
+                    \Forwext\Core\Moderation\Workspace\ModerationWorkspaceSection::Bans,
+                    [DisciplineActionType::Suspension, DisciplineActionType::Ban],
+                ),
                 new ModerationTaskWorkspaceSource($taskRepository),
             ]),
             new ModerationTaskService(
@@ -138,6 +177,19 @@ final class ModerationApplicationFactory
             $this->basePath,
             $canManage,
         );
+        $disciplineHandler = new DisciplineHandler(
+            $disciplineService,
+            $users,
+            $guard,
+            $this->basePath,
+            new DisciplineCapabilities(
+                $gate->allows(PermissionKey::fromString(DisciplineService::WARNING_ISSUE_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(DisciplineService::WARNING_MANAGE_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(DisciplineService::RESTRICTION_MANAGE_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(DisciplineService::BAN_MANAGE_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(DisciplineService::REVOKE_PERMISSION)),
+            ),
+        );
 
         try {
             if ($routePath === '/moderation') {
@@ -159,6 +211,34 @@ final class ModerationApplicationFactory
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
                 }
                 return $approvalHandler->moderate($request);
+            }
+
+            if ($routePath === '/moderation/discipline') {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $disciplineHandler->view();
+            }
+
+            if ($routePath === '/moderation/discipline/actions') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $disciplineHandler->issue($request);
+            }
+
+            if ($routePath === '/moderation/discipline/warning-definitions') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $disciplineHandler->saveWarningDefinition($request);
+            }
+
+            if (preg_match('#^/moderation/discipline/([0-9a-f]{32})/revoke$#D', $routePath, $matches) === 1) {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $disciplineHandler->revoke($request, $matches[1]);
             }
 
             if ($routePath === '/moderation/tasks') {
@@ -194,11 +274,11 @@ final class ModerationApplicationFactory
             }
 
             return $this->secure(Response::text('Not Found', 404));
-        } catch (PermissionDeniedException|ReportMutationGuardException) {
+        } catch (PermissionDeniedException|ReportMutationGuardException|DisciplineMutationGuardException) {
             return $this->secure(Response::text('Forbidden', 403));
         } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
             return $this->secure(Response::text('Not Found', 404));
-        } catch (ModerationOperationException) {
+        } catch (ModerationOperationException|DisciplineOperationException) {
             return $this->secure(Response::text('Conflict', 409));
         } catch (InvalidArgumentException|ValueError) {
             return $this->secure(Response::text('Bad Request', 400));
@@ -216,6 +296,7 @@ final class ModerationApplicationFactory
                 ),
                 new DatabaseUserRepository($this->database()),
                 $this->config->requireString('authentication.session.cookie_name'),
+                new DatabaseDisciplineAuthenticationAvailability($this->database()),
             );
         }
         return $this->viewers;

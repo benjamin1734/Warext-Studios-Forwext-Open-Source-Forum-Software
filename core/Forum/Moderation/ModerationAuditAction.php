@@ -29,4 +29,10 @@ enum ModerationAuditAction: string
     case ReportAssign = 'report.assign';
     case ReportStatus = 'report.status';
     case ReportComment = 'report.comment';
+    case WarningDefinitionSave = 'discipline.warning_definition.save';
+    case WarningIssue = 'discipline.warning.issue';
+    case RestrictionApply = 'discipline.restriction.apply';
+    case SuspensionApply = 'discipline.suspension.apply';
+    case BanApply = 'discipline.ban.apply';
+    case DisciplineRevoke = 'discipline.revoke';
 }

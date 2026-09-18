@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Profile;
 
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Domain\User\UserAuthenticationAvailability;
 use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Http\Request;
 use InvalidArgumentException;
@@ -16,6 +17,7 @@ final readonly class AuthSessionProfileViewerResolver implements ProfileViewerRe
         private AuthSessionManager $sessions,
         private UserRepository $users,
         private string $cookieName,
+        private ?UserAuthenticationAvailability $availability = null,
     ) {
         if (preg_match('/^[A-Za-z0-9_.-]{1,80}$/D', $cookieName) !== 1) {
             throw new InvalidArgumentException('Authentication session cookie name is invalid.');
@@ -35,7 +37,9 @@ final readonly class AuthSessionProfileViewerResolver implements ProfileViewerRe
         }
 
         $user = $this->users->find($identity->userId);
-        if ($user === null || !$user->status()->canAuthenticateNormally()) {
+        if ($user === null || !$user->status()->canAuthenticateNormally()
+            || ($this->availability !== null && !$this->availability->allows($identity->userId))
+        ) {
             return null;
         }
 

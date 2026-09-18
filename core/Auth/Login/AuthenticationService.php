@@ -15,6 +15,7 @@ use Forwext\Core\Auth\Remember\RememberTokenService;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Domain\User\EmailAddress;
 use Forwext\Core\Domain\User\User;
+use Forwext\Core\Domain\User\UserAuthenticationAvailability;
 use Forwext\Core\Domain\User\Username;
 use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Infrastructure\Clock;
@@ -38,6 +39,7 @@ final readonly class AuthenticationService
         private int $networkAttemptLimit = 50,
         private int $attemptWindowSeconds = 900,
         private Clock $clock = new SystemClock(),
+        private ?UserAuthenticationAvailability $availability = null,
     ) {
     }
 
@@ -62,7 +64,9 @@ final readonly class AuthenticationService
         if (!$this->hasher->verify($request->password, $credential->passwordHash)) {
             $this->reject($user, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::InvalidCredentials, $now);
         }
-        if ($user === null || !$user->status()->canAuthenticateNormally()) {
+        if ($user === null || !$user->status()->canAuthenticateNormally()
+            || ($this->availability !== null && !$this->availability->allows($user->id()))
+        ) {
             $this->reject($user, $identityFingerprint, $ipFingerprint, $deviceFingerprint, LoginOutcome::AccountUnavailable, $now);
         }
         if ($this->hasher->needsRehash($credential->passwordHash)) {

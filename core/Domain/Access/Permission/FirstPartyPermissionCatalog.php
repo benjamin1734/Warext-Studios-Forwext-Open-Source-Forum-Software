@@ -20,6 +20,12 @@ final class FirstPartyPermissionCatalog
 
             self::flag('moderation.access', 'Access moderation workspace surfaces.'),
             self::flag('moderation.manage', 'Perform moderation management actions.'),
+            self::flag('moderation.discipline.view', 'View warning, restriction, suspension and ban records.'),
+            self::flag('moderation.warning.issue', 'Issue configured warning definitions to users.'),
+            self::flag('moderation.warning.manage', 'Manage warning definitions and point/expiry defaults.'),
+            self::flag('moderation.restriction.manage', 'Apply posting and content restrictions.'),
+            self::flag('moderation.ban.manage', 'Apply temporary suspensions and temporary/permanent bans.'),
+            self::flag('moderation.discipline.revoke', 'Revoke active discipline actions.'),
             self::flag('audit.view', 'View independent moderation audit records.'),
             self::flag('audit.review', 'Review independent moderation audit cases and anomaly flags.'),
             self::flag('audit.export', 'Export authorized independent moderation audit data.'),

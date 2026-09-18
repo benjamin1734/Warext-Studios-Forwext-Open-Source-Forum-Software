@@ -12,6 +12,19 @@ use UnexpectedValueException;
 
 final readonly class DatabasePermissionRuleRepository implements PermissionRuleRepository
 {
+    /** @var array<string,list<string>> */
+    private const DISCIPLINE_RESTRICTIONS = [
+        'forum.thread.create' => ['posting', 'content'],
+        'forum.post.create' => ['posting', 'content'],
+        'profile.post.create' => ['posting', 'content'],
+        'profile.post.comment' => ['posting', 'content'],
+        'portfolio.create' => ['content'],
+        'portfolio.manage_own' => ['content'],
+        'marketplace.listing.create' => ['content'],
+        'marketplace.listing.manage_own' => ['content'],
+        'giveaway.create' => ['content'],
+    ];
+
     public function __construct(private QueryExecutor $database)
     {
     }
@@ -56,7 +69,44 @@ final readonly class DatabasePermissionRuleRepository implements PermissionRuleR
             )));
         }
 
+        $disciplineRestrictions = self::DISCIPLINE_RESTRICTIONS[$key->value()] ?? [];
+        if ($disciplineRestrictions !== [] && $this->hasActiveDisciplineRestriction(
+            $assignment->userId(),
+            $disciplineRestrictions,
+        )) {
+            $rows[] = [
+                'subject_type' => PermissionSubjectType::User->value,
+                'subject_id' => $assignment->userId()->value(),
+                'effect' => PermissionEffect::Deny->value,
+                'numeric_limit' => null,
+                'node_id' => $nodeId?->value(),
+            ];
+        }
+
         return array_map($this->hydrateRule(...), $rows);
+    }
+
+    /** @param list<string> $restrictions */
+    private function hasActiveDisciplineRestriction(EntityId $userId, array $restrictions): bool
+    {
+        $parameters = ['user_id' => $userId->value()];
+        $placeholders = [];
+        foreach ($restrictions as $index => $restriction) {
+            $name = 'restriction_' . $index;
+            $placeholders[] = ':' . $name;
+            $parameters[$name] = $restriction;
+        }
+
+        return (int) $this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM `forwext_discipline_actions` a '
+            . 'INNER JOIN `forwext_discipline_action_restrictions` r ON r.`action_id` = a.`action_id` '
+            . 'WHERE a.`user_id` = :user_id AND a.`action_type` = \'restriction\' '
+            . 'AND r.`restriction_key` IN (' . implode(', ', $placeholders) . ') '
+            . 'AND a.`revoked_at_utc` IS NULL '
+            . 'AND a.`starts_at_utc` <= UTC_TIMESTAMP(6) '
+            . 'AND (a.`expires_at_utc` IS NULL OR a.`expires_at_utc` > UTC_TIMESTAMP(6))',
+            $parameters,
+        )) > 0;
     }
 
     /** @return array{0: string, 1: array<string, string|int|float|bool|null>} */

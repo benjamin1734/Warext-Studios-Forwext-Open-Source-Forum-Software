@@ -29,6 +29,7 @@ use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\EmailAddress;
 use Forwext\Core\Domain\User\User;
+use Forwext\Core\Domain\User\UserAuthenticationAvailability;
 use Forwext\Core\Domain\User\UserId;
 use Forwext\Core\Domain\User\UserLocale;
 use Forwext\Core\Domain\User\Username;
@@ -85,6 +86,38 @@ final class AuthenticationServiceTest extends TestCase
         self::assertSame([LoginOutcome::InvalidCredentials], $history->outcomes);
     }
 
+    public function testDisciplineAvailabilityRejectsOtherwiseValidCredentialsBeforeSessionCreation(): void
+    {
+        $clock = new LoginFrozenClock('2026-09-15 08:00:00');
+        $user = self::user(UserStatus::Active, $clock->now());
+        $credentials = new LoginMemoryCredentialStore(new CredentialRecord($user->id(), 'stored-hash', 1, $clock->now()));
+        $sessions = new LoginMemorySessionStore($clock);
+        $history = new LoginMemoryHistory();
+        $service = self::service(
+            $user,
+            $credentials,
+            new LoginFakeHasher(true, false),
+            $sessions,
+            $history,
+            new AllowingMfaGate(),
+            $clock,
+            new LoginAvailability(false),
+        );
+
+        $this->expectException(AuthenticationRejectedException::class);
+        try {
+            $service->login(new LoginRequest(
+                'active_user',
+                'correct-password',
+                '203.0.113.23',
+                'Forwext Test Browser/1.0',
+            ));
+        } finally {
+            self::assertSame(0, $sessions->writes);
+            self::assertSame([LoginOutcome::AccountUnavailable], $history->outcomes);
+        }
+    }
+
     public function testMfaRequiredLoginDoesNotCreateAuthenticatedSession(): void
     {
         $clock = new LoginFrozenClock('2026-09-15 08:00:00');
@@ -111,6 +144,7 @@ final class AuthenticationServiceTest extends TestCase
         LoginMemoryHistory $history,
         MfaLoginGate $mfaGate,
         Clock $clock,
+        ?UserAuthenticationAvailability $availability = null,
     ): AuthenticationService {
         return new AuthenticationService(
             new LoginMemoryUserRepository($user),
@@ -124,6 +158,7 @@ final class AuthenticationServiceTest extends TestCase
             $history,
             $mfaGate,
             clock: $clock,
+            availability: $availability,
         );
     }
 
@@ -252,4 +287,11 @@ final class LoginFrozenClock implements Clock
     private DateTimeImmutable $time;
     public function __construct(string $time) { $this->time = new DateTimeImmutable($time, new DateTimeZone('UTC')); }
     public function now(): DateTimeImmutable { return $this->time; }
+}
+
+
+final readonly class LoginAvailability implements UserAuthenticationAvailability
+{
+    public function __construct(private bool $allowed) {}
+    public function allows(EntityId $userId): bool { return $this->allowed; }
 }
