@@ -136,6 +136,17 @@ jobs:
       - name: Validate Composer metadata
         run: composer validate --no-check-publish
 
+      - name: Validate application release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          require __DIR__ . "/vendor/autoload.php";
+          $version = trim((string) file_get_contents(__DIR__ . "/VERSION"));
+          \Forwext\Core\Migration\SemanticVersion::parse($version);
+          echo "Application release version accepted: {$version}\n";
+          '
+
       - name: Enforce strict types
         run: php tools/quality/check-strict-types.php
 
