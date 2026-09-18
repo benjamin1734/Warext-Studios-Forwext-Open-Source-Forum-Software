@@ -9,7 +9,7 @@ CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 10
 LAST_COMPLETED_SUBSTEP = 11.03
 CURRENT_STEP = 11.04
-LAST_COMMIT = b1a064a24eabdad35dde42958f08dfb8f3c50664
+LAST_COMMIT = 9bf0208f03623c6a1af9038467876f36b69c4461
 BLOCKERS = none
 NEXT_STEP = 11.04 - Hata Bildirimlerim sayfası
 ```
@@ -42,6 +42,7 @@ NEXT_STEP = 11.04 - Hata Bildirimlerim sayfası
 - Added additive idempotent migration `20260918023000_bug_report_form_intake` for reproduction/expected/actual/source intake plus attachment metadata.
 - Added regression coverage for atomic workflow+diagnostic+intake+attachment persistence, source-path privacy, form escaping and global authenticated bug-report access.
 - Feature commit: `b1a064a24eabdad35dde42958f08dfb8f3c50664`.
+- UX correction commit: `9bf0208f03623c6a1af9038467876f36b69c4461` keeps the global entry icon-only while retaining accessible labelling.
 - GitHub Actions build run `35376839885`: success.
 - MySQL migration smoke run `35376839901`: success.
 - Reporter-facing list/detail/responses/additional-info/notification tracking remains scoped to 11.04; duplicate/staff dashboard/search/analytics/export/audit remains 11.05.
