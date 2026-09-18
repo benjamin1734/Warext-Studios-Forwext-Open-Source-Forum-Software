@@ -19,6 +19,7 @@ use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
+use Forwext\Database\Migrations\Core\CreateBugReportConversation;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
@@ -78,6 +79,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateBugReportWorkflow::class, $classes);
         self::assertContains(CreateBugDiagnosticContext::class, $classes);
         self::assertContains(CreateBugReportFormIntake::class, $classes);
+        self::assertContains(CreateBugReportConversation::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);

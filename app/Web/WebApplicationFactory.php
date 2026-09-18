@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
+use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
+use Forwext\App\Web\Bug\MyBugReportsHandler;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
@@ -56,6 +59,8 @@ use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
+use Forwext\Core\Bug\Conversation\DatabaseBugReportConversationRepository;
+use Forwext\Core\Bug\Conversation\NotificationBugReportNotifier;
 use Forwext\Core\Bug\Diagnostic\BugBrowserDeviceClassifier;
 use Forwext\Core\Bug\Diagnostic\BugDiagnosticContextCollector;
 use Forwext\Core\Bug\Diagnostic\DatabaseBugDiagnosticContextRepository;
@@ -311,6 +316,13 @@ final readonly class WebApplicationFactory
         $bugReports = new DatabaseBugReportRepository($database);
         $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
         $bugIntake = new DatabaseBugReportIntakeRepository($database);
+        $bugConversation = new DatabaseBugReportConversationRepository($database);
+        $bugNotificationRegistry = new NotificationRegistry();
+        NotificationBugReportNotifier::registerDefinitions($bugNotificationRegistry);
+        $bugNotifier = new NotificationBugReportNotifier(new NotificationDispatcher(
+            $bugNotificationRegistry,
+            new DatabaseNotificationRepository($database),
+        ));
         $bugDiagnosticCollector = new BugDiagnosticContextCollector(new BugBrowserDeviceClassifier(
             new AuthenticationFingerprint(
                 $secretStore,
@@ -374,6 +386,51 @@ final readonly class WebApplicationFactory
                 $basePath,
             ),
             [$bugCsrf],
+        ));
+        $routes->add(new Route(
+            'bug.reports.mine',
+            [HttpMethod::Get],
+            new PathTemplate('/bugs'),
+            new MyBugReportsHandler(
+                $database,
+                $bugReports,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+            ),
+        ));
+        $routes->add(new Route(
+            'bug.report.detail',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/bugs/{reportId}', ['reportId'=>'[0-9a-f]{32}']),
+            new BugReportDetailHandler(
+                $database,
+                $bugReports,
+                $bugIntake,
+                $bugConversation,
+                $viewerResolver,
+                $authorizer,
+                $bugNotifier,
+                $basePath,
+            ),
+            [$bugCsrf],
+        ));
+        $routes->add(new Route(
+            'bug.report.attachment',
+            [HttpMethod::Get],
+            new PathTemplate(
+                '/bugs/{reportId}/attachments/{attachmentId}',
+                ['reportId'=>'[0-9a-f]{32}','attachmentId'=>'[0-9a-f]{32}'],
+            ),
+            new BugAttachmentDownloadHandler(
+                $database,
+                $bugReports,
+                $bugIntake,
+                $storage,
+                $viewerResolver,
+                $authorizer,
+                new AttachmentDownloadResponseFactory(),
+            ),
         ));
         $routes->add(new Route(
             'faq.index',

@@ -140,7 +140,7 @@ final readonly class BugReportFormHandler implements RequestHandlerInterface
         return Response::text('', 303)
             ->withHeader(
                 'Location',
-                $this->basePath->prepend('/bugs/report?created=' . rawurlencode($receipt->submission->report->reportId->value())),
+                $this->basePath->prepend('/bugs/' . rawurlencode($receipt->submission->report->reportId->value())),
             )
             ->withHeader('Cache-Control', 'no-store');
     }

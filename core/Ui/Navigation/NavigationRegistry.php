@@ -19,6 +19,13 @@ final class NavigationRegistry
         $registry->register(new NavigationItem('members', 'Üyeler', '/members', 200));
         $registry->register(new NavigationItem('members.online', 'Çevrimiçi', '/members/online', 210));
         $registry->register(new NavigationItem('faq', 'SSS', '/faq', 250));
+        $registry->register(new NavigationItem(
+            'bugs.mine',
+            'Hata Bildirimlerim',
+            '/bugs',
+            270,
+            NavigationAudience::Member,
+        ));
         $registry->register(new NavigationItem('forum.stats', 'İstatistikler', '/stats', 300));
 
         foreach ($contributors as $contributor) {
