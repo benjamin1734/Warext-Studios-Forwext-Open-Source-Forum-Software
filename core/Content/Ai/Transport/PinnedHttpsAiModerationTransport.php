@@ -16,6 +16,27 @@ final readonly class PinnedHttpsAiModerationTransport implements AiModerationHtt
         int $timeoutMilliseconds,
         int $maxResponseBytes = 524288,
     ): AiModerationHttpResponse {
+        if ($endpoint->port !== 443
+            || preg_match('/\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\z/D', $endpoint->host) !== 1
+            || $endpoint->requestTarget === ''
+            || $endpoint->requestTarget[0] !== '/'
+            || preg_match('/[\r\n\x00]/', $endpoint->requestTarget) === 1
+            || $endpoint->addresses === []
+        ) {
+            throw new AiModerationProviderException('AI provider pinned endpoint is invalid.');
+        }
+        foreach ($endpoint->addresses as $address) {
+            if (!is_string($address)
+                || filter_var(
+                    $address,
+                    FILTER_VALIDATE_IP,
+                    FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE,
+                ) === false
+            ) {
+                throw new AiModerationProviderException('AI provider pinned endpoint contains a non-public address.');
+            }
+        }
+
         if ($timeoutMilliseconds < 250 || $timeoutMilliseconds > 15000
             || $maxResponseBytes < 1024 || $maxResponseBytes > 1048576
             || strlen($json) > 1048576
