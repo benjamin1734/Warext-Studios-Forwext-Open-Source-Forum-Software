@@ -119,7 +119,7 @@ final class SupportTicketServiceTest extends TestCase
         $ticket = $this->ticket($this->id('2'));
         $repo->tickets[$ticket->ticketId->value()] = $ticket;
         $service = $this->service($actor, [
-            $actor->value() => ['support.ticket.manage', 'support.ticket.view_all'],
+            $actor->value() => ['support.ticket.assign', 'support.ticket.view_all'],
             $assignee->value() => [],
         ], $repo);
 

@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.03 — Support Conversation and Staff Tools
+
+- Added append-only requester/staff ticket conversation, staff-only internal notes and immutable workflow history.
+- Added granular support permissions for all-ticket reply, internal notes, assignment, escalation, merge, split and canned-response administration.
+- Added first-response SLA recording, resolved-ticket reopening, canned responses and durable support notifications.
+- Added non-destructive same-requester merge with message provenance plus public-message-only ticket split.
+- Added native permission-aware ticket detail/staff-tool UX and ticket-authorized private attachment downloads.
+- Added additive migration `20260918013000_support_conversation_tools` and regression coverage.
+
 ### 10.02 — Ticket Creation UX and Form System
 
 - Added category-specific dynamic support fields with server-side validation and historical value snapshots.

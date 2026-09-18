@@ -90,6 +90,15 @@ final readonly class DatabaseSupportTicketIntakeRepository implements SupportTic
         }
     }
 
+    public function description(EntityId $ticketId): ?string
+    {
+        $value = $this->database->fetchValue(new CompiledQuery(
+            'SELECT description FROM forwext_support_ticket_intake WHERE ticket_id=:ticket_id LIMIT 1',
+            ['ticket_id'=>$ticketId->value()],
+        ));
+        return is_string($value) ? $value : null;
+    }
+
     public function saveFieldValues(EntityId $ticketId, array $values): void
     {
         foreach ($values as $fieldKey => $value) {

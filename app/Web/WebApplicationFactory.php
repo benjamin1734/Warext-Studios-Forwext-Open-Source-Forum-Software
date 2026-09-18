@@ -40,6 +40,8 @@ use Forwext\App\Web\Social\PostBookmarkHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
 use Forwext\App\Web\Search\SearchHandler;
+use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
+use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
@@ -77,6 +79,9 @@ use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Notification\DatabaseNotificationRepository;
+use Forwext\Core\Notification\NotificationDispatcher;
+use Forwext\Core\Notification\NotificationRegistry;
 use Forwext\Core\Notification\Realtime\DatabaseNotificationRealtimeReader;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeService;
 use Forwext\Core\Notification\Sound\DatabaseNotificationSoundRepository;
@@ -126,6 +131,8 @@ use Forwext\Core\Session\SessionStore;
 use Forwext\Core\Social\Interaction\DatabaseSocialInteractionRepository;
 use Forwext\Core\Social\Interaction\SocialInteractionService;
 use Forwext\Core\Storage\LocalStorageDriver;
+use Forwext\Core\Support\Conversation\DatabaseSupportConversationRepository;
+use Forwext\Core\Support\Conversation\NotificationSupportTicketNotifier;
 use Forwext\Core\Support\Intake\AccountSupportContextResolver;
 use Forwext\Core\Support\Intake\DatabaseSupportSubmissionRateLimiter;
 use Forwext\Core\Support\Intake\DatabaseSupportTicketIntakeRepository;
@@ -266,6 +273,21 @@ final readonly class WebApplicationFactory
             $attachmentQuota,
             $authorizer,
         );
+        $supportTickets = new DatabaseSupportTicketRepository($database);
+        $supportIntake = new DatabaseSupportTicketIntakeRepository($database);
+        $supportConversation = new DatabaseSupportConversationRepository($database);
+        $supportNotificationRegistry = new NotificationRegistry();
+        NotificationSupportTicketNotifier::registerDefinitions($supportNotificationRegistry);
+        $supportNotifier = new NotificationSupportTicketNotifier(new NotificationDispatcher(
+            $supportNotificationRegistry,
+            new DatabaseNotificationRepository($database),
+        ));
+        $supportContexts = new SupportContextRegistry([
+            new ThreadSupportContextResolver($threads, $authorizer),
+            new AccountSupportContextResolver($users, $authorizer),
+            new MarketplaceSupportContextResolver(),
+        ]);
+
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $supportCsrf = $this->supportCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
@@ -280,14 +302,11 @@ final readonly class WebApplicationFactory
             new PathTemplate('/support/new'),
             new SupportTicketFormHandler(
                 $database,
-                new DatabaseSupportTicketRepository($database),
-                new DatabaseSupportTicketIntakeRepository($database),
+                $supportTickets,
+                $supportIntake,
+                $supportConversation,
                 new DatabaseSupportSubmissionRateLimiter($database),
-                new SupportContextRegistry([
-                    new ThreadSupportContextResolver($threads, $authorizer),
-                    new AccountSupportContextResolver($users, $authorizer),
-                    new MarketplaceSupportContextResolver(),
-                ]),
+                $supportContexts,
                 $storage,
                 $attachmentInspector,
                 $attachmentQuota,
@@ -297,6 +316,40 @@ final readonly class WebApplicationFactory
                 $basePath,
             ),
             [$supportCsrf],
+        ));
+        $routes->add(new Route(
+            'support.ticket.detail',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/support/tickets/{ticketId}', ['ticketId'=>'[0-9a-f]{32}']),
+            new SupportTicketDetailHandler(
+                $database,
+                $supportTickets,
+                $supportIntake,
+                $supportConversation,
+                $viewerResolver,
+                $authorizer,
+                $users,
+                $supportNotifier,
+                $basePath,
+            ),
+            [$supportCsrf],
+        ));
+        $routes->add(new Route(
+            'support.ticket.attachment',
+            [HttpMethod::Get],
+            new PathTemplate(
+                '/support/tickets/{ticketId}/attachments/{attachmentId}',
+                ['ticketId'=>'[0-9a-f]{32}','attachmentId'=>'[0-9a-f]{32}'],
+            ),
+            new SupportAttachmentDownloadHandler(
+                $database,
+                $supportTickets,
+                $supportIntake,
+                $storage,
+                $viewerResolver,
+                $authorizer,
+                new AttachmentDownloadResponseFactory(),
+            ),
         ));
         $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));

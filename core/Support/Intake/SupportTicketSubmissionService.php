@@ -15,6 +15,10 @@ use Forwext\Core\Forum\Attachment\AttachmentInspector;
 use Forwext\Core\Storage\StorageDriver;
 use Forwext\Core\Storage\StoragePath;
 use Forwext\Core\Storage\StorageVisibility;
+use Forwext\Core\Support\Conversation\SupportConversationRepository;
+use Forwext\Core\Support\Conversation\SupportHistoryEventType;
+use Forwext\Core\Support\Conversation\SupportHistoryVisibility;
+use Forwext\Core\Support\Conversation\SupportTicketHistoryEntry;
 use Forwext\Core\Support\Ticket\SupportCategory;
 use Forwext\Core\Support\Ticket\SupportTicketService;
 use InvalidArgumentException;
@@ -33,6 +37,7 @@ final readonly class SupportTicketSubmissionService
         private AttachmentInspector $inspector,
         private PermissionGate $gate,
         private SupportSubmissionPolicy $policy = new SupportSubmissionPolicy(),
+        private ?SupportConversationRepository $conversation = null,
     ) {
     }
 
@@ -144,6 +149,17 @@ final readonly class SupportTicketSubmissionService
             ): SupportTicketSubmissionReceipt {
                 $ticket = $this->tickets->create($category->key, $subject, $now);
                 $this->intake->saveIntake($ticket->ticketId, $description);
+                if ($this->conversation !== null) {
+                    $this->conversation->appendHistory(new SupportTicketHistoryEntry(
+                        SupportTicketHistoryEntry::generateId(),
+                        $ticket->ticketId,
+                        $this->gate->actorId(),
+                        SupportHistoryEventType::Created,
+                        SupportHistoryVisibility::Public,
+                        ['status'=>$ticket->status->value],
+                        $now,
+                    ));
+                }
                 $this->intake->saveFieldValues($ticket->ticketId, $values);
                 if ($context !== null) {
                     $this->intake->saveContext($ticket->ticketId, $context);

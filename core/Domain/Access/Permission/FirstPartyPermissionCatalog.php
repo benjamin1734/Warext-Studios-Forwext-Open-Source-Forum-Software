@@ -47,6 +47,13 @@ final class FirstPartyPermissionCatalog
             self::flag('support.ticket.reply_own', 'Reply to own support tickets.'),
             self::flag('support.ticket.view_all', 'View support tickets from all users.'),
             self::flag('support.ticket.manage', 'Manage support tickets.'),
+            self::flag('support.ticket.reply_all', 'Reply publicly to support tickets from all users.'),
+            self::flag('support.ticket.internal_note', 'Add staff-only internal notes to support tickets.'),
+            self::flag('support.ticket.assign', 'Assign or unassign support tickets.'),
+            self::flag('support.ticket.escalate', 'Escalate active support tickets.'),
+            self::flag('support.ticket.merge', 'Merge eligible support tickets from the same requester.'),
+            self::flag('support.ticket.split', 'Split public support messages into new tickets.'),
+            self::flag('support.canned_response.manage', 'Manage reusable support canned responses.'),
             self::flag('faq.view', 'View FAQ content.'),
             self::flag('faq.manage', 'Manage FAQ categories, questions and answers.'),
 

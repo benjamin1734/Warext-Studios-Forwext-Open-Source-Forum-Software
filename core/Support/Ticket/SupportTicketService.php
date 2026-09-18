@@ -19,6 +19,7 @@ final readonly class SupportTicketService
     public const VIEW_OWN_PERMISSION = 'support.ticket.view_own';
     public const VIEW_ALL_PERMISSION = 'support.ticket.view_all';
     public const MANAGE_PERMISSION = 'support.ticket.manage';
+    public const ASSIGN_PERMISSION = 'support.ticket.assign';
 
     public function __construct(
         private TransactionalQueryExecutor $database,
@@ -119,7 +120,7 @@ final readonly class SupportTicketService
         ?EntityId $assignedUserId,
         ?DateTimeImmutable $now = null,
     ): SupportTicket {
-        $this->gate->require(PermissionKey::fromString(self::MANAGE_PERMISSION));
+        $this->gate->require(PermissionKey::fromString(self::ASSIGN_PERMISSION));
         if ($assignedUserId !== null
             && !$this->authorizer->allows(
                 $assignedUserId,
@@ -129,7 +130,7 @@ final readonly class SupportTicketService
             throw new InvalidArgumentException('Support assignee does not have support ticket staff access.');
         }
 
-        return $this->database->transaction(function () use ($ticketId, $assignedUserId, $now): SupportTicket {
+        return $this->atomic(function () use ($ticketId, $assignedUserId, $now): SupportTicket {
             $current = $this->required($ticketId);
             if (!$current->status->isActive()) {
                 throw new SupportTicketOperationException('Resolved/closed support tickets cannot be reassigned.');
@@ -154,7 +155,7 @@ final readonly class SupportTicketService
     ): SupportTicket {
         $this->gate->require(PermissionKey::fromString(self::MANAGE_PERMISSION));
 
-        return $this->database->transaction(function () use ($ticketId, $priority, $now): SupportTicket {
+        return $this->atomic(function () use ($ticketId, $priority, $now): SupportTicket {
             $current = $this->required($ticketId);
             if (!$current->status->isActive()) {
                 throw new SupportTicketOperationException('Resolved/closed support tickets cannot change priority.');
@@ -179,7 +180,7 @@ final readonly class SupportTicketService
     ): SupportTicket {
         $this->gate->require(PermissionKey::fromString(self::MANAGE_PERMISSION));
 
-        return $this->database->transaction(function () use ($ticketId, $status, $now): SupportTicket {
+        return $this->atomic(function () use ($ticketId, $status, $now): SupportTicket {
             $current = $this->required($ticketId);
             if ($current->status === $status) {
                 return $current;
@@ -220,7 +221,7 @@ final readonly class SupportTicketService
     ): SupportTicket {
         $this->gate->require(PermissionKey::fromString(self::MANAGE_PERMISSION));
 
-        return $this->database->transaction(function () use ($ticketId, $now): SupportTicket {
+        return $this->atomic(function () use ($ticketId, $now): SupportTicket {
             $current = $this->required($ticketId);
             if ($current->sla->firstRespondedAt !== null) {
                 return $current;
@@ -237,6 +238,13 @@ final readonly class SupportTicketService
     {
         return $this->tickets->find($ticketId)
             ?? throw new SupportTicketNotFoundException('Support ticket was not found.');
+    }
+
+    private function atomic(\Closure $callback): mixed
+    {
+        return $this->database->inTransaction()
+            ? $callback()
+            : $this->database->transaction(static fn () => $callback());
     }
 
     private static function dueAt(DateTimeImmutable $createdAt, ?int $minutes): ?DateTimeImmutable

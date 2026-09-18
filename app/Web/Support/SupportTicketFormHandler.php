@@ -23,6 +23,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Upload\UploadedFile;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Storage\StorageDriver;
+use Forwext\Core\Support\Conversation\SupportConversationRepository;
 use Forwext\Core\Support\Intake\SupportContextRegistry;
 use Forwext\Core\Support\Intake\SupportContextType;
 use Forwext\Core\Support\Intake\SupportContextUnavailableException;
@@ -44,6 +45,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
         private TransactionalQueryExecutor $database,
         private SupportTicketRepository $tickets,
         private SupportTicketIntakeRepository $intake,
+        private SupportConversationRepository $conversation,
         private SupportSubmissionRateLimiter $rateLimiter,
         private SupportContextRegistry $contexts,
         private StorageDriver $storage,
@@ -81,6 +83,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
             $this->inspector,
             $gate,
             $this->policy,
+            $this->conversation,
         );
 
         try {
@@ -199,8 +202,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
         return Response::text('', 303)
             ->withHeader(
                 'Location',
-                $this->basePath->prepend('/support/new?created=' . rawurlencode($receipt->ticket->ticketId->value())
-                    . '&category=' . rawurlencode($receipt->ticket->categoryKey)),
+                $this->basePath->prepend('/support/tickets/' . rawurlencode($receipt->ticket->ticketId->value())),
             )
             ->withHeader('Cache-Control', 'no-store');
     }

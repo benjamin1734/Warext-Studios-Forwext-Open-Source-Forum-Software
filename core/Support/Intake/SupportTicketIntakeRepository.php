@@ -14,6 +14,7 @@ interface SupportTicketIntakeRepository
     public function saveFieldDefinition(SupportFieldDefinition $definition): void;
 
     public function saveIntake(EntityId $ticketId, string $description): void;
+    public function description(EntityId $ticketId): ?string;
 
     /** @param array<string,SupportFieldValue> $values */
     public function saveFieldValues(EntityId $ticketId, array $values): void;

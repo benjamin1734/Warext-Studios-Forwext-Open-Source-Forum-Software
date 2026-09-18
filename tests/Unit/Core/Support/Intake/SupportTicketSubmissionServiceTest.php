@@ -298,6 +298,7 @@ final class IntakeMemoryRepository implements SupportTicketIntakeRepository
     public function activeFields(string $categoryKey): array { return $this->definitions; }
     public function saveFieldDefinition(SupportFieldDefinition $definition): void { $this->definitions[] = $definition; }
     public function saveIntake(EntityId $ticketId, string $description): void { $this->description = $description; }
+    public function description(EntityId $ticketId): ?string { return $this->description; }
     public function saveFieldValues(EntityId $ticketId, array $values): void { $this->values = $values; }
     public function saveContext(EntityId $ticketId, SupportContextLink $context): void { $this->linkedContext = $context; }
     public function saveAttachment(SupportAttachmentRecord $attachment): void { $this->savedAttachments[] = $attachment; }
