@@ -50,6 +50,15 @@ jobs:
           FORWEXT_TEST_DB_PASSWORD: root
         run: php tools/quality/smoke-core-migrations.php
 
+      - name: Run post-install web bootstrap smoke test
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3306
+          FORWEXT_TEST_DB_NAME: forwext_ci
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+        run: php tools/quality/smoke-post-install-web.php
+
   mariadb-migrations:
     name: MariaDB 10.11 migrations
     runs-on: ubuntu-latest
@@ -90,3 +99,12 @@ jobs:
           FORWEXT_TEST_DB_USER: root
           FORWEXT_TEST_DB_PASSWORD: root
         run: php tools/quality/smoke-core-migrations.php
+
+      - name: Run post-install web bootstrap smoke test
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3307
+          FORWEXT_TEST_DB_NAME: forwext_ci
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+        run: php tools/quality/smoke-post-install-web.php
