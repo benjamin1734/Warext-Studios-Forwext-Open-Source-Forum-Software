@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 09
-LAST_COMPLETED_SUBSTEP = 10.01
-CURRENT_STEP = 10.02
-LAST_COMMIT = 452ec301f160cb1e548763763978af521dbe01a8
+LAST_COMPLETED_SUBSTEP = 10.02
+CURRENT_STEP = 10.03
+LAST_COMMIT = 174a1a76d3ad0aec1cea5e3cc83196c7f7385f59
 BLOCKERS = none
-NEXT_STEP = 10.02 - Talep açma UX ve form sistemi
+NEXT_STEP = 10.03 - Talep konuşması ve yetkili araçları
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 10.02 - Talep açma UX ve form sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01`.
-- Current sub-step: `10.02 — Talep açma UX ve form sistemi`.
-- Remaining roadmap work after 10.01: **74 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.02`.
+- Current sub-step: `10.03 — Talep konuşması ve yetkili araçları`.
+- Remaining roadmap work after 10.02: **73 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 10.02
+
+- Added category-specific dynamic support fields with backend-controlled text, textarea, select and checkbox validation.
+- Rejects unknown/manipulated field keys and invalid scalar types instead of trusting browser-rendered form controls.
+- Added one-to-one ticket intake descriptions plus typed historical dynamic-field value snapshots.
+- Added typed optional context links for thread, account and marketplace-listing references.
+- Thread context re-checks real node-scoped `forum.view`; account context is self-only unless the actor has `support.ticket.view_all`.
+- Marketplace context is intentionally opaque until its later domain exists and does not expose fabricated marketplace data.
+- Added support-specific private attachment metadata while reusing the hardened verified-upload reader, signature/MIME inspection, image metadata stripping, filename normalization and shared private storage driver.
+- Added storage compensation when DB persistence fails after an attachment object is written.
+- Added fixed-window database anti-spam limits: 5 tickets/user/hour, 20/user/day and max 2 normalized duplicate payloads per 15 minutes; only SHA-256 fingerprints are stored.
+- Added authenticated CSRF-protected native `GET|POST /support/new` UX with progressive disclosure and multipart attachment handling.
+- Added additive idempotent migration `20260918012000_support_ticket_intake` with dynamic fields, intake, values, context links, attachments and rate-limit buckets.
+- Updated ticket creation to participate safely in an existing transaction so ticket + intake + values + context + attachment metadata can commit atomically.
+- Added regression coverage for field manipulation, unauthorized account context, duplicate rate limits, attachment persistence and escaped HTML.
+- Feature commit: `174a1a76d3ad0aec1cea5e3cc83196c7f7385f59`.
+- GitHub Actions build run `35360039776`: success.
+- MySQL migration smoke run `35360039857`: success.
+- Conversation, internal notes, canned responses, escalation, merge/split and status history remain scoped to 10.03.
 
 ## Completed in 10.01
 
