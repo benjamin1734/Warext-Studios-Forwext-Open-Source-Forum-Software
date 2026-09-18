@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.01 — Common Content Pipeline
+
+- Added the canonical `validation → spam → spellcheck → AI moderation → moderation policy → persist → notify → index` contract.
+- Added a fail-fast pipeline registry requiring exactly one processor for every pre-persist stage.
+- Added strict UTF-8/control-character/length validation and adapted the existing `AbuseEngine` into the spam stage.
+- Added review propagation plus after-persist abuse finalization using the real thread/post target id.
+- Added explicit pass-through spellcheck and AI moderation extension points reserved for roadmap 12.04 and 12.02.
+- Added transactional persist/notify/index orchestration so index queue failures roll back the same content write.
+- Added durable search-change enqueue through the existing search lifecycle queue.
+- Integrated the pipeline with thread creation, first posts, replies and post edits.
+- Added regression coverage for canonical stage order, rollback behavior, registry completeness, review behavior and search enqueue.
+- No schema or permission migration is required for 12.01.
+
 ### 11.05 — Staff Bug Dashboard and Duplicate Workflow
 
 - Added permission-gated `/bugs/staff` queue with title/summary search and status, severity, category and assignee filters.
