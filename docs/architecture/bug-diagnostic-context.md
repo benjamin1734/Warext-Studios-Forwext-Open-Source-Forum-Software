@@ -119,9 +119,11 @@ The only foreign keys are:
 - bug report → cascade on report deletion;
 - actor user → set NULL on account deletion.
 
-## Roadmap boundary
+## 11.03 integration
 
-11.02 does not add the bug-report page/modal, screenshot/file upload, reproduction steps, expected/actual fields, or submission UX. Those belong to 11.03.
+The 11.03 bug-report form now consumes this collector through `BugReportSubmissionService` rather than accepting client-supplied diagnostic fields as authoritative context.
+
+The page-accessible form adds reproduction steps, expected/actual results, an optional query-free source-page path hint and hardened private screenshot/file attachments. The source-page hint is informational; matched route, actor, route entities, theme/module, client summary and request id continue to come from the server-side 11.02 collector.
 
 Reporter-facing history/detail/additional-information and notification tracking remain 11.04.
 
