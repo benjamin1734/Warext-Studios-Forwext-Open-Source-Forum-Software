@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 11.05
-CURRENT_STEP = 12.01
-LAST_COMMIT = f23cafca1bd05a3662a90992cade35c2383f9838
+LAST_COMPLETED_SUBSTEP = 12.01
+CURRENT_STEP = 12.02
+LAST_COMMIT = c9379444d854798ffc104e66a0dade0cf90ef217
 BLOCKERS = none
-NEXT_STEP = 12.01 - Ortak content pipeline
+NEXT_STEP = 12.02 - AI içerik denetimi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 12.01 - Ortak content pipeline
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`.
-- Current sub-step: `12.01 — Ortak content pipeline`.
-- Remaining roadmap work after 11.05: **64 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01`.
+- Current sub-step: `12.02 — AI içerik denetimi`.
+- Remaining roadmap work after 12.01: **63 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.01
+
+- Added the canonical `validation → spam → spellcheck → AI moderation → moderation policy → persist → notify → index` content pipeline contract.
+- Added fail-fast stage registration so every pre-persist stage is present exactly once and persist/notify/index remain engine-owned.
+- Added strict default UTF-8, control-character, empty-content and byte-limit validation.
+- Adapted the existing first-party `AbuseEngine` into the spam stage with reject-before-persist and review propagation.
+- Added after-persist abuse finalization so review events receive the real `forum.thread` / `forum.post` target id.
+- Added explicit spellcheck and AI moderation pass-through extension points without implementing 12.04/12.02 behavior early.
+- Added transactionally ordered persist → notify → index execution, with search-index change enqueue in the same transaction.
+- Added `ForumContentPipelineFactory` backed by the existing durable search lifecycle queue.
+- Integrated the pipeline with thread creation, first-post creation, replies and post edits while preserving existing permission/forum-state checks.
+- Added regression coverage for canonical stage order, registry completeness, pre-persist validation rejection, transaction rollback, review behavior and search enqueue.
+- No database migration or new permission key was required for 12.01.
+- Feature commit: `c9379444d854798ffc104e66a0dade0cf90ef217`.
+- GitHub Actions build run `35385211861`: success; strict-types and PHPUnit passed on PHP 8.4 and PHP 8.5, production dependency minimum was verified and the cPanel full package was built successfully.
+- MySQL migration smoke run `35385211863`: success.
+- Main step 12 remains active. Next: `12.02 — AI içerik denetimi` for provider abstraction, risk score, allow/flag/queue/reject, timeout fallback and human override.
 
 ## Completed in 11.05
 
