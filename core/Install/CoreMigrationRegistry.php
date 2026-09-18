@@ -18,6 +18,7 @@ use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
 use Forwext\Database\Migrations\Core\CreateSupportTicketDomain;
+use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
@@ -90,6 +91,7 @@ final class CoreMigrationRegistry
             new CreateCoreAuditStream(),
             new CreateIndependentModerationOversight(),
             new CreateSupportTicketDomain(),
+            new CreateSupportTicketIntake(),
         ];
     }
 }

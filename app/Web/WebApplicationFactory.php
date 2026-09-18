@@ -40,6 +40,7 @@ use Forwext\App\Web\Social\PostBookmarkHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
 use Forwext\App\Web\Search\SearchHandler;
+use Forwext\App\Web\Support\SupportTicketFormHandler;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Config\ConfigLoader;
@@ -125,6 +126,13 @@ use Forwext\Core\Session\SessionStore;
 use Forwext\Core\Social\Interaction\DatabaseSocialInteractionRepository;
 use Forwext\Core\Social\Interaction\SocialInteractionService;
 use Forwext\Core\Storage\LocalStorageDriver;
+use Forwext\Core\Support\Intake\AccountSupportContextResolver;
+use Forwext\Core\Support\Intake\DatabaseSupportSubmissionRateLimiter;
+use Forwext\Core\Support\Intake\DatabaseSupportTicketIntakeRepository;
+use Forwext\Core\Support\Intake\MarketplaceSupportContextResolver;
+use Forwext\Core\Support\Intake\SupportContextRegistry;
+use Forwext\Core\Support\Intake\ThreadSupportContextResolver;
+use Forwext\Core\Support\Ticket\DatabaseSupportTicketRepository;
 use RuntimeException;
 
 final readonly class WebApplicationFactory
@@ -246,24 +254,50 @@ final readonly class WebApplicationFactory
         $websocketPath = $this->realtimeWebsocketPath($config);
 
         $attachmentQuota = new AttachmentQuotaPolicy();
+        $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
             $posts,
             $threads,
             $nodes,
             $storage,
-            new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota),
+            $attachmentInspector,
             new GdAttachmentThumbnailGenerator($attachmentQuota),
             $attachmentQuota,
             $authorizer,
         );
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
+        $supportCsrf = $this->supportCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
+        $routes->add(new Route(
+            'support.ticket.new',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/support/new'),
+            new SupportTicketFormHandler(
+                $database,
+                new DatabaseSupportTicketRepository($database),
+                new DatabaseSupportTicketIntakeRepository($database),
+                new DatabaseSupportSubmissionRateLimiter($database),
+                new SupportContextRegistry([
+                    new ThreadSupportContextResolver($threads, $authorizer),
+                    new AccountSupportContextResolver($users, $authorizer),
+                    new MarketplaceSupportContextResolver(),
+                ]),
+                $storage,
+                $attachmentInspector,
+                $attachmentQuota,
+                $viewerResolver,
+                $authorizer,
+                new VerifiedUploadedAttachmentReader(),
+                $basePath,
+            ),
+            [$supportCsrf],
+        ));
         $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));
         $routes->add(new Route('editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'), new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions)));
@@ -469,6 +503,11 @@ final readonly class WebApplicationFactory
     private function attachmentCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'attachment', 'forwext.csrf.attachment.v1');
+    }
+
+    private function supportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'support-ticket', 'forwext.csrf.support-ticket.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

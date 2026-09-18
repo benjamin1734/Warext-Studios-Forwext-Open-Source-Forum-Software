@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.02 — Ticket Creation UX and Form System
+
+- Added category-specific dynamic support fields with server-side validation and historical value snapshots.
+- Added required ticket description, typed thread/account/marketplace context links and private support attachments.
+- Reused hardened upload inspection/private storage primitives without weakening forum/post attachment authorization.
+- Added per-user hourly/daily and duplicate-payload database rate limits using privacy-safe fingerprints.
+- Added native CSRF-protected `/support/new` GET/POST creation UX.
+- Added additive migration `20260918012000_support_ticket_intake` and regression coverage for manipulation, rate-limit, attachment and XSS paths.
+
 ### 10.01 — Internal Support/Ticket Domain
 
 - Added typed support category, priority, lifecycle and SLA metadata domain models.

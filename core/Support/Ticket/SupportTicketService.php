@@ -76,9 +76,13 @@ final readonly class SupportTicketService
             1,
         );
 
-        $this->database->transaction(function () use ($ticket): void {
+        if ($this->database->inTransaction()) {
             $this->tickets->create($ticket);
-        });
+        } else {
+            $this->database->transaction(function () use ($ticket): void {
+                $this->tickets->create($ticket);
+            });
+        }
         return $ticket;
     }
 
