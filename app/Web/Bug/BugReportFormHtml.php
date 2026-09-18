@@ -45,6 +45,7 @@ final class BugReportFormHtml
             : '<code>' . self::e($sourcePath) . '</code>';
 
         $body = '<section class="card settings"><h1>Hata bildir</h1>'
+            . '<p><a href="' . self::e($basePath->prepend('/bugs/my')) . '">Hata Bildirimlerim</a></p>'
             . '<p class="muted">Sorunu mümkün olduğunca tekrar üretilebilir şekilde anlat. Teknik bağlam güvenli biçimde ayrıca toplanır.</p>'
             . $notice
             . '<form method="post" enctype="multipart/form-data" action="' . self::e($basePath->prepend('/bugs/report'))
