@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 10
-LAST_COMPLETED_SUBSTEP = 11.02
-CURRENT_STEP = 11.03
-LAST_COMMIT = a6c3ba384187cd6258aeb77020dae1029d8c1694
+LAST_COMPLETED_SUBSTEP = 11.03
+CURRENT_STEP = 11.04
+LAST_COMMIT = b1a064a24eabdad35dde42958f08dfb8f3c50664
 BLOCKERS = none
-NEXT_STEP = 11.03 - Hata bildirim formu ve attachment
+NEXT_STEP = 11.04 - Hata Bildirimlerim sayfası
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 11.03 - Hata bildirim formu ve attachment
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`; main step `11` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.02`.
-- Current sub-step: `11.03 — Hata bildirim formu ve attachment`.
-- Remaining roadmap work after 11.02: **67 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.03`.
+- Current sub-step: `11.04 — Hata Bildirimlerim sayfası`.
+- Remaining roadmap work after 11.03: **66 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 11.03
+
+- Added authenticated CSRF-protected native `GET|POST /bugs/report` submission UX.
+- Added reproduction steps, expected result and actual result fields with backend length validation.
+- Added a global authenticated **Hata bildir** action to the shared native page shell so bug reporting is reachable from every first-party page using that shell.
+- Added a first-party client enhancer that propagates only `window.location.pathname`; query strings/fragments are never copied into bug-report source context.
+- Kept the 11.02 server-derived diagnostic record authoritative and stored the browser/user supplied source path separately as convenience metadata.
+- Added screenshot/file upload using verified PHP upload sources, signature-based attachment inspection, image safety checks/metadata sanitation and private storage.
+- Added a maximum of five attachments per report under the shared 25 MiB per-file policy.
+- Added storage compensation so private objects already written during a failed SQL submission are removed.
+- Added additive idempotent migration `20260918023000_bug_report_form_intake` for reproduction/expected/actual/source intake plus attachment metadata.
+- Added regression coverage for atomic workflow+diagnostic+intake+attachment persistence, source-path privacy, form escaping and global authenticated bug-report access.
+- Feature commit: `b1a064a24eabdad35dde42958f08dfb8f3c50664`.
+- GitHub Actions build run `35376839885`: success.
+- MySQL migration smoke run `35376839901`: success.
+- Reporter-facing list/detail/responses/additional-info/notification tracking remains scoped to 11.04; duplicate/staff dashboard/search/analytics/export/audit remains 11.05.
 
 ## Completed in 11.02
 
