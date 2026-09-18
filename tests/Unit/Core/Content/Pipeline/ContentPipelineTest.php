@@ -116,7 +116,7 @@ final class ContentPipelineTest extends TestCase
             self::assertSame('index failed', $exception->getMessage());
         }
 
-        self::assertSame('tx.rollback', $trace->events[array_key_last($trace->events)]);
+        self::assertSame('tx.rollback', $trace->events[count($trace->events) - 1]);
         self::assertFalse($database->inTransaction());
     }
 
