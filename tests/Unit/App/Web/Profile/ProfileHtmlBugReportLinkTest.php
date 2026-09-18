@@ -17,6 +17,9 @@ final class ProfileHtmlBugReportLinkTest extends TestCase
         self::assertStringContainsString('data-bug-report-link',$html);
         self::assertStringContainsString('/community/bugs/report',$html);
         self::assertStringContainsString('/community/assets/bug-report-link.js',$html);
+        self::assertStringContainsString('aria-label="Hata bildir"',$html);
+        self::assertStringContainsString('<svg',$html);
+        self::assertStringNotContainsString('>Hata bildir</a>',$html);
     }
 
     public function testAnonymousPagesDoNotExposeBugReportAction(): void
