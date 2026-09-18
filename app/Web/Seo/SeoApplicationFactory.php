@@ -23,7 +23,8 @@ use Forwext\Core\Seo\Discovery\DatabasePublicProfileDiscoverySource;
 use Forwext\Core\Seo\Discovery\DatabasePublicProfileSeoReader;
 use Forwext\Core\Seo\Discovery\PublicDiscoveryService;
 use Forwext\Core\Seo\Discovery\StaticPublicDiscoverySource;
-use Forwext\Core\Seo\SeoContext;\nuse Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
+use Forwext\Core\Seo\SeoContext;
+use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use RuntimeException;
 
 final class SeoApplicationFactory
