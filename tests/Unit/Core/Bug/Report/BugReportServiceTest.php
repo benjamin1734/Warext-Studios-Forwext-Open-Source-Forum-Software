@@ -12,7 +12,9 @@ use Forwext\Core\Bug\Report\BugHistoryVisibility;
 use Forwext\Core\Bug\Report\BugReport;
 use Forwext\Core\Bug\Report\BugReportCategory;
 use Forwext\Core\Bug\Report\BugReportHistoryEntry;
+use Forwext\Core\Bug\Report\BugReportNotifier;
 use Forwext\Core\Bug\Report\BugReportOperationException;
+use Forwext\Core\Bug\Report\NullBugReportNotifier;
 use Forwext\Core\Bug\Report\BugReportRepository;
 use Forwext\Core\Bug\Report\BugReportService;
 use Forwext\Core\Bug\Report\BugReportSeverity;
@@ -186,6 +188,74 @@ final class BugReportServiceTest extends TestCase
         $service->changeCategory($report->reportId, 'disabled');
     }
 
+    public function testReporterAdditionalInfoIsPublicTrackedAndNotified(): void
+    {
+        $reporter = $this->id('2');
+        $repo = new BugMemoryRepository();
+        $report = $this->report($reporter);
+        $repo->reports[$report->reportId->value()] = $report;
+        $notifier = new RecordingBugReportNotifier();
+        $service = $this->service($reporter, [
+            $reporter->value()=>['bug.report.view_own'],
+        ], $repo, $notifier);
+
+        $entry = $service->addReporterInfo(
+            $report->reportId,
+            '  New reproduction detail.  ',
+            $this->time('2026-09-18 19:20:00.000000'),
+        );
+
+        self::assertSame(BugHistoryEventType::ReporterInfoAdded, $entry->eventType);
+        self::assertSame(BugHistoryVisibility::Public, $entry->visibility);
+        self::assertSame('New reproduction detail.', $entry->payload['body']);
+        self::assertSame(1, $notifier->reporterInfoCount);
+        self::assertCount(1, $service->history($report->reportId));
+    }
+
+    public function testStaffResponseIsPublicAndReporterNotificationHookRuns(): void
+    {
+        $staff = $this->id('1');
+        $reporter = $this->id('2');
+        $repo = new BugMemoryRepository();
+        $report = $this->report($reporter);
+        $repo->reports[$report->reportId->value()] = $report;
+        $notifier = new RecordingBugReportNotifier();
+        $service = $this->service($staff, [
+            $staff->value()=>['bug.report.view_all','bug.report.manage'],
+            $reporter->value()=>['bug.report.view_own'],
+        ], $repo, $notifier);
+
+        $entry = $service->staffRespond(
+            $report->reportId,
+            'Please test the fix.',
+            $this->time('2026-09-18 19:25:00.000000'),
+        );
+
+        self::assertSame(BugHistoryEventType::StaffResponse, $entry->eventType);
+        self::assertSame('Please test the fix.', $entry->payload['body']);
+        self::assertSame(1, $notifier->staffResponseCount);
+    }
+
+    public function testTerminalReportRejectsReporterAdditionalInfo(): void
+    {
+        $reporter = $this->id('2');
+        $repo = new BugMemoryRepository();
+        $report = $this->report($reporter);
+        $repo->reports[$report->reportId->value()] = $report;
+        $staff = $this->id('1');
+        $staffService = $this->service($staff, [
+            $staff->value()=>['bug.report.view_all','bug.report.manage'],
+        ], $repo);
+        $staffService->changeStatus($report->reportId, BugReportStatus::Resolved);
+
+        $reporterService = $this->service($reporter, [
+            $reporter->value()=>['bug.report.view_own'],
+        ], $repo);
+
+        $this->expectException(BugReportOperationException::class);
+        $reporterService->addReporterInfo($report->reportId, 'Late detail');
+    }
+
     public function testDuplicateIsTerminalAndCanOnlyReopenToNew(): void
     {
         self::assertTrue(BugReportStatus::Duplicate->isTerminal());
@@ -196,7 +266,12 @@ final class BugReportServiceTest extends TestCase
     /**
      * @param array<string,list<string>> $permissions
      */
-    private function service(EntityId $actor, array $permissions, BugMemoryRepository $repo): BugReportService
+    private function service(
+        EntityId $actor,
+        array $permissions,
+        BugMemoryRepository $repo,
+        ?BugReportNotifier $notifier = null,
+    ): BugReportService
     {
         $authorizer = new PermissionAuthorizer(
             new PermissionEngine(new BugPermissionRepository($permissions)),
@@ -208,6 +283,7 @@ final class BugReportServiceTest extends TestCase
             $repo,
             new PermissionGate($authorizer, $actor),
             $authorizer,
+            $notifier ?? new NullBugReportNotifier(),
         );
     }
 
@@ -465,5 +541,28 @@ final readonly class BugPermissionRepository implements PermissionRuleRepository
             $assignment->userId(),
             PermissionEffect::Allow,
         )];
+    }
+}
+
+
+final class RecordingBugReportNotifier implements BugReportNotifier
+{
+    public int $staffResponseCount = 0;
+    public int $statusCount = 0;
+    public int $reporterInfoCount = 0;
+
+    public function staffResponse(BugReport $report, BugReportHistoryEntry $entry): void
+    {
+        $this->staffResponseCount++;
+    }
+
+    public function statusChanged(BugReport $report): void
+    {
+        $this->statusCount++;
+    }
+
+    public function reporterInfoAdded(BugReport $report, BugReportHistoryEntry $entry): void
+    {
+        $this->reporterInfoCount++;
     }
 }
