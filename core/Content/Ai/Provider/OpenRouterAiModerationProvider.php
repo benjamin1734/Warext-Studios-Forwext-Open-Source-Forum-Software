@@ -33,7 +33,12 @@ final class OpenRouterAiModerationProvider extends AbstractPromptAiModerationPro
 
     protected function responseText(array $response): string
     {
-        $text = $response['choices'][0]['message']['content'] ?? null;
+        $choices = $response['choices'] ?? null;
+        if (!is_array($choices) || !array_is_list($choices) || !isset($choices[0]) || !is_array($choices[0])) {
+            throw new AiModerationProviderException('OpenRouter moderation response choices are invalid.');
+        }
+        $message = $choices[0]['message'] ?? null;
+        $text = is_array($message) ? ($message['content'] ?? null) : null;
         if (!is_string($text) || trim($text) === '') {
             throw new AiModerationProviderException('OpenRouter moderation response is missing classifier JSON.');
         }
