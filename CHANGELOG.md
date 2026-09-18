@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### Post-install web bootstrap hotfix — 0.0.7.06-dev
+
+- Fixed the production route contract for `DisciplineAccountHandler`, which caused every post-install web bootstrap to fail with a `TypeError` and return HTTP 500.
+- Added a real post-install web smoke test that runs `InstallationService`, loads the installed version, builds the production router, renders `/`, applies SEO/CSP decoration and requires HTTP 200.
+- The post-install smoke now runs against both MySQL 8.4 and MariaDB 10.11, preventing “installer succeeds but site immediately fails” releases.
+- Added privacy-safe runtime failure correlation: bootstrap exceptions show a short reference and write a redacted diagnostic chain to `storage/logs/runtime.log`.
+- Installed-version loading is now covered by the runtime failure boundary so malformed runtime state receives the same correlated diagnostics.
+
 ### Installer / cPanel compatibility hotfix — 0.0.7.05-dev
 
 - Preserved cPanel-managed PHP handlers by keeping public `.htaccess` out of generated release payloads and merging Forwext routing rules through the installer instead of overwriting the file.
