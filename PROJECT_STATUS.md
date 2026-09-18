@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 09
-LAST_COMPLETED_SUBSTEP = 10.02
-CURRENT_STEP = 10.03
-LAST_COMMIT = 174a1a76d3ad0aec1cea5e3cc83196c7f7385f59
+LAST_COMPLETED_SUBSTEP = 10.03
+CURRENT_STEP = 10.04
+LAST_COMMIT = 1ca50f71b63da3d187aeb51089595fbbe022f3d9
 BLOCKERS = none
-NEXT_STEP = 10.03 - Talep konuşması ve yetkili araçları
+NEXT_STEP = 10.04 - SSS sistemi
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 10.03 - Talep konuşması ve yetkili araçları
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`; main step `10` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.02`.
-- Current sub-step: `10.03 — Talep konuşması ve yetkili araçları`.
-- Remaining roadmap work after 10.02: **73 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.03`.
+- Current sub-step: `10.04 — SSS sistemi`.
+- Remaining roadmap work after 10.03: **72 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 10.03
+
+- Added append-only requester/staff public ticket conversation and staff-only internal notes.
+- Added granular support permissions for staff replies, internal notes, assignment, escalation, merge, split and canned-response administration while preserving the shared permission engine as authority.
+- Added reusable canned responses with key/title snapshots on historical messages.
+- Added first-response SLA recording on the first real staff public reply and automatic resolved-to-open reopening when conversation resumes.
+- Added append-only public/staff workflow history for ticket creation, status, assignment, escalation, merge, split and first response.
+- Added monotonic escalation levels 1-5 with a database-level concurrent downgrade guard.
+- Added non-destructive same-requester merge: source closes, source conversation is preserved, messages are copied to target with provenance and partial/truncated merge is refused at the bounded safety ceiling.
+- Added public-message-only split; internal notes cannot leak into newly requester-visible tickets.
+- Added durable first-party notifications for staff replies, requester replies to current assignee, assignment, status changes and split-created tickets.
+- Added native CSRF-protected `/support/tickets/{ticketId}` conversation/staff-tools surface with server-side username assignment resolution.
+- Added ticket-authorized private support attachment downloads with persisted byte-size/SHA-256 integrity verification.
+- Added additive idempotent migration `20260918013000_support_conversation_tools`, seven granular support permissions and built-in template defaults.
+- Feature commit: `1ca50f71b63da3d187aeb51089595fbbe022f3d9`.
+- GitHub Actions build run `35362580409`: success.
+- MySQL migration smoke run `35362580529`: success.
+- FAQ content/recommendation remains 10.04-10.05; My Tickets/staff dashboard/SLA reporting/support audit remains 10.06.
 
 ## Completed in 10.02
 
