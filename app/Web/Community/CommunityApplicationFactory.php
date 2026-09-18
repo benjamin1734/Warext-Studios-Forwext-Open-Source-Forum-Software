@@ -27,7 +27,7 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Presence\DatabasePresenceRepository;
 use Forwext\Core\Presence\PresenceService;
-use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Routing\BasePath;\nuse Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
@@ -57,7 +57,7 @@ final class CommunityApplicationFactory
             $this->projectRoot . '/config/defaults.php',
             $this->projectRoot . '/config/generated.php',
         );
-        $this->canonicalUrl = new CanonicalUrl($this->config->requireString('routing.canonical_url'));
+        $this->canonicalUrl = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(\n            $this->config->requireString('routing.canonical_url'),\n        ));
         $this->basePath = $this->canonicalUrl->basePath();
     }
 
