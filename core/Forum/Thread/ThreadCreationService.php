@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Forwext\Core\Forum\Thread;
 
 use DateTimeImmutable;
+use Forwext\Core\Content\Pipeline\AbusePipelineAttributes;
+use Forwext\Core\Content\Pipeline\ContentPipeline;
+use Forwext\Core\Content\Pipeline\ContentPipelineContext;
+use Forwext\Core\Content\Pipeline\ContentPipelinePersisted;
+use Forwext\Core\Content\Pipeline\ContentPipelineRejectedException;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Forum\Node\ForumNodeAuthorization;
@@ -24,6 +29,7 @@ final readonly class ThreadCreationService
         private ThreadTypeRegistry $types,
         private PermissionGate $gate,
         private ?AbuseEngine $abuse = null,
+        private ?ContentPipeline $pipeline = null,
     ) {
     }
 
@@ -49,6 +55,49 @@ final readonly class ThreadCreationService
         }
 
         $type = $this->types->require($typeKey);
+        if ($this->pipeline !== null) {
+            $attributes = AbusePipelineAttributes::fromRequestContext(
+                $abuseContext,
+                \Forwext\Core\Moderation\Abuse\AbuseEventType::Thread,
+                $this->gate->actorId(),
+            );
+            try {
+                $created = $this->pipeline->execute(
+                    new ContentPipelineContext(
+                        $this->gate->actorId(),
+                        'forum.thread',
+                        $title->value(),
+                        200,
+                        $settings->requireThreadApproval(),
+                        $attributes,
+                    ),
+                    $now,
+                    function (ContentPipelineContext $context) use ($forumNodeId, $type, $now): ContentPipelinePersisted {
+                        $thread = Thread::create(
+                            ThreadId::generate(),
+                            $forumNodeId,
+                            $this->gate->actorId(),
+                            $type->key(),
+                            ThreadTitle::fromString($context->text),
+                            $context->requiresReview,
+                            $now,
+                        );
+                        $this->threads->save($thread);
+                        return new ContentPipelinePersisted($thread, 'forum.thread', $thread->id());
+                    },
+                );
+            } catch (ContentPipelineRejectedException $exception) {
+                throw new ThreadOperationException(
+                    'Thread creation was blocked by content policy.',
+                    previous: $exception,
+                );
+            }
+            if (!$created instanceof Thread) {
+                throw new ThreadOperationException('Thread content pipeline returned an invalid result.');
+            }
+            return $created;
+        }
+
         $decision = AbuseDecision::allow();
         $context = null;
         if ($this->abuse !== null) {

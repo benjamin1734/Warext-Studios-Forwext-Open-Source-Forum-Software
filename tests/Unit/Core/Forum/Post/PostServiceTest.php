@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\Core\Forum\Post;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Content\Pipeline\ContentPipeline;
+use Forwext\Core\Content\Pipeline\ForumContentPipelineFactory;
+use Forwext\Core\Database\CompiledQuery;
+use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDefinition;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -46,6 +51,8 @@ use Forwext\Core\Moderation\Abuse\AbuseEventType;
 use Forwext\Core\Moderation\Abuse\AbuseRepository;
 use Forwext\Core\Moderation\Abuse\AbuseRule;
 use Forwext\Core\Moderation\Abuse\AbuseSignal;
+use Forwext\Core\Search\Lifecycle\SearchIndexChange;
+use Forwext\Core\Search\Lifecycle\SearchIndexChangeStore;
 use PHPUnit\Framework\TestCase;
 
 final class PostServiceTest extends TestCase
@@ -105,6 +112,103 @@ final class PostServiceTest extends TestCase
         self::assertCount(1, $abuseRepository->events);
         self::assertSame('forum.post', $abuseRepository->events[0]->targetType);
         self::assertSame($reply->id()->value(), $abuseRepository->events[0]->targetId?->value());
+    }
+
+    public function testCommonContentPipelineAppliesReviewAndQueuesPostIndexChange(): void
+    {
+        $actor = $this->id('1');
+        $forum = $this->forum(false, true);
+        $thread = $this->thread($forum->id(), $actor, ThreadModerationState::Visible, false);
+        $first = $this->post($thread->id(), $actor, 1, false);
+        $posts = new PostServicePostRepository([$first]);
+        $abuseRepository = new PostAbuseRepository(new AbuseRule(
+            'post.user.pipeline-review',
+            'Pipeline review',
+            AbuseEventType::Post,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $search = new PostPipelineSearchStore();
+        $database = new PostPipelineDatabase();
+        $pipeline = ForumContentPipelineFactory::create(
+            $database,
+            $search,
+            new AbuseEngine($abuseRepository),
+        );
+        $service = $this->service(
+            $actor,
+            $forum,
+            $thread,
+            $posts,
+            ['forum.view', 'forum.post.create'],
+            null,
+            $pipeline,
+        );
+
+        $reply = $service->reply(
+            $thread->id(),
+            PostBody::fromString('Pipeline review reply'),
+            $this->time('2026-09-18 19:46:00.000000'),
+        );
+
+        self::assertSame(PostModerationState::Pending, $reply->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.post', $abuseRepository->events[0]->targetType);
+        self::assertSame($reply->id()->value(), $abuseRepository->events[0]->targetId?->value());
+        self::assertSame([['post', $reply->id()->value()]], $search->recorded);
+        self::assertSame(1, $database->transactions);
+    }
+
+    public function testPostEditUsesPipelineAndCanReturnVisibleContentToModeration(): void
+    {
+        $actor = $this->id('1');
+        $forum = $this->forum(false, true);
+        $thread = $this->thread($forum->id(), $actor, ThreadModerationState::Visible, false);
+        $first = $this->post($thread->id(), $actor, 1, false);
+        $posts = new PostServicePostRepository([$first]);
+        $abuseRepository = new PostAbuseRepository(new AbuseRule(
+            'post.edit.pipeline-review',
+            'Pipeline edit review',
+            AbuseEventType::Post,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $search = new PostPipelineSearchStore();
+        $database = new PostPipelineDatabase();
+        $pipeline = ForumContentPipelineFactory::create(
+            $database,
+            $search,
+            new AbuseEngine($abuseRepository),
+        );
+        $service = $this->service(
+            $actor,
+            $forum,
+            $thread,
+            $posts,
+            ['forum.view', PostPermission::EditOwn->value],
+            null,
+            $pipeline,
+        );
+
+        $edited = $service->edit(
+            $first->id(),
+            PostBody::fromString('Edited through pipeline'),
+            $this->time('2026-09-18 19:47:00.000000'),
+        );
+
+        self::assertSame('Edited through pipeline', $edited->body()->source());
+        self::assertSame(PostModerationState::Pending, $edited->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.post', $abuseRepository->events[0]->targetType);
+        self::assertSame($edited->id()->value(), $abuseRepository->events[0]->targetId?->value());
+        self::assertSame([['post', $edited->id()->value()]], $search->recorded);
+        self::assertSame(1, $database->transactions);
     }
 
     public function testReplyIsBlockedWhenThreadIsLocked(): void
@@ -180,6 +284,7 @@ final class PostServiceTest extends TestCase
         PostServicePostRepository $posts,
         array $permissions,
         ?AbuseEngine $abuse = null,
+        ?ContentPipeline $pipeline = null,
     ): PostService {
         $assignment = new UserAccessAssignment($actor, $this->id('c'));
         $gate = new PermissionGate(
@@ -197,6 +302,7 @@ final class PostServiceTest extends TestCase
             $posts,
             $gate,
             $abuse,
+            $pipeline,
         );
     }
 
@@ -517,5 +623,79 @@ final class PostAbuseRepository implements AbuseRepository
     public function resolve(EntityId $eventId, EntityId $actorUserId, string $resolution, DateTimeImmutable $at): void
     {
         throw new \LogicException('Not used.');
+    }
+}
+
+
+final class PostPipelineSearchStore implements SearchIndexChangeStore
+{
+    /** @var list<array{0:string,1:string}> */
+    public array $recorded = [];
+
+    public function record(string $documentType, string $documentId): void
+    {
+        $this->recorded[] = [$documentType, $documentId];
+    }
+
+    public function claimDue(DateTimeImmutable $now, int $limit, int $leaseSeconds = 120): array
+    {
+        return [];
+    }
+
+    public function acknowledge(SearchIndexChange $change): bool
+    {
+        return true;
+    }
+
+    public function retry(
+        SearchIndexChange $change,
+        int $attempts,
+        DateTimeImmutable $availableAt,
+        string $errorCode,
+    ): bool {
+        return true;
+    }
+}
+
+final class PostPipelineDatabase implements TransactionalQueryExecutor
+{
+    private bool $inside = false;
+    public int $transactions = 0;
+
+    public function execute(CompiledQuery $query): int
+    {
+        return 0;
+    }
+
+    public function fetchOne(CompiledQuery $query): ?array
+    {
+        return null;
+    }
+
+    public function fetchAll(CompiledQuery $query): array
+    {
+        return [];
+    }
+
+    public function fetchValue(CompiledQuery $query): mixed
+    {
+        return null;
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->inside;
+    }
+
+    public function transaction(Closure $callback): mixed
+    {
+        ++$this->transactions;
+        $previous = $this->inside;
+        $this->inside = true;
+        try {
+            return $callback($this);
+        } finally {
+            $this->inside = $previous;
+        }
     }
 }

@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Forwext\Core\Forum\Post;
 
 use DateTimeImmutable;
+use Forwext\Core\Content\Pipeline\AbusePipelineAttributes;
+use Forwext\Core\Content\Pipeline\ContentPipeline;
+use Forwext\Core\Content\Pipeline\ContentPipelineContext;
+use Forwext\Core\Content\Pipeline\ContentPipelinePersisted;
+use Forwext\Core\Content\Pipeline\ContentPipelineRejectedException;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
@@ -30,6 +35,7 @@ final readonly class PostService
         private PostRepository $posts,
         private PermissionGate $gate,
         private ?AbuseEngine $abuse = null,
+        private ?ContentPipeline $pipeline = null,
     ) {
     }
 
@@ -58,10 +64,21 @@ final readonly class PostService
             throw new PostOperationException('Thread forum is not available.');
         }
 
+        $baseRequiresApproval = $settings->requirePostApproval()
+            || $thread->moderationState() !== ThreadModerationState::Visible;
+        if ($this->pipeline !== null) {
+            return $this->createThroughPipeline(
+                $threadId,
+                $body,
+                $baseRequiresApproval,
+                true,
+                $now,
+                $abuseContext,
+            );
+        }
+
         [$decision, $context] = $this->evaluateCreate($body, $now, $abuseContext);
-        $requiresApproval = $settings->requirePostApproval()
-            || $thread->moderationState() !== ThreadModerationState::Visible
-            || $decision->requiresReview();
+        $requiresApproval = $baseRequiresApproval || $decision->requiresReview();
 
         $post = $this->posts->create($threadId, $actor, $body, $requiresApproval, true, $now);
         if ($this->abuse !== null && $context !== null && $decision->requiresReview()) {
@@ -105,6 +122,17 @@ final readonly class PostService
             throw new PostOperationException('Thread first post is not currently available.');
         }
 
+        if ($this->pipeline !== null) {
+            return $this->createThroughPipeline(
+                $threadId,
+                $body,
+                $settings->requirePostApproval(),
+                false,
+                $now,
+                $abuseContext,
+            );
+        }
+
         [$decision, $context] = $this->evaluateCreate($body, $now, $abuseContext);
         $post = $this->posts->create(
             $threadId,
@@ -120,13 +148,67 @@ final readonly class PostService
         return $post;
     }
 
-    public function edit(EntityId $postId, PostBody $body, DateTimeImmutable $at): Post
-    {
+    public function edit(
+        EntityId $postId,
+        PostBody $body,
+        DateTimeImmutable $at,
+        ?AbuseContext $abuseContext = null,
+    ): Post {
         [$post, $thread] = $this->postContext($postId);
         $this->requireOwnOrAny($post, PostPermission::EditOwn, PostPermission::EditAny, $thread->forumNodeId());
         if ($post->isDeleted()) {
             throw new PostOperationException('Deleted posts cannot be edited before restore.');
         }
+        if ($post->body()->source() === $body->source()) {
+            return $post;
+        }
+
+        if ($this->pipeline !== null) {
+            $attributes = AbusePipelineAttributes::fromRequestContext(
+                $abuseContext,
+                \Forwext\Core\Moderation\Abuse\AbuseEventType::Post,
+                $this->gate->actorId(),
+            );
+            try {
+                $updated = $this->pipeline->execute(
+                    new ContentPipelineContext(
+                        $this->gate->actorId(),
+                        'forum.post',
+                        $body->source(),
+                        100000,
+                        $post->moderationState() === PostModerationState::Pending,
+                        $attributes,
+                    ),
+                    $at,
+                    function (ContentPipelineContext $context) use ($post, $at): ContentPipelinePersisted {
+                        $changed = $post->edit(
+                            PostBody::fromString($context->text),
+                            $this->gate->actorId(),
+                            $at,
+                        );
+                        if ($context->requiresReview
+                            && $post->moderationState() === PostModerationState::Visible
+                        ) {
+                            $changed = $post->requestModeration($this->gate->actorId(), $at) || $changed;
+                        }
+                        if ($changed) {
+                            $this->posts->save($post);
+                        }
+                        return new ContentPipelinePersisted($post, 'forum.post', $post->id());
+                    },
+                );
+            } catch (ContentPipelineRejectedException $exception) {
+                throw new PostOperationException(
+                    'Post edit was blocked by content policy.',
+                    previous: $exception,
+                );
+            }
+            if (!$updated instanceof Post) {
+                throw new PostOperationException('Post edit content pipeline returned an invalid result.');
+            }
+            return $updated;
+        }
+
         if ($post->edit($body, $this->gate->actorId(), $at)) {
             $this->posts->save($post);
         }
@@ -201,6 +283,60 @@ final readonly class PostService
         [$thread, $hierarchy] = $this->threadContext($post->threadId());
         (new ForumNodeAuthorization($this->gate))->requireView($hierarchy, $thread->forumNodeId());
         return [$post, $thread, $hierarchy];
+    }
+
+    private function createThroughPipeline(
+        EntityId $threadId,
+        PostBody $body,
+        bool $requiresApproval,
+        bool $mustBeFirst,
+        DateTimeImmutable $now,
+        ?AbuseContext $abuseContext,
+    ): Post {
+        if ($this->pipeline === null) {
+            throw new PostOperationException('Content pipeline is not configured.');
+        }
+
+        $attributes = AbusePipelineAttributes::fromRequestContext(
+            $abuseContext,
+            \Forwext\Core\Moderation\Abuse\AbuseEventType::Post,
+            $this->gate->actorId(),
+        );
+
+        try {
+            $created = $this->pipeline->execute(
+                new ContentPipelineContext(
+                    $this->gate->actorId(),
+                    'forum.post',
+                    $body->source(),
+                    100000,
+                    $requiresApproval,
+                    $attributes,
+                ),
+                $now,
+                function (ContentPipelineContext $context) use ($threadId, $mustBeFirst, $now): ContentPipelinePersisted {
+                    $post = $this->posts->create(
+                        $threadId,
+                        $this->gate->actorId(),
+                        PostBody::fromString($context->text),
+                        $context->requiresReview,
+                        $mustBeFirst,
+                        $now,
+                    );
+                    return new ContentPipelinePersisted($post, 'forum.post', $post->id());
+                },
+            );
+        } catch (ContentPipelineRejectedException $exception) {
+            throw new PostOperationException(
+                'Post creation was blocked by content policy.',
+                previous: $exception,
+            );
+        }
+
+        if (!$created instanceof Post) {
+            throw new PostOperationException('Post content pipeline returned an invalid result.');
+        }
+        return $created;
     }
 
     /** @return array{0:AbuseDecision,1:?AbuseContext} */
