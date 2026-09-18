@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.04 — My Bug Reports
+
+- Added reporter-scoped `/bugs/my` and permission-aware bug detail pages with status/date/category/severity and full public history.
+- Added bounded reporter additional-information and staff-response events to the existing append-only bug history stream.
+- Added durable bug status/staff-response/assigned-reporter-info notifications through the shared notification engine.
+- Added permission-aware private bug attachment downloads with persisted size and SHA-256 verification.
+- Added an icon-only **Hata Bildirimlerim** shortcut next to the global bug-report icon and redirect new reports to their detail page.
+- Added regression coverage for reporter/staff permissions, terminal-state rules, notification hooks, XSS escaping and attachment integrity.
+
 ### 11.03 — Bug Report Form and Attachments
 
 - Added global authenticated bug-report access and native CSRF-protected `/bugs/report` GET/POST UX.
