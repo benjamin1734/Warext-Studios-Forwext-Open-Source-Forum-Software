@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.02
-CURRENT_STEP = 09.03
-LAST_COMMIT = 9709c84abf019a9eb39737a8ce3302cbac02bf5c
+LAST_COMPLETED_SUBSTEP = 09.03
+CURRENT_STEP = 09.04
+LAST_COMMIT = 7a1e825e11aa4d5375dde35f5c1b4bca99ed7b70
 BLOCKERS = none
-NEXT_STEP = 09.03 - Approval/moderation queue
+NEXT_STEP = 09.04 - Warning/discipline/ban
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 09.03 - Approval/moderation queue
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.02`.
-- Current sub-step: `09.03 — Approval/moderation queue`.
-- Remaining roadmap work after 09.02: **80 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.03`.
+- Current sub-step: `09.04 — Warning/discipline/ban`.
+- Remaining roadmap work after 09.03: **79 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.03
+
+- Replaced the forum-only pending-content workspace adapter with a typed shared `ApprovalQueueRegistry` / provider contract for first-party moderated content domains.
+- Added a real forum approval provider for pending threads and posts; later profile/portfolio/marketplace providers can join the same registry when those roadmap domains implement persisted moderation states.
+- Added native PHP `/moderation/approval` queue UX with bounded bulk selection, approve/reject actions and controlled reason codes.
+- Enforced `moderation.access` for reads and `moderation.manage` for mutations, then re-checked `forum.view`, the relevant node-scoped thread/post moderation permission and `forum.moderation.bulk` before forum candidates become actionable.
+- Added first-class thread/post reject actions that persist the existing `rejected` lifecycle state instead of treating rejection as deletion.
+- Added row-locked stale-decision protection so bulk approve/reject only mutates content that is still `pending`; concurrent or already-decided records fail rather than overwrite a newer moderator decision.
+- Reused the existing moderation audit stream, request-id correlation and same-origin moderation mutation guard; no parallel authorization or audit system was introduced.
+- Removed the superseded `ForumApprovalWorkspaceSource` and integrated the shared queue back into the existing moderation workspace through `ApprovalQueueWorkspaceSource`.
+- Added regression tests for provider ownership, fail-closed access/manage permissions, provider dispatch/deduplication, HTML escaping, reject permission mapping, per-item/bulk audit events and stale-decision refusal.
+- No database migration was required because the existing thread/post moderation states, permission tables and moderation audit storage are reused.
+- Feature commit: `41e7a05693bb6711a3f1aa4780b2d504ab567090`.
+- Test-fix/final implementation pointer: `7a1e825e11aa4d5375dde35f5c1b4bca99ed7b70`.
+- GitHub Actions build run `35336290787` passed strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification and full/update package generation.
+- MySQL 8.4 migration smoke run `35336290906` passed the clean-install migration chain and idempotent second pass.
+- No new mandatory Node/Redis/Docker/Supervisor/worker dependency was introduced for cPanel runtime.
 
 ## Completed in 09.02
 
