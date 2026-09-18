@@ -25,7 +25,7 @@ final readonly class BugCsvExporter
                 'report_id','title','category','status','severity',
                 'reporter_user_id','assigned_user_id','duplicate_of',
                 'created_at_utc','updated_at_utc',
-            ]);
+            ], ',', '"', '');
 
             foreach ($reports as $report) {
                 $duplicate = $repository->duplicateLink($report->reportId);
@@ -40,7 +40,7 @@ final readonly class BugCsvExporter
                     $this->cell($duplicate?->canonicalReportId->value() ?? ''),
                     $this->cell($report->createdAt->format('Y-m-d H:i:s.u')),
                     $this->cell($report->updatedAt->format('Y-m-d H:i:s.u')),
-                ]);
+                ], ',', '"', '');
             }
 
             rewind($stream);
