@@ -10,6 +10,7 @@ use DateTimeZone;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Forum\Moderation\BulkThreadAction;
 use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Moderation\ModerationAuditContext;
