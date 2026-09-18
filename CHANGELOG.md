@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.05 — Staff Bug Dashboard and Duplicate Workflow
+
+- Added permission-gated `/bugs/staff` queue with title/summary search and status, severity, category and assignee filters.
+- Added staff assignment, category, severity and lifecycle controls to the existing bug detail surface.
+- Added advisory duplicate similarity suggestions plus explicit canonical duplicate linking; similarity never changes state automatically.
+- Added persisted duplicate relations with foreign keys/indexes and migration `20260918025000_bug_staff_workflow`.
+- Added staff summary/category analytics and filtered CSV export with spreadsheet formula-injection mitigation.
+- Added centralized `bug` audit scope covering reporter/staff replies, workflow mutations, duplicate links and exports.
+- Added `bug.report.export` and `bug.audit.view` backend permissions with safe built-in template defaults.
+- Added regression coverage for duplicate ranking, atomic explicit linking, audit behavior, dashboard escaping and CSV safety.
+
 ### 11.04 — My Bug Reports
 
 - Added authenticated `/bugs` reporter history and permission-aware `/bugs/{reportId}` detail/follow-up flow.
