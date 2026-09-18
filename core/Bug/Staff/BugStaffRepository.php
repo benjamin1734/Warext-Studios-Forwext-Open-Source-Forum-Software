@@ -24,6 +24,8 @@ interface BugStaffRepository
 
     public function saveDuplicateLink(BugDuplicateLink $link): void;
 
+    public function deleteDuplicateLink(EntityId $duplicateReportId): bool;
+
     /** @return list<BugAuditEntry> */
     public function recentAudit(int $limit = 50): array;
 }
