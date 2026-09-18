@@ -148,7 +148,16 @@ final readonly class BugStaffService
         ?DateTimeImmutable $now = null,
     ): BugReport {
         $this->requireManage();
+        if ($status === BugReportStatus::Duplicate) {
+            throw new InvalidArgumentException('Use the duplicate-link workflow to mark a report duplicate.');
+        }
         $before = $this->reports->report($reportId);
+        if ($before->status === BugReportStatus::Duplicate
+            && $status === BugReportStatus::New
+            && $this->staff->duplicateLink($reportId) !== null
+        ) {
+            throw new BugReportOperationException('Remove the duplicate link before reopening this report.');
+        }
         $at = self::utc($now);
 
         $after = $this->atomic(function () use ($reportId, $status, $before, $at): BugReport {
@@ -182,8 +191,10 @@ final readonly class BugStaffService
 
         $source = $this->reports->report($duplicateReportId);
         $canonical = $this->reports->report($canonicalReportId);
-        if ($canonical->status === BugReportStatus::Duplicate) {
-            throw new BugReportOperationException('A duplicate report cannot be used as the canonical target.');
+        if ($canonical->status === BugReportStatus::Duplicate
+            || $this->staff->duplicateLink($canonicalReportId) !== null
+        ) {
+            throw new BugReportOperationException('A duplicate-linked report cannot be used as the canonical target.');
         }
 
         $existing = $this->staff->duplicateLink($duplicateReportId);
@@ -231,6 +242,42 @@ final readonly class BugStaffService
             $this->safeNotify(fn () => $this->notifier->statusChanged($updated));
         }
         return $link;
+    }
+
+    public function unlinkDuplicate(
+        EntityId $duplicateReportId,
+        ?DateTimeImmutable $now = null,
+    ): BugReport {
+        $this->requireManage();
+        $current = $this->reports->report($duplicateReportId);
+        $link = $this->staff->duplicateLink($duplicateReportId)
+            ?? throw new BugReportOperationException('Bug report is not linked as a duplicate.');
+        if ($current->status !== BugReportStatus::Duplicate) {
+            throw new BugReportOperationException('Duplicate relation is inconsistent with report status.');
+        }
+
+        $at = self::utc($now);
+        $updated = $current;
+        $this->atomic(function () use ($current, $link, $at, &$updated): void {
+            if (!$this->staff->deleteDuplicateLink($current->reportId)) {
+                throw new BugReportOperationException('Duplicate relation disappeared before unlinking.');
+            }
+            $updated = $this->reports->changeStatus(
+                $current->reportId,
+                BugReportStatus::New,
+                $at,
+            );
+            $this->appendAudit(
+                'bug.report.duplicate.unlink',
+                $current->reportId,
+                ['status'=>$current->status->value,'canonical_report_id'=>$link->canonicalReportId->value()],
+                ['status'=>$updated->status->value,'canonical_report_id'=>null],
+                $at,
+            );
+        });
+
+        $this->safeNotify(fn () => $this->notifier->statusChanged($updated));
+        return $updated;
     }
 
     public function export(BugStaffFilter $filter): string
