@@ -246,7 +246,23 @@ final readonly class BugStaffService
             min(1000, max(1, $filter->limit)),
             0,
         ));
-        return $this->csv->export($reports, $this->staff);
+        $csv = $this->csv->export($reports, $this->staff);
+        $at = self::utc(null);
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Bug,
+            $this->gate->actorId(),
+            AuditAction::fromString('bug.report.export'),
+            'bug.export',
+            'dashboard',
+            null,
+            null,
+            $this->auditRequestId,
+            [],
+            ['row_count'=>count($reports)],
+            $at,
+        ));
+        return $csv;
     }
 
     private function requireManage(): void
