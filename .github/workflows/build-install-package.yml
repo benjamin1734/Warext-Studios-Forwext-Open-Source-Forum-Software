@@ -200,6 +200,14 @@ jobs:
             --exclude '/.htaccess' \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.editorconfig' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.cache' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude 'eslint.config.mjs' \
+            --exclude 'tsconfig.base.json' \
+            --exclude 'package.json' \
             --exclude 'dist/' \
             --exclude 'tests/' \
             --exclude 'tools/' \
