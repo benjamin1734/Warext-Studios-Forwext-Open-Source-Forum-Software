@@ -232,6 +232,9 @@ final readonly class BugReportDetailHandler implements RequestHandlerInterface
                     EntityId::fromString($this->requiredHexId($body,'canonical_report_id')),
                 );
                 break;
+            case 'duplicate_unlink':
+                $staffService->unlinkDuplicate($reportId);
+                break;
             default:
                 throw new InvalidArgumentException('Unknown bug report action.');
         }
