@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 08
-LAST_COMPLETED_SUBSTEP = 09.05
-CURRENT_STEP = 09.06
-LAST_COMMIT = 403d48ea4c54a94fdf06ea718b9d2ec92772c47b
+LAST_COMPLETED_SUBSTEP = 09.06
+CURRENT_STEP = 09.07
+LAST_COMMIT = 07a14555069e87ce169392ccfce028eda5f8c4b8
 BLOCKERS = none
-NEXT_STEP = 09.06 - Core moderator/admin audit
+NEXT_STEP = 09.07 - Bağımsız moderasyon denetimi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 09.06 - Core moderator/admin audit
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`; main step `09` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.05`.
-- Current sub-step: `09.06 — Core moderator/admin audit`.
-- Remaining roadmap work after 09.05: **77 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.06`.
+- Current sub-step: `09.07 — Bağımsız moderasyon denetimi`.
+- Remaining roadmap work after 09.06: **76 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 09.06
+
+- Added a central core audit event model with operational scope, actor, extensible action, target, optional forum/reason context, request-id, before/after snapshots and UTC occurrence time.
+- Added `forwext_core_audit_events` plus target/actor/request/scope/time indexes and a transaction-only `DatabaseAuditEventStore`.
+- Added recursive persistence-time sensitive-data redaction for passwords, secrets/tokens, auth/session/credential material, private/recovery/TOTP/API keys, raw IP fields and e-mail fields while preserving privacy-safe fingerprints.
+- Added `AuditRecorder` / `CoreAuditRecorder` so state mutation and its audit event can commit atomically.
+- Redirected the existing moderation audit adapter to the central stream without changing thread/post/report/task/discipline/abuse domain-facing audit contracts.
+- Added upgrade-safe legacy moderation audit import; historical actor/action/target/reason/request/time metadata is retained while pre-09.06 snapshot JSON is replaced by an explicit migration redaction marker.
+- Added `audit.view` template defaults and a backend-permission-gated native `/moderation/audit` page with actor/request-id filters plus a conditional Moderation Workspace link.
+- Made the existing `ForumMetadataAdminService` require an `AuditRecorder`; prefix, custom-field, forum configuration and forum-field administrative mutations now produce administration-scoped core audit events with before/after snapshots when available.
+- Added additive idempotent migration `20260918005000_core_audit_stream`; the previous moderation audit table is not destructively dropped.
+- Added regression coverage for recursive redaction, transaction enforcement, `audit.view` authorization, HTML escaping, central moderation persistence and ACP metadata actor/before-after/request-id recording.
+- Feature/final implementation commit: `07a14555069e87ce169392ccfce028eda5f8c4b8`.
+- GitHub Actions build run `35351960329` passed Composer validation, strict-types, PHPUnit on PHP 8.4 and PHP 8.5, production PHP 8.4 dependency-baseline verification, cPanel full-package generation and artifact upload.
+- Differential update-package/release publication was intentionally skipped because `VERSION` did not change; immutable update output remains release/version-bump driven.
+- MySQL 8.4 migration smoke run `35351960288` passed the complete clean-install migration chain and idempotent second pass.
+- Hash chaining, independent review cases, moderator self-record protections and anomaly flags were intentionally left for 09.07 rather than conflated with the operational core audit stream.
 
 ## Completed in 09.05
 
