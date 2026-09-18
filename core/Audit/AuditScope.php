@@ -9,6 +9,7 @@ enum AuditScope: string
     case Moderation = 'moderation';
     case Administration = 'administration';
     case Support = 'support';
+    case Bug = 'bug';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum AuditScope: string
             self::Moderation => 'Moderasyon',
             self::Administration => 'Yönetim',
             self::Support => 'Destek',
+            self::Bug => 'Hata Bildirimleri',
         };
     }
 }
