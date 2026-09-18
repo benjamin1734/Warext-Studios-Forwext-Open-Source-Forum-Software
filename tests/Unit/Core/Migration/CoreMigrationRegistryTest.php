@@ -15,6 +15,7 @@ use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
 use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
+use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
@@ -70,6 +71,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateSupportConversationTools::class, $classes);
         self::assertContains(CreateFaqSystem::class, $classes);
         self::assertContains(CreateFaqSupportBridge::class, $classes);
+        self::assertContains(CreateSupportReportingAudit::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);

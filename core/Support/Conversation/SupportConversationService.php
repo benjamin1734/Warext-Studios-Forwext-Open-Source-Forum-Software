@@ -6,6 +6,11 @@ namespace Forwext\Core\Support\Conversation;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
@@ -36,6 +41,8 @@ final readonly class SupportConversationService
         private SupportConversationRepository $conversation,
         private PermissionGate $gate,
         private SupportTicketNotifier $notifier = new NullSupportTicketNotifier(),
+        private ?AuditRecorder $audit = null,
+        private ?AuditRequestId $auditRequestId = null,
     ) {
     }
 
@@ -134,6 +141,18 @@ final readonly class SupportConversationService
                     $now,
                 );
             }
+            $this->appendAudit(
+                'support.ticket.reply',
+                $current->ticketId,
+                [],
+                [
+                    'message_id'=>$message->messageId->value(),
+                    'author_role'=>$message->authorRole->value,
+                    'visibility'=>$message->visibility->value,
+                    'status'=>$current->status->value,
+                ],
+                $now,
+            );
             return $current;
         });
 
@@ -156,6 +175,7 @@ final readonly class SupportConversationService
             throw new SupportConversationOperationException('Internal notes require staff ticket access.');
         }
 
+        $at = self::utc($now);
         $message = new SupportConversationMessage(
             SupportConversationMessage::generateId(),
             $ticket->ticketId,
@@ -166,16 +186,44 @@ final readonly class SupportConversationService
             null,
             null,
             null,
-            self::utc($now),
+            $at,
         );
-        $this->conversation->appendMessage($message);
+        $this->database->transaction(function () use ($message, $at): void {
+            $this->conversation->appendMessage($message);
+            $this->appendAudit(
+                'support.ticket.internal_note',
+                $message->ticketId,
+                [],
+                ['message_id'=>$message->messageId->value(),'visibility'=>'internal'],
+                $at,
+            );
+        });
         return $message;
     }
 
     public function saveCannedResponse(SupportCannedResponse $response): void
     {
         $this->gate->require(PermissionKey::fromString(self::CANNED_MANAGE_PERMISSION));
-        $this->conversation->saveCannedResponse($response);
+        $at = self::utc(null);
+        $this->database->transaction(function () use ($response, $at): void {
+            $this->conversation->saveCannedResponse($response);
+            if ($this->audit !== null) {
+                $this->audit->append(new AuditEvent(
+                    AuditEvent::generateId(),
+                    AuditScope::Support,
+                    $this->gate->actorId(),
+                    AuditAction::fromString('support.canned_response.save'),
+                    'support.canned_response',
+                    $response->key,
+                    null,
+                    null,
+                    $this->auditRequestId ?? AuditRequestId::generate(),
+                    [],
+                    ['active'=>$response->active,'sort_order'=>$response->sortOrder],
+                    $at,
+                ));
+            }
+        });
     }
 
     public function assign(
@@ -196,6 +244,15 @@ final readonly class SupportConversationService
                         'from_user_id'=>$before->assignedUserId?->value(),
                         'to_user_id'=>$after->assignedUserId?->value(),
                     ],
+                    $now,
+                );
+            }
+            if ($before->assignedUserId?->value() !== $after->assignedUserId?->value()) {
+                $this->appendAudit(
+                    'support.ticket.assign',
+                    $ticketId,
+                    ['assigned_user_id'=>$before->assignedUserId?->value()],
+                    ['assigned_user_id'=>$after->assignedUserId?->value()],
                     $now,
                 );
             }
@@ -223,6 +280,15 @@ final readonly class SupportConversationService
                     SupportHistoryEventType::StatusChanged,
                     SupportHistoryVisibility::Public,
                     ['from'=>$before->status->value,'to'=>$after->status->value],
+                    $now,
+                );
+            }
+            if ($before->status !== $after->status) {
+                $this->appendAudit(
+                    'support.ticket.status',
+                    $ticketId,
+                    ['status'=>$before->status->value],
+                    ['status'=>$after->status->value],
                     $now,
                 );
             }
@@ -259,6 +325,13 @@ final readonly class SupportConversationService
                 SupportHistoryEventType::Escalated,
                 SupportHistoryVisibility::Staff,
                 ['from_level'=>$current?->level ?? 0,'to_level'=>$state->level],
+                $now,
+            );
+            $this->appendAudit(
+                'support.ticket.escalate',
+                $state->ticketId,
+                ['level'=>$current?->level],
+                ['level'=>$state->level],
                 $now,
             );
             return $state;
@@ -347,6 +420,17 @@ final readonly class SupportConversationService
                 SupportHistoryVisibility::Public,
                 [
                     'source_ticket_id'=>$source->ticketId->value(),
+                    'copied_message_count'=>count($sourceMessages),
+                ],
+                $now,
+            );
+            $this->appendAudit(
+                'support.ticket.merge',
+                $source->ticketId,
+                ['status'=>$source->status->value],
+                [
+                    'status'=>'closed',
+                    'target_ticket_id'=>$target->ticketId->value(),
                     'copied_message_count'=>count($sourceMessages),
                 ],
                 $now,
@@ -445,10 +529,47 @@ final readonly class SupportConversationService
                 ['source_ticket_id'=>$source->ticketId->value(),'source_message_id'=>$message->messageId->value()],
                 $now,
             );
+            $this->appendAudit(
+                'support.ticket.split',
+                $source->ticketId,
+                [],
+                ['new_ticket_id'=>$created->ticketId->value(),'source_message_id'=>$message->messageId->value()],
+                $now,
+            );
         });
 
         $this->safeNotify(fn () => $this->notifier->splitCreated($source, $created));
         return $created;
+    }
+
+    /**
+     * @param array<string,scalar|null> $before
+     * @param array<string,scalar|null> $after
+     */
+    private function appendAudit(
+        string $action,
+        EntityId $ticketId,
+        array $before,
+        array $after,
+        DateTimeImmutable $now,
+    ): void {
+        if ($this->audit === null) {
+            return;
+        }
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Support,
+            $this->gate->actorId(),
+            AuditAction::fromString($action),
+            'support.ticket',
+            $ticketId->value(),
+            null,
+            null,
+            $this->auditRequestId ?? AuditRequestId::generate(),
+            $before,
+            $after,
+            $now,
+        ));
     }
 
     private function reopenForReply(SupportTicket $ticket, DateTimeImmutable $now): SupportTicket

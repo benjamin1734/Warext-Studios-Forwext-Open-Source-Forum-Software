@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.06 — Support Panel, My Tickets, Reporting and Audit
+
+- Added authenticated My Tickets and permission-gated staff support dashboard surfaces.
+- Added SLA breach/response-time/category reporting over existing ticket state.
+- Added `support.report.view` and `support.audit.view` permissions.
+- Reused the central audit stream with a new `support` scope and atomic privacy-safe support mutation records.
+- Added migration `20260918020000_support_reporting_audit` plus permission/audit/XSS regression coverage.
+
 ### 10.05 — FAQ ↔ Support Bridge
 
 - Added permission-safe FAQ recommendations during ticket creation and after ticket resolution.

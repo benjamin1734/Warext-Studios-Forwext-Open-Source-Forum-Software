@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Support;
 
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -49,6 +51,7 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
         private UserRepository $users,
         private SupportTicketNotifier $notifier,
         private BasePath $basePath,
+        private AuditRecorder $audit,
     ) {
     }
 
@@ -82,6 +85,8 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
                 $this->conversation,
                 $gate,
                 $this->notifier,
+                $this->audit,
+                AuditRequestId::generate(),
             );
 
             if ($request->method() === HttpMethod::Post) {

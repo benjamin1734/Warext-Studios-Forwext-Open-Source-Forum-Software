@@ -45,9 +45,13 @@ use Forwext\App\Web\Faq\FaqArticleIdHandler;
 use Forwext\App\Web\Faq\FaqIndexHandler;
 use Forwext\App\Web\Faq\FaqManageHandler;
 use Forwext\App\Web\Faq\FaqSupportDraftHandler;
+use Forwext\App\Web\Support\MyTicketsHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
+use Forwext\App\Web\Support\SupportStaffDashboardHandler;
 use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
+use Forwext\Core\Audit\CoreAuditRecorder;
+use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Config\ConfigLoader;
@@ -150,6 +154,7 @@ use Forwext\Core\Support\Intake\DatabaseSupportTicketIntakeRepository;
 use Forwext\Core\Support\Intake\MarketplaceSupportContextResolver;
 use Forwext\Core\Support\Intake\SupportContextRegistry;
 use Forwext\Core\Support\Intake\ThreadSupportContextResolver;
+use Forwext\Core\Support\Reporting\DatabaseSupportReportingRepository;
 use Forwext\Core\Support\Ticket\DatabaseSupportTicketRepository;
 use RuntimeException;
 
@@ -306,6 +311,8 @@ final readonly class WebApplicationFactory
         $supportTickets = new DatabaseSupportTicketRepository($database);
         $supportIntake = new DatabaseSupportTicketIntakeRepository($database);
         $supportConversation = new DatabaseSupportConversationRepository($database);
+        $supportReporting = new DatabaseSupportReportingRepository($database);
+        $supportAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $supportNotificationRegistry = new NotificationRegistry();
         NotificationSupportTicketNotifier::registerDefinitions($supportNotificationRegistry);
         $supportNotifier = new NotificationSupportTicketNotifier(new NotificationDispatcher(
@@ -385,8 +392,33 @@ final readonly class WebApplicationFactory
                 $authorizer,
                 new VerifiedUploadedAttachmentReader(),
                 $basePath,
+                $supportAudit,
             ),
             [$supportCsrf],
+        ));
+        $routes->add(new Route(
+            'support.tickets.mine',
+            [HttpMethod::Get],
+            new PathTemplate('/support/tickets'),
+            new MyTicketsHandler(
+                $supportTickets,
+                $supportReporting,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+            ),
+        ));
+        $routes->add(new Route(
+            'support.staff.dashboard',
+            [HttpMethod::Get],
+            new PathTemplate('/support/staff'),
+            new SupportStaffDashboardHandler(
+                $supportTickets,
+                $supportReporting,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+            ),
         ));
         $routes->add(new Route(
             'support.ticket.detail',
@@ -403,6 +435,7 @@ final readonly class WebApplicationFactory
                 $users,
                 $supportNotifier,
                 $basePath,
+                $supportAudit,
             ),
             [$supportCsrf],
         ));

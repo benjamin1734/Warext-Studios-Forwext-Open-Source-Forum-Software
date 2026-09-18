@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Support\Conversation;
 
 use Closure;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\Core\Database\CompiledQuery;
@@ -324,6 +327,39 @@ final class SupportConversationServiceTest extends TestCase
         self::assertSame(SupportHistoryVisibility::Staff, $conversation->history[1]->visibility);
     }
 
+    public function testAuditMetadataNeverContainsReplyOrInternalNoteBody(): void
+    {
+        $staff = $this->id('1');
+        $requester = $this->id('2');
+        $tickets = new ConversationTicketRepository($this->category());
+        $ticket = $this->ticket($requester);
+        $tickets->tickets[$ticket->ticketId->value()] = $ticket;
+        $conversation = new ConversationMemoryRepository();
+        $audit = new ConversationAuditRecorder();
+        $service = $this->service(
+            $staff,
+            [$staff->value()=>['support.ticket.view_all','support.ticket.reply_all','support.ticket.internal_note']],
+            $tickets,
+            $conversation,
+            new ConversationIntakeRepository(),
+            new ConversationNotifier(),
+            $audit,
+        );
+
+        $service->reply($ticket->ticketId, 'secret reply body', now:$this->time('2026-09-18 18:00:00.000000'));
+        $service->internalNote($ticket->ticketId, 'private internal body', $this->time('2026-09-18 18:01:00.000000'));
+
+        self::assertCount(2, $audit->events);
+        $encoded = json_encode(array_map(
+            static fn (AuditEvent $event): array => ['before'=>$event->before,'after'=>$event->after],
+            $audit->events,
+        ), JSON_THROW_ON_ERROR);
+        self::assertStringNotContainsString('secret reply body', $encoded);
+        self::assertStringNotContainsString('private internal body', $encoded);
+        self::assertSame('support.ticket.reply', $audit->events[0]->action->value());
+        self::assertSame('support.ticket.internal_note', $audit->events[1]->action->value());
+    }
+
     /**
      * @param array<string,list<string>> $permissions
      */
@@ -334,6 +370,7 @@ final class SupportConversationServiceTest extends TestCase
         ConversationMemoryRepository $conversation,
         ConversationIntakeRepository $intake,
         ConversationNotifier $notifier,
+        ?ConversationAuditRecorder $audit = null,
     ): SupportConversationService {
         $database = new ConversationTransactionDatabase();
         $authorizer = new PermissionAuthorizer(
@@ -351,6 +388,8 @@ final class SupportConversationServiceTest extends TestCase
             $conversation,
             $gate,
             $notifier,
+            $audit,
+            AuditRequestId::fromString('support-test-request'),
         );
     }
 
@@ -593,5 +632,24 @@ final readonly class ConversationPermissionRepository implements PermissionRuleR
             return [];
         }
         return [new PermissionRule(PermissionSubjectType::User, $assignment->userId(), PermissionEffect::Allow)];
+    }
+}
+
+
+final class ConversationAuditRecorder implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events = [];
+
+    public function append(AuditEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        $result = $mutation();
+        $this->events[] = $event;
+        return $result;
     }
 }

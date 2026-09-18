@@ -107,6 +107,7 @@ final class SupportTicketFormHtml
             );
 
         $body = '<section class="card settings"><h1>Destek talebi aç</h1>'
+            . '<p><a href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></p>'
             . '<p class="muted">Önce doğru kategoriyi seç. Kategoriye özel alanlar yalnız gerektiğinde gösterilir.</p>'
             . $notice . $categoryChooser . '</section>' . $faq . $form;
 

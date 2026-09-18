@@ -22,6 +22,7 @@ use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
 use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
+use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
@@ -98,6 +99,7 @@ final class CoreMigrationRegistry
             new CreateSupportConversationTools(),
             new CreateFaqSystem(),
             new CreateFaqSupportBridge(),
+            new CreateSupportReportingAudit(),
         ];
     }
 }

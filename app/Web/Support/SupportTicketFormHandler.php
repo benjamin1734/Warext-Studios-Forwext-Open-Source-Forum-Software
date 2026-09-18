@@ -6,6 +6,8 @@ namespace Forwext\App\Web\Support;
 
 use Forwext\App\Web\Forum\UploadedAttachmentReader;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -57,6 +59,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
         private PermissionAuthorizer $authorizer,
         private UploadedAttachmentReader $uploadedFiles,
         private BasePath $basePath,
+        private AuditRecorder $audit,
         private SupportSubmissionPolicy $policy = new SupportSubmissionPolicy(),
     ) {
     }
@@ -86,6 +89,8 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
             $gate,
             $this->policy,
             $this->conversation,
+            $this->audit,
+            AuditRequestId::generate(),
         );
 
         try {

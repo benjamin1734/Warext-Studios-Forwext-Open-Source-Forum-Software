@@ -139,6 +139,7 @@ final class SupportTicketDetailHtml
         $history .= '</section>';
 
         $body = '<section class="card settings"><h1>' . self::e($ticket->subject) . '</h1>'
+            . '<p><a href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></p>'
             . '<p class="muted">Talep #' . self::e($ticket->ticketId->value()) . '</p>'
             . $notice . $meta . '</section>'
             . $relations . $intake . $messages . $faqGuidance . $reply . $staffTools . $history;

@@ -6,6 +6,11 @@ namespace Forwext\Core\Support\Intake;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
@@ -38,6 +43,8 @@ final readonly class SupportTicketSubmissionService
         private PermissionGate $gate,
         private SupportSubmissionPolicy $policy = new SupportSubmissionPolicy(),
         private ?SupportConversationRepository $conversation = null,
+        private ?AuditRecorder $audit = null,
+        private ?AuditRequestId $auditRequestId = null,
     ) {
     }
 
@@ -203,6 +210,23 @@ final readonly class SupportTicketSubmissionService
                     $attachments[] = $record;
                 }
 
+                $this->appendAudit(
+                    'support.ticket.create',
+                    $ticket->ticketId,
+                    [],
+                    [
+                        'category'=>$ticket->categoryKey,
+                        'priority'=>$ticket->priority->value,
+                        'status'=>$ticket->status->value,
+                        'requester_user_id'=>$ticket->requesterUserId?->value(),
+                        'field_count'=>count($values),
+                        'attachment_count'=>count($attachments),
+                        'context_type'=>$context?->type->value,
+                        'context_id'=>$context?->targetId->value(),
+                    ],
+                    $now,
+                );
+
                 return new SupportTicketSubmissionReceipt($ticket, $values, $context, $attachments);
             });
         } catch (Throwable $exception) {
@@ -214,6 +238,36 @@ final readonly class SupportTicketSubmissionService
             }
             throw $exception;
         }
+    }
+
+    /**
+     * @param array<string,scalar|null> $before
+     * @param array<string,scalar|null> $after
+     */
+    private function appendAudit(
+        string $action,
+        EntityId $ticketId,
+        array $before,
+        array $after,
+        DateTimeImmutable $now,
+    ): void {
+        if ($this->audit === null) {
+            return;
+        }
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Support,
+            $this->gate->actorId(),
+            AuditAction::fromString($action),
+            'support.ticket',
+            $ticketId->value(),
+            null,
+            null,
+            $this->auditRequestId ?? AuditRequestId::generate(),
+            $before,
+            $after,
+            $now,
+        ));
     }
 
     private function activeCategory(string $categoryKey): SupportCategory
