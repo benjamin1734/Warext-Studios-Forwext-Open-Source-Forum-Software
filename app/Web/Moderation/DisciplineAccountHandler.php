@@ -7,12 +7,13 @@ namespace Forwext\App\Web\Moderation;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Discipline\DisciplineRepository;
 use Forwext\Core\Routing\BasePath;
 
-final readonly class DisciplineAccountHandler
+final readonly class DisciplineAccountHandler implements RequestHandlerInterface
 {
     public function __construct(
         private DisciplineRepository $discipline,
