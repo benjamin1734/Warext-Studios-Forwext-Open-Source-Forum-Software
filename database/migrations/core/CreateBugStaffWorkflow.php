@@ -39,7 +39,7 @@ final readonly class CreateBugStaffWorkflow implements Migration
             'CREATE TABLE IF NOT EXISTS forwext_bug_report_duplicates ('
             . 'duplicate_report_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
             . 'canonical_report_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
-            . 'created_by_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
+            . 'created_by_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,'
             . 'created_at_utc DATETIME(6) NOT NULL,'
             . 'PRIMARY KEY (duplicate_report_id),'
             . 'KEY idx_forwext_bug_duplicate_canonical (canonical_report_id,created_at_utc,duplicate_report_id),'
@@ -49,7 +49,7 @@ final readonly class CreateBugStaffWorkflow implements Migration
             . 'CONSTRAINT fk_forwext_bug_duplicate_canonical FOREIGN KEY (canonical_report_id) '
             . 'REFERENCES forwext_bug_reports (report_id) ON DELETE RESTRICT,'
             . 'CONSTRAINT fk_forwext_bug_duplicate_actor FOREIGN KEY (created_by_user_id) '
-            . 'REFERENCES forwext_users (user_id) ON DELETE RESTRICT'
+            . 'REFERENCES forwext_users (user_id) ON DELETE SET NULL'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
 
