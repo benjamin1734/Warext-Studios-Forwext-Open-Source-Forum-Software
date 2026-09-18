@@ -13,6 +13,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Domain\User\Username;
+use Forwext\Core\Faq\SupportBridge\FaqSupportBridgeService;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
@@ -26,6 +27,7 @@ use Forwext\Core\Support\Conversation\SupportConversationRepository;
 use Forwext\Core\Support\Conversation\SupportConversationService;
 use Forwext\Core\Support\Conversation\SupportTicketNotifier;
 use Forwext\Core\Support\Intake\SupportTicketIntakeRepository;
+use Forwext\Core\Support\Ticket\SupportTicket;
 use Forwext\Core\Support\Ticket\SupportTicketNotFoundException;
 use Forwext\Core\Support\Ticket\SupportTicketOperationException;
 use Forwext\Core\Support\Ticket\SupportTicketRepository;
@@ -41,6 +43,7 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
         private SupportTicketRepository $tickets,
         private SupportTicketIntakeRepository $intake,
         private SupportConversationRepository $conversation,
+        private FaqSupportBridgeService $faqBridge,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
         private UserRepository $users,
@@ -82,8 +85,8 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
             );
 
             if ($request->method() === HttpMethod::Post) {
-                $ticketService->ticket($ticketId);
-                return $this->mutate($request, $ticketId, $service);
+                $ticket = $ticketService->ticket($ticketId);
+                return $this->mutate($request, $actor, $ticket, $service);
             }
 
             return $this->view($request, $ticketId, $service, $gate);
@@ -111,6 +114,14 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
 
         $view = $service->view($ticketId);
         $ticket = $view->ticket;
+        $description = $this->intake->description($ticketId);
+        $faqRecommendations = in_array($ticket->status, [SupportTicketStatus::Resolved, SupportTicketStatus::Closed], true)
+            ? $this->faqBridge->recommend(
+                $gate->actorId(),
+                $ticket->categoryKey,
+                $ticket->subject . ' ' . ($description ?? ''),
+            )
+            : [];
         $actorIsRequester = $ticket->isRequester($gate->actorId());
         $canReply = $actorIsRequester
             ? $gate->allows(PermissionKey::fromString('support.ticket.reply_own'))
@@ -125,7 +136,7 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
 
         $html = SupportTicketDetailHtml::page(
             $view,
-            $this->intake->description($ticketId),
+            $description,
             $this->intake->fieldValues($ticketId),
             $this->intake->context($ticketId),
             $this->intake->attachments($ticketId),
@@ -140,10 +151,12 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
                 $gate->allows(PermissionKey::fromString(SupportConversationService::MERGE_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(SupportConversationService::SPLIT_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(SupportConversationService::CANNED_MANAGE_PERMISSION)),
+                $gate->allows(PermissionKey::fromString(FaqSupportBridgeService::SUGGEST_DRAFT_PERMISSION)),
             ),
             $requesterName,
             $assigneeName,
             ($request->query()['updated'] ?? null) === '1',
+            $faqRecommendations,
         );
 
         return Response::html($html)->withHeader('Cache-Control', 'private, no-store');
@@ -151,9 +164,11 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
 
     private function mutate(
         Request $request,
-        EntityId $ticketId,
+        EntityId $actor,
+        SupportTicket $ticket,
         SupportConversationService $service,
     ): Response {
+        $ticketId = $ticket->ticketId;
         $body = $request->parsedBody();
         $action = $body['action'] ?? null;
         if (!is_string($action)) {
@@ -194,6 +209,17 @@ final readonly class SupportTicketDetailHandler implements RequestHandlerInterfa
                     $ticketId,
                     EntityId::fromString($this->requiredHexId($body, 'message_id')),
                     $this->requiredString($body, 'subject', 200),
+                );
+                break;
+            case 'faq_draft':
+                $messageId = EntityId::fromString($this->requiredHexId($body, 'message_id'));
+                $message = $this->conversation->message($messageId)
+                    ?? throw new InvalidArgumentException('FAQ draft source message was not found.');
+                $this->faqBridge->suggestDraft(
+                    $actor,
+                    $ticket,
+                    $message,
+                    $this->optionalString($body, 'faq_category_key', 64),
                 );
                 break;
             case 'canned_save':

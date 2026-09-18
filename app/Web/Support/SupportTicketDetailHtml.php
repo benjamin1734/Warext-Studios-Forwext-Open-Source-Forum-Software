@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Support;
 
 use Forwext\App\Web\Profile\ProfileHtml;
+use Forwext\Core\Faq\SupportBridge\FaqSupportRecommendation;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Support\Conversation\SupportConversationMessage;
 use Forwext\Core\Support\Conversation\SupportConversationView;
@@ -24,6 +25,7 @@ final class SupportTicketDetailHtml
     /**
      * @param array<string,SupportFieldValue> $fieldValues
      * @param list<SupportAttachmentRecord> $attachments
+     * @param list<FaqSupportRecommendation> $faqRecommendations
      */
     public static function page(
         SupportConversationView $view,
@@ -37,6 +39,7 @@ final class SupportTicketDetailHtml
         ?string $requesterName = null,
         ?string $assigneeName = null,
         bool $updated = false,
+        array $faqRecommendations = [],
     ): string {
         $ticket = $view->ticket;
         $notice = $updated ? '<div class="notice success">Talep güncellendi.</div>' : '';
@@ -113,6 +116,15 @@ final class SupportTicketDetailHtml
             ? self::staffTools($view, $csrfToken, $basePath, $capabilities)
             : '';
 
+        $faqGuidance = $faqRecommendations === []
+            ? ''
+            : FaqRecommendationHtml::section(
+                $faqRecommendations,
+                $basePath,
+                'Çözüm sonrası ilgili SSS',
+                'Bu talep için görünür bir SSS önerisi bulunamadı.',
+            );
+
         $history = '<section class="card section"><h2>Durum geçmişi</h2>';
         if ($view->history === []) {
             $history .= '<p class="muted">Henüz durum değişikliği yok.</p>';
@@ -129,7 +141,7 @@ final class SupportTicketDetailHtml
         $body = '<section class="card settings"><h1>' . self::e($ticket->subject) . '</h1>'
             . '<p class="muted">Talep #' . self::e($ticket->ticketId->value()) . '</p>'
             . $notice . $meta . '</section>'
-            . $relations . $intake . $messages . $reply . $staffTools . $history;
+            . $relations . $intake . $messages . $faqGuidance . $reply . $staffTools . $history;
 
         return ProfileHtml::page('Destek talebi', $body, $basePath, authenticated: true);
     }
@@ -151,6 +163,20 @@ final class SupportTicketDetailHtml
             ? ''
             : ' <span class="muted">Ayrılan mesaj kopyası</span>';
 
+        $faqDraft = '';
+        if ($capabilities->canSuggestFaqDraft
+            && $message->authorRole === SupportMessageRole::Staff
+            && $message->visibility === SupportMessageVisibility::Public
+        ) {
+            $faqDraft = '<details><summary>Bu yanıttan SSS taslağı öner</summary>'
+                . '<form method="post" action="' . self::action($message->ticketId->value(), $basePath) . '">'
+                . self::csrf($csrfToken)
+                . '<input type="hidden" name="action" value="faq_draft">'
+                . '<input type="hidden" name="message_id" value="' . self::e($message->messageId->value()) . '">'
+                . '<label><span>SSS kategori anahtarı (isteğe bağlı)</span><input name="faq_category_key" maxlength="64"></label>'
+                . '<button type="submit">SSS taslağı öner</button></form></details>';
+        }
+
         $split = '';
         if ($capabilities->canSplit && $message->visibility === SupportMessageVisibility::Public) {
             $split = '<details><summary>Bu mesajdan yeni talep ayır</summary>'
@@ -165,7 +191,7 @@ final class SupportTicketDetailHtml
         return '<article class="support-message"><header><strong>' . self::e($role) . '</strong>'
             . $internal . $canned . $copy
             . '<span class="muted"> — ' . self::e($message->createdAt->format('Y-m-d H:i')) . '</span></header>'
-            . '<p>' . self::multiline($message->body) . '</p>' . $split . '</article>';
+            . '<p>' . self::multiline($message->body) . '</p>' . $faqDraft . $split . '</article>';
     }
 
     private static function staffTools(

@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.05 — FAQ ↔ Support Bridge
+
+- Added permission-safe FAQ recommendations during ticket creation and after ticket resolution.
+- Added bounded DB candidate discovery followed by authoritative `FaqService` visibility rechecks.
+- Added granular staff FAQ-draft suggestions from public ticket replies only.
+- Added FAQ-manager review that converts accepted suggestions into inactive/staff-visible FAQ drafts.
+- Added migration `20260918015000_faq_support_bridge` and `support.faq_draft.suggest` permission defaults.
+
 ### 10.04 — FAQ System
 
 - Added category/question/answer FAQ domain with tags, language, visibility, ordering and SEO fields.

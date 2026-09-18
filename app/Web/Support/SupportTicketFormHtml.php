@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Support;
 
 use Forwext\App\Web\Profile\ProfileHtml;
+use Forwext\Core\Faq\SupportBridge\FaqSupportRecommendation;
 use Forwext\Core\Support\Intake\SupportContextType;
 use Forwext\Core\Support\Intake\SupportFieldDefinition;
 use Forwext\Core\Support\Intake\SupportFieldType;
@@ -16,6 +17,7 @@ final class SupportTicketFormHtml
     /**
      * @param list<SupportCategory> $categories
      * @param list<SupportFieldDefinition> $fields
+     * @param list<FaqSupportRecommendation> $recommendations
      */
     public static function page(
         array $categories,
@@ -27,6 +29,8 @@ final class SupportTicketFormHtml
         bool $error = false,
         ?SupportContextType $contextType = null,
         ?string $contextId = null,
+        array $recommendations = [],
+        string $recommendationQuery = '',
     ): string {
         $notice = '';
         if ($createdTicketId !== null) {
@@ -51,8 +55,10 @@ final class SupportTicketFormHtml
 
         $categoryChooser = '<form method="get" action="' . self::e($basePath->prepend('/support/new'))
             . '" class="search-form"><label><span>Kategori</span><select name="category">'
-            . $categoryOptions . '</select></label><div class="search-actions">'
-            . '<button type="submit">Formu göster</button></div></form>';
+            . $categoryOptions . '</select></label>'
+            . '<label class="search-wide"><span>Sorununuz / anahtar kelime</span><input name="q" maxlength="300" value="'
+            . self::e($recommendationQuery) . '" placeholder="Örn. giriş yapamıyorum"></label>'
+            . '<div class="search-actions"><button type="submit">SSS önerilerini göster</button></div></form>';
 
         $form = '';
         if ($selectedCategory !== null) {
@@ -78,7 +84,7 @@ final class SupportTicketFormHtml
                 . self::e($basePath->prepend('/support/new')) . '" class="presence-settings">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
                 . '<input type="hidden" name="category" value="' . self::e($selectedCategory->key) . '">'
-                . '<label><span>Konu</span><input name="subject" maxlength="200" required></label>'
+                . '<label><span>Konu</span><input name="subject" maxlength="200" value="' . self::e($recommendationQuery) . '" required></label>'
                 . '<label><span>Açıklama</span><textarea name="description" maxlength="10000" rows="8" required></textarea></label>'
                 . $dynamic
                 . '<details><summary>İlgili içerik veya hesabı bağla</summary>'
@@ -91,9 +97,18 @@ final class SupportTicketFormHtml
                 . '<button type="submit">Talebi oluştur</button></form></section>';
         }
 
+        $faq = $selectedCategory === null
+            ? ''
+            : FaqRecommendationHtml::section(
+                $recommendations,
+                $basePath,
+                'Talep açmadan önce bunlara göz atın',
+                $recommendationQuery === '' ? 'Kategoriye göre görünür bir SSS önerisi bulunamadı.' : 'Bu soruyla eşleşen görünür bir SSS bulunamadı.',
+            );
+
         $body = '<section class="card settings"><h1>Destek talebi aç</h1>'
             . '<p class="muted">Önce doğru kategoriyi seç. Kategoriye özel alanlar yalnız gerektiğinde gösterilir.</p>'
-            . $notice . $categoryChooser . '</section>' . $form;
+            . $notice . $categoryChooser . '</section>' . $faq . $form;
 
         return ProfileHtml::page('Destek talebi aç', $body, $basePath, authenticated: true);
     }

@@ -63,6 +63,20 @@ final readonly class FaqService
         ));
     }
 
+    /** @return list<FaqArticleView> */
+    public function recommendationCandidates(?EntityId $actor): array
+    {
+        $views = [];
+        foreach ($this->faq->articles() as $article) {
+            try {
+                $views[] = $this->visibleArticle($article, $actor);
+            } catch (FaqOperationException) {
+                // Hidden/inactive FAQ content is deliberately excluded from recommendations.
+            }
+        }
+        return $views;
+    }
+
     public function article(EntityId $articleId, ?EntityId $actor): FaqArticleView
     {
         $article = $this->faq->article($articleId)
@@ -101,10 +115,15 @@ final readonly class FaqService
             throw new InvalidArgumentException('FAQ article language must match its category language.');
         }
 
-        $this->database->transaction(function () use ($article): void {
+        $persist = function () use ($article): void {
             $this->faq->saveArticle($article);
             $this->searchChanges->record(self::SEARCH_TYPE, $article->articleId->value());
-        });
+        };
+        if ($this->database->inTransaction()) {
+            $persist();
+        } else {
+            $this->database->transaction(static fn () => $persist());
+        }
     }
 
     public function voteHelpful(EntityId $actor, EntityId $articleId, bool $helpful): FaqHelpfulSummary

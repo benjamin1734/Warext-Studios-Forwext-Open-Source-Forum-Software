@@ -69,7 +69,7 @@ final class SupportTicketDetailHtmlTest extends TestCase
             [],
             'csrf-token',
             new BasePath('/community'),
-            new SupportTicketDetailCapabilities(true, false, false, false, false, false, false, false),
+            new SupportTicketDetailCapabilities(true, false, false, false, false, false, false, false, false),
             '<Admin>',
             null,
         );

@@ -11,6 +11,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Faq\SupportBridge\FaqSupportBridgeService;
 use Forwext\Core\Forum\Attachment\AttachmentInspector;
 use Forwext\Core\Forum\Attachment\AttachmentOperationException;
 use Forwext\Core\Forum\Attachment\AttachmentQuotaPolicy;
@@ -46,6 +47,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
         private SupportTicketRepository $tickets,
         private SupportTicketIntakeRepository $intake,
         private SupportConversationRepository $conversation,
+        private FaqSupportBridgeService $faqBridge,
         private SupportSubmissionRateLimiter $rateLimiter,
         private SupportContextRegistry $contexts,
         private StorageDriver $storage,
@@ -90,7 +92,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
             if ($request->method() === HttpMethod::Post) {
                 return $this->submit($request, $submission);
             }
-            return $this->view($request, $ticketService, $submission);
+            return $this->view($request, $viewerId, $ticketService, $submission);
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
         } catch (SupportSubmissionRateLimitException) {
@@ -110,6 +112,7 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
 
     private function view(
         Request $request,
+        EntityId $viewerId,
         SupportTicketService $tickets,
         SupportTicketSubmissionService $submission,
     ): Response {
@@ -122,6 +125,14 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
         $selected = $this->selectedCategory($categories, $request->query()['category'] ?? null);
         $fields = $selected === null ? [] : $submission->fields($selected->key);
         [$contextType, $contextId] = $this->queryContext($request);
+        $recommendationQuery = $request->query()['q'] ?? '';
+        if (!is_string($recommendationQuery) || strlen($recommendationQuery) > 300) {
+            throw new InvalidArgumentException('FAQ recommendation query is invalid.');
+        }
+        $recommendationQuery = trim($recommendationQuery);
+        $recommendations = $selected === null
+            ? []
+            : $this->faqBridge->recommend($viewerId, $selected->key, $recommendationQuery);
 
         $created = $request->query()['created'] ?? null;
         $created = is_string($created) && preg_match('/^[a-f0-9]{32}$/D', $created) === 1 ? $created : null;
@@ -136,6 +147,8 @@ final readonly class SupportTicketFormHandler implements RequestHandlerInterface
             ($request->query()['error'] ?? null) === '1',
             $contextType,
             $contextId,
+            $recommendations,
+            $recommendationQuery,
         ))->withHeader('Cache-Control', 'private, no-store');
     }
 

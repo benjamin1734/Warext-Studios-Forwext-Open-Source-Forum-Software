@@ -15,6 +15,7 @@ final readonly class SupportTicketDetailCapabilities
         public bool $canMerge,
         public bool $canSplit,
         public bool $canManageCanned,
+        public bool $canSuggestFaqDraft,
     ) {
     }
 }

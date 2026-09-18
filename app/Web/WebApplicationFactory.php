@@ -44,6 +44,7 @@ use Forwext\App\Web\Faq\FaqArticleHandler;
 use Forwext\App\Web\Faq\FaqArticleIdHandler;
 use Forwext\App\Web\Faq\FaqIndexHandler;
 use Forwext\App\Web\Faq\FaqManageHandler;
+use Forwext\App\Web\Faq\FaqSupportDraftHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
@@ -61,6 +62,8 @@ use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
 use Forwext\Core\Faq\DatabaseFaqRepository;
 use Forwext\Core\Faq\FaqService;
+use Forwext\Core\Faq\SupportBridge\DatabaseFaqSupportBridgeRepository;
+use Forwext\Core\Faq\SupportBridge\FaqSupportBridgeService;
 use Forwext\Core\Faq\Search\FaqSearchAccessScopeProvider;
 use Forwext\Core\Forum\Attachment\AttachmentInspector;
 use Forwext\Core\Forum\Attachment\AttachmentQuotaPolicy;
@@ -221,11 +224,19 @@ final readonly class WebApplicationFactory
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
         $nodes = new DatabaseForumNodeRepository($database);
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
+        $faqRepository = new DatabaseFaqRepository($database);
         $faq = new FaqService(
             $database,
-            new DatabaseFaqRepository($database),
+            $faqRepository,
             $authorizer,
             $searchChanges,
+        );
+        $faqSupportBridge = new FaqSupportBridgeService(
+            $database,
+            $faq,
+            $faqRepository,
+            new DatabaseFaqSupportBridgeRepository($database),
+            $authorizer,
         );
         $searchService = new PermissionAwareSearchService(
             new NativeDatabaseSearchDriver($database),
@@ -330,6 +341,13 @@ final readonly class WebApplicationFactory
             [$faqCsrf],
         ));
         $routes->add(new Route(
+            'faq.manage.support-drafts',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/faq/manage/support-drafts'),
+            new FaqSupportDraftHandler($faq, $faqSupportBridge, $viewerResolver, $basePath),
+            [$faqCsrf],
+        ));
+        $routes->add(new Route(
             'faq.article.id',
             [HttpMethod::Get],
             new PathTemplate('/faq/articles/{articleId}', ['articleId'=>'[0-9a-f]{32}']),
@@ -357,6 +375,7 @@ final readonly class WebApplicationFactory
                 $supportTickets,
                 $supportIntake,
                 $supportConversation,
+                $faqSupportBridge,
                 new DatabaseSupportSubmissionRateLimiter($database),
                 $supportContexts,
                 $storage,
@@ -378,6 +397,7 @@ final readonly class WebApplicationFactory
                 $supportTickets,
                 $supportIntake,
                 $supportConversation,
+                $faqSupportBridge,
                 $viewerResolver,
                 $authorizer,
                 $users,

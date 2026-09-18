@@ -54,6 +54,7 @@ final class FirstPartyPermissionCatalog
             self::flag('support.ticket.merge', 'Merge eligible support tickets from the same requester.'),
             self::flag('support.ticket.split', 'Split public support messages into new tickets.'),
             self::flag('support.canned_response.manage', 'Manage reusable support canned responses.'),
+            self::flag('support.faq_draft.suggest', 'Suggest FAQ drafts from public staff ticket replies.'),
             self::flag('faq.view', 'View FAQ content.'),
             self::flag('faq.manage', 'Manage FAQ categories, questions and answers.'),
 

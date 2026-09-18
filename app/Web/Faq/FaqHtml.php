@@ -156,7 +156,8 @@ final class FaqHtml
         $body = '<section class="card"><h1>SSS Yönetimi</h1><p class="muted">'
             . 'Kategori, içerik, görünürlük, dil, sıralama, SEO ve import/export yönetimi.</p>'
             . $notice
-            . '<p><a href="' . self::e($basePath->prepend('/faq/manage?export=1')) . '">JSON dışa aktar</a></p>'
+            . '<p><a href="' . self::e($basePath->prepend('/faq/manage?export=1')) . '">JSON dışa aktar</a>'
+            . ' · <a href="' . self::e($basePath->prepend('/faq/manage/support-drafts')) . '">Destekten gelen SSS taslakları</a></p>'
             . '<details open><summary>Kategori kaydet</summary><form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="category_save">'
             . '<label><span>Anahtar</span><input name="key" maxlength="64" required></label>'
