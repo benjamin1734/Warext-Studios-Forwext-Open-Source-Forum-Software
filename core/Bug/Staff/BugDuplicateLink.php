@@ -17,10 +17,12 @@ final readonly class BugDuplicateLink
     public function __construct(
         public EntityId $duplicateReportId,
         public EntityId $canonicalReportId,
-        public EntityId $createdByUserId,
+        public ?EntityId $createdByUserId,
         DateTimeImmutable $createdAt,
     ) {
-        UserId::assert($this->createdByUserId);
+        if ($this->createdByUserId !== null) {
+            UserId::assert($this->createdByUserId);
+        }
         if ($this->duplicateReportId->equals($this->canonicalReportId)) {
             throw new InvalidArgumentException('A bug report cannot duplicate itself.');
         }
