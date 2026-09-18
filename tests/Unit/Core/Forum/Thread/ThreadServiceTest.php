@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\Core\Forum\Thread;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Content\Pipeline\ForumContentPipelineFactory;
+use Forwext\Core\Database\CompiledQuery;
+use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDefinition;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -41,6 +45,8 @@ use Forwext\Core\Moderation\Abuse\AbuseEventType;
 use Forwext\Core\Moderation\Abuse\AbuseRepository;
 use Forwext\Core\Moderation\Abuse\AbuseRule;
 use Forwext\Core\Moderation\Abuse\AbuseSignal;
+use Forwext\Core\Search\Lifecycle\SearchIndexChange;
+use Forwext\Core\Search\Lifecycle\SearchIndexChangeStore;
 use PHPUnit\Framework\TestCase;
 
 final class ThreadServiceTest extends TestCase
@@ -119,6 +125,58 @@ final class ThreadServiceTest extends TestCase
         self::assertCount(1, $abuseRepository->events);
         self::assertSame('forum.thread', $abuseRepository->events[0]->targetType);
         self::assertSame($thread->id()->value(), $abuseRepository->events[0]->targetId?->value());
+    }
+
+    public function testCommonContentPipelineAppliesReviewAndQueuesThreadIndexChange(): void
+    {
+        $actor = $this->id('1');
+        $forum = ForumNode::forum(
+            $this->id('a'),
+            null,
+            'Forum',
+            ForumNodeSlug::fromString('forum'),
+            new ForumSettings(requireThreadApproval: false),
+        );
+        $threads = new ThreadServiceRepository();
+        $abuseRepository = new ThreadAbuseRepository(new AbuseRule(
+            'thread.user.pipeline-review',
+            'Pipeline review',
+            AbuseEventType::Thread,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $search = new ThreadPipelineSearchStore();
+        $database = new ThreadPipelineDatabase();
+        $pipeline = ForumContentPipelineFactory::create(
+            $database,
+            $search,
+            new AbuseEngine($abuseRepository),
+        );
+        $service = new ThreadCreationService(
+            new ThreadServiceNodeRepository([$forum]),
+            $threads,
+            ThreadTypeRegistry::withCoreDefaults(),
+            $this->gate($actor, $forum->id(), ['forum.view', 'forum.thread.create']),
+            null,
+            $pipeline,
+        );
+
+        $thread = $service->create(
+            $forum->id(),
+            ThreadTypeKey::fromString('discussion'),
+            ThreadTitle::fromString('Pipeline thread'),
+            $this->time('2026-09-18 19:45:00.000000'),
+        );
+
+        self::assertSame(ThreadModerationState::Pending, $thread->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.thread', $abuseRepository->events[0]->targetType);
+        self::assertSame($thread->id()->value(), $abuseRepository->events[0]->targetId?->value());
+        self::assertSame([['thread', $thread->id()->value()]], $search->recorded);
+        self::assertSame(1, $database->transactions);
     }
 
     public function testCreationFailsWhenForumDisablesNewThreadsEvenWithPermission(): void
@@ -461,5 +519,79 @@ final class ThreadAbuseRepository implements AbuseRepository
     public function resolve(EntityId $eventId, EntityId $actorUserId, string $resolution, DateTimeImmutable $at): void
     {
         throw new \LogicException('Not used.');
+    }
+}
+
+
+final class ThreadPipelineSearchStore implements SearchIndexChangeStore
+{
+    /** @var list<array{0:string,1:string}> */
+    public array $recorded = [];
+
+    public function record(string $documentType, string $documentId): void
+    {
+        $this->recorded[] = [$documentType, $documentId];
+    }
+
+    public function claimDue(DateTimeImmutable $now, int $limit, int $leaseSeconds = 120): array
+    {
+        return [];
+    }
+
+    public function acknowledge(SearchIndexChange $change): bool
+    {
+        return true;
+    }
+
+    public function retry(
+        SearchIndexChange $change,
+        int $attempts,
+        DateTimeImmutable $availableAt,
+        string $errorCode,
+    ): bool {
+        return true;
+    }
+}
+
+final class ThreadPipelineDatabase implements TransactionalQueryExecutor
+{
+    private bool $inside = false;
+    public int $transactions = 0;
+
+    public function execute(CompiledQuery $query): int
+    {
+        return 0;
+    }
+
+    public function fetchOne(CompiledQuery $query): ?array
+    {
+        return null;
+    }
+
+    public function fetchAll(CompiledQuery $query): array
+    {
+        return [];
+    }
+
+    public function fetchValue(CompiledQuery $query): mixed
+    {
+        return null;
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->inside;
+    }
+
+    public function transaction(Closure $callback): mixed
+    {
+        ++$this->transactions;
+        $previous = $this->inside;
+        $this->inside = true;
+        try {
+            return $callback($this);
+        } finally {
+            $this->inside = $previous;
+        }
     }
 }
