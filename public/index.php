@@ -11,6 +11,7 @@ use Forwext\App\Web\WebApplicationFactory;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Logging\RuntimeFailureReporter;
 use Forwext\Core\Migration\FileInstalledVersionStore;
 
 $root = dirname(__DIR__);
@@ -45,15 +46,15 @@ if (!is_file($autoload)) {
 
 require $autoload;
 
-$versions = new FileInstalledVersionStore($root . '/storage/install/installed-version.json');
-$version = $versions->current();
-if ($version === null) {
-    header('Location: install.php', true, 302);
-    exit;
-}
-
 $requestMethod = HttpMethod::Get;
 try {
+    $versions = new FileInstalledVersionStore($root . '/storage/install/installed-version.json');
+    $version = $versions->current();
+    if ($version === null) {
+        header('Location: install.php', true, 302);
+        exit;
+    }
+
     $request = Request::fromGlobals();
     $requestMethod = $request->method();
 
@@ -88,7 +89,14 @@ try {
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('Referrer-Policy', 'no-referrer');
 } catch (Throwable $exception) {
-    $response = Response::text('Internal Server Error', 500)
+    $requestUri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI'])
+        ? $_SERVER['REQUEST_URI']
+        : null;
+    $reference = (new RuntimeFailureReporter(
+        $root . '/storage/logs/runtime.log',
+    ))->report($exception, $requestUri);
+
+    $response = Response::text('Internal Server Error [' . $reference . ']', 500)
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('X-Robots-Tag', 'noindex, nofollow')
         ->withHeader('Cache-Control', 'no-store');
