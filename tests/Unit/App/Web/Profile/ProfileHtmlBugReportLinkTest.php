@@ -20,6 +20,8 @@ final class ProfileHtmlBugReportLinkTest extends TestCase
         self::assertStringContainsString('aria-label="Hata bildir"',$html);
         self::assertStringContainsString('<svg',$html);
         self::assertStringNotContainsString('>Hata bildir</a>',$html);
+        self::assertStringContainsString('/community/bugs/my',$html);
+        self::assertStringContainsString('aria-label="Hata Bildirimlerim"',$html);
     }
 
     public function testAnonymousPagesDoNotExposeBugReportAction(): void
@@ -27,5 +29,6 @@ final class ProfileHtmlBugReportLinkTest extends TestCase
         $html=ProfileHtml::page('Test','<p>Body</p>',new BasePath('/community'),authenticated:false);
 
         self::assertStringNotContainsString('data-bug-report-link',$html);
+        self::assertStringNotContainsString('/community/bugs/my',$html);
     }
 }
