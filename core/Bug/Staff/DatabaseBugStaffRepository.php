@@ -154,7 +154,7 @@ final readonly class DatabaseBugStaffRepository implements BugStaffRepository
             [
                 'duplicate_report_id'=>$link->duplicateReportId->value(),
                 'canonical_report_id'=>$link->canonicalReportId->value(),
-                'created_by_user_id'=>$link->createdByUserId->value(),
+                'created_by_user_id'=>$link->createdByUserId?->value(),
                 'created_at_utc'=>$this->format($link->createdAt),
             ],
             true,
