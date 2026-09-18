@@ -18,13 +18,17 @@ final readonly class BugAuditEntry
         public EntityId $auditId,
         public EntityId $actorUserId,
         public string $action,
+        public string $targetType,
         public string $targetId,
         public string $requestId,
         DateTimeImmutable $occurredAt,
     ) {
         UserId::assert($this->actorUserId);
         if (preg_match('/^[a-z][a-z0-9._-]{1,95}$/D', $this->action) !== 1
-            || preg_match('/^[a-f0-9]{32}$/D', $this->targetId) !== 1
+            || preg_match('/^[a-z][a-z0-9._-]{1,31}$/D', $this->targetType) !== 1
+            || $this->targetId === ''
+            || strlen($this->targetId) > 191
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]*$/D', $this->targetId) !== 1
             || $this->requestId === ''
             || strlen($this->requestId) > 100
         ) {
