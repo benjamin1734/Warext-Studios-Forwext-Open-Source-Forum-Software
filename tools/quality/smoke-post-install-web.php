@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Forwext\App\Web\Community\CommunityApplicationFactory;
+use Forwext\App\Web\Moderation\ModerationApplicationFactory;
+use Forwext\App\Web\Report\ReportApplicationFactory;
 use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
 use Forwext\Core\Http\HttpMethod;
@@ -57,32 +60,70 @@ if ($version === null) {
     throw new RuntimeException('Installer did not persist an installed version.');
 }
 
-$request = new Request(HttpMethod::Get, '/');
-$seo = new SeoApplicationFactory($root);
-$response = $seo->handle($request);
+$handle = static function (string $requestPath) use ($root, $version) {
+    $request = new Request(HttpMethod::Get, $requestPath);
 
-$web = new WebApplicationFactory($root);
-if ($response === null) {
-    $response = $web->create($version->value())->handle($request);
-}
-$response = $seo->decorate($request, $response)
-    ->withHeader('Content-Security-Policy', $web->contentSecurityPolicy());
+    $seo = new SeoApplicationFactory($root);
+    $response = $seo->handle($request);
 
-if ($response->status() !== 200) {
+    if ($response === null) {
+        $response = (new ModerationApplicationFactory($root))->handle($request);
+    }
+    if ($response === null) {
+        $response = (new ReportApplicationFactory($root))->handle($request);
+    }
+    if ($response === null) {
+        $response = (new CommunityApplicationFactory($root))->handle($request);
+    }
+
+    $web = new WebApplicationFactory($root);
+    if ($response === null) {
+        $response = $web->create($version->value())->handle($request);
+    }
+
+    return $seo->decorate($request, $response)
+        ->withHeader('Content-Security-Policy', $web->contentSecurityPolicy());
+};
+
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$rootResponse = $handle('/');
+if ($rootResponse->status() !== 200) {
     throw new RuntimeException(sprintf(
         'Post-install home bootstrap returned HTTP %d instead of 200.',
-        $response->status(),
+        $rootResponse->status(),
     ));
 }
-if (!str_contains($response->body(), 'Forwext Forum Platform')) {
+if (!str_contains($rootResponse->body(), 'Forwext Forum Platform')) {
     throw new RuntimeException('Post-install home response did not contain the expected Forwext marker.');
 }
-if ($response->headers()->first('Content-Security-Policy') === null) {
+if ($rootResponse->headers()->first('Content-Security-Policy') === null) {
     throw new RuntimeException('Post-install home response is missing Content-Security-Policy.');
 }
 
+foreach (['/search', '/members', '/faq', '/members/online', '/stats'] as $route) {
+    $response = $handle($route);
+    if ($response->status() === 404) {
+        throw new RuntimeException(sprintf(
+            'Post-install navigation route %s unexpectedly returned HTTP 404.',
+            $route,
+        ));
+    }
+}
+
+$_SERVER['SCRIPT_NAME'] = '/public/index.php';
+foreach (['/', '/search', '/members', '/faq', '/members/online', '/stats'] as $route) {
+    $requestPath = '/public' . $route;
+    $response = $handle($requestPath);
+    if ($response->status() === 404) {
+        throw new RuntimeException(sprintf(
+            'Subfolder deployment route %s unexpectedly returned HTTP 404.',
+            $requestPath,
+        ));
+    }
+}
+
 printf(
-    "Post-install web bootstrap smoke passed: version=%s migrations_applied=%d migrations_skipped=%d.\n",
+    "Post-install web bootstrap smoke passed: version=%s migrations_applied=%d migrations_skipped=%d navigation_and_subfolder_routes=ok.\n",
     $version->value(),
     count($report->applied),
     count($report->skipped),
