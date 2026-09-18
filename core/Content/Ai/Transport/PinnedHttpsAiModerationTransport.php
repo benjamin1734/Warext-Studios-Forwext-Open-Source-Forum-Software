@@ -20,7 +20,7 @@ final readonly class PinnedHttpsAiModerationTransport implements AiModerationHtt
             || preg_match('/\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\z/D', $endpoint->host) !== 1
             || $endpoint->requestTarget === ''
             || $endpoint->requestTarget[0] !== '/'
-            || preg_match('/[\r\n\x00]/', $endpoint->requestTarget) === 1
+            || preg_match('/[\x00-\x20\x7F]/', $endpoint->requestTarget) === 1
             || $endpoint->addresses === []
         ) {
             throw new AiModerationProviderException('AI provider pinned endpoint is invalid.');
