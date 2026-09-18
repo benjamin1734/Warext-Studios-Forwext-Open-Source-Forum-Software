@@ -234,6 +234,13 @@ final class StaffRepository implements BugStaffRepository
     public function duplicateCandidates(BugReport $source,int $limit=100):array{return $this->reports;}
     public function duplicateLink(EntityId $duplicateReportId):?BugDuplicateLink{return $this->links[$duplicateReportId->value()]??null;}
     public function saveDuplicateLink(BugDuplicateLink $link):void{$this->links[$link->duplicateReportId->value()]=$link;}
+    public function deleteDuplicateLink(EntityId $duplicateReportId):bool
+    {
+        $key=$duplicateReportId->value();
+        if(!isset($this->links[$key]))return false;
+        unset($this->links[$key]);
+        return true;
+    }
     public function recentAudit(int $limit=50):array{return [];}
 }
 
