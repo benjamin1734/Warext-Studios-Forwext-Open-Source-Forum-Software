@@ -49,7 +49,11 @@ final readonly class OpenAiModerationProvider implements AiModerationProvider
             $timeoutMilliseconds,
         );
         $object = AiModerationProviderSupport::object($response);
-        $scores = $object['results'][0]['category_scores'] ?? null;
+        $results = $object['results'] ?? null;
+        if (!is_array($results) || !array_is_list($results) || !isset($results[0]) || !is_array($results[0])) {
+            throw new AiModerationProviderException('OpenAI moderation response results are invalid.');
+        }
+        $scores = $results[0]['category_scores'] ?? null;
         if (!is_array($scores) || array_is_list($scores) || $scores === []) {
             throw new AiModerationProviderException('OpenAI moderation response category scores are invalid.');
         }
