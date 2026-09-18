@@ -29,7 +29,7 @@ final class FirstPartyPermissionCatalog
             self::flag('moderation.abuse.view', 'View anti-spam and abuse events.'),
             self::flag('moderation.abuse.manage_rules', 'Manage automated anti-abuse rules.'),
             self::flag('moderation.abuse.cleanup', 'Run abuse cleanup through normal content moderation permissions.'),
-            self::flag('audit.view', 'View independent moderation audit records.'),
+            self::flag('audit.view', 'View authorized core audit records.'),
             self::flag('audit.review', 'Review independent moderation audit cases and anomaly flags.'),
             self::flag('audit.export', 'Export authorized independent moderation audit data.'),
             self::flag('acp.access', 'Access the administration control panel.'),

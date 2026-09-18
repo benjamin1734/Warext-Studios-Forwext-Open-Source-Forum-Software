@@ -24,13 +24,19 @@ final readonly class ModerationWorkspaceHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private bool $canManage,
+        private bool $canViewAudit = false,
     ) {
     }
 
     public function view(): Response
     {
         return $this->secure(Response::html(
-            ModerationWorkspaceHtml::page($this->workspace->snapshot(), $this->basePath, $this->canManage),
+            ModerationWorkspaceHtml::page(
+                $this->workspace->snapshot(),
+                $this->basePath,
+                $this->canManage,
+                $this->canViewAudit,
+            ),
         ));
     }
 

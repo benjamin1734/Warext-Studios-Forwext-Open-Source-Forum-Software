@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 09.06 — Core Moderator/Admin Audit
+
+- Added a central moderator/admin audit event model with scope, actor, action, target, request-id and before/after snapshots.
+- Added persistence-time recursive sensitive-data redaction and transaction-only audit writes.
+- Redirected the existing moderation audit adapter to the central stream and added mandatory audit recording to the existing forum-metadata ACP service.
+- Added native `/moderation/audit` browsing with backend `audit.view` permission checks and actor/request-id filters.
+- Added additive migration `20260918005000_core_audit_stream`; legacy moderation event metadata is preserved while legacy snapshot payloads are safely redacted during import.
+- Hash-chain/independent oversight remains intentionally scoped to 09.07.
+
 ### 09.05 — Anti-Spam / Abuse Tools
 
 - Added privacy-safe fixed-window automated rules for registration, thread and post abuse using user/identity/IP/device/content signals.

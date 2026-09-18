@@ -7,6 +7,8 @@ namespace Forwext\App\Web\Moderation;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\App\Web\Report\ReportServiceFactory;
+use Forwext\Core\Audit\CoreAuditService;
+use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Config\ConfigLoader;
@@ -115,6 +117,7 @@ final class ModerationApplicationFactory
         $nodes = new DatabaseForumNodeRepository($database);
         $users = new DatabaseUserRepository($database);
         $audit = new DatabaseModerationAuditStore($database);
+        $coreAudit = new CoreAuditService(new DatabaseAuditEventStore($database), $gate);
         $disciplineRepository = new DatabaseDisciplineRepository($database);
         $abuseRepository = new DatabaseAbuseRepository($database);
         $disciplineNotifications = new NotificationRegistry();
@@ -149,6 +152,7 @@ final class ModerationApplicationFactory
         );
         $guard = new ModerationRequestGuard($this->canonicalUrl);
         $canManage = $gate->allows(PermissionKey::fromString('moderation.manage'));
+        $canViewAudit = $gate->allows(PermissionKey::fromString('audit.view'));
         $handler = new ModerationWorkspaceHandler(
             new ModerationWorkspaceService($gate, [
                 new ReportWorkspaceSource($database, $reportRepository),
@@ -177,7 +181,9 @@ final class ModerationApplicationFactory
             $guard,
             $this->basePath,
             $canManage,
+            $canViewAudit,
         );
+        $auditHandler = new CoreAuditHandler($coreAudit, $this->basePath);
         $reportHandler = new ReportModerationHandler(
             ReportServiceFactory::create($database, $this->permissionAuthorizer(), $gate),
             $guard,
@@ -219,6 +225,13 @@ final class ModerationApplicationFactory
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
                 }
                 return $handler->view();
+            }
+
+            if ($routePath === '/moderation/audit') {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $auditHandler->view($request);
             }
 
             if ($routePath === '/moderation/approval') {

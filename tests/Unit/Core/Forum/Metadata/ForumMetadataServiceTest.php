@@ -6,6 +6,10 @@ namespace Forwext\Tests\Unit\Core\Forum\Metadata;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDefinition;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -160,7 +164,12 @@ final class ForumMetadataServiceTest extends TestCase
             )],
         );
         $nodes = new MetadataServiceNodeRepository([$forum]);
-        $denied = new ForumMetadataAdminService($nodes, $metadata, $this->gate($actor, $forum->id(), []));
+        $denied = new ForumMetadataAdminService(
+            $nodes,
+            $metadata,
+            $this->gate($actor, $forum->id(), []),
+            new MetadataAuditRecorder(),
+        );
 
         try {
             $denied->configureForum($forum->id(), [], [], false, false, 0);
@@ -169,7 +178,12 @@ final class ForumMetadataServiceTest extends TestCase
             self::assertTrue(true);
         }
 
-        $allowed = new ForumMetadataAdminService($nodes, $metadata, $this->gate($actor, $forum->id(), ['acp.manage']));
+        $allowed = new ForumMetadataAdminService(
+            $nodes,
+            $metadata,
+            $this->gate($actor, $forum->id(), ['acp.manage']),
+            new MetadataAuditRecorder(),
+        );
         $this->expectException(MetadataOperationException::class);
         $allowed->configureForum(
             $forum->id(),
@@ -179,6 +193,46 @@ final class ForumMetadataServiceTest extends TestCase
             false,
             0,
         );
+    }
+
+    public function testAdminConfigurationWritesCentralAdministrationAuditWithBeforeAfterAndRequestId(): void
+    {
+        $actor = $this->id('9');
+        $forum = $this->forum();
+        $metadata = new MetadataServiceRepositoryStub(
+            new ForumContentConfiguration($forum->id(), [], [], false, false, 0),
+        );
+        $audit = new MetadataAuditRecorder();
+        $service = new ForumMetadataAdminService(
+            new MetadataServiceNodeRepository([$forum]),
+            $metadata,
+            $this->gate($actor, $forum->id(), ['acp.manage']),
+            $audit,
+        );
+
+        $service->configureForum(
+            $forum->id(),
+            [],
+            [],
+            true,
+            true,
+            5,
+            AuditRequestId::fromString('req-admin-config'),
+            $this->time('2026-09-18 12:00:00.000000'),
+        );
+
+        self::assertCount(1, $audit->events);
+        $event = $audit->events[0];
+        self::assertSame(AuditScope::Administration, $event->scope);
+        self::assertSame($actor->value(), $event->actorUserId->value());
+        self::assertSame('forum.metadata.configuration.save', $event->action->value());
+        self::assertSame('forum.metadata', $event->targetType);
+        self::assertSame($forum->id()->value(), $event->targetId);
+        self::assertSame('req-admin-config', $event->requestId->value());
+        self::assertFalse($event->before['tags_enabled']);
+        self::assertTrue($event->after['tags_enabled']);
+        self::assertSame(5, $event->after['max_tags']);
+        self::assertSame(1, $audit->mutations);
     }
 
     private function threadService(
@@ -477,5 +531,26 @@ final class MetadataServicePermissionRepository implements PermissionRuleReposit
             PermissionEffect::Allow,
             $this->forumId,
         )];
+    }
+}
+
+
+final class MetadataAuditRecorder implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events = [];
+    public int $mutations = 0;
+
+    public function append(AuditEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        $this->mutations++;
+        $result = $mutation();
+        $this->events[] = $event;
+        return $result;
     }
 }

@@ -10,6 +10,7 @@ use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
+use Forwext\Database\Migrations\Core\CreateCoreAuditStream;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
@@ -84,6 +85,7 @@ final class CoreMigrationRegistry
             new CreateReportSystemTables(),
             new CreateDisciplineTables(),
             new CreateAbusePreventionTables(),
+            new CreateCoreAuditStream(),
         ];
     }
 }

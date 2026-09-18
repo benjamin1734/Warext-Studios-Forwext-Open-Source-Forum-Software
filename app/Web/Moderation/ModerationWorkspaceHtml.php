@@ -16,6 +16,7 @@ final class ModerationWorkspaceHtml
         ModerationWorkspaceSnapshot $snapshot,
         BasePath $basePath,
         bool $canManage,
+        bool $canViewAudit = false,
     ): string {
         $cards = '';
         foreach (ModerationWorkspaceSection::cases() as $section) {
@@ -51,9 +52,13 @@ final class ModerationWorkspaceHtml
                 . '</form></details>';
         }
 
+        $auditLink = $canViewAudit
+            ? '<p><a href="' . self::e($basePath->prepend('/moderation/audit')) . '">Core Audit Stream</a></p>'
+            : '';
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
         $content = '<div class="card"><h1 style="margin:0">Moderasyon çalışma alanı</h1>'
-            . '<p class="muted">Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevleri tek dahili görünümde toplanır.</p></div>'
+            . '<p class="muted">Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevleri tek dahili görünümde toplanır.</p>'
+            . $auditLink . '</div>'
             . '<div class="stats-grid section">' . $cards . '</div>'
             . $create . $sections . $script;
 

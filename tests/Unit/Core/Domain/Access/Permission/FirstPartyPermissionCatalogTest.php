@@ -61,6 +61,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
         ], $namespaces);
 
         foreach ([
+            'audit.view',
             'audit.review',
             'spellcheck.dictionary.manage_site',
             'content_manager.execute',

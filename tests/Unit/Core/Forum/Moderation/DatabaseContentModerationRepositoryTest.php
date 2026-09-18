@@ -43,7 +43,8 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         self::assertCount(2, $database->executedQueries);
         self::assertStringContainsString('UPDATE `forwext_threads`', $database->executedQueries[0]->sql);
         self::assertSame($this->id('c')->value(), $database->executedQueries[0]->parameters['forum_node_id']);
-        self::assertStringContainsString('INSERT INTO `forwext_moderation_audit_events`', $database->executedQueries[1]->sql);
+        self::assertStringContainsString('INSERT INTO forwext_core_audit_events', $database->executedQueries[1]->sql);
+        self::assertSame('moderation', $database->executedQueries[1]->parameters['scope']);
         self::assertSame('thread.move', $database->executedQueries[1]->parameters['action']);
         self::assertSame($this->id('1')->value(), $database->executedQueries[1]->parameters['actor_user_id']);
     }
