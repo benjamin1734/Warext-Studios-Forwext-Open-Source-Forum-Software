@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.03 — Bug Report Form and Attachments
+
+- Added authenticated `/bugs/new` intake with category, title, summary, reproduction steps and expected/actual result fields.
+- Added icon-only page-level bug-report entry that carries only the current query-free path as optional source context.
+- Added inline screenshot/file uploads through the shared signature/MIME/image-metadata validation pipeline and private storage.
+- Added atomic report + diagnostic + detail + attachment metadata persistence with storage compensation on failure.
+- Added permission-aware private attachment downloads with byte-size and SHA-256 integrity verification.
+- Added migration `20260918023000_bug_report_intake` and regression coverage for form escaping, upload limits, atomic persistence, source-path privacy and migration registration.
+
 ### 11.02 — Automatic Bug Diagnostic Context
 
 - Added privacy-safe URL path, route, user, forum/thread/post, theme/module, browser/device and request-id capture.
