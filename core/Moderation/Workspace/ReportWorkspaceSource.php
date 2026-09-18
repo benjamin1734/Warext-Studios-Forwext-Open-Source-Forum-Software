@@ -29,7 +29,7 @@ final readonly class ReportWorkspaceSource implements ModerationWorkspaceSource
         ));
     }
 
-    public function items(int $limit): array
+    public function latest(int $limit): array
     {
         return array_map($this->item(...), $this->reports->activeGroups($limit));
     }
