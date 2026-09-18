@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 10
-LAST_COMPLETED_SUBSTEP = 11.03
-CURRENT_STEP = 11.04
-LAST_COMMIT = 9bf0208f03623c6a1af9038467876f36b69c4461
+LAST_COMPLETED_SUBSTEP = 11.04
+CURRENT_STEP = 11.05
+LAST_COMMIT = 717b6873e351f0e560eb5dd214eefc8aa08ea6fc
 BLOCKERS = none
-NEXT_STEP = 11.04 - Hata Bildirimlerim sayfası
+NEXT_STEP = 11.05 - Staff bug dashboard ve duplicate sistemi
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 11.04 - Hata Bildirimlerim sayfası
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`; main step `11` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.03`.
-- Current sub-step: `11.04 — Hata Bildirimlerim sayfası`.
-- Remaining roadmap work after 11.03: **66 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.04`.
+- Current sub-step: `11.05 — Staff bug dashboard ve duplicate sistemi`.
+- Remaining roadmap work after 11.04: **65 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 11.04
+
+- Added authenticated `/bugs` **Hata Bildirimlerim** list with own-report-only retrieval, category, status, severity, creation/update dates and permission-aware detail links.
+- Added member navigation access to **Hata Bildirimlerim** while preserving the icon-only global **Hata bildir** entry.
+- Added permission-aware `GET|POST /bugs/{reportId}` detail with original intake, private attachments, public reporter/staff responses and visibility-filtered workflow history.
+- Added `bug.report.reply_own` for reporter follow-up information and `bug.report.reply_all` for staff public responses.
+- Added append-only bug-report conversation persistence with nullable historical authors.
+- Added durable first-party notifications for staff replies, reporter follow-up to the current assignee and real status transitions.
+- Added report-authorized private attachment downloads with persisted byte-size and SHA-256 integrity verification.
+- Added additive idempotent migration `20260918024000_bug_report_conversation` and safe built-in permission-template defaults.
+- Added regression coverage for cross-account IDOR denial, reply/status notification hooks, XSS escaping and authenticated navigation visibility.
+- Feature commit: `717b6873e351f0e560eb5dd214eefc8aa08ea6fc`.
+- GitHub Actions build run `35378143632`: success.
+- MySQL migration smoke run `35378143698`: success.
+- Duplicate detection/linking, staff bug dashboard, assignment UI, filters, search, analytics, export and centralized bug audit remain scoped to 11.05.
 
 ## Completed in 11.03
 
