@@ -30,6 +30,10 @@ final readonly class CoreAiModerationProviderFactory
     public function gemini(#[SensitiveParameter] string $apiKey, string $model): AiModerationProvider
     {
         $model = AiModerationProviderSupport::assertModel($model);
+        if (str_starts_with($model, 'models/')) {
+            $model = substr($model, 7);
+            $model = AiModerationProviderSupport::assertModel($model);
+        }
         return new GeminiAiModerationProvider(
             $this->transport,
             $this->endpoints->approve(
