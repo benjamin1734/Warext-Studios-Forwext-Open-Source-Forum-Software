@@ -67,6 +67,8 @@ final class FirstPartyPermissionCatalog
             self::flag('bug.report.assign', 'Assign or unassign bug reports.'),
             self::flag('bug.report.reply_own', 'Add follow-up information to own bug reports.'),
             self::flag('bug.report.reply_all', 'Reply to bug reports from all users.'),
+            self::flag('bug.report.export', 'Export authorized bug-report data.'),
+            self::flag('bug.audit.view', 'View centralized bug-report audit records.'),
 
             self::flag('portfolio.view', 'View portfolio content.'),
             self::flag('portfolio.create', 'Create portfolio entries.'),
