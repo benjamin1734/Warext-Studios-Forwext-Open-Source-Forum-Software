@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Forwext\Core\Install\InstallationFailureReporter;
 use Forwext\Core\Install\InstallationInput;
 use Forwext\Core\Install\InstallationService;
 
@@ -88,7 +89,9 @@ if (!is_file($autoload)) {
                 session_regenerate_id(true);
                 $completed = true;
             } catch (Throwable $exception) {
-                $error = $exception->getMessage();
+                $error = (new InstallationFailureReporter(
+                    $root . '/storage/logs/install.log',
+                ))->report($exception);
             }
         }
     }
