@@ -148,13 +148,67 @@ final readonly class PostService
         return $post;
     }
 
-    public function edit(EntityId $postId, PostBody $body, DateTimeImmutable $at): Post
-    {
+    public function edit(
+        EntityId $postId,
+        PostBody $body,
+        DateTimeImmutable $at,
+        ?AbuseContext $abuseContext = null,
+    ): Post {
         [$post, $thread] = $this->postContext($postId);
         $this->requireOwnOrAny($post, PostPermission::EditOwn, PostPermission::EditAny, $thread->forumNodeId());
         if ($post->isDeleted()) {
             throw new PostOperationException('Deleted posts cannot be edited before restore.');
         }
+        if ($post->body()->source() === $body->source()) {
+            return $post;
+        }
+
+        if ($this->pipeline !== null) {
+            $attributes = AbusePipelineAttributes::fromRequestContext(
+                $abuseContext,
+                \Forwext\Core\Moderation\Abuse\AbuseEventType::Post,
+                $this->gate->actorId(),
+            );
+            try {
+                $updated = $this->pipeline->execute(
+                    new ContentPipelineContext(
+                        $this->gate->actorId(),
+                        'forum.post',
+                        $body->source(),
+                        100000,
+                        $post->moderationState() === PostModerationState::Pending,
+                        $attributes,
+                    ),
+                    $at,
+                    function (ContentPipelineContext $context) use ($post, $at): ContentPipelinePersisted {
+                        $changed = $post->edit(
+                            PostBody::fromString($context->text),
+                            $this->gate->actorId(),
+                            $at,
+                        );
+                        if ($context->requiresReview
+                            && $post->moderationState() === PostModerationState::Visible
+                        ) {
+                            $changed = $post->requestModeration($this->gate->actorId(), $at) || $changed;
+                        }
+                        if ($changed) {
+                            $this->posts->save($post);
+                        }
+                        return new ContentPipelinePersisted($post, 'forum.post', $post->id());
+                    },
+                );
+            } catch (ContentPipelineRejectedException $exception) {
+                throw new PostOperationException(
+                    'Post edit was blocked by content policy.',
+                    previous: $exception,
+                );
+            }
+            if (!$updated instanceof Post) {
+                throw new PostOperationException('Post edit content pipeline returned an invalid result.');
+            }
+            return $updated;
+        }
+
         if ($post->edit($body, $this->gate->actorId(), $at)) {
             $this->posts->save($post);
         }
