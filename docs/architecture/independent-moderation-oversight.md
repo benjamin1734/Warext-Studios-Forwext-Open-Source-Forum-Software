@@ -54,7 +54,7 @@ Full verification is explicit in the UI rather than running on every page load.
 
 ## Historical boundary
 
-The independent chain starts at migration `20260918006000_independent_moderation_oversight`.
+The independent chain starts at migration `20260918010000_independent_moderation_oversight`.
 
 Existing pre-09.07 moderation/core audit events are **not** backfilled into the hash chain. A hash created today cannot prove that an old record was unchanged before today. Those events remain available in the operational 09.06 audit stream but are correctly distinguished from post-activation tamper-evident entries.
 
@@ -102,6 +102,6 @@ Mutations reuse the existing same-origin moderation guard and all rendered field
 
 ## Deployment
 
-Migration `20260918006000_independent_moderation_oversight` is additive and idempotent. It creates chain state, immutable entries, review cases and anomaly flags without resetting existing data.
+Migration `20260918010000_independent_moderation_oversight` is additive and idempotent. It creates chain state, immutable entries, review cases and anomaly flags without resetting existing data.
 
 No Redis, Node.js, Docker, Supervisor or permanent worker is required.

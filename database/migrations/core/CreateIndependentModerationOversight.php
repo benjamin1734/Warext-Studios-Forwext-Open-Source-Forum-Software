@@ -15,7 +15,7 @@ final readonly class CreateIndependentModerationOversight implements Migration
 {
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260918006000_independent_moderation_oversight');
+        return MigrationId::fromString('20260918010000_independent_moderation_oversight');
     }
 
     public function owner(): MigrationOwner
