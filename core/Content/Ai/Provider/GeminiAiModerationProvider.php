@@ -38,7 +38,16 @@ final class GeminiAiModerationProvider extends AbstractPromptAiModerationProvide
 
     protected function responseText(array $response): string
     {
-        $text = $response['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $candidates = $response['candidates'] ?? null;
+        if (!is_array($candidates) || !array_is_list($candidates) || !isset($candidates[0]) || !is_array($candidates[0])) {
+            throw new AiModerationProviderException('Gemini moderation response candidates are invalid.');
+        }
+        $content = $candidates[0]['content'] ?? null;
+        $parts = is_array($content) ? ($content['parts'] ?? null) : null;
+        $first = is_array($parts) && array_is_list($parts) && isset($parts[0]) && is_array($parts[0])
+            ? $parts[0]
+            : null;
+        $text = is_array($first) ? ($first['text'] ?? null) : null;
         if (!is_string($text) || trim($text) === '') {
             throw new AiModerationProviderException('Gemini moderation response is missing classifier JSON.');
         }
