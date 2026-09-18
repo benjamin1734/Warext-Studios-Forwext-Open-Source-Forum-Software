@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### Installer / cPanel compatibility hotfix — 0.0.7.05-dev
+
+- Preserved cPanel-managed PHP handlers by keeping public `.htaccess` out of generated release payloads and merging Forwext routing rules through the installer instead of overwriting the file.
+- Added legacy-runtime guards so an unsupported PHP runtime reports the PHP 8.4+ requirement instead of failing with a parser error.
+- Added correlated installer failure diagnostics under `storage/logs/install.log` without exposing secrets to the browser.
+- Added MariaDB 10.11 alongside MySQL 8.4 migration smoke coverage.
+- Fixed the release/runtime version contract so published Forwext side-update versions such as `0.0.7.05-dev` are accepted by the installer.
+- Release CI now validates `VERSION` with the same application parser before producing or publishing packages.
+- The installer validates the project version before changing `.htaccess`, secrets, generated configuration or database state.
+
 ### 12.01 — Common Content Pipeline
 
 - Added the canonical `validation → spam → spellcheck → AI moderation → moderation policy → persist → notify → index` contract.
