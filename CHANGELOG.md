@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 09.03 — Approval / Moderation Queue
+
+- Added a typed first-party approval queue registry/provider contract so current and future moderated content domains share one queue instead of parallel moderation applications.
+- Added a permission-aware forum provider for pending threads/posts with native PHP bulk approve/reject UI under `/moderation/approval`.
+- Reused `moderation.access`, `moderation.manage`, node-scoped view/moderate permissions and `forum.moderation.bulk` with backend enforcement.
+- Added first-class thread/post reject moderation actions that persist the existing `rejected` lifecycle state, write per-item audit events and preserve bulk audit summaries.
+- Added row-locked stale-decision protection: approve/reject only succeeds while stored content is still `pending`.
+- Integrated the common queue back into the existing moderation workspace and reused the same-origin moderation mutation guard and request-id correlation.
+- Added regression coverage for provider ownership, permission fail-closed behavior, dispatch deduplication, escaping, reject permission mapping and stale-decision protection.
+- No database migration or additional cPanel runtime service is required.
+
 ### 06.01 — Node, Category and Forum Hierarchy
 
 - Added first-class category, forum, page and link nodes with opaque 128-bit ids and globally unique canonical slugs.

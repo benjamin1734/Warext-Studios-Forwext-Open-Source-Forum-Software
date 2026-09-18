@@ -704,12 +704,19 @@ final readonly class DatabaseContentModerationRepository implements ContentModer
         if (($row['merged_into_thread_id'] ?? null) !== null) {
             throw new RuntimeException('Merged source threads cannot be bulk-moderated.');
         }
+        if (
+            in_array($action, [BulkThreadAction::Approve, BulkThreadAction::Reject], true)
+            && (string) $row['moderation_state'] !== ThreadModerationState::Pending->value
+        ) {
+            throw new RuntimeException('Bulk approval actions require a pending thread.');
+        }
         [$auditAction, $before, $after, $assignments, $parameters] = match ($action) {
             BulkThreadAction::Lock => [ModerationAuditAction::ThreadLock, ['locked' => (bool) $row['locked']], ['locked' => true], ['`locked` = :value'], ['value' => true]],
             BulkThreadAction::Unlock => [ModerationAuditAction::ThreadUnlock, ['locked' => (bool) $row['locked']], ['locked' => false], ['`locked` = :value'], ['value' => false]],
             BulkThreadAction::Sticky => [ModerationAuditAction::ThreadSticky, ['sticky' => (bool) $row['sticky']], ['sticky' => true], ['`sticky` = :value'], ['value' => true]],
             BulkThreadAction::Unsticky => [ModerationAuditAction::ThreadUnsticky, ['sticky' => (bool) $row['sticky']], ['sticky' => false], ['`sticky` = :value'], ['value' => false]],
             BulkThreadAction::Approve => [ModerationAuditAction::ThreadApprove, ['moderation_state' => (string) $row['moderation_state']], ['moderation_state' => ThreadModerationState::Visible->value], ['`moderation_state` = :value'], ['value' => ThreadModerationState::Visible->value]],
+            BulkThreadAction::Reject => [ModerationAuditAction::ThreadReject, ['moderation_state' => (string) $row['moderation_state']], ['moderation_state' => ThreadModerationState::Rejected->value], ['`moderation_state` = :value'], ['value' => ThreadModerationState::Rejected->value]],
             BulkThreadAction::Delete => [ModerationAuditAction::ThreadDelete, ['deleted' => (bool) $row['deleted']], ['deleted' => true], ['`deleted` = 1', '`deleted_at_utc` = :deleted_at'], ['deleted_at' => self::format($context->occurredAt)]],
             BulkThreadAction::Restore => [ModerationAuditAction::ThreadRestore, ['deleted' => (bool) $row['deleted']], ['deleted' => false], ['`deleted` = 0', '`deleted_at_utc` = NULL'], []],
         };
@@ -735,11 +742,18 @@ final readonly class DatabaseContentModerationRepository implements ContentModer
         if ($action === BulkPostAction::Delete && (int) $row['position'] === 1) {
             throw new RuntimeException('First posts must be moderated through thread delete in bulk operations.');
         }
-        if ($action === BulkPostAction::Approve && (bool) $row['deleted']) {
-            throw new RuntimeException('Deleted posts must be restored before bulk approval.');
+        if (
+            in_array($action, [BulkPostAction::Approve, BulkPostAction::Reject], true)
+            && (string) $row['moderation_state'] !== PostModerationState::Pending->value
+        ) {
+            throw new RuntimeException('Bulk approval actions require a pending post.');
+        }
+        if (in_array($action, [BulkPostAction::Approve, BulkPostAction::Reject], true) && (bool) $row['deleted']) {
+            throw new RuntimeException('Deleted posts must be restored before bulk approval actions.');
         }
         [$auditAction, $historyAction, $before, $after, $assignments, $parameters] = match ($action) {
             BulkPostAction::Approve => [ModerationAuditAction::PostApprove, 'post.approved', ['moderation_state' => (string) $row['moderation_state']], ['moderation_state' => PostModerationState::Visible->value], ['`moderation_state` = :value'], ['value' => PostModerationState::Visible->value]],
+            BulkPostAction::Reject => [ModerationAuditAction::PostReject, 'post.rejected', ['moderation_state' => (string) $row['moderation_state']], ['moderation_state' => PostModerationState::Rejected->value], ['`moderation_state` = :value'], ['value' => PostModerationState::Rejected->value]],
             BulkPostAction::Delete => [ModerationAuditAction::PostDelete, 'post.deleted', ['deleted' => (bool) $row['deleted']], ['deleted' => true], ['`deleted` = 1', '`deleted_at_utc` = :deleted_at'], ['deleted_at' => self::format($context->occurredAt)]],
             BulkPostAction::Restore => [ModerationAuditAction::PostRestore, 'post.restored', ['deleted' => (bool) $row['deleted']], ['deleted' => false], ['`deleted` = 0', '`deleted_at_utc` = NULL'], []],
         };

@@ -22,18 +22,24 @@ use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\Forum\Moderation\ContentModerationService;
+use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
+use Forwext\Core\Forum\Moderation\ModerationOperationException;
 use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Moderation\Approval\ApprovalQueueRegistry;
+use Forwext\Core\Moderation\Approval\ApprovalQueueService;
+use Forwext\Core\Moderation\Approval\ForumApprovalQueueProvider;
 use Forwext\Core\Moderation\Report\DatabaseReportRepository;
 use Forwext\Core\Moderation\Report\ReportGroupNotFoundException;
 use Forwext\Core\Moderation\Task\DatabaseModerationTaskRepository;
 use Forwext\Core\Moderation\Task\ModerationTaskNotFoundException;
 use Forwext\Core\Moderation\Task\ModerationTaskService;
-use Forwext\Core\Moderation\Workspace\ForumApprovalWorkspaceSource;
+use Forwext\Core\Moderation\Workspace\ApprovalQueueWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ModerationTaskWorkspaceSource;
 use Forwext\Core\Moderation\Workspace\ModerationWorkspaceService;
 use Forwext\Core\Moderation\Workspace\ReportWorkspaceSource;
@@ -91,23 +97,30 @@ final class ModerationApplicationFactory
         $database = $this->database();
         $taskRepository = new DatabaseModerationTaskRepository($database);
         $reportRepository = new DatabaseReportRepository($database);
+        $nodes = new DatabaseForumNodeRepository($database);
+        $audit = new DatabaseModerationAuditStore($database);
+        $contentModeration = new ContentModerationService(
+            $nodes,
+            new DatabaseContentModerationRepository($database, $audit),
+            $gate,
+        );
+        $approvalRegistry = new ApprovalQueueRegistry([
+            new ForumApprovalQueueProvider($database, $nodes, $gate, $contentModeration),
+        ]);
+        $approvalService = new ApprovalQueueService($approvalRegistry, $gate);
         $guard = new ModerationRequestGuard($this->canonicalUrl);
         $canManage = $gate->allows(PermissionKey::fromString('moderation.manage'));
         $handler = new ModerationWorkspaceHandler(
             new ModerationWorkspaceService($gate, [
                 new ReportWorkspaceSource($database, $reportRepository),
-                new ForumApprovalWorkspaceSource(
-                    $database,
-                    new DatabaseForumNodeRepository($database),
-                    $gate,
-                ),
+                new ApprovalQueueWorkspaceSource($approvalRegistry),
                 new ModerationTaskWorkspaceSource($taskRepository),
             ]),
             new ModerationTaskService(
                 $database,
                 $taskRepository,
                 $gate,
-                new DatabaseModerationAuditStore($database),
+                $audit,
             ),
             $guard,
             $this->basePath,
@@ -119,6 +132,12 @@ final class ModerationApplicationFactory
             $this->basePath,
             $canManage,
         );
+        $approvalHandler = new ApprovalQueueHandler(
+            $approvalService,
+            $guard,
+            $this->basePath,
+            $canManage,
+        );
 
         try {
             if ($routePath === '/moderation') {
@@ -126,6 +145,20 @@ final class ModerationApplicationFactory
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
                 }
                 return $handler->view();
+            }
+
+            if ($routePath === '/moderation/approval') {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $approvalHandler->view();
+            }
+
+            if ($routePath === '/moderation/approval/actions') {
+                if ($request->method() !== HttpMethod::Post) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'POST'));
+                }
+                return $approvalHandler->moderate($request);
             }
 
             if ($routePath === '/moderation/tasks') {
@@ -165,6 +198,8 @@ final class ModerationApplicationFactory
             return $this->secure(Response::text('Forbidden', 403));
         } catch (ModerationTaskNotFoundException|ReportGroupNotFoundException) {
             return $this->secure(Response::text('Not Found', 404));
+        } catch (ModerationOperationException) {
+            return $this->secure(Response::text('Conflict', 409));
         } catch (InvalidArgumentException|ValueError) {
             return $this->secure(Response::text('Bad Request', 400));
         }

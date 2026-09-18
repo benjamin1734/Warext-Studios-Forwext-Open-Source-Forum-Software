@@ -78,6 +78,56 @@ final class DatabaseContentModerationRepositoryTest extends TestCase
         }
     }
 
+    public function testBulkRejectMovesPendingThreadToRejectedWithPerItemAndSummaryAudit(): void
+    {
+        $database = new ModerationRepositoryRecordingDatabase();
+        $row = $this->threadRow('a', 'b');
+        $row['moderation_state'] = 'pending';
+        $database->fetchOneQueue[] = $row;
+        $repository = new DatabaseContentModerationRepository(
+            $database,
+            new DatabaseModerationAuditStore($database),
+        );
+
+        $repository->bulkThreads(
+            BulkThreadAction::Reject,
+            [$this->id('a')],
+            $this->context('req-bulk-reject'),
+        );
+
+        self::assertTrue($database->transactionUsed);
+        self::assertCount(3, $database->executedQueries);
+        self::assertSame('rejected', $database->executedQueries[0]->parameters['value']);
+        self::assertSame('thread.reject', $database->executedQueries[1]->parameters['action']);
+        self::assertSame('bulk.thread', $database->executedQueries[2]->parameters['action']);
+        self::assertStringContainsString(
+            '"action":"reject"',
+            (string) $database->executedQueries[2]->parameters['after_json'],
+        );
+    }
+
+    public function testBulkApprovalRejectsStaleThreadDecisionBeforeAnyMutation(): void
+    {
+        $database = new ModerationRepositoryRecordingDatabase();
+        $database->fetchOneQueue[] = $this->threadRow('a', 'b');
+        $repository = new DatabaseContentModerationRepository(
+            $database,
+            new DatabaseModerationAuditStore($database),
+        );
+
+        $this->expectException(RuntimeException::class);
+        try {
+            $repository->bulkThreads(
+                BulkThreadAction::Reject,
+                [$this->id('a')],
+                $this->context('req-stale-reject'),
+            );
+        } finally {
+            self::assertTrue($database->transactionUsed);
+            self::assertSame([], $database->executedQueries);
+        }
+    }
+
     public function testAuditStoreRefusesOutOfTransactionAppend(): void
     {
         $database = new ModerationRepositoryRecordingDatabase();

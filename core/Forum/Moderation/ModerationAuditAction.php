@@ -15,9 +15,11 @@ enum ModerationAuditAction: string
     case ThreadSticky = 'thread.sticky';
     case ThreadUnsticky = 'thread.unsticky';
     case ThreadApprove = 'thread.approve';
+    case ThreadReject = 'thread.reject';
     case ThreadDelete = 'thread.delete';
     case ThreadRestore = 'thread.restore';
     case PostApprove = 'post.approve';
+    case PostReject = 'post.reject';
     case PostDelete = 'post.delete';
     case PostRestore = 'post.restore';
     case BulkThread = 'bulk.thread';

@@ -261,7 +261,7 @@ final readonly class ContentModerationService
         DateTimeImmutable $at,
     ): void {
         $permission = match ($action) {
-            BulkPostAction::Approve => PostPermission::Moderate->key(),
+            BulkPostAction::Approve, BulkPostAction::Reject => PostPermission::Moderate->key(),
             BulkPostAction::Delete => PostPermission::DeleteAny->key(),
             BulkPostAction::Restore => PostPermission::Restore->key(),
         };
@@ -341,7 +341,7 @@ final readonly class ContentModerationService
         return match ($action) {
             BulkThreadAction::Lock, BulkThreadAction::Unlock => ThreadPermission::Lock->key(),
             BulkThreadAction::Sticky, BulkThreadAction::Unsticky => ThreadPermission::Sticky->key(),
-            BulkThreadAction::Approve => ThreadPermission::Moderate->key(),
+            BulkThreadAction::Approve, BulkThreadAction::Reject => ThreadPermission::Moderate->key(),
             BulkThreadAction::Delete => ModerationPermission::DeleteThread->key(),
             BulkThreadAction::Restore => ModerationPermission::RestoreThread->key(),
         };

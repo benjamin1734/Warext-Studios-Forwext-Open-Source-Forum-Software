@@ -125,6 +125,33 @@ final class ContentModerationServiceTest extends TestCase
         }
     }
 
+    public function testBulkRejectUsesModerateAndBulkPermissions(): void
+    {
+        [$actor, $forumA, , $thread] = $this->fixture();
+        $repository = new ModerationServiceRepository([$thread]);
+        $service = new ContentModerationService(
+            new ModerationServiceNodeRepository([$forumA]),
+            $repository,
+            $this->gate($actor, [
+                $forumA->id()->value() => [
+                    'forum.view',
+                    ModerationPermission::Bulk->value,
+                    ThreadPermission::Moderate->value,
+                ],
+            ]),
+        );
+
+        $service->bulkThreads(
+            BulkThreadAction::Reject,
+            [$thread->threadId],
+            ModerationReasonCode::fromString('approval.rules'),
+            ModerationRequestId::fromString('req-bulk-reject'),
+            $this->time('2026-09-15 21:07:00.000000'),
+        );
+
+        self::assertSame(['bulk.thread.reject'], $repository->calls);
+    }
+
     public function testMergeRequiresPermissionAcrossEveryParticipatingForum(): void
     {
         [$actor, $forumA, $forumB, $destination] = $this->fixture();

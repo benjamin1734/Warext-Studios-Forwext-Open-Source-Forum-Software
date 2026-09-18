@@ -11,6 +11,7 @@ enum BulkThreadAction: string
     case Sticky = 'sticky';
     case Unsticky = 'unsticky';
     case Approve = 'approve';
+    case Reject = 'reject';
     case Delete = 'delete';
     case Restore = 'restore';
 }
