@@ -66,7 +66,7 @@ use Forwext\Core\Moderation\Workspace\ReportWorkspaceSource;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
 use Forwext\Core\Notification\NotificationDispatcher;
 use Forwext\Core\Notification\NotificationRegistry;
-use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Routing\BasePath;\nuse Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
 use Forwext\Core\Security\Secret\SecretCipher;
@@ -96,7 +96,7 @@ final class ModerationApplicationFactory
             $this->projectRoot . '/config/defaults.php',
             $this->projectRoot . '/config/generated.php',
         );
-        $this->canonicalUrl = new CanonicalUrl($this->config->requireString('routing.canonical_url'));
+        $this->canonicalUrl = new CanonicalUrl(RuntimeCanonicalUrlResolver::resolve(\n            $this->config->requireString('routing.canonical_url'),\n        ));
         $this->basePath = $this->canonicalUrl->basePath();
     }
 
