@@ -164,6 +164,15 @@ final readonly class DatabaseBugStaffRepository implements BugStaffRepository
         }
     }
 
+    public function deleteDuplicateLink(EntityId $duplicateReportId): bool
+    {
+        return $this->database->execute(new CompiledQuery(
+            'DELETE FROM forwext_bug_report_duplicates WHERE duplicate_report_id=:duplicate_report_id',
+            ['duplicate_report_id'=>$duplicateReportId->value()],
+            true,
+        )) === 1;
+    }
+
     public function recentAudit(int $limit = 50): array
     {
         if ($limit < 1 || $limit > 200) {
@@ -229,7 +238,7 @@ final readonly class DatabaseBugStaffRepository implements BugStaffRepository
         return new BugDuplicateLink(
             EntityId::fromString((string) $row['duplicate_report_id']),
             EntityId::fromString((string) $row['canonical_report_id']),
-            UserId::fromStored((string) $row['created_by_user_id']),
+            $row['created_by_user_id'] === null ? null : UserId::fromStored((string) $row['created_by_user_id']),
             $this->parse((string) $row['created_at_utc']),
         );
     }
