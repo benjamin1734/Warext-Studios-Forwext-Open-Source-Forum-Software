@@ -2,11 +2,29 @@
 
 declare(strict_types=1);
 
+use Forwext\Core\Install\InstallationFailureReporter;
 use Forwext\Core\Install\InstallationInput;
 use Forwext\Core\Install\InstallationService;
 
 $root = dirname(__DIR__);
 $autoload = $root . '/vendor/autoload.php';
+
+if (PHP_VERSION_ID < 80400) {
+    http_response_code(500);
+    header('Content-Type: text/html; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+    echo '<!doctype html><html lang="tr"><meta charset="utf-8"><title>Forwext kurulum gereksinimi</title>';
+    echo '<body style="font:16px/1.55 system-ui,sans-serif;max-width:760px;margin:48px auto;padding:0 20px">';
+    echo '<h1>PHP 8.4 veya üzeri gerekli</h1>';
+    echo '<p>Kurulum başlatılamadı. Sunucuda çalışan PHP sürümü: <strong>'
+        . htmlspecialchars(PHP_VERSION, ENT_QUOTES, 'UTF-8') . '</strong>.</p>';
+    echo '<p>cPanel kullanıyorsanız MultiPHP Manager üzerinden bu alan adını PHP 8.4 veya daha yeni bir sürüme alın.</p>';
+    echo '</body></html>';
+    exit;
+}
+
 $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && $_SERVER['HTTPS'] !== 'off';
 
 session_set_cookie_params([
@@ -59,19 +77,21 @@ if (!is_file($autoload)) {
         } else {
             try {
                 $input = new InstallationInput(
-                    canonicalUrl: field('canonical_url'),
-                    databaseHost: field('database_host'),
-                    databasePort: (int) field('database_port'),
-                    databaseName: field('database_name'),
-                    databaseUsername: field('database_username'),
-                    databasePassword: field('database_password', trim: false),
+                    field('canonical_url'),
+                    field('database_host'),
+                    (int) field('database_port'),
+                    field('database_name'),
+                    field('database_username'),
+                    field('database_password', false)
                 );
                 $report = $installer->install($input);
                 unset($_SESSION['install_csrf']);
                 session_regenerate_id(true);
                 $completed = true;
             } catch (Throwable $exception) {
-                $error = $exception->getMessage();
+                $error = (new InstallationFailureReporter(
+                    $root . '/storage/logs/install.log',
+                ))->report($exception);
             }
         }
     }

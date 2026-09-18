@@ -200,6 +200,15 @@ jobs:
             --exclude '/.htaccess' \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.editorconfig' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.cache' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude 'eslint.config.mjs' \
+            --exclude 'tsconfig.base.json' \
+            --exclude 'package.json' \
+            --exclude 'public/.htaccess' \
             --exclude 'dist/' \
             --exclude 'tests/' \
             --exclude 'tools/' \
@@ -301,6 +310,8 @@ jobs:
                       digest.update(chunk)
               return digest.hexdigest()
 
+          preserved_paths = {".htaccess", "public/.htaccess"}
+
           def inventory(root: Path) -> dict[str, dict[str, object]]:
               result: dict[str, dict[str, object]] = {}
               for path in sorted(root.rglob("*")):
@@ -309,6 +320,8 @@ jobs:
                   if not path.is_file():
                       continue
                   relative = path.relative_to(root).as_posix()
+                  if relative in preserved_paths:
+                      continue
                   result[relative] = {"path": path, "sha256": sha256(path)}
               return result
 

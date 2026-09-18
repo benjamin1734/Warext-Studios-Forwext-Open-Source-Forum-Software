@@ -1,4 +1,4 @@
-name: MySQL migration smoke
+name: Database migration smoke
 
 on:
   push:
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   mysql-migrations:
+    name: MySQL 8.4 migrations
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -44,6 +45,47 @@ jobs:
         env:
           FORWEXT_TEST_DB_HOST: 127.0.0.1
           FORWEXT_TEST_DB_PORT: 3306
+          FORWEXT_TEST_DB_NAME: forwext_ci
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+        run: php tools/quality/smoke-core-migrations.php
+
+  mariadb-migrations:
+    name: MariaDB 10.11 migrations
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: forwext_ci
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Run clean MariaDB migration smoke test
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3307
           FORWEXT_TEST_DB_NAME: forwext_ci
           FORWEXT_TEST_DB_USER: root
           FORWEXT_TEST_DB_PASSWORD: root

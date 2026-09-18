@@ -50,6 +50,8 @@ final class InstallationService
                 throw new MigrationException('Forwext is already installed.');
             }
 
+            (new ApacheHtaccessManager($this->projectRoot . '/public/.htaccess'))->ensurePublicRouting();
+
             $keyProvider = new EnvironmentOrFileSecretKeyProvider(
                 $this->projectRoot . '/config/secret.key',
                 'FORWEXT_MASTER_KEY',
