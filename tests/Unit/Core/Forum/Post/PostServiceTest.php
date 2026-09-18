@@ -162,6 +162,55 @@ final class PostServiceTest extends TestCase
         self::assertSame(1, $database->transactions);
     }
 
+    public function testPostEditUsesPipelineAndCanReturnVisibleContentToModeration(): void
+    {
+        $actor = $this->id('1');
+        $forum = $this->forum(false, true);
+        $thread = $this->thread($forum->id(), $actor, ThreadModerationState::Visible, false);
+        $first = $this->post($thread->id(), $actor, 1, false);
+        $posts = new PostServicePostRepository([$first]);
+        $abuseRepository = new PostAbuseRepository(new AbuseRule(
+            'post.edit.pipeline-review',
+            'Pipeline edit review',
+            AbuseEventType::Post,
+            AbuseSignal::User,
+            1,
+            60,
+            AbuseAction::Review,
+            true,
+        ));
+        $search = new PostPipelineSearchStore();
+        $database = new PostPipelineDatabase();
+        $pipeline = ForumContentPipelineFactory::create(
+            $database,
+            $search,
+            new AbuseEngine($abuseRepository),
+        );
+        $service = $this->service(
+            $actor,
+            $forum,
+            $thread,
+            $posts,
+            ['forum.view', PostPermission::EditOwn->value],
+            null,
+            $pipeline,
+        );
+
+        $edited = $service->edit(
+            $first->id(),
+            PostBody::fromString('Edited through pipeline'),
+            $this->time('2026-09-18 19:47:00.000000'),
+        );
+
+        self::assertSame('Edited through pipeline', $edited->body()->source());
+        self::assertSame(PostModerationState::Pending, $edited->moderationState());
+        self::assertCount(1, $abuseRepository->events);
+        self::assertSame('forum.post', $abuseRepository->events[0]->targetType);
+        self::assertSame($edited->id()->value(), $abuseRepository->events[0]->targetId?->value());
+        self::assertSame([['post', $edited->id()->value()]], $search->recorded);
+        self::assertSame(1, $database->transactions);
+    }
+
     public function testReplyIsBlockedWhenThreadIsLocked(): void
     {
         $actor = $this->id('1');
