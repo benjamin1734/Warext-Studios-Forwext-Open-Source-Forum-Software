@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.02-dev
 LAST_COMPLETED_MAIN_STEP = 10
-LAST_COMPLETED_SUBSTEP = 10.06
-CURRENT_STEP = 11.01
-LAST_COMMIT = 3d95c790037c60bbe4f17311c14262c5c7be8d16
+LAST_COMPLETED_SUBSTEP = 11.01
+CURRENT_STEP = 11.02
+LAST_COMMIT = 48c7c8ef5f84e89ab6e239676872bfda65a482bd
 BLOCKERS = none
-NEXT_STEP = 11.01 - Hata raporu domain ve workflow
+NEXT_STEP = 11.02 - Otomatik teknik bağlam toplama
 ```
 
 ## Current position
@@ -21,13 +21,27 @@ NEXT_STEP = 11.01 - Hata raporu domain ve workflow
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`; main step `11` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`.
-- Current sub-step: `11.01 — Hata raporu domain ve workflow`.
-- Remaining roadmap work after 10.06: **69 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01`.
+- Current sub-step: `11.02 — Otomatik teknik bağlam toplama`.
+- Remaining roadmap work after 11.01: **68 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 11.01
+
+- Added typed bug-report severity, configurable categories and `new/in_review/resolved/rejected/duplicate` lifecycle states.
+- Added immutable bug-report aggregate with reporter, optional assignee, terminal finalized timestamp, UTC timestamps and optimistic-lock version.
+- Added permission-aware create/own/all access plus category, severity, lifecycle and assignment operations.
+- Added dedicated `bug.report.assign` permission and assignee validation against `bug.report.view_all`.
+- Enforced backend IDOR/BOLA protection for single-report/history access and all staff mutations.
+- Added append-only public/staff tracking history for creation, status, assignment, severity and category changes.
+- Added additive idempotent migration `20260918021000_bug_report_workflow` with categories, reports, history, indexes, FKs and safe built-in permission defaults.
+- Feature commit: `48c7c8ef5f84e89ab6e239676872bfda65a482bd`.
+- GitHub Actions build run `35374163970`: success.
+- MySQL migration smoke run `35374163988`: success.
+- Automatic diagnostic context remains 11.02; form/attachments 11.03; reporter UI 11.04; duplicate detection/dashboard/search/export/audit 11.05.
 
 ## Completed in 10.06
 
