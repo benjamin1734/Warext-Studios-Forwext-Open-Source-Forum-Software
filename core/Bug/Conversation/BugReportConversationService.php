@@ -7,6 +7,11 @@ namespace Forwext\Core\Bug\Conversation;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Bug\Report\BugReport;
 use Forwext\Core\Bug\Report\BugReportService;
 use Forwext\Core\Bug\Report\BugReportStatus;
@@ -28,6 +33,8 @@ final readonly class BugReportConversationService
         private BugReportConversationRepository $conversation,
         private PermissionGate $gate,
         private BugReportNotifier $notifier=new NullBugReportNotifier(),
+        private ?AuditRecorder $audit=null,
+        private ?AuditRequestId $auditRequestId=null,
     ) {
     }
 
@@ -66,6 +73,13 @@ final readonly class BugReportConversationService
 
         $this->atomic(function () use ($message): void {
             $this->conversation->append($message);
+            $this->appendAudit(
+                'bug.report.reporter_reply',
+                $message->reportId,
+                [],
+                ['message_id'=>$message->messageId->value(),'role'=>$message->authorRole->value],
+                $message->createdAt,
+            );
         });
         $this->safeNotify(fn()=> $this->notifier->reporterReply($report,$message));
         return $message;
@@ -91,6 +105,13 @@ final readonly class BugReportConversationService
 
         $this->atomic(function () use ($message): void {
             $this->conversation->append($message);
+            $this->appendAudit(
+                'bug.report.staff_reply',
+                $message->reportId,
+                [],
+                ['message_id'=>$message->messageId->value(),'role'=>$message->authorRole->value],
+                $message->createdAt,
+            );
         });
         $this->safeNotify(fn()=> $this->notifier->staffReply($report,$message));
         return $message;
@@ -107,6 +128,36 @@ final readonly class BugReportConversationService
             $this->safeNotify(fn()=> $this->notifier->statusChanged($after));
         }
         return $after;
+    }
+
+    /**
+     * @param array<string,scalar|null> $before
+     * @param array<string,scalar|null> $after
+     */
+    private function appendAudit(
+        string $action,
+        EntityId $reportId,
+        array $before,
+        array $after,
+        DateTimeImmutable $at,
+    ): void {
+        if ($this->audit === null) {
+            return;
+        }
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Bug,
+            $this->gate->actorId(),
+            AuditAction::fromString($action),
+            'bug.report',
+            $reportId->value(),
+            null,
+            null,
+            $this->auditRequestId ?? AuditRequestId::generate(),
+            $before,
+            $after,
+            $at,
+        ));
     }
 
     private function atomic(Closure $callback): mixed
