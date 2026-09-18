@@ -20,6 +20,7 @@ use Forwext\Core\Content\Pipeline\DefaultContentValidationProcessor;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -118,6 +119,34 @@ final class ContentPipelineTest extends TestCase
 
         self::assertSame('tx.rollback', $trace->events[count($trace->events) - 1]);
         self::assertFalse($database->inTransaction());
+    }
+
+    public function testPipelineRefusesIncompleteOrDuplicatePrePersistRegistry(): void
+    {
+        $trace = new PipelineTrace();
+
+        try {
+            new ContentPipeline(
+                new PipelineDatabase($trace),
+                [new RecordingPipelineProcessor(ContentPipelineStage::Validation, $trace)],
+            );
+            self::fail('Missing stages must be rejected.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('stage is missing', $exception->getMessage());
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        new ContentPipeline(
+            new PipelineDatabase($trace),
+            [
+                new RecordingPipelineProcessor(ContentPipelineStage::Validation, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::Validation, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::Spam, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::Spellcheck, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::AiModeration, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::ModerationPolicy, $trace),
+            ],
+        );
     }
 
     public function testValidationRejectsBeforePersistenceTransactionStarts(): void
