@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 11.01 — Bug Report Domain and Workflow
+
+- Added typed bug-report severity, category and `new/in_review/resolved/rejected/duplicate` lifecycle states.
+- Added permission-aware create/own/all access, granular assignment, optimistic-lock mutations and append-only public/staff tracking history.
+- Added backend IDOR/BOLA protection plus assignee eligibility checks against bug staff access.
+- Added additive migration `20260918021000_bug_report_workflow` with starter categories, indexes, foreign keys and safe permission-template defaults.
+- Added regression coverage for lifecycle/finalization, history visibility, category/severity changes and assignment security.
+
 ### 10.06 — Support Panel, My Tickets, Reporting and Audit
 
 - Added authenticated My Tickets and permission-gated staff support dashboard surfaces.

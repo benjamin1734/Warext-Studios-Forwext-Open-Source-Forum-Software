@@ -64,6 +64,7 @@ final class FirstPartyPermissionCatalog
             self::flag('bug.report.view_own', 'View own bug reports.'),
             self::flag('bug.report.view_all', 'View bug reports from all users.'),
             self::flag('bug.report.manage', 'Manage bug reports and duplicate workflows.'),
+            self::flag('bug.report.assign', 'Assign or unassign bug reports.'),
 
             self::flag('portfolio.view', 'View portfolio content.'),
             self::flag('portfolio.create', 'Create portfolio entries.'),
