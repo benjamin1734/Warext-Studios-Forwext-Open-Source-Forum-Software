@@ -18,6 +18,11 @@ final readonly class SearchChangeContentPipelineIndexer implements ContentPipeli
         ContentPipelinePersisted $persisted,
         DateTimeImmutable $at,
     ): void {
-        $this->changes->record($persisted->targetType, $persisted->targetId->value());
+        $documentType = match ($persisted->targetType) {
+            'forum.thread' => 'thread',
+            'forum.post' => 'post',
+            default => $persisted->targetType,
+        };
+        $this->changes->record($documentType, $persisted->targetId->value());
     }
 }
