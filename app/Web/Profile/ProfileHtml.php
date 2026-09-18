@@ -45,6 +45,13 @@ final class ProfileHtml
                 . '<path d="M9 3h6l1 2h3v2h-2.2c.5.9.8 1.9.9 3H21v2h-3.3c-.1.7-.3 1.4-.6 2H21v2h-5.1c-1 1.2-2.3 2-3.9 2s-2.9-.8-3.9-2H3v-2h3.9c-.3-.6-.5-1.3-.6-2H3v-2h3.3c.1-1.1.4-2.1.9-3H5V5h3l1-2Zm3 4a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0v-3a3 3 0 0 0-3-3Z"/>'
                 . '</svg></a>'
             : '';
+        $bugReportsLink = $authenticated
+            ? '<a class="bug-reports-fab" href="' . self::escape($basePath->prepend('/bugs/my'))
+                . '" aria-label="Hata Bildirimlerim" title="Hata Bildirimlerim">'
+                . '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+                . '<path d="M4 4h16v2H4V4Zm0 7h16v2H4v-2Zm0 7h16v2H4v-2ZM2 4h1v2H2V4Zm0 7h1v2H2v-2Zm0 7h1v2H2v-2Z"/>'
+                . '</svg></a>'
+            : '';
 
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -78,12 +85,12 @@ final class ProfileHtml
             . '.pagination{display:flex;gap:8px;margin-top:18px}.pagination a{padding:7px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none}.pagination a[aria-current=page]{border-color:var(--accent);color:var(--accent)}'
             . '.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{padding:18px}.stat strong{display:block;font-size:26px}.presence-settings{margin-top:18px;display:flex;gap:12px;align-items:end;flex-wrap:wrap}.presence-settings label{display:grid;gap:6px;min-width:220px}'
             . '.presence-settings input,.presence-settings textarea,.presence-settings select{width:100%;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:9px;padding:10px 11px;font:inherit}.presence-settings textarea{resize:vertical}'
-            . '.bug-report-fab{position:fixed;right:20px;bottom:20px;z-index:50;width:46px;height:46px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--panel2);color:var(--muted);text-decoration:none;box-shadow:0 8px 30px #0008}.bug-report-fab:hover,.bug-report-fab:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-fab svg{width:22px;height:22px;fill:currentColor}'
+            . '.bug-report-fab,.bug-reports-fab{position:fixed;bottom:20px;z-index:50;width:46px;height:46px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--panel2);color:var(--muted);text-decoration:none;box-shadow:0 8px 30px #0008}.bug-report-fab{right:20px}.bug-reports-fab{right:76px}.bug-report-fab:hover,.bug-report-fab:focus-visible,.bug-reports-fab:hover,.bug-reports-fab:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-fab svg,.bug-reports-fab svg{width:22px;height:22px;fill:currentColor}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
             . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
-            . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
+            . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportsLink . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
             . '<script src="' . $notificationRealtimeScript . '" defer></script>'
