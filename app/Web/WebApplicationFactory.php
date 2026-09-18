@@ -40,6 +40,10 @@ use Forwext\App\Web\Social\PostBookmarkHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
 use Forwext\App\Web\Search\SearchHandler;
+use Forwext\App\Web\Faq\FaqArticleHandler;
+use Forwext\App\Web\Faq\FaqArticleIdHandler;
+use Forwext\App\Web\Faq\FaqIndexHandler;
+use Forwext\App\Web\Faq\FaqManageHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
@@ -55,6 +59,9 @@ use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\Faq\DatabaseFaqRepository;
+use Forwext\Core\Faq\FaqService;
+use Forwext\Core\Faq\Search\FaqSearchAccessScopeProvider;
 use Forwext\Core\Forum\Attachment\AttachmentInspector;
 use Forwext\Core\Forum\Attachment\AttachmentQuotaPolicy;
 use Forwext\Core\Forum\Attachment\DatabaseAttachmentRepository;
@@ -122,6 +129,7 @@ use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
+use Forwext\Core\Search\Lifecycle\DatabaseSearchIndexChangeStore;
 use Forwext\Core\Search\NativeDatabaseSearchDriver;
 use Forwext\Core\Search\PermissionAwareSearchService;
 use Forwext\Core\Search\Saved\SavedSearchQueryRegistry;
@@ -212,10 +220,21 @@ final readonly class WebApplicationFactory
         $posts = new DatabasePostRepository($database);
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
         $nodes = new DatabaseForumNodeRepository($database);
+        $searchChanges = new DatabaseSearchIndexChangeStore($database);
+        $faq = new FaqService(
+            $database,
+            new DatabaseFaqRepository($database),
+            $authorizer,
+            $searchChanges,
+        );
         $searchService = new PermissionAwareSearchService(
             new NativeDatabaseSearchDriver($database),
             $authorizer,
-            [new PublicSearchAccessScopeProvider(), new ForumSearchAccessScopeProvider($nodes, $authorizer)],
+            [
+                new PublicSearchAccessScopeProvider(),
+                new ForumSearchAccessScopeProvider($nodes, $authorizer),
+                new FaqSearchAccessScopeProvider($authorizer),
+            ],
             new SavedSearchQueryRegistry(),
         );
         $quotes = new CrossThreadQuoteService($posts, $threads, $users);
@@ -290,12 +309,45 @@ final readonly class WebApplicationFactory
 
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
         $supportCsrf = $this->supportCsrfMiddleware($config);
+        $faqCsrf = $this->faqCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
+        $routes->add(new Route(
+            'faq.index',
+            [HttpMethod::Get],
+            new PathTemplate('/faq'),
+            new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'faq.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/faq/manage'),
+            new FaqManageHandler($faq, $viewerResolver, $basePath),
+            [$faqCsrf],
+        ));
+        $routes->add(new Route(
+            'faq.article.id',
+            [HttpMethod::Get],
+            new PathTemplate('/faq/articles/{articleId}', ['articleId'=>'[0-9a-f]{32}']),
+            new FaqArticleIdHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'faq.article',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate(
+                '/faq/{language}/{slug}',
+                [
+                    'language'=>'[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*',
+                    'slug'=>'[a-z0-9][a-z0-9-]{1,159}',
+                ],
+            ),
+            new FaqArticleHandler($faq, $viewerResolver, $basePath),
+            [$faqCsrf],
+        ));
         $routes->add(new Route(
             'support.ticket.new',
             [HttpMethod::Get, HttpMethod::Post],
@@ -561,6 +613,11 @@ final readonly class WebApplicationFactory
     private function supportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'support-ticket', 'forwext.csrf.support-ticket.v1');
+    }
+
+    private function faqCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'faq', 'forwext.csrf.faq.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

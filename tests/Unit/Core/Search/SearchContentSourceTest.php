@@ -6,6 +6,8 @@ namespace Forwext\Tests\Unit\Core\Search;
 
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
+use Forwext\Core\Faq\Search\DatabaseFaqSearchContentSource;
+use Forwext\Core\Faq\Search\FaqSearchAccessScopeProvider;
 use Forwext\Core\Search\Lifecycle\SearchIndexScope;
 use Forwext\Core\Search\Lifecycle\Source\DatabasePostSearchContentSource;
 use Forwext\Core\Search\Lifecycle\Source\DatabaseUserSearchContentSource;
@@ -57,6 +59,32 @@ final class SearchContentSourceTest extends TestCase
         self::assertNull($source->document('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'));
     }
 
+    public function testFaqIndexUsesEffectiveVisibilityAndCarriesTags(): void
+    {
+        $database = new SourceRecordingDatabase();
+        $database->one = [[
+            'article_id' => 'dddddddddddddddddddddddddddddddd',
+            'question' => 'How does FAQ work?',
+            'answer' => 'Answer body',
+            'article_visibility' => 'public',
+            'category_visibility' => 'members',
+            'language' => 'tr',
+            'updated_at_utc' => '2026-09-18 18:00:00.000000',
+            'article_active' => 1,
+            'category_active' => 1,
+        ]];
+        $database->all = [[['tag_key'=>'support'],['tag_key'=>'help']]];
+        $source = new DatabaseFaqSearchContentSource($database);
+
+        $document = $source->document('dddddddddddddddddddddddddddddddd');
+
+        self::assertNotNull($document);
+        self::assertSame('faq.article', $document->documentType);
+        self::assertSame([FaqSearchAccessScopeProvider::MEMBERS], $document->accessScopes);
+        self::assertSame(['support','help'], $document->attributes['tag']);
+        self::assertSame('tr', $document->locale);
+    }
+
     public function testVisiblePostCarriesOnlyItsForumPermissionScope(): void
     {
         $database = new SourceRecordingDatabase();
@@ -88,6 +116,8 @@ final class SourceRecordingDatabase implements QueryExecutor
 {
     /** @var list<array<string, mixed>|null> */
     public array $one = [];
+    /** @var list<list<array<string,mixed>>> */
+    public array $all = [];
     /** @var list<CompiledQuery> */
     public array $queries = [];
 
@@ -106,7 +136,7 @@ final class SourceRecordingDatabase implements QueryExecutor
     public function fetchAll(CompiledQuery $query): array
     {
         $this->queries[] = $query;
-        return [];
+        return array_shift($this->all) ?? [];
     }
 
     public function fetchValue(CompiledQuery $query): mixed

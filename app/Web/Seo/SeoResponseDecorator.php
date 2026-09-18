@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Seo;
 
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Faq\Seo\DatabaseFaqSeoReader;
 use Forwext\Core\Seo\Discovery\DatabasePublicProfileSeoReader;
 use Forwext\Core\Seo\SeoContext;
 use Forwext\Core\Seo\SeoHeadRenderer;
@@ -16,6 +17,7 @@ final readonly class SeoResponseDecorator
     public function __construct(
         private SeoContext $context,
         private ?DatabasePublicProfileSeoReader $profiles = null,
+        private ?DatabaseFaqSeoReader $faq = null,
     ) {
     }
 
@@ -81,6 +83,52 @@ final readonly class SeoResponseDecorator
             return $profile === null ? null : $this->profileMetadata($profile->username, $profile->canonicalPath());
         }
 
+        if ($routePath === '/faq') {
+            $url = $this->context->absolute('/faq');
+            return new SeoMetadata(
+                'Sık Sorulan Sorular · ' . $this->context->siteName(),
+                $this->context->siteName() . ' sık sorulan sorular ve yardım içerikleri.',
+                $url,
+                true,
+                'website',
+                [[
+                    '@context'=>'https://schema.org',
+                    '@type'=>'CollectionPage',
+                    'name'=>'Sık Sorulan Sorular',
+                    'url'=>$url,
+                ]],
+            );
+        }
+
+        if (preg_match('#^/faq/([^/]+)/([^/]+)$#D', $routePath, $matches) === 1) {
+            $record = $this->faq?->find(rawurldecode($matches[1]), rawurldecode($matches[2]));
+            if ($record === null) {
+                return null;
+            }
+            $url = $this->context->absolute($record->canonicalPath());
+            $description = $record->seoDescription ?? self::summary($record->answer);
+            return new SeoMetadata(
+                $record->seoTitle ?? $record->question,
+                $description,
+                $url,
+                true,
+                'article',
+                [[
+                    '@context'=>'https://schema.org',
+                    '@type'=>'FAQPage',
+                    'mainEntity'=>[[
+                        '@type'=>'Question',
+                        'name'=>$record->question,
+                        'acceptedAnswer'=>[
+                            '@type'=>'Answer',
+                            'text'=>$record->answer,
+                        ],
+                    ]],
+                    'url'=>$url,
+                ]],
+            );
+        }
+
         return null;
     }
 
@@ -100,6 +148,15 @@ final readonly class SeoResponseDecorator
                 'url' => $url,
             ]],
         );
+    }
+
+    private static function summary(string $answer): string
+    {
+        $plain = trim((string) preg_replace('/\s+/u', ' ', strip_tags($answer)));
+        if ($plain === '') {
+            return 'Sık sorulan soru ve yardım içeriği.';
+        }
+        return strlen($plain) <= 320 ? $plain : substr($plain, 0, 317) . '...';
     }
 
     private function injectHtmlMetadata(Response $response, ?SeoMetadata $metadata): Response

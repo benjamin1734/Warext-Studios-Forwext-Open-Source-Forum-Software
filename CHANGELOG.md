@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 10.04 — FAQ System
+
+- Added category/question/answer FAQ domain with tags, language, visibility, ordering and SEO fields.
+- Added helpful analytics, permission-gated JSON import/export and privacy-safe exported content.
+- Added `faq.article` native search indexing with server-derived public/member/staff scopes.
+- Added public/native FAQ pages, management surface, dedicated CSRF and escaped rendering.
+- Added FAQPage SEO structured data plus sitemap/feed discovery for public active content.
+- Added additive migration `20260918014000_faq_system` and regression coverage.
+
 ### 10.03 — Support Conversation and Staff Tools
 
 - Added append-only requester/staff ticket conversation, staff-only internal notes and immutable workflow history.

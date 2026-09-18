@@ -189,6 +189,9 @@ final class SearchHtml
         if ($hit->documentType === 'user' && $hit->title !== null) {
             $href = ProfileHtml::escape($basePath->prepend('/members/' . rawurlencode($hit->title)));
             $heading = '<a href="' . $href . '">' . $title . '</a>';
+        } elseif ($hit->documentType === 'faq.article') {
+            $href = ProfileHtml::escape($basePath->prepend('/faq/articles/' . rawurlencode($hit->documentId)));
+            $heading = '<a href="' . $href . '">' . $title . '</a>';
         }
         return '<article class="search-hit"><div class="search-hit-type">' . $type . '</div><h3>'
             . $heading . '</h3><div class="muted search-hit-id">' . $id . '</div></article>';

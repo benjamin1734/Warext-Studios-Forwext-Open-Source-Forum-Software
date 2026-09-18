@@ -12,6 +12,7 @@ use Forwext\App\Web\Seo\SeoResponseDecorator;
 use Forwext\App\Web\Seo\SitemapHandler;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
+use Forwext\Core\Faq\Seo\DatabaseFaqSeoReader;
 use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
@@ -113,6 +114,39 @@ final class SeoFoundationTest extends TestCase
         self::assertStringContainsString('Disallow: /forum/account/', $body);
         self::assertStringContainsString('Disallow: /forum/search', $body);
         self::assertStringContainsString('Sitemap: https://example.test/forum/sitemap.xml', $body);
+    }
+
+    public function testDecoratorBuildsFaqPageMetadataOnlyFromPublicFaqReader(): void
+    {
+        $executor = new RecordingSeoExecutor(oneRow: [
+            'language'=>'tr',
+            'slug'=>'nasil-calisir',
+            'question'=>'Nasıl çalışır?',
+            'answer'=>'Güvenli bir açıklama.',
+            'seo_title'=>'Özel SEO başlığı',
+            'seo_description'=>'Özel SEO açıklaması',
+            'updated_at_utc'=>'2026-09-18 18:00:00.000000',
+        ]);
+        $decorator = new SeoResponseDecorator(
+            new SeoContext(new CanonicalUrl('https://example.test/community')),
+            null,
+            new DatabaseFaqSeoReader($executor),
+        );
+        $response = Response::html('<!doctype html><html><head><title>FAQ</title></head><body>x</body></html>');
+
+        $decorated = $decorator->decorate(
+            new Request(HttpMethod::Get, '/community/faq/tr/nasil-calisir'),
+            $response,
+        );
+
+        self::assertNull($decorated->headers()->first('x-robots-tag'));
+        self::assertStringContainsString('name="robots" content="index,follow"', $decorated->body());
+        self::assertStringContainsString('FAQPage', $decorated->body());
+        self::assertStringContainsString('https://example.test/community/faq/tr/nasil-calisir', $decorated->body());
+        self::assertNotNull($executor->lastQuery);
+        $sql = strtolower($executor->lastQuery->sql);
+        self::assertStringContainsString("a.visibility='public'", $sql);
+        self::assertStringContainsString("c.visibility='public'", $sql);
     }
 
     public function testDecoratorKeepsAuthenticatedOnlyProfileOutOfSeo(): void

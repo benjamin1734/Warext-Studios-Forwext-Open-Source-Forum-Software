@@ -10,6 +10,8 @@ use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
 use Forwext\Core\Http\Canonical\CanonicalUrl;
+use Forwext\Core\Faq\Seo\DatabaseFaqPublicDiscoverySource;
+use Forwext\Core\Faq\Seo\DatabaseFaqSeoReader;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
@@ -30,6 +32,7 @@ final class SeoApplicationFactory
     private SeoContext $context;
     private ?DatabaseConnection $database = null;
     private ?DatabasePublicProfileSeoReader $profiles = null;
+    private ?DatabaseFaqSeoReader $faq = null;
     private ?PublicDiscoveryService $discovery = null;
 
     public function __construct(private string $projectRoot)
@@ -98,10 +101,13 @@ final class SeoApplicationFactory
                 preg_match('#^/members/[^/]+$#D', $routePath) === 1
                 || preg_match('#^/u/[^/]+$#D', $routePath) === 1
             );
+        $needsFaqLookup = is_string($routePath)
+            && preg_match('#^/faq/[^/]+/[^/]+$#D', $routePath) === 1;
 
         return (new SeoResponseDecorator(
             $this->context,
             $needsProfileLookup ? $this->profiles() : null,
+            $needsFaqLookup ? $this->faq() : null,
         ))->decorate($request, $response);
     }
 
@@ -111,10 +117,20 @@ final class SeoApplicationFactory
             $this->discovery = new PublicDiscoveryService([
                 new StaticPublicDiscoverySource(),
                 new DatabasePublicProfileDiscoverySource($this->profiles()),
+                new DatabaseFaqPublicDiscoverySource($this->database()),
             ]);
         }
 
         return $this->discovery;
+    }
+
+    private function faq(): DatabaseFaqSeoReader
+    {
+        if ($this->faq === null) {
+            $this->faq = new DatabaseFaqSeoReader($this->database());
+        }
+
+        return $this->faq;
     }
 
     private function profiles(): DatabasePublicProfileSeoReader
