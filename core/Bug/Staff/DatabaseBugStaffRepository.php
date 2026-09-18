@@ -171,8 +171,8 @@ final readonly class DatabaseBugStaffRepository implements BugStaffRepository
         }
 
         $rows = $this->database->fetchAll(new CompiledQuery(
-            "SELECT audit_id,actor_user_id,action,target_id,request_id,occurred_at_utc "
-            . "FROM forwext_core_audit_events WHERE scope='bug' AND target_type='bug.report' "
+            "SELECT audit_id,actor_user_id,action,target_type,target_id,request_id,occurred_at_utc "
+            . "FROM forwext_core_audit_events WHERE scope='bug' "
             . 'ORDER BY occurred_at_utc DESC,audit_id DESC LIMIT ' . $limit,
         ));
 
@@ -181,6 +181,7 @@ final readonly class DatabaseBugStaffRepository implements BugStaffRepository
                 EntityId::fromString((string) $row['audit_id']),
                 UserId::fromStored((string) $row['actor_user_id']),
                 (string) $row['action'],
+                (string) $row['target_type'],
                 (string) $row['target_id'],
                 (string) $row['request_id'],
                 $this->parse((string) $row['occurred_at_utc']),
