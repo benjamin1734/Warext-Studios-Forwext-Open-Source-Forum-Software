@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Core\Routing;
 
 use Forwext\Core\Http\HttpMethod;
+use Forwext\Core\Http\Middleware\MiddlewareInterface;
 use Forwext\Core\Http\Middleware\MiddlewarePipeline;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
@@ -15,10 +16,21 @@ final readonly class Router implements RequestHandlerInterface
     public const ATTRIBUTE_ROUTE_NAME = 'route_name';
     public const ATTRIBUTE_ROUTE_PARAMETERS = 'route_params';
 
+    /** @var list<MiddlewareInterface> */
+    private array $globalMiddleware;
+
+    /** @param list<MiddlewareInterface> $globalMiddleware */
     public function __construct(
         private RouteCollection $routes,
         private BasePath $basePath = new BasePath(),
+        array $globalMiddleware = [],
     ) {
+        foreach ($globalMiddleware as $entry) {
+            if (!$entry instanceof MiddlewareInterface) {
+                throw new RoutingException('Router global middleware contains an invalid entry.');
+            }
+        }
+        $this->globalMiddleware = array_values($globalMiddleware);
     }
 
     public function handle(Request $request): Response
@@ -52,8 +64,9 @@ final readonly class Router implements RequestHandlerInterface
             ->withAttribute(self::ATTRIBUTE_ROUTE_PARAMETERS, $match->parameters);
 
         $handler = $match->route->handler();
-        if ($match->route->middleware() !== []) {
-            $handler = new MiddlewarePipeline($match->route->middleware(), $handler);
+        $middleware = array_merge($this->globalMiddleware, $match->route->middleware());
+        if ($middleware !== []) {
+            $handler = new MiddlewarePipeline($middleware, $handler);
         }
 
         return $handler->handle($routedRequest);
