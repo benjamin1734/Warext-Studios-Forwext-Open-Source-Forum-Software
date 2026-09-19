@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Forwext\Core\Content\Manager;
 
 use DateTimeImmutable;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
@@ -13,6 +18,7 @@ use Forwext\Core\Forum\Node\ForumNodeType;
 use Forwext\Core\Queue\QueueDriver;
 use Forwext\Core\Queue\QueueName;
 use JsonException;
+use LogicException;
 
 final readonly class ContentManagerService
 {
@@ -24,6 +30,7 @@ final readonly class ContentManagerService
         private ForumNodeRepository $nodes,
         private PermissionAuthorizer $authorizer,
         private QueueDriver $queue,
+        private ?AuditRecorder $audit = null,
     ) {
     }
 
@@ -62,6 +69,7 @@ final readonly class ContentManagerService
         ContentManagerAction $action,
         ?EntityId $targetForumNodeId,
         DateTimeImmutable $at,
+        ?AuditRequestId $requestId = null,
     ): ContentManagerOperation {
         $preview = $this->preview($actorUserId, $filter, $action, $targetForumNodeId);
         if ($preview->truncated) {
@@ -74,16 +82,6 @@ final readonly class ContentManagerService
         }
 
         $operationId = EntityId::fromString(bin2hex(random_bytes(16)));
-        $this->operations->create(
-            $operationId,
-            $actorUserId,
-            $filter,
-            $action,
-            $targetForumNodeId,
-            $preview->targets,
-            $at,
-        );
-
         try {
             $payload = json_encode(
                 ['operation_id'=>$operationId->value()],
@@ -92,16 +90,59 @@ final readonly class ContentManagerService
         } catch (JsonException $exception) {
             throw new ContentManagerOperationException('Content manager queue payload could not be encoded.', previous:$exception);
         }
-        $this->queue->push(
-            QueueName::fromString('content-manager'),
-            self::JOB_TYPE,
-            $payload,
-            5,
+
+        $event = new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Moderation,
+            $actorUserId,
+            AuditAction::fromString('content.manager.enqueue'),
+            'content.manager_operation',
+            $operationId->value(),
+            $filter->forumNodeId,
+            null,
+            $requestId ?? AuditRequestId::generate(),
+            [],
+            [
+                'action'=>$action->value,
+                'target_user_id'=>$filter->targetUserId->value(),
+                'content_type'=>$filter->contentType?->value,
+                'filter_forum_node_id'=>$filter->forumNodeId?->value(),
+                'target_forum_node_id'=>$targetForumNodeId?->value(),
+                'target_count'=>$preview->total(),
+            ],
             $at,
         );
 
-        return $this->operations->find($operationId)
-            ?? throw new ContentManagerOperationException('Queued content manager operation could not be reloaded.');
+        return $this->auditRecorder()->mutate($event, function () use (
+            $operationId,
+            $actorUserId,
+            $filter,
+            $action,
+            $targetForumNodeId,
+            $preview,
+            $payload,
+            $at,
+        ): ContentManagerOperation {
+            $this->operations->create(
+                $operationId,
+                $actorUserId,
+                $filter,
+                $action,
+                $targetForumNodeId,
+                $preview->targets,
+                $at,
+            );
+            $this->queue->push(
+                QueueName::fromString('content-manager'),
+                self::JOB_TYPE,
+                $payload,
+                5,
+                $at,
+            );
+
+            return $this->operations->find($operationId)
+                ?? throw new ContentManagerOperationException('Queued content manager operation could not be reloaded.');
+        });
     }
 
     public function operation(EntityId $actorUserId, EntityId $operationId): ContentManagerOperation
@@ -164,4 +205,9 @@ final readonly class ContentManagerService
             throw new ContentManagerAccessDeniedException('Content manager permission is denied.');
         }
     }
+    private function auditRecorder(): AuditRecorder
+    {
+        return $this->audit ?? throw new LogicException('Content manager mutations require central audit.');
+    }
+
 }

@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Forum;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\App\Web\Audit\HttpAuditRequestId;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Entity\EntityId;
@@ -42,7 +43,7 @@ final readonly class ThreadFreshnessHandler implements RequestHandlerInterface
             $now = new DateTimeImmutable('now',new DateTimeZone('UTC'));
             $message = null;
             if ($request->method() === HttpMethod::Post) {
-                $snapshot = $this->freshness->renew($actor,$threadId,$now);
+                $snapshot = $this->freshness->renew($actor,$threadId,$now,HttpAuditRequestId::fromRequest($request));
                 $message = 'Konu güncelliği yenilendi.';
             } else {
                 $snapshot = $this->freshness->snapshot($actor,$threadId,$now);

@@ -4,9 +4,9 @@ Roadmap step 05.06 makes the shared 05.02 permission engine the common authoriza
 
 ## First-party namespace contract
 
-The core catalog registers **83 typed permission definitions across 28 namespaces**:
+The core catalog registers **111 typed permission definitions across 29 namespaces**:
 
-- `forum` — forum/content viewing and creation plus numeric content limits
+- `forum` — forum/content viewing and creation, numeric content limits and node-scoped thread-freshness controls
 - `moderation` — moderation workspace access and management
 - `audit` — independent moderation audit viewing, review and export
 - `acp` — administration access and management
@@ -20,7 +20,6 @@ The core catalog registers **83 typed permission definitions across 28 namespace
 - `ai` — AI assistance, moderation and provider/policy management
 - `spellcheck` — spellcheck use and personal/site dictionaries
 - `content_manager` — user-content management access and execution
-- `freshness` — own-thread renewal, review and freshness-policy management
 - `giveaway` — visibility, entry, creation and management
 - `easteregg` — Easter Egg administration
 - `trophy` — trophy/badge visibility, management and awarding

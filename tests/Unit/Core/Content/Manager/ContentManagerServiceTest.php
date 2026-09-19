@@ -6,6 +6,9 @@ namespace Forwext\Tests\Unit\Core\Content\Manager;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Content\Manager\ContentManagerAccessDeniedException;
 use Forwext\Core\Content\Manager\ContentManagerAction;
 use Forwext\Core\Content\Manager\ContentManagerContentType;
@@ -53,12 +56,14 @@ final class ContentManagerServiceTest extends TestCase
         ]);
         $operations = new MemoryContentManagerOperations();
         $queue = new MemoryContentManagerQueue();
+        $audit = new ContentManagerRecordingAudit();
         $service = new ContentManagerService(
             $content,
             $operations,
             new EmptyContentManagerNodes(),
             $this->authorizer($actor, true),
             $queue,
+            $audit,
         );
         $filter = new ContentManagerFilter($targetUser);
 
@@ -73,6 +78,7 @@ final class ContentManagerServiceTest extends TestCase
             ContentManagerAction::Delete,
             null,
             $this->time(),
+            AuditRequestId::fromString('req-content-manager'),
         );
 
         self::assertSame(2, $operation->totalCount);
@@ -80,6 +86,9 @@ final class ContentManagerServiceTest extends TestCase
         self::assertCount(2, $operations->frozenTargets);
         self::assertSame('content.manager.execute', $queue->lastType);
         self::assertStringContainsString($operation->operationId->value(), $queue->lastPayload ?? '');
+        self::assertCount(1, $audit->events);
+        self::assertSame('content.manager.enqueue', $audit->events[0]->action->value());
+        self::assertSame('req-content-manager', $audit->events[0]->requestId->value());
     }
 
     public function testExecutePermissionIsRequiredEvenWhenAccessPermissionExists(): void
@@ -322,5 +331,24 @@ final class SingleContentManagerForumNodes extends EmptyContentManagerNodes
             ForumNodeSlug::fromString('test-forum'),
             new ForumSettings(),
         );
+    }
+}
+
+
+final class ContentManagerRecordingAudit implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events = [];
+
+    public function append(AuditEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        $result = $mutation();
+        $this->events[] = $event;
+        return $result;
     }
 }

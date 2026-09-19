@@ -89,9 +89,10 @@ final class FirstPartyPermissionCatalog
             self::flag('spellcheck.dictionary.manage_site', 'Manage the site spellcheck dictionary.'),
             self::flag('content_manager.access', 'Access user content management tools.'),
             self::flag('content_manager.execute', 'Execute authorized bulk content management actions.'),
-            self::flag('freshness.renew_own', 'Renew eligible own stale threads.'),
-            self::flag('freshness.review', 'Review stale-thread moderation queues.'),
-            self::flag('freshness.manage', 'Manage thread freshness policies.'),
+            self::flag('forum.thread.freshness.renew_own', 'Renew freshness for an authored thread in an authorized forum.'),
+            self::flag('forum.thread.freshness.renew_any', 'Renew or reopen freshness for any thread in an authorized forum.'),
+            self::flag('forum.thread.freshness.review', 'Review stale-thread freshness cases in an authorized forum.'),
+            self::flag('forum.thread.freshness.manage_policy', 'Manage per-forum thread freshness policy.'),
 
             self::flag('giveaway.view', 'View giveaways.'),
             self::flag('giveaway.enter', 'Enter eligible giveaways.'),

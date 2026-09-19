@@ -33,6 +33,7 @@ use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
 use Forwext\Database\Migrations\Core\CreateBugReportConversation;
 use Forwext\Database\Migrations\Core\CreateBugStaffWorkflow;
 use Forwext\Database\Migrations\Core\CreateInfrastructureDriverTables;
+use Forwext\Database\Migrations\Core\IntegrateContentGovernancePermissions;
 use Forwext\Database\Migrations\Core\CreateMfaDeviceSecurityTables;
 use Forwext\Database\Migrations\Core\CreateModerationWorkspaceTables;
 use Forwext\Database\Migrations\Core\CreateNotificationAlertTables;
@@ -120,6 +121,7 @@ final class CoreMigrationRegistry
             new CreateSpellcheckSystem(),
             new CreateContentManagerSystem(),
             new CreateThreadFreshnessSystem(),
+            new IntegrateContentGovernancePermissions(),
         ];
     }
 }

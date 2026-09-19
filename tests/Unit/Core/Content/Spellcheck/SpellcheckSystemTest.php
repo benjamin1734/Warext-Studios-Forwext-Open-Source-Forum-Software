@@ -6,6 +6,9 @@ namespace Forwext\Tests\Unit\Core\Content\Spellcheck;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Content\Pipeline\ContentPipelineContext;
 use Forwext\Core\Content\Spellcheck\SpellcheckAccessDeniedException;
 use Forwext\Core\Content\Spellcheck\SpellcheckDictionaryRepository;
@@ -69,10 +72,20 @@ final class SpellcheckSystemTest extends TestCase
             new SpellcheckProviderRegistry([new TurkishSpellcheckProvider()]),
             $dictionary,
             new FixedSpellcheckPermissions(true, true, false),
+            $audit = new SpellcheckRecordingAudit(),
         );
 
-        $service->addUserWord($actor, 'tr-tr', 'Forwext');
+        $service->addUserWord(
+            $actor,
+            'tr-tr',
+            'Forwext',
+            AuditRequestId::fromString('req-spellcheck'),
+        );
         self::assertSame(['Forwext'], $dictionary->userWords($actor, 'tr-tr'));
+        self::assertCount(1, $audit->events);
+        self::assertSame('content.spellcheck.dictionary.user.add', $audit->events[0]->action->value());
+        self::assertSame('req-spellcheck', $audit->events[0]->requestId->value());
+        self::assertNotSame('Forwext', $audit->events[0]->targetId);
 
         $this->expectException(SpellcheckAccessDeniedException::class);
         $service->addSiteWord($actor, 'tr-tr', 'Vianore');
@@ -198,5 +211,24 @@ final class MemorySpellcheckDictionary implements SpellcheckDictionaryRepository
         if (!isset($this->users[$userId->value()][$key])) return false;
         unset($this->users[$userId->value()][$key]);
         return true;
+    }
+}
+
+
+final class SpellcheckRecordingAudit implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events = [];
+
+    public function append(AuditEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        $result = $mutation();
+        $this->events[] = $event;
+        return $result;
     }
 }

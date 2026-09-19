@@ -6,6 +6,7 @@ namespace Forwext\App\Web\ContentManager;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\App\Web\Audit\HttpAuditRequestId;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Content\Manager\ContentManagerAccessDeniedException;
@@ -102,6 +103,7 @@ final readonly class ContentManagerHandler implements RequestHandlerInterface
             $action,
             $targetForum,
             new DateTimeImmutable('now', new DateTimeZone('UTC')),
+            HttpAuditRequestId::fromRequest($request),
         );
         $this->processor->process($operation->operationId, new DateTimeImmutable('now', new DateTimeZone('UTC')), 25);
         return Response::text('', 303)

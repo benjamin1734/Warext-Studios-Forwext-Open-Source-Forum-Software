@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Editor;
 
+use Forwext\App\Web\Audit\HttpAuditRequestId;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Content\Spellcheck\SpellcheckAccessDeniedException;
@@ -92,13 +93,13 @@ final readonly class SpellcheckDictionaryHandler implements RequestHandlerInterf
         try {
             $language = SpellcheckLanguage::normalize($language);
             if ($scope === 'user' && $action === 'add') {
-                $this->spellcheck->addUserWord($viewerId, $language, $word);
+                $this->spellcheck->addUserWord($viewerId, $language, $word, HttpAuditRequestId::fromRequest($request));
             } elseif ($scope === 'user' && $action === 'remove') {
-                $this->spellcheck->removeUserWord($viewerId, $language, $word);
+                $this->spellcheck->removeUserWord($viewerId, $language, $word, HttpAuditRequestId::fromRequest($request));
             } elseif ($scope === 'site' && $action === 'add') {
-                $this->spellcheck->addSiteWord($viewerId, $language, $word);
+                $this->spellcheck->addSiteWord($viewerId, $language, $word, HttpAuditRequestId::fromRequest($request));
             } elseif ($scope === 'site' && $action === 'remove') {
-                $this->spellcheck->removeSiteWord($viewerId, $language, $word);
+                $this->spellcheck->removeSiteWord($viewerId, $language, $word, HttpAuditRequestId::fromRequest($request));
             } else {
                 return Response::text('Invalid dictionary operation.', 400)
                     ->withHeader('Cache-Control', 'no-store');

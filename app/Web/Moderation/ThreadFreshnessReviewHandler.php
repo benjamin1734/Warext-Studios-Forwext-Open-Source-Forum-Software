@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Moderation;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\App\Web\Audit\HttpAuditRequestId;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Entity\EntityId;
@@ -41,7 +42,7 @@ final readonly class ThreadFreshnessReviewHandler implements RequestHandlerInter
                 $body = $request->parsedBody();
                 $mode = $body['mode'] ?? null;
                 if ($mode === 'maintain') {
-                    $result = $this->freshness->maintain($now,100);
+                    $result = $this->freshness->maintainForActor($actor,$now,100,HttpAuditRequestId::fromRequest($request));
                     $message = 'Bakım turu: '.$result->scanned.' tarandı, '.$result->notified.' bildirim, '
                         .$result->locked.' kilit, '.$result->archived.' arşiv, '.$result->unfeatured.' öne çıkarma kaldırma, '
                         .$result->reviewsCreated.' inceleme.';
@@ -49,7 +50,7 @@ final readonly class ThreadFreshnessReviewHandler implements RequestHandlerInter
                     $threadRaw = $body['thread_id'] ?? null;
                     $resolution = $body['resolution'] ?? null;
                     if (!is_string($threadRaw) || !is_string($resolution)) throw new InvalidArgumentException('Review form invalid.');
-                    $this->freshness->resolveReview($actor,EntityId::fromString($threadRaw),$resolution,$now);
+                    $this->freshness->resolveReview($actor,EntityId::fromString($threadRaw),$resolution,$now,HttpAuditRequestId::fromRequest($request));
                     $message = 'İnceleme sonuçlandırıldı.';
                 } else {
                     throw new InvalidArgumentException('Review mode invalid.');

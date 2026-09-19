@@ -25,7 +25,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             FirstPartyPermissionCatalog::namespaces(),
         );
 
-        self::assertCount(110, $entries);
+        self::assertCount(111, $entries);
         self::assertCount(count($keys), array_unique($keys));
         self::assertSame([
             'acp',
@@ -40,7 +40,6 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             'easteregg',
             'faq',
             'forum',
-            'freshness',
             'giveaway',
             'invite',
             'marketplace',
@@ -60,13 +59,20 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             'trophy',
         ], $namespaces);
 
+        self::assertNotContains('freshness.renew_own', $keys);
+        self::assertNotContains('freshness.review', $keys);
+        self::assertNotContains('freshness.manage', $keys);
+
         foreach ([
             'audit.view',
             'audit.review',
             'ai.moderation.override',
             'spellcheck.dictionary.manage_site',
             'content_manager.execute',
-            'freshness.manage',
+            'forum.thread.freshness.renew_own',
+            'forum.thread.freshness.renew_any',
+            'forum.thread.freshness.review',
+            'forum.thread.freshness.manage_policy',
             'easteregg.manage',
             'trophy.award',
             'promotion.manage',

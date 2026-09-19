@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Moderation;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\App\Web\Audit\HttpAuditRequestId;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Entity\EntityId;
@@ -61,7 +62,7 @@ final readonly class ThreadFreshnessPolicyHandler implements RequestHandlerInter
                     $this->optionalInt($input,'moderator_review_after_days'),
                     $this->requiredInt($input,'renewal_cooldown_hours'),
                 );
-                $this->freshness->savePolicy($actor,$policy,$now);
+                $this->freshness->savePolicy($actor,$policy,$now,HttpAuditRequestId::fromRequest($request));
             }
             $policy = $this->freshness->policy($actor,$forumId)
                 ?? new ThreadFreshnessPolicy($forumId,false,30,21,45,90,30,60,24);

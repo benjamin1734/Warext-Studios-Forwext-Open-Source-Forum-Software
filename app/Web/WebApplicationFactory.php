@@ -268,10 +268,12 @@ final readonly class WebApplicationFactory
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
         $nodes = new DatabaseForumNodeRepository($database);
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
+        $contentGovernanceAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $spellcheck = new SpellcheckService(
             new SpellcheckProviderRegistry([new TurkishSpellcheckProvider()]),
             new DatabaseSpellcheckDictionaryRepository($database),
             new AuthorizerSpellcheckPermissionResolver($authorizer),
+            $contentGovernanceAudit,
         );
         $contentManagerQueue = new DatabaseQueueDriver($database);
         $contentManagerRepository = new DatabaseContentManagerRepository($database);
@@ -299,6 +301,7 @@ final readonly class WebApplicationFactory
             $nodes,
             $authorizer,
             $contentManagerQueue,
+            $contentGovernanceAudit,
         );
         $freshnessRepository = new DatabaseThreadFreshnessRepository($database);
         $freshnessNotificationRegistry = new NotificationRegistry();
@@ -313,6 +316,7 @@ final readonly class WebApplicationFactory
             $authorizer,
             $searchChanges,
             $freshnessNotifier,
+            $contentGovernanceAudit,
         );
         $faqRepository = new DatabaseFaqRepository($database);
         $faq = new FaqService(

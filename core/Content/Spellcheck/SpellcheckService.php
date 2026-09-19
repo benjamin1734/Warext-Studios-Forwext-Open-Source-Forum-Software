@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Content\Spellcheck;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Domain\Entity\EntityId;
+use LogicException;
 
 final readonly class SpellcheckService
 {
@@ -12,6 +20,7 @@ final readonly class SpellcheckService
         private SpellcheckProviderRegistry $providers,
         private SpellcheckDictionaryRepository $dictionary,
         private SpellcheckPermissionResolver $permissions,
+        private ?AuditRecorder $audit = null,
     ) {
     }
 
@@ -64,35 +73,115 @@ final readonly class SpellcheckService
         ];
     }
 
-    public function addUserWord(EntityId $userId, string $language, string $word): void
-    {
+    public function addUserWord(
+        EntityId $userId,
+        string $language,
+        string $word,
+        ?AuditRequestId $requestId = null,
+        ?DateTimeImmutable $at = null,
+    ): void {
         if (!$this->permissions->canManageOwnDictionary($userId)) {
             throw new SpellcheckAccessDeniedException('Own spellcheck dictionary management is not permitted.');
         }
-        $this->dictionary->addUser($userId, $language, $word);
+        $language = SpellcheckLanguage::normalize($language);
+        $wordHash = hash('sha256', SpellcheckWord::normalize($word));
+        $event = $this->dictionaryAuditEvent($userId, 'user', 'add', $language, $wordHash, $requestId, $at);
+        $this->auditRecorder()->mutate($event, function () use ($userId, $language, $word): void {
+            $this->dictionary->addUser($userId, $language, $word);
+        });
     }
 
-    public function removeUserWord(EntityId $userId, string $language, string $word): bool
-    {
+    public function removeUserWord(
+        EntityId $userId,
+        string $language,
+        string $word,
+        ?AuditRequestId $requestId = null,
+        ?DateTimeImmutable $at = null,
+    ): bool {
         if (!$this->permissions->canManageOwnDictionary($userId)) {
             throw new SpellcheckAccessDeniedException('Own spellcheck dictionary management is not permitted.');
         }
-        return $this->dictionary->removeUser($userId, $language, $word);
+        $language = SpellcheckLanguage::normalize($language);
+        $wordHash = hash('sha256', SpellcheckWord::normalize($word));
+        $event = $this->dictionaryAuditEvent($userId, 'user', 'remove', $language, $wordHash, $requestId, $at);
+        return $this->auditRecorder()->mutate(
+            $event,
+            fn (): bool => $this->dictionary->removeUser($userId, $language, $word),
+        );
     }
 
-    public function addSiteWord(EntityId $userId, string $language, string $word): void
-    {
+    public function addSiteWord(
+        EntityId $userId,
+        string $language,
+        string $word,
+        ?AuditRequestId $requestId = null,
+        ?DateTimeImmutable $at = null,
+    ): void {
         if (!$this->permissions->canManageSiteDictionary($userId)) {
             throw new SpellcheckAccessDeniedException('Site spellcheck dictionary management is not permitted.');
         }
-        $this->dictionary->addSite($language, $word, $userId);
+        $language = SpellcheckLanguage::normalize($language);
+        $wordHash = hash('sha256', SpellcheckWord::normalize($word));
+        $event = $this->dictionaryAuditEvent($userId, 'site', 'add', $language, $wordHash, $requestId, $at);
+        $this->auditRecorder()->mutate($event, function () use ($userId, $language, $word): void {
+            $this->dictionary->addSite($language, $word, $userId);
+        });
     }
 
-    public function removeSiteWord(EntityId $userId, string $language, string $word): bool
-    {
+    public function removeSiteWord(
+        EntityId $userId,
+        string $language,
+        string $word,
+        ?AuditRequestId $requestId = null,
+        ?DateTimeImmutable $at = null,
+    ): bool {
         if (!$this->permissions->canManageSiteDictionary($userId)) {
             throw new SpellcheckAccessDeniedException('Site spellcheck dictionary management is not permitted.');
         }
-        return $this->dictionary->removeSite($language, $word);
+        $language = SpellcheckLanguage::normalize($language);
+        $wordHash = hash('sha256', SpellcheckWord::normalize($word));
+        $event = $this->dictionaryAuditEvent($userId, 'site', 'remove', $language, $wordHash, $requestId, $at);
+        return $this->auditRecorder()->mutate(
+            $event,
+            fn (): bool => $this->dictionary->removeSite($language, $word),
+        );
+    }
+
+    private function dictionaryAuditEvent(
+        EntityId $actorUserId,
+        string $scope,
+        string $operation,
+        string $language,
+        string $wordHash,
+        ?AuditRequestId $requestId,
+        ?DateTimeImmutable $at,
+    ): AuditEvent {
+        $at = ($at ?? new DateTimeImmutable('now', new DateTimeZone('UTC')))
+            ->setTimezone(new DateTimeZone('UTC'));
+
+        return new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Administration,
+            $actorUserId,
+            AuditAction::fromString('content.spellcheck.dictionary.' . $scope . '.' . $operation),
+            'spellcheck.dictionary',
+            $wordHash,
+            null,
+            null,
+            $requestId ?? AuditRequestId::generate(),
+            [],
+            [
+                'scope'=>$scope,
+                'language'=>$language,
+                'operation'=>$operation,
+                'word_fingerprint'=>$wordHash,
+            ],
+            $at,
+        );
+    }
+
+    private function auditRecorder(): AuditRecorder
+    {
+        return $this->audit ?? throw new LogicException('Spellcheck dictionary mutations require central audit.');
     }
 }
