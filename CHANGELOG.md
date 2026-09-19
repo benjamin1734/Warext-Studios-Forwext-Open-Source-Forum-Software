@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.06 — Thread Freshness Policies
+
+- Added per-forum stale windows, author-notification, auto-unfeature, auto-lock, moderator-review and auto-archive thresholds with renewal cooldowns.
+- Added an independent freshness activity clock and visible stale/archive status model.
+- Added author renewal plus moderator/admin renewal/reopen authority without silently removing pre-existing manual moderator locks.
+- Added durable stale-topic author notifications and moderator review cases with keep, renew and archive resolutions.
+- Added bounded `thread.freshness.maintain` maintenance processing, 15-minute scheduler registration and a cPanel-safe manual maintenance fallback.
+- Made archived topics leave normal thread listings and native search, reject new replies and synchronize related search documents on archive/reopen.
+- Added new-activity freshness reset and automatic resolution of obsolete pending stale-review cases.
+- Added backend `renew_own`, `renew_any`, `review` and `manage_policy` permissions plus CSRF-protected renewal/review/policy web surfaces.
+- Added additive migration `20260919100000_thread_freshness_system`, architecture documentation and regression coverage.
+
 ### 12.05 — User Content Manager
 
 - Added a permission-gated user content inventory across forum threads and posts with user/type/forum/state/deleted/text filters.

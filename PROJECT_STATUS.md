@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.11-dev
+CURRENT_VERSION = 0.0.7.12-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.05
-CURRENT_STEP = 12.06
-LAST_COMMIT = 2c5607f6e7e02366293cc13d63862155a0bce5d8
+LAST_COMPLETED_SUBSTEP = 12.06
+CURRENT_STEP = 12.07
+LAST_COMMIT = 614416b4b5743b08f10a45eb5ab26b6a03706384
 BLOCKERS = none
-NEXT_STEP = 12.06 - Konu güncellik politikaları
+NEXT_STEP = 12.07 - Cross-system audit/permission integration
 ```
 
 ## Current position
@@ -21,13 +21,36 @@ NEXT_STEP = 12.06 - Konu güncellik politikaları
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.05`.
-- Current sub-step: `12.06 — Konu güncellik politikaları`.
-- Remaining roadmap work after 12.05: **59 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.06`.
+- Current sub-step: `12.07 — Cross-system audit/permission integration`.
+- Remaining roadmap work after 12.06: **58 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.06
+
+- Added per-forum thread freshness policies with stale, author-notification, auto-unfeature, auto-lock, moderator-review and auto-archive thresholds plus renewal cooldowns.
+- Added an independent `last_activity_at_utc` freshness clock so automated lifecycle mutations do not make old topics appear current.
+- Added `Güncelliğini yitirmiş` and `Arşivlenmiş` freshness states through `ThreadFreshnessSnapshot`.
+- Added author renewal with cooldown enforcement and staff `renew_any` authority for bypass/reopen workflows.
+- Preserved manual moderator locks: staff renewal only removes locks applied by freshness automation.
+- Added first-party stale-topic author notifications with per-freshness-cycle dedupe.
+- Added durable moderator-review cases with keep, renew/reopen and archive resolutions.
+- Added automatic stale lifecycle maintenance for notification, unfeature, review, lock and archive in bounded batches.
+- Added `thread.freshness.maintain` maintenance-queue task every 15 minutes plus a bounded native manual maintenance fallback for cPanel deployments.
+- Made archive functional: archived threads leave normal forum listings/native search and reject new post creation.
+- Added search lifecycle synchronization for archive/reopen transitions, including related posts.
+- Added new-post freshness updates; new activity clears stale-cycle markers and resolves obsolete pending freshness review cases as `activity`.
+- Added backend-authoritative `forum.thread.freshness.renew_own`, `renew_any`, `review` and `manage_policy` permissions with conservative template defaults.
+- Added CSRF-protected native surfaces for thread freshness/renewal, moderator reviews and administrator per-forum policy management.
+- Added additive idempotent migration `20260919100000_thread_freshness_system` with archive columns, policy/state/review tables and supporting indexes.
+- Added architecture and regression coverage for policy validation, badges, maintenance actions, queue scheduling and freshness integration.
+- Feature commit: `e291998b61de62e1189c52d5289bdb44144b598e`; hardening/completion commit: `614416b4b5743b08f10a45eb5ab26b6a03706384`.
+- GitHub Actions hardening build run `35431788993`: success; strict-types, lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel FULL build passed.
+- Database migration smoke run `35431789007`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `12.07 — Cross-system audit/permission integration`.
 
 ## Completed in 12.05
 
