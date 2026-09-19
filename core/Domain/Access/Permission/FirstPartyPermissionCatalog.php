@@ -107,6 +107,7 @@ final class FirstPartyPermissionCatalog
             self::flag('promotion.manage', 'Manage automatic user promotion rules.'),
             self::flag('reward.manage', 'Manage shared reward-provider policies and grants.'),
 
+            self::flag('marketplace.category.manage', 'Manage marketplace categories and custom fields.'),
             self::flag('marketplace.listing.view', 'View marketplace listings.'),
             self::flag('marketplace.listing.create', 'Create marketplace listings.'),
             self::flag('marketplace.listing.manage_own', 'Manage own marketplace listings.'),
