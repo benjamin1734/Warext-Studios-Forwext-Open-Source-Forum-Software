@@ -19,6 +19,7 @@ use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
 use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
+use Forwext\Database\Migrations\Core\CreateGiveawayDomain;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -105,5 +106,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreatePortfolioSystem::class, $classes);
         self::assertContains(UpgradePortfolioMediaStorage::class, $classes);
         self::assertContains(CreateReferralSystem::class, $classes);
+        self::assertContains(CreateGiveawayDomain::class, $classes);
     }
 }

@@ -20,13 +20,14 @@ final class GlobalDiscoveryUxTest extends TestCase
         $registry = GlobalDiscoveryRegistry::withCoreDefaults();
 
         self::assertSame(
-            ['forum', 'support', 'faq', 'portfolio', 'marketplace', 'members'],
+            ['forum', 'support', 'faq', 'portfolio', 'giveaway', 'marketplace', 'members'],
             array_map(static fn (GlobalDiscoveryCategory $category): string => $category->key, $registry->categories()),
         );
         self::assertSame(['forum', 'thread', 'post'], $registry->resolveDocumentTypes('forum'));
         self::assertSame(['support.ticket', 'support.message'], $registry->resolveDocumentTypes('support'));
         self::assertSame(['faq.article'], $registry->resolveDocumentTypes('faq'));
         self::assertSame(['portfolio.item'], $registry->resolveDocumentTypes('portfolio'));
+        self::assertSame(['giveaway.item'], $registry->resolveDocumentTypes('giveaway'));
         self::assertSame(['marketplace.listing'], $registry->resolveDocumentTypes('marketplace'));
         self::assertSame(['user'], $registry->resolveDocumentTypes('members'));
         self::assertSame('members', $registry->categoryForType('user')?->key);
@@ -74,6 +75,7 @@ final class GlobalDiscoveryUxTest extends TestCase
                 new SearchHit('thread', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 10.0, 'Forum konusu'),
                 new SearchHit('support.ticket', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 9.0, 'Destek kaydı'),
                 new SearchHit('portfolio.item', 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', 8.5, 'Portfolyo projesi'),
+                new SearchHit('giveaway.item', 'ffffffffffffffffffffffffffffffff', 8.25, 'Çekiliş'),
                 new SearchHit('user', 'cccccccccccccccccccccccccccccccc', 8.0, 'alice'),
             ],
             ['q' => 'alpha'],
@@ -87,6 +89,7 @@ final class GlobalDiscoveryUxTest extends TestCase
         self::assertStringContainsString('>Destek <small', $html);
         self::assertStringContainsString('>Üyeler <small', $html);
         self::assertStringContainsString('/community/portfolio/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', $html);
+        self::assertStringContainsString('/community/giveaways/ffffffffffffffffffffffffffffffff', $html);
         self::assertStringContainsString('/community/members/alice', $html);
         self::assertStringNotContainsString('href="/community/support', $html);
     }

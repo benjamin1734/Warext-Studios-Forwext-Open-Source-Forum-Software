@@ -26,6 +26,7 @@ final class GlobalDiscoveryRegistry
         $registry->register(new GlobalDiscoveryCategory('support', 'Destek', ['support.ticket', 'support.message'], 200));
         $registry->register(new GlobalDiscoveryCategory('faq', 'SSS', ['faq.article'], 300));
         $registry->register(new GlobalDiscoveryCategory('portfolio', 'Portfolyo', ['portfolio.item'], 400));
+        $registry->register(new GlobalDiscoveryCategory('giveaway', 'Çekilişler', ['giveaway.item'], 450));
         $registry->register(new GlobalDiscoveryCategory('marketplace', 'Marketplace', ['marketplace.listing'], 500));
         $registry->register(new GlobalDiscoveryCategory('members', 'Üyeler', ['user'], 600));
 
