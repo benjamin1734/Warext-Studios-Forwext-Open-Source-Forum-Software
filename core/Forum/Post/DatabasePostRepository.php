@@ -106,6 +106,12 @@ final readonly class DatabasePostRepository implements PostRepository
                 . '`notified_at_utc`=NULL,`review_requested_at_utc`=NULL,`last_evaluated_at_utc`=NULL',
                 ['thread_id'=>$threadId->value(),'last_activity_at_utc'=>self::format($post->updatedAt())],
             ));
+            $database->execute(new CompiledQuery(
+                'UPDATE `forwext_thread_freshness_reviews` SET `status`=\'resolved\','
+                . '`resolved_by_user_id`=NULL,`resolved_at_utc`=:resolved_at_utc,`resolution`=\'activity\' '
+                . 'WHERE `thread_id`=:thread_id AND `status`=\'pending\'',
+                ['resolved_at_utc'=>self::format($post->updatedAt()),'thread_id'=>$threadId->value()],
+            ));
             $post->markPersisted(1);
             return $post;
         });

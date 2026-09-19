@@ -45,6 +45,9 @@ final class DatabasePostRepositoryTest extends TestCase
         self::assertStringContainsString('MAX(`position`)', $database->fetchValueQueries[0]->sql);
         self::assertSame($this->id('b')->value(), $database->executedQueries[0]->parameters['thread_id']);
         self::assertSame(1, $database->executedQueries[0]->parameters['position']);
+        self::assertStringStartsWith('INSERT INTO `forwext_thread_freshness_state`', $database->executedQueries[1]->sql);
+        self::assertStringStartsWith('UPDATE `forwext_thread_freshness_reviews`', $database->executedQueries[2]->sql);
+        self::assertSame($this->id('b')->value(), $database->executedQueries[2]->parameters['thread_id']);
     }
 
     public function testReplyGetsNextMonotonicPosition(): void

@@ -20,7 +20,7 @@ Auto-lock/archive/unfeature/review thresholds may not precede the stale window. 
 
 Freshness does **not** use the thread aggregate's `updated_at_utc` as its authoritative clock because automated lifecycle mutations also change that timestamp. `forwext_thread_freshness_state.last_activity_at_utc` is the independent freshness clock.
 
-Existing threads are backfilled from the latest available thread/post activity. New posts update the freshness state and clear notification/review-evaluation markers. Explicit renewal also advances the freshness clock.
+Existing threads are backfilled from the latest available thread/post activity. New posts update the freshness state, clear notification/review-evaluation markers, and resolve any pending stale-review as `activity`. Explicit renewal also advances the freshness clock.
 
 ## Badge and renewal
 
