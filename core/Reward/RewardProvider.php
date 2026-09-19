@@ -11,6 +11,11 @@ interface RewardProvider
 {
     public function key(): string;
 
+    /** @return list<RewardTargetOption> */
+    public function targets(): array;
+
+    public function supportsTarget(EntityId $targetId): bool;
+
     public function apply(
         EntityId $recipientUserId,
         EntityId $targetId,

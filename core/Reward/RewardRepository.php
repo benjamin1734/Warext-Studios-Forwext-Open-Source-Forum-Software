@@ -44,4 +44,7 @@ interface RewardRepository
     public function allBindings(int $limit = 500): array;
 
     public function saveBinding(RewardBinding $binding): void;
+
+    /** @return list<RewardSourceOption> */
+    public function sourceOptions(string $sourceType): array;
 }

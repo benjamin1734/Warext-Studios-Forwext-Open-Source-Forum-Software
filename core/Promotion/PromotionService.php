@@ -87,6 +87,19 @@ final readonly class PromotionService
         return count($grants);
     }
 
+    public function evaluateBatchForActor(
+        EntityId $actor,int $limit,DateTimeImmutable $now,?AuditRequestId $requestId=null
+    ):int{
+        $this->require($actor,'promotion.manage');
+        $count=$this->evaluateBatch($limit,$now);
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('promotion.evaluate_batch'),
+            'promotion.batch','rules',null,'promotion.evaluate_batch',$requestId??AuditRequestId::generate(),[],
+            ['processed_users'=>$count,'limit'=>$limit],self::utc($now)
+        ));
+        return $count;
+    }
+
     public function evaluateBatch(int $limit,DateTimeImmutable $now):int
     {
         if($limit<1||$limit>500)throw new InvalidArgumentException('Promotion evaluation batch limit is invalid.');

@@ -23,6 +23,28 @@ final readonly class DatabaseRoleRewardProvider implements RewardProvider
         return 'role';
     }
 
+    public function targets(): array
+    {
+        return array_map(
+            static fn(array $row):RewardTargetOption=>new RewardTargetOption(
+                EntityId::fromString((string)$row['role_id']),
+                (string)$row['name'],
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                "SELECT role_id,name FROM forwext_roles WHERE kind='custom' AND is_protected=0 "
+                . 'ORDER BY priority DESC,name,role_id'
+            ))
+        );
+    }
+
+    public function supportsTarget(EntityId $targetId): bool
+    {
+        return (int)$this->database->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM forwext_roles WHERE role_id=:role_id AND kind='custom' AND is_protected=0",
+            ['role_id'=>$targetId->value()]
+        ))===1;
+    }
+
     public function apply(EntityId $recipientUserId, EntityId $targetId, int $units, DateTimeImmutable $now): RewardProviderResult
     {
         UserId::assert($recipientUserId);

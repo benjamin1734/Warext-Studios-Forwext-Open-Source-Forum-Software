@@ -209,6 +209,26 @@ final readonly class DatabaseRewardRepository implements RewardRepository
         ));
     }
 
+    public function sourceOptions(string $sourceType): array
+    {
+        $rows=match($sourceType){
+            'giveaway'=>$this->database->fetchAll(new CompiledQuery(
+                'SELECT giveaway_id AS source_id,title AS label FROM forwext_giveaways ORDER BY created_at_utc DESC LIMIT 500'
+            )),
+            'trophy'=>$this->database->fetchAll(new CompiledQuery(
+                'SELECT trophy_id AS source_id,name AS label FROM forwext_trophies ORDER BY priority DESC,name LIMIT 500'
+            )),
+            default=>throw new InvalidArgumentException('Unsupported reward binding source type.'),
+        };
+        return array_map(
+            static fn(array $row):RewardSourceOption=>new RewardSourceOption(
+                EntityId::fromString((string)$row['source_id']),
+                (string)$row['label'],
+            ),
+            $rows
+        );
+    }
+
     /** @param array<string,mixed> $row */
     private function hydrateDefinition(array $row):RewardDefinition
     {

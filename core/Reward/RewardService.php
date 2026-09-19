@@ -145,15 +145,23 @@ final readonly class RewardService implements RewardGrantGateway
         return $changed;
     }
 
-    /** @return array{definitions:list<RewardDefinition>,bindings:list<RewardBinding>,retryable:list<RewardGrant>,providers:list<string>} */
+    /** @return array{definitions:list<RewardDefinition>,bindings:list<RewardBinding>,retryable:list<RewardGrant>,providers:list<string>,targets:array<string,list<RewardTargetOption>>,giveaways:list<RewardSourceOption>,trophies:list<RewardSourceOption>} */
     public function managementSnapshot(EntityId $actor):array
     {
         $this->require($actor,'reward.manage');
+        $targets=[];
+        foreach($this->providers->keys() as $providerKey){
+            $provider=$this->providers->find($providerKey);
+            $targets[$providerKey]=$provider?->targets()??[];
+        }
         return [
             'definitions'=>$this->repository->definitions(),
             'bindings'=>$this->repository->allBindings(),
             'retryable'=>$this->repository->retryable(100),
             'providers'=>$this->providers->keys(),
+            'targets'=>$targets,
+            'giveaways'=>$this->repository->sourceOptions('giveaway'),
+            'trophies'=>$this->repository->sourceOptions('trophy'),
         ];
     }
 
@@ -161,8 +169,12 @@ final readonly class RewardService implements RewardGrantGateway
         EntityId $actor,RewardDefinition $definition,DateTimeImmutable $now,?AuditRequestId $requestId=null
     ):void{
         $this->require($actor,'reward.manage');
-        if($this->providers->find($definition->providerKey)===null){
+        $provider=$this->providers->find($definition->providerKey);
+        if($provider===null){
             throw new InvalidArgumentException('Unknown reward provider.');
+        }
+        if(!$provider->supportsTarget($definition->targetId)){
+            throw new InvalidArgumentException('Reward target is not eligible for automatic assignment.');
         }
         $before=$this->repository->definition($definition->rewardId);
         $event=new AuditEvent(
@@ -213,6 +225,19 @@ final readonly class RewardService implements RewardGrantGateway
             ['state'=>$grant->state->value],['state'=>$after->state->value],self::utc($now)
         ));
         return $after;
+    }
+
+    public function retryDueForActor(
+        EntityId $actor,int $limit,DateTimeImmutable $now,?AuditRequestId $requestId=null
+    ):int{
+        $this->require($actor,'reward.manage');
+        $count=$this->retryDue($limit,$now);
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('reward.retry_batch'),
+            'reward.batch','retry',null,'reward.retry_batch',$requestId??AuditRequestId::generate(),[],
+            ['applied_count'=>$count,'limit'=>$limit],self::utc($now)
+        ));
+        return $count;
     }
 
     public function retryDue(int $limit,DateTimeImmutable $now):int

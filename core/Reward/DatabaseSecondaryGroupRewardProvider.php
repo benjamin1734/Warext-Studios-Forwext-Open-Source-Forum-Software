@@ -23,6 +23,27 @@ final readonly class DatabaseSecondaryGroupRewardProvider implements RewardProvi
         return 'secondary_group';
     }
 
+    public function targets(): array
+    {
+        return array_map(
+            static fn(array $row):RewardTargetOption=>new RewardTargetOption(
+                EntityId::fromString((string)$row['group_id']),
+                (string)$row['name'],
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT group_id,name FROM forwext_user_groups WHERE is_system=0 ORDER BY sort_order,name,group_id'
+            ))
+        );
+    }
+
+    public function supportsTarget(EntityId $targetId): bool
+    {
+        return (int)$this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_user_groups WHERE group_id=:group_id AND is_system=0',
+            ['group_id'=>$targetId->value()]
+        ))===1;
+    }
+
     public function apply(EntityId $recipientUserId, EntityId $targetId, int $units, DateTimeImmutable $now): RewardProviderResult
     {
         UserId::assert($recipientUserId);
