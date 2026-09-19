@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Content\Ai\Provider;
 
+use Forwext\Core\Content\Ai\AiModerationCredentialStore;
 use Forwext\Core\Content\Ai\AiModerationProvider;
+use Forwext\Core\Content\Ai\AiModerationProviderException;
 use Forwext\Core\Content\Ai\Transport\AiModerationEndpointPolicy;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpTransport;
 use SensitiveParameter;
@@ -77,5 +79,26 @@ final readonly class CoreAiModerationProviderFactory
             $model,
             $credential,
         );
+    }
+
+    public function fromCredentialStore(
+        AiModerationCredentialStore $credentials,
+        string $providerKey,
+        string $model,
+        ?string $customEndpoint = null,
+    ): AiModerationProvider {
+        $credential = $credentials->get($providerKey);
+        if ($credential === null) {
+            throw new AiModerationProviderException('AI moderation provider credential is unavailable.');
+        }
+        return match ($providerKey) {
+            'openai' => $this->openAi($credential, $model),
+            'gemini' => $this->gemini($credential, $model),
+            'anthropic' => $this->anthropic($credential, $model),
+            'openrouter' => $this->openRouter($credential, $model),
+            default => $customEndpoint === null
+                ? throw new AiModerationProviderException('Custom AI provider endpoint is required.')
+                : $this->custom($customEndpoint, $providerKey, $model, $credential),
+        };
     }
 }

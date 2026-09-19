@@ -8,9 +8,12 @@ use InvalidArgumentException;
 
 final readonly class AiModerationRequest
 {
+    public AiModerationPrompt $prompt;
+
     public function __construct(
         public string $contentType,
         public string $text,
+        ?AiModerationPrompt $prompt = null,
     ) {
         if (preg_match('/^[a-z][a-z0-9._-]{1,63}$/D', $this->contentType) !== 1) {
             throw new InvalidArgumentException('AI moderation content type is invalid.');
@@ -18,5 +21,6 @@ final readonly class AiModerationRequest
         if ($this->text === '' || strlen($this->text) > 1_000_000 || preg_match('//u', $this->text) !== 1) {
             throw new InvalidArgumentException('AI moderation text is invalid.');
         }
+        $this->prompt = $prompt ?? AiModerationPrompt::coreV1();
     }
 }

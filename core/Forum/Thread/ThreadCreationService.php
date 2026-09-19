@@ -61,6 +61,7 @@ final readonly class ThreadCreationService
                 \Forwext\Core\Moderation\Abuse\AbuseEventType::Thread,
                 $this->gate->actorId(),
             );
+            $attributes['forum.node_id'] = $forumNodeId->value();
             try {
                 $created = $this->pipeline->execute(
                     new ContentPipelineContext(

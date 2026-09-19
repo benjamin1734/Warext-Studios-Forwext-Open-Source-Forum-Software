@@ -6,6 +6,7 @@ namespace Forwext\Core\Content\Ai\Provider;
 
 use Forwext\Core\Content\Ai\AiModerationProviderException;
 use Forwext\Core\Content\Ai\AiModerationRequest;
+use Forwext\Core\Content\Ai\AiModerationUsage;
 
 final class GeminiAiModerationProvider extends AbstractPromptAiModerationProvider
 {
@@ -23,7 +24,7 @@ final class GeminiAiModerationProvider extends AbstractPromptAiModerationProvide
     {
         return [
             'systemInstruction'=>[
-                'parts'=>[['text'=>PromptJsonModerationParser::SYSTEM_PROMPT]],
+                'parts'=>[['text'=>$request->prompt->systemPrompt]],
             ],
             'contents'=>[[
                 'role'=>'user',
@@ -52,5 +53,10 @@ final class GeminiAiModerationProvider extends AbstractPromptAiModerationProvide
             throw new AiModerationProviderException('Gemini moderation response is missing classifier JSON.');
         }
         return $text;
+    }
+
+    protected function usage(array $response): AiModerationUsage
+    {
+        return AiModerationProviderSupport::geminiUsage($response);
     }
 }

@@ -25,7 +25,7 @@ final class OpenRouterAiModerationProvider extends AbstractPromptAiModerationPro
             'model'=>$this->providerModel,
             'temperature'=>0,
             'messages'=>[
-                ['role'=>'system','content'=>PromptJsonModerationParser::SYSTEM_PROMPT],
+                ['role'=>'system','content'=>$request->prompt->systemPrompt],
                 ['role'=>'user','content'=>$request->text],
             ],
         ];

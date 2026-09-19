@@ -21,6 +21,7 @@ final readonly class AiModerationPolicyProcessor implements ContentPipelineProce
         private AiModerationPolicy $policy = new AiModerationPolicy(),
         private AiModerationOverrideRepository $overrides = new NullAiModerationOverrideRepository(),
         private AiModerationDecisionStore $decisions = new NullAiModerationDecisionStore(),
+        private ?AiModerationForumPolicyRepository $forumPolicies = null,
     ) {
     }
 
@@ -36,7 +37,8 @@ final readonly class AiModerationPolicyProcessor implements ContentPipelineProce
         $assessment = AiModerationPipelineAttributes::assessment($context);
         $fingerprint = AiModerationPipelineAttributes::fingerprint($context);
         $override = $this->overrides->active($fingerprint, $at);
-        $decision = $this->policy->decide($assessment, $override);
+        $policy = $this->resolvedPolicy($context);
+        $decision = $policy->decide($assessment, $override);
 
         $context = $context
             ->withAttribute('ai.content_fingerprint', $fingerprint)
@@ -69,6 +71,16 @@ final readonly class AiModerationPolicyProcessor implements ContentPipelineProce
             $persisted->targetId,
             $at,
         ));
+    }
+
+    private function resolvedPolicy(ContentPipelineContext $context): AiModerationPolicy
+    {
+        $forumNodeId = AiModerationPipelineAttributes::forumNodeId($context);
+        if ($forumNodeId === null || $this->forumPolicies === null) {
+            return $this->policy;
+        }
+        $forum = $this->forumPolicies->find($forumNodeId);
+        return $forum?->moderationPolicy() ?? $this->policy;
     }
 
     private function record(

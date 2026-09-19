@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 final readonly class AiModerationAssessment
 {
+    public AiModerationUsage $usage;
+
     /**
      * @param array<string, float> $categories
      */
@@ -17,7 +19,11 @@ final readonly class AiModerationAssessment
         public float $riskScore,
         public array $categories = [],
         public ?string $fallbackReason = null,
+        ?AiModerationUsage $usage = null,
+        public string $promptVersion = 'core.v1',
+        public bool $redacted = false,
     ) {
+        $this->usage = $usage ?? new AiModerationUsage();
         if (preg_match('/^[a-z][a-z0-9._-]{1,63}$/D', $this->providerKey) !== 1) {
             throw new InvalidArgumentException('AI moderation provider key is invalid.');
         }
@@ -45,6 +51,26 @@ final readonly class AiModerationAssessment
         ) {
             throw new InvalidArgumentException('AI moderation fallback reason is invalid.');
         }
+        if (preg_match('/^[a-z0-9][a-z0-9._-]{1,63}$/D', $this->promptVersion) !== 1) {
+            throw new InvalidArgumentException('AI moderation prompt version is invalid.');
+        }
+    }
+
+    public function withOperationalMetadata(
+        AiModerationUsage $usage,
+        string $promptVersion,
+        bool $redacted,
+    ): self {
+        return new self(
+            $this->providerKey,
+            $this->model,
+            $this->riskScore,
+            $this->categories,
+            $this->fallbackReason,
+            $usage,
+            $promptVersion,
+            $redacted,
+        );
     }
 
     public static function fallback(
@@ -52,7 +78,10 @@ final readonly class AiModerationAssessment
         string $model,
         string $reason,
         float $riskScore = 0.5,
+        ?AiModerationUsage $usage = null,
+        string $promptVersion = 'core.v1',
+        bool $redacted = false,
     ): self {
-        return new self($providerKey, $model, $riskScore, [], $reason);
+        return new self($providerKey, $model, $riskScore, [], $reason, $usage, $promptVersion, $redacted);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Core\Content\Ai\Provider;
 
 use Forwext\Core\Content\Ai\AiModerationProviderException;
+use Forwext\Core\Content\Ai\AiModerationUsage;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpResponse;
 use JsonException;
 
@@ -79,5 +80,52 @@ final class AiModerationProviderSupport
             throw new AiModerationProviderException('AI moderation risk score is outside 0..1.');
         }
         return $score;
+    }
+
+    /** @param array<string,mixed> $response */
+    public static function openAiLikeUsage(array $response): AiModerationUsage
+    {
+        $usage = $response['usage'] ?? null;
+        if (!is_array($usage)) {
+            return new AiModerationUsage();
+        }
+        return new AiModerationUsage(
+            self::nonNegativeInt($usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0),
+            self::nonNegativeInt($usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0),
+        );
+    }
+
+    /** @param array<string,mixed> $response */
+    public static function anthropicUsage(array $response): AiModerationUsage
+    {
+        $usage = $response['usage'] ?? null;
+        if (!is_array($usage)) {
+            return new AiModerationUsage();
+        }
+        return new AiModerationUsage(
+            self::nonNegativeInt($usage['input_tokens'] ?? 0),
+            self::nonNegativeInt($usage['output_tokens'] ?? 0),
+        );
+    }
+
+    /** @param array<string,mixed> $response */
+    public static function geminiUsage(array $response): AiModerationUsage
+    {
+        $usage = $response['usageMetadata'] ?? null;
+        if (!is_array($usage)) {
+            return new AiModerationUsage();
+        }
+        return new AiModerationUsage(
+            self::nonNegativeInt($usage['promptTokenCount'] ?? 0),
+            self::nonNegativeInt($usage['candidatesTokenCount'] ?? 0),
+        );
+    }
+
+    private static function nonNegativeInt(mixed $value): int
+    {
+        if (!is_int($value) || $value < 0 || $value > 100_000_000) {
+            return 0;
+        }
+        return $value;
     }
 }

@@ -7,6 +7,7 @@ namespace Forwext\Core\Content\Ai\Provider;
 use Forwext\Core\Content\Ai\AiModerationAssessment;
 use Forwext\Core\Content\Ai\AiModerationProvider;
 use Forwext\Core\Content\Ai\AiModerationRequest;
+use Forwext\Core\Content\Ai\AiModerationUsage;
 use Forwext\Core\Content\Ai\Transport\AiModerationEndpoint;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpTransport;
 use SensitiveParameter;
@@ -40,10 +41,15 @@ abstract class AbstractPromptAiModerationProvider implements AiModerationProvide
             $timeoutMilliseconds,
         );
         $object = AiModerationProviderSupport::object($response);
-        return PromptJsonModerationParser::assessment(
+        $assessment = PromptJsonModerationParser::assessment(
             $this->responseText($object),
             $this->key(),
             $this->providerModel,
+        );
+        return $assessment->withOperationalMetadata(
+            $this->usage($object),
+            $request->prompt->version,
+            false,
         );
     }
 
@@ -55,4 +61,10 @@ abstract class AbstractPromptAiModerationProvider implements AiModerationProvide
 
     /** @param array<string,mixed> $response */
     abstract protected function responseText(array $response): string;
+
+    /** @param array<string,mixed> $response */
+    protected function usage(array $response): AiModerationUsage
+    {
+        return AiModerationProviderSupport::openAiLikeUsage($response);
+    }
 }

@@ -57,6 +57,8 @@ final readonly class CustomAiModerationProvider implements AiModerationProvider
             AiModerationProviderSupport::json([
                 'model'=>$this->providerModel,
                 'content_type'=>$request->contentType,
+                'prompt_version'=>$request->prompt->version,
+                'system_prompt'=>$request->prompt->systemPrompt,
                 'text'=>$request->text,
             ]),
             $timeoutMilliseconds,
@@ -76,6 +78,14 @@ final readonly class CustomAiModerationProvider implements AiModerationProvider
                 AiModerationProviderSupport::score($score);
         }
         ksort($categories, SORT_STRING);
-        return new AiModerationAssessment($this->providerKey, $this->providerModel, $risk, $categories);
+        return new AiModerationAssessment(
+            $this->providerKey,
+            $this->providerModel,
+            $risk,
+            $categories,
+            null,
+            AiModerationProviderSupport::openAiLikeUsage($object),
+            $request->prompt->version,
+        );
     }
 }

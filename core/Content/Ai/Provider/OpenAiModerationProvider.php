@@ -70,6 +70,14 @@ final readonly class OpenAiModerationProvider implements AiModerationProvider
             $risk = max($risk, $value);
         }
         ksort($categories, SORT_STRING);
-        return new AiModerationAssessment($this->key(), $this->providerModel, $risk, $categories);
+        return new AiModerationAssessment(
+            $this->key(),
+            $this->providerModel,
+            $risk,
+            $categories,
+            null,
+            AiModerationProviderSupport::openAiLikeUsage($object),
+            $request->prompt->version,
+        );
     }
 }

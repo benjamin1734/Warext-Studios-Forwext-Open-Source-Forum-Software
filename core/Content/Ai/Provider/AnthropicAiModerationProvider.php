@@ -6,6 +6,7 @@ namespace Forwext\Core\Content\Ai\Provider;
 
 use Forwext\Core\Content\Ai\AiModerationProviderException;
 use Forwext\Core\Content\Ai\AiModerationRequest;
+use Forwext\Core\Content\Ai\AiModerationUsage;
 
 final class AnthropicAiModerationProvider extends AbstractPromptAiModerationProvider
 {
@@ -27,7 +28,7 @@ final class AnthropicAiModerationProvider extends AbstractPromptAiModerationProv
         return [
             'model'=>$this->providerModel,
             'max_tokens'=>400,
-            'system'=>PromptJsonModerationParser::SYSTEM_PROMPT,
+            'system'=>$request->prompt->systemPrompt,
             'messages'=>[[
                 'role'=>'user',
                 'content'=>$request->text,
@@ -49,5 +50,10 @@ final class AnthropicAiModerationProvider extends AbstractPromptAiModerationProv
             }
         }
         throw new AiModerationProviderException('Anthropic moderation response is missing classifier JSON.');
+    }
+
+    protected function usage(array $response): AiModerationUsage
+    {
+        return AiModerationProviderSupport::anthropicUsage($response);
     }
 }

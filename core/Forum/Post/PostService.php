@@ -169,6 +169,7 @@ final readonly class PostService
                 \Forwext\Core\Moderation\Abuse\AbuseEventType::Post,
                 $this->gate->actorId(),
             );
+            $attributes['forum.node_id'] = $thread->forumNodeId()->value();
             try {
                 $updated = $this->pipeline->execute(
                     new ContentPipelineContext(
@@ -302,6 +303,9 @@ final readonly class PostService
             \Forwext\Core\Moderation\Abuse\AbuseEventType::Post,
             $this->gate->actorId(),
         );
+        $thread = $this->threads->find($threadId)
+            ?? throw new PostOperationException('Thread is not available.');
+        $attributes['forum.node_id'] = $thread->forumNodeId()->value();
 
         try {
             $created = $this->pipeline->execute(
