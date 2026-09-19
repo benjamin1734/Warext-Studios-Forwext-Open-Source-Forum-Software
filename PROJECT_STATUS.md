@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.21-dev
-LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.07
-CURRENT_STEP = 13.08
-LAST_COMMIT = 0189a1ca16d87d293d2a4ca0cf576042305e0a15
+CURRENT_VERSION = 0.0.7.22-dev
+LAST_COMPLETED_MAIN_STEP = 13
+LAST_COMPLETED_SUBSTEP = 13.08
+CURRENT_STEP = 14.01
+LAST_COMMIT = 08c884d79eb2fbc5d427f710e873edd8ebaeef48
 BLOCKERS = none
-NEXT_STEP = 13.08 - User promotions ve ödül provider sistemi
+NEXT_STEP = 14.01 - Marketplace domain ve kategori sistemi
 ```
 
 ## Current position
@@ -20,14 +20,36 @@ NEXT_STEP = 13.08 - User promotions ve ödül provider sistemi
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.07`.
-- Current sub-step: `13.08 — User promotions ve ödül provider sistemi`.
-- Remaining roadmap work after 13.07: **49 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`.
+- Current sub-step: `14.01 — Marketplace domain ve kategori sistemi`.
+- Remaining roadmap work after 13.08: **48 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.08
+
+- Added a shared reward definition/provider/ledger contract used by first-party referral, giveaway and trophy flows instead of each subsystem inventing its own access-assignment fulfillment path.
+- Added durable idempotent reward grants with pending/applied/failed/revoked states, source identity, provider/target snapshots, retryability and shared assignment-ownership tracking.
+- Added built-in secondary-group and role reward providers on the existing 05.01 access model; only non-system secondary groups and unprotected custom roles are eligible.
+- Rejected system groups, protected roles, staff roles and system roles both from provider target discovery and again at apply time so reward automation cannot escalate ACP/moderation privileges.
+- Added ownership-safe reward revocation: manual/pre-existing assignments are not claimed by the reward engine, and managed assignments are removed only when no other active entitlement still requires the same target.
+- Bridged 13.02 referral qualification to the shared reward gateway while retaining the referral ledger as authoritative when common fulfillment is temporarily unavailable.
+- Bridged 13.05 giveaway winner selection/redraw to reward bindings; redraw revokes the superseded winner's managed reward source and fulfills the replacement winner independently of immutable draw/audit state.
+- Bridged 13.07 trophy award/revoke to reward bindings without allowing reward failures to roll back trophy grant/history state.
+- Added rule-based User Promotions using account age, visible post count, qualified referral count, current giveaway wins and active trophy count; matching rules grant configured shared rewards.
+- Added optional ownership-safe `revoke_when_unqualified` promotion policy through additive migration `20260919181500_promotion_revocation_policy`.
+- Added bounded promotion evaluation and cPanel/manual single-user/batch controls plus optional advanced scheduler jobs; added 15-minute bounded retry support for pending/failed shared reward grants.
+- Added native `/admin/rewards` and `/admin/promotions` workflows with dedicated CSRF, backend-authoritative `reward.manage` / `promotion.manage`, reward definitions, source bindings, retry controls and promotion rule management.
+- Added central administration audit for reward definitions/bindings/retries and promotion definitions/manual evaluations.
+- Added migrations `20260919180000_reward_promotion_system`, `20260919181000_promotion_system` and additive `20260919181500_promotion_revocation_policy`.
+- Added architecture documentation at `docs/architecture/reward-promotion-system.md` and regression coverage for promotion revoke policy, protected/staff/system role rejection, system-group rejection, primary-group duplication avoidance and bounded maintenance schedules.
+- Completion commits: `846bf031c05320679744d5cd2f3430a1b8db9407`, `e4776292b2892db2b7d79e48b78dfa4a2946f923`, `e89313ef5dd3a377f0db7ed729bf430e768115bb`, `4565cec5b99a4ec1104cfd279a558c975456fab3`, `300ef441868b66f895d5f8a40ce131455e083594`, `076a3d362c5614e690cafd4c2dc54a1888a98dfc`, `08c884d79eb2fbc5d427f710e873edd8ebaeef48`.
+- GitHub Actions build run `35463225449`: success; strict-types, lint, PHPUnit on supported PHP jobs, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35463225405`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Main step 13 is complete. Next: `14.01 — Marketplace domain ve kategori sistemi`.
 
 ## Completed in 13.07
 

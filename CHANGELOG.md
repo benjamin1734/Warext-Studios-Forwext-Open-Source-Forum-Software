@@ -6,6 +6,21 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.08 — User Promotions and Shared Reward Provider
+
+- Added a shared reward provider/ledger API for first-party referral, giveaway and trophy fulfillment with durable idempotent grant state and retry support.
+- Added safe role and secondary-group reward providers on the existing access model; system groups and protected/staff/system roles are excluded from automatic reward targets.
+- Added ownership-aware revocation so manual/pre-existing assignments are preserved and shared entitlements are not removed while another active source still requires them.
+- Added giveaway/trophy reward bindings plus direct referral reward dispatch through the same gateway.
+- Added rule-based User Promotions for account age, visible posts, qualified referrals, current giveaway wins and active trophy count.
+- Added optional `revoke_when_unqualified`, bounded cPanel/manual evaluation, advanced scheduler support and reward retry maintenance.
+- Added backend `promotion.manage` / `reward.manage`, dedicated CSRF, central audit and native `/admin/promotions` + `/admin/rewards` management workflows.
+- Added migrations `20260919180000_reward_promotion_system`, `20260919181000_promotion_system` and `20260919181500_promotion_revocation_policy`.
+- Added privilege/revocation/maintenance regression tests and `docs/architecture/reward-promotion-system.md`.
+- Completion commits: `846bf031c05320679744d5cd2f3430a1b8db9407`, `e4776292b2892db2b7d79e48b78dfa4a2946f923`, `e89313ef5dd3a377f0db7ed729bf430e768115bb`, `4565cec5b99a4ec1104cfd279a558c975456fab3`, `300ef441868b66f895d5f8a40ce131455e083594`, `076a3d362c5614e690cafd4c2dc54a1888a98dfc`, `08c884d79eb2fbc5d427f710e873edd8ebaeef48`.
+- GitHub Actions build run `35463225449`: success.
+- Database migration smoke run `35463225405`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.07 — Trophy, Badge and Achievement System
 
 - Added trophy/badge/achievement definitions with priority, active state, same-origin icon/banner paths and typed manual/rule configuration.
