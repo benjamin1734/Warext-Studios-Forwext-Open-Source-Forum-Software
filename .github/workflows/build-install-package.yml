@@ -47,14 +47,18 @@ jobs:
             exit 1
           fi
 
+          TAG="v${VERSION}"
           SHOULD_PUBLISH="false"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             SHOULD_PUBLISH="true"
           elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
             SHOULD_PUBLISH="true"
+          elif ! git show-ref --tags --verify --quiet "refs/tags/${TAG}" \
+            && ! gh release view "$TAG" >/dev/null 2>&1; then
+            # Retry an unpublished VERSION after a previous release workflow failed.
+            SHOULD_PUBLISH="true"
           fi
 
-          TAG="v${VERSION}"
           PREVIOUS_TAG=""
           if [[ "$SHOULD_PUBLISH" == "true" ]]; then
             if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
