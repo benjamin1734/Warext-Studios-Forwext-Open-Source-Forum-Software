@@ -297,6 +297,144 @@
         }
     };
 
+    const codePointIndexToCodeUnit = (value, index) => Array.from(value).slice(0, Math.max(0, index)).join('').length;
+
+    const hideSpellcheck = (root) => {
+        const container = root.querySelector('[data-fx-editor-spellcheck]');
+        if (!(container instanceof HTMLElement)) return;
+        container.replaceChildren();
+        container.hidden = true;
+    };
+
+    const renderSpellcheck = (root, source, payload, snapshot) => {
+        const container = root.querySelector('[data-fx-editor-spellcheck]');
+        if (!(container instanceof HTMLElement)) return;
+        container.replaceChildren();
+
+        const issues = Array.isArray(payload.issues) ? payload.issues : [];
+        const heading = document.createElement('strong');
+        heading.textContent = issues.length === 0
+            ? 'Yazım denetimi: sorun bulunamadı.'
+            : 'Yazım denetimi: ' + issues.length + ' öneri';
+        container.append(heading);
+
+        if (issues.length === 0) {
+            container.hidden = false;
+            return;
+        }
+
+        const snapshotCharacters = Array.from(snapshot);
+        issues.forEach((issue) => {
+            if (!issue || typeof issue.word !== 'string'
+                || !Number.isInteger(issue.start) || issue.start < 0
+                || !Number.isInteger(issue.length) || issue.length < 1
+                || !Array.isArray(issue.suggestions)
+            ) return;
+
+            const item = document.createElement('div');
+            item.className = 'fx-editor__spellcheck-item';
+
+            const context = document.createElement('button');
+            context.type = 'button';
+            context.className = 'fx-editor__spellcheck-context';
+            const contextStart = Math.max(0, issue.start - 18);
+            const contextEnd = Math.min(snapshotCharacters.length, issue.start + issue.length + 18);
+            context.append(document.createTextNode(snapshotCharacters.slice(contextStart, issue.start).join('')));
+            const mark = document.createElement('mark');
+            mark.textContent = snapshotCharacters.slice(issue.start, issue.start + issue.length).join('');
+            context.append(mark);
+            context.append(document.createTextNode(snapshotCharacters.slice(issue.start + issue.length, contextEnd).join('')));
+            context.addEventListener('click', () => {
+                if (source.value !== snapshot) {
+                    setStatus(root, 'Metin değişti; yazım denetimini yeniden çalıştır.');
+                    hideSpellcheck(root);
+                    return;
+                }
+                const start = codePointIndexToCodeUnit(snapshot, issue.start);
+                const end = codePointIndexToCodeUnit(snapshot, issue.start + issue.length);
+                source.setSelectionRange(start, end);
+                source.focus();
+            });
+            item.append(context);
+
+            const suggestions = document.createElement('div');
+            suggestions.className = 'fx-editor__spellcheck-suggestions';
+            issue.suggestions
+                .filter((value) => typeof value === 'string' && value.length > 0)
+                .slice(0, 8)
+                .forEach((suggestion) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = suggestion;
+                    button.addEventListener('click', () => {
+                        if (source.value !== snapshot) {
+                            setStatus(root, 'Metin değişti; yazım denetimini yeniden çalıştır.');
+                            hideSpellcheck(root);
+                            return;
+                        }
+                        const start = codePointIndexToCodeUnit(snapshot, issue.start);
+                        const end = codePointIndexToCodeUnit(snapshot, issue.start + issue.length);
+                        replaceRange(source, start, end, suggestion);
+                        hideSpellcheck(root);
+                        setStatus(root, 'Öneri uygulandı. Denetimi yeniden çalıştırabilirsin.');
+                    });
+                    suggestions.append(button);
+                });
+            item.append(suggestions);
+            container.append(item);
+        });
+
+        container.hidden = false;
+    };
+
+    const requestSpellcheck = async (root, source) => {
+        const endpoint = root.dataset.spellcheckUrl;
+        if (!endpoint) return false;
+        const snapshot = source.value;
+        if (snapshot.trim() === '') {
+            hideSpellcheck(root);
+            setStatus(root, 'Yazım denetimi için metin gerekli.');
+            return false;
+        }
+
+        setStatus(root, 'Yazım denetleniyor…', 'loading');
+        try {
+            const body = new URLSearchParams();
+            body.set('source', snapshot);
+            body.set('language', root.dataset.spellcheckLanguage || 'tr-tr');
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                },
+                body: body.toString(),
+            });
+            const payload = await response.json();
+            if (!response.ok || !Array.isArray(payload.issues)) {
+                hideSpellcheck(root);
+                setStatus(root, response.status === 403
+                    ? 'Yazım denetimi için yetkin yok.'
+                    : 'Yazım denetimi tamamlanamadı.');
+                return false;
+            }
+            if (source.value !== snapshot) {
+                hideSpellcheck(root);
+                setStatus(root, 'Metin denetim sırasında değişti; tekrar çalıştır.');
+                return false;
+            }
+            renderSpellcheck(root, source, payload, snapshot);
+            setStatus(root, payload.issues.length === 0
+                ? 'Yazım denetimi tamamlandı; öneri yok.'
+                : payload.issues.length + ' yazım önerisi bulundu.');
+            return true;
+        } catch (_error) {
+            hideSpellcheck(root);
+            setStatus(root, 'Yazım denetimi isteği başarısız oldu.');
+            return false;
+        }
+    };
     const requestPreview = async (root, source) => {
         const endpoint = root.dataset.previewUrl;
         const preview = root.querySelector('[data-fx-editor-preview]');
@@ -376,6 +514,7 @@
         source.addEventListener('input', () => {
             updateMetrics(root, source);
             scheduleMentionAutocomplete(root, source);
+            hideSpellcheck(root);
         });
         source.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') hideMentionMenu(root);
@@ -392,6 +531,8 @@
         });
         const previewButton = root.querySelector('[data-fx-editor-preview-button]');
         if (previewButton) previewButton.addEventListener('click', () => void requestPreview(root, source));
+        const spellcheckButton = root.querySelector('[data-fx-editor-spellcheck-button]');
+        if (spellcheckButton) spellcheckButton.addEventListener('click', () => void requestSpellcheck(root, source));
         updateMetrics(root, source);
     };
 
@@ -415,6 +556,12 @@
         previewLink(root, url) {
             if (!(root instanceof HTMLElement) || typeof url !== 'string' || url.trim() === '') return Promise.resolve(false);
             return requestLinkPreview(root, url.trim());
+        },
+        spellcheck(root) {
+            if (!(root instanceof HTMLElement)) return Promise.resolve(false);
+            const source = root.querySelector('[data-fx-editor-source]');
+            if (!(source instanceof HTMLTextAreaElement)) return Promise.resolve(false);
+            return requestSpellcheck(root, source);
         },
     });
 })();

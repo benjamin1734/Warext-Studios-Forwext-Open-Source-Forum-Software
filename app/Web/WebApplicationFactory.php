@@ -14,6 +14,8 @@ use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
 use Forwext\App\Web\Editor\EditorQuoteHandler;
+use Forwext\App\Web\Editor\EditorSpellcheckHandler;
+use Forwext\App\Web\Editor\SpellcheckDictionaryHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
@@ -71,6 +73,11 @@ use Forwext\Core\Bug\Report\DatabaseBugReportRepository;
 use Forwext\Core\Bug\Staff\DatabaseBugStaffRepository;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
+use Forwext\Core\Content\Spellcheck\AuthorizerSpellcheckPermissionResolver;
+use Forwext\Core\Content\Spellcheck\DatabaseSpellcheckDictionaryRepository;
+use Forwext\Core\Content\Spellcheck\SpellcheckProviderRegistry;
+use Forwext\Core\Content\Spellcheck\SpellcheckService;
+use Forwext\Core\Content\Spellcheck\TurkishSpellcheckProvider;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
@@ -245,6 +252,11 @@ final readonly class WebApplicationFactory
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
         $nodes = new DatabaseForumNodeRepository($database);
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
+        $spellcheck = new SpellcheckService(
+            new SpellcheckProviderRegistry([new TurkishSpellcheckProvider()]),
+            new DatabaseSpellcheckDictionaryRepository($database),
+            new AuthorizerSpellcheckPermissionResolver($authorizer),
+        );
         $faqRepository = new DatabaseFaqRepository($database);
         $faq = new FaqService(
             $database,
@@ -370,6 +382,7 @@ final readonly class WebApplicationFactory
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
+        $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -596,9 +609,16 @@ final readonly class WebApplicationFactory
         ));
         $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));
+        $routes->add(new Route('editor.spellcheck', [HttpMethod::Post], new PathTemplate('/editor/spellcheck'), new EditorSpellcheckHandler($spellcheck, $viewerResolver)));
         $routes->add(new Route('editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'), new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions)));
         $routes->add(new Route('editor.quote', [HttpMethod::Get], new PathTemplate('/editor/quote'), new EditorQuoteHandler($quotes, $viewerResolver, $authorizer)));
         $routes->add(new Route('editor.link-preview', [HttpMethod::Post], new PathTemplate('/editor/link-preview'), new EditorLinkPreviewHandler($linkPreviews, $viewerResolver)));
+        $routes->add(new Route(
+            'account.spellcheck-dictionary', [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/spellcheck-dictionary'),
+            new SpellcheckDictionaryHandler($spellcheck, $viewerResolver, $basePath),
+            [$spellcheckDictionaryCsrf],
+        ));
         $routes->add(new Route(
             'forum.attachment.stage', [HttpMethod::Post], new PathTemplate('/forums/{forumId}/attachments'),
             new AttachmentStageHandler($attachmentServices, $viewerResolver, new VerifiedUploadedAttachmentReader()), [$attachmentCsrf],
@@ -789,6 +809,11 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function spellcheckDictionaryCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'spellcheck-dictionary', 'forwext.csrf.spellcheck-dictionary.v1');
     }
 
     private function profileUrlCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

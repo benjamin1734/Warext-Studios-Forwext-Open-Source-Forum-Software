@@ -28,6 +28,8 @@ final class RichEditorViewTest extends TestCase
         self::assertStringContainsString('data-mention-url="/forum/editor/mention"', $html);
         self::assertStringContainsString('data-quote-url="/forum/editor/quote"', $html);
         self::assertStringContainsString('data-link-preview-url="/forum/editor/link-preview"', $html);
+        self::assertStringContainsString('data-spellcheck-url="/forum/editor/spellcheck"', $html);
+        self::assertStringContainsString('data-spellcheck-language="tr-tr"', $html);
         self::assertStringContainsString('data-fx-editor-characters', $html);
         self::assertStringContainsString('data-fx-editor-words', $html);
         self::assertStringContainsString('data-fx-editor-bytes', $html);
@@ -38,6 +40,9 @@ final class RichEditorViewTest extends TestCase
         self::assertStringContainsString('data-fx-editor-command="emoji"', $html);
         self::assertStringContainsString('data-fx-editor-mention-menu', $html);
         self::assertStringContainsString('data-fx-editor-emoji-palette', $html);
+        self::assertStringContainsString('data-fx-editor-spellcheck-button', $html);
+        self::assertStringContainsString('data-fx-editor-spellcheck', $html);
+        self::assertStringContainsString('href="/forum/account/spellcheck-dictionary"', $html);
         self::assertStringContainsString('&lt;unsafe&gt; [b]source[/b]', $html);
         self::assertStringNotContainsString('<unsafe>', $html);
     }

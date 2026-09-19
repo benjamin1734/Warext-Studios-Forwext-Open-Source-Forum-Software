@@ -145,6 +145,59 @@
     gap: .75rem;
 }
 
+.fx-editor__spellcheck {
+    display: grid;
+    gap: .7rem;
+    padding: .85rem;
+    border: 1px solid currentColor;
+    border-radius: .55rem;
+}
+
+.fx-editor__spellcheck[hidden] { display: none; }
+
+.fx-editor__spellcheck-item {
+    display: grid;
+    gap: .45rem;
+    padding-top: .6rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+}
+
+.fx-editor__spellcheck-context {
+    width: 100%;
+    padding: .5rem .6rem;
+    border: 0;
+    border-radius: .4rem;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.fx-editor__spellcheck-context mark {
+    padding: .05rem .15rem;
+    border-radius: .2rem;
+    font-weight: 800;
+}
+
+.fx-editor__spellcheck-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.fx-editor__spellcheck-suggestions button,
+.fx-editor__dictionary-link {
+    min-height: 2rem;
+    padding: .35rem .6rem;
+    border: 1px solid currentColor;
+    border-radius: .4rem;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
 .fx-editor__status { font-size: .9rem; }
 .fx-rich-text { line-height: 1.6; }
 

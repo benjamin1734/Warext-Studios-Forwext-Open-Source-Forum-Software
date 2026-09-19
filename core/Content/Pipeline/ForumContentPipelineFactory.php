@@ -18,6 +18,8 @@ use Forwext\Core\Content\Ai\NullAiModerationOverrideRepository;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Moderation\Abuse\AbuseEngine;
 use Forwext\Core\Search\Lifecycle\SearchIndexChangeStore;
+use Forwext\Core\Content\Spellcheck\SpellcheckPipelineProcessor;
+use Forwext\Core\Content\Spellcheck\SpellcheckService;
 
 final class ForumContentPipelineFactory
 {
@@ -32,6 +34,7 @@ final class ForumContentPipelineFactory
         ?AiModerationPolicy $aiPolicy = null,
         ?AiModerationForumPolicyRepository $aiForumPolicies = null,
         ?AiModerationMetricsStore $aiMetrics = null,
+        ?SpellcheckService $spellcheck = null,
     ): ContentPipeline {
         $aiProcessor = $aiModeration === null
             ? new PassThroughAiModerationProcessor()
@@ -54,7 +57,9 @@ final class ForumContentPipelineFactory
             [
                 new DefaultContentValidationProcessor(),
                 new AbuseContentPipelineProcessor($abuse),
-                new PassThroughSpellcheckProcessor(),
+                $spellcheck === null
+                    ? new PassThroughSpellcheckProcessor()
+                    : new SpellcheckPipelineProcessor($spellcheck),
                 $aiProcessor,
                 $policyProcessor,
             ],

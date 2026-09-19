@@ -20,6 +20,7 @@ use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
 use Forwext\Database\Migrations\Core\CreateSupportTicketDomain;
+use Forwext\Database\Migrations\Core\CreateSpellcheckSystem;
 use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
@@ -114,6 +115,7 @@ final class CoreMigrationRegistry
             new CreateBugStaffWorkflow(),
             new CreateAiModerationWorkflow(),
             new CreateAiModerationPrivacyCostPolicy(),
+            new CreateSpellcheckSystem(),
         ];
     }
 }
