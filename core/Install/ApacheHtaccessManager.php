@@ -18,14 +18,14 @@ final readonly class ApacheHtaccessManager
     public function ensurePublicRouting(): void
     {
         if (is_link($this->path)) {
-            throw new RuntimeException('Public .htaccess may not be a symbolic link.');
+            throw new RuntimeException('Managed .htaccess may not be a symbolic link.');
         }
 
         $existing = '';
         if (is_file($this->path)) {
             $contents = file_get_contents($this->path);
             if (!is_string($contents)) {
-                throw new RuntimeException('Unable to read the existing public .htaccess file.');
+                throw new RuntimeException('Unable to read the existing managed .htaccess file.');
             }
             $existing = $contents;
         }
@@ -84,7 +84,7 @@ final readonly class ApacheHtaccessManager
     {
         $directory = dirname($this->path);
         if (!is_dir($directory)) {
-            throw new RuntimeException('Public directory does not exist.');
+            throw new RuntimeException('Managed .htaccess parent directory does not exist.');
         }
 
         $mode = 0644;
@@ -99,13 +99,13 @@ final readonly class ApacheHtaccessManager
 
         try {
             if (file_put_contents($temporary, $contents, LOCK_EX) !== strlen($contents)) {
-                throw new RuntimeException('Unable to stage the public .htaccess file.');
+                throw new RuntimeException('Unable to stage the managed .htaccess file.');
             }
             if (!chmod($temporary, $mode)) {
-                throw new RuntimeException('Unable to preserve public .htaccess permissions.');
+                throw new RuntimeException('Unable to preserve managed .htaccess permissions.');
             }
             if (!rename($temporary, $this->path)) {
-                throw new RuntimeException('Unable to activate the public .htaccess file.');
+                throw new RuntimeException('Unable to activate the managed .htaccess file.');
             }
         } finally {
             if (is_file($temporary)) {

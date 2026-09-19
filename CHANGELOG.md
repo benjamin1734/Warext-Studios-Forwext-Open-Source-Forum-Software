@@ -6,6 +6,13 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### Root front-controller routing repair — 0.0.7.08-dev
+
+- Fixed cPanel/LiteSpeed installs where the home page loaded but clean routes such as `/search`, `/members`, `/faq` and `/stats` returned server-level 404 responses.
+- The release pipeline continues to preserve hosting-managed `.htaccess` files, while the installer now merges Forwext routing into both the project root and `public/` document-root layouts without deleting existing cPanel PHP handlers.
+- Runtime bootstrap now self-heals both managed routing files for already-installed sites, allowing a normal side-update from `0.0.7.07-dev` to repair routing without reinstalling or resetting the database.
+- Added packaging-policy regression coverage that requires preserved `.htaccess` files to have matching installer/runtime repair paths.
+
 ### cPanel/subfolder routing hotfix — 0.0.7.07-dev
 
 - Fixed navigation 404s when Forwext is served from a URL subfolder such as `/public`.

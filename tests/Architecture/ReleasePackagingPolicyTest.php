@@ -52,6 +52,20 @@ final class ReleasePackagingPolicyTest extends TestCase
         self::assertStringNotContainsString('zip -rq "forwext-${VERSION}-install.zip"', $workflow);
     }
 
+    public function testPreservedHtaccessFilesAreRepairedForBothSupportedDocumentRoots(): void
+    {
+        $workflow = $this->read('.github/workflows/build-install-package.yml');
+        $installer = $this->read('core/Install/InstallationService.php');
+        $runtime = $this->read('public/index.php');
+
+        self::assertStringContainsString("--exclude '/.htaccess'", $workflow);
+        self::assertStringContainsString("--exclude 'public/.htaccess'", $workflow);
+        self::assertStringContainsString("$this->projectRoot . '/.htaccess'", $installer);
+        self::assertStringContainsString("$this->projectRoot . '/public/.htaccess'", $installer);
+        self::assertStringContainsString("$root . '/.htaccess'", $runtime);
+        self::assertStringContainsString("$root . '/public/.htaccess'", $runtime);
+    }
+
     private function read(string $relativePath): string
     {
         $path = dirname(__DIR__, 2) . '/' . $relativePath;

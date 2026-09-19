@@ -11,6 +11,7 @@ use Forwext\App\Web\WebApplicationFactory;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Install\ApacheHtaccessManager;
 use Forwext\Core\Logging\RuntimeFailureReporter;
 use Forwext\Core\Migration\FileInstalledVersionStore;
 
@@ -48,6 +49,11 @@ require $autoload;
 
 $requestMethod = HttpMethod::Get;
 try {
+    // Release ZIPs deliberately preserve hosting-managed .htaccess files.
+    // Repair both supported document-root layouts without replacing cPanel PHP handlers.
+    (new ApacheHtaccessManager($root . '/.htaccess'))->ensurePublicRouting();
+    (new ApacheHtaccessManager($root . '/public/.htaccess'))->ensurePublicRouting();
+
     $versions = new FileInstalledVersionStore($root . '/storage/install/installed-version.json');
     $version = $versions->current();
     if ($version === null) {
