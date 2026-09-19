@@ -10,6 +10,7 @@ use Forwext\Database\Migrations\Core\CreateAiModerationWorkflow;
 use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
+use Forwext\Database\Migrations\Core\CreateContentManagerSystem;
 use Forwext\Database\Migrations\Core\CreateCoreAuditStream;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
 use Forwext\Database\Migrations\Core\CreateSupportTicketDomain;
@@ -88,6 +89,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateAiModerationWorkflow::class, $classes);
         self::assertContains(CreateAiModerationPrivacyCostPolicy::class, $classes);
         self::assertContains(CreateSpellcheckSystem::class, $classes);
+        self::assertContains(CreateContentManagerSystem::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);

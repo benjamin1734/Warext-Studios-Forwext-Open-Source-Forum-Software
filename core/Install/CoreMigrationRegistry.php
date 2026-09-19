@@ -12,6 +12,7 @@ use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
+use Forwext\Database\Migrations\Core\CreateContentManagerSystem;
 use Forwext\Database\Migrations\Core\CreateCoreAuditStream;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
@@ -116,6 +117,7 @@ final class CoreMigrationRegistry
             new CreateAiModerationWorkflow(),
             new CreateAiModerationPrivacyCostPolicy(),
             new CreateSpellcheckSystem(),
+            new CreateContentManagerSystem(),
         ];
     }
 }

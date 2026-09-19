@@ -50,17 +50,25 @@ final readonly class ContentPipeline
     /**
      * @param Closure(ContentPipelineContext): ContentPipelinePersisted $persist
      */
-    public function execute(
+    public function preprocess(
         ContentPipelineContext $context,
         DateTimeImmutable $at,
-        Closure $persist,
-    ): object {
+    ): ContentPipelineContext {
         $current = $context;
         foreach (ContentPipelineStage::prePersist() as $stage) {
             $processor = $this->processors[$stage->value]
                 ?? throw new LogicException('Content pipeline processor registry is incomplete.');
             $current = $processor->process($current, $at);
         }
+        return $current;
+    }
+
+    public function execute(
+        ContentPipelineContext $context,
+        DateTimeImmutable $at,
+        Closure $persist,
+    ): object {
+        $current = $this->preprocess($context, $at);
 
         /** @var ContentPipelinePersisted $persisted */
         $persisted = $this->database->transaction(function () use ($current, $at, $persist): ContentPipelinePersisted {

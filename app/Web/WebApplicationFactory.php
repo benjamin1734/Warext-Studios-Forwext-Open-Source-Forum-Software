@@ -10,6 +10,8 @@ use Forwext\App\Web\Bug\BugReportFormHandler;
 use Forwext\App\Web\Bug\BugStaffDashboardHandler;
 use Forwext\App\Web\Bug\BugStaffExportHandler;
 use Forwext\App\Web\Bug\MyBugReportsHandler;
+use Forwext\App\Web\ContentManager\ContentManagerHandler;
+use Forwext\App\Web\ContentManager\ContentManagerOperationHandler;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
@@ -73,6 +75,11 @@ use Forwext\Core\Bug\Report\DatabaseBugReportRepository;
 use Forwext\Core\Bug\Staff\DatabaseBugStaffRepository;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
+use Forwext\Core\Content\Manager\ContentManagerOperationProcessor;
+use Forwext\Core\Content\Manager\ContentManagerService;
+use Forwext\Core\Content\Manager\DatabaseContentManagerOperationRepository;
+use Forwext\Core\Content\Manager\DatabaseContentManagerRepository;
+use Forwext\Core\Content\Pipeline\ForumContentPipelineFactory;
 use Forwext\Core\Content\Spellcheck\AuthorizerSpellcheckPermissionResolver;
 use Forwext\Core\Content\Spellcheck\DatabaseSpellcheckDictionaryRepository;
 use Forwext\Core\Content\Spellcheck\SpellcheckProviderRegistry;
@@ -108,6 +115,8 @@ use Forwext\Core\Forum\Editor\PinnedHttpsLinkPreviewTransport;
 use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
 use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
 use Forwext\Core\Forum\Editor\UserMentionResolver;
+use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
+use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
@@ -147,6 +156,7 @@ use Forwext\Core\Profile\Url\DatabaseProfileUrlStore;
 use Forwext\Core\Profile\Url\EngineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\ProfileSlugPolicy;
 use Forwext\Core\Profile\Url\ProfileUrlService;
+use Forwext\Core\Queue\DatabaseQueueDriver;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Routing\PathTemplate;
@@ -256,6 +266,33 @@ final readonly class WebApplicationFactory
             new SpellcheckProviderRegistry([new TurkishSpellcheckProvider()]),
             new DatabaseSpellcheckDictionaryRepository($database),
             new AuthorizerSpellcheckPermissionResolver($authorizer),
+        );
+        $contentManagerQueue = new DatabaseQueueDriver($database);
+        $contentManagerRepository = new DatabaseContentManagerRepository($database);
+        $contentManagerOperations = new DatabaseContentManagerOperationRepository($database);
+        $contentManagerPipeline = ForumContentPipelineFactory::create(
+            $database,
+            $searchChanges,
+            spellcheck: $spellcheck,
+        );
+        $contentManagerModeration = new DatabaseContentModerationRepository(
+            $database,
+            new DatabaseModerationAuditStore($database),
+        );
+        $contentManagerProcessor = new ContentManagerOperationProcessor(
+            $contentManagerOperations,
+            $contentManagerRepository,
+            $contentManagerModeration,
+            $searchChanges,
+            $contentManagerPipeline,
+            $authorizer,
+        );
+        $contentManager = new ContentManagerService(
+            $contentManagerRepository,
+            $contentManagerOperations,
+            $nodes,
+            $authorizer,
+            $contentManagerQueue,
         );
         $faqRepository = new DatabaseFaqRepository($database);
         $faq = new FaqService(
@@ -383,6 +420,7 @@ final readonly class WebApplicationFactory
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
+        $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -608,6 +646,17 @@ final readonly class WebApplicationFactory
             ),
         ));
         $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
+        $routes->add(new Route(
+            'content-manager.index', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/content-manager'),
+            new ContentManagerHandler($contentManager, $contentManagerProcessor, $users, $viewerResolver, $basePath),
+            [$contentManagerCsrf],
+        ));
+        $routes->add(new Route(
+            'content-manager.operation', [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/content-manager/operations/{operationId}', ['operationId'=>'[0-9a-f]{32}']),
+            new ContentManagerOperationHandler($contentManager, $contentManagerProcessor, $viewerResolver, $basePath),
+            [$contentManagerCsrf],
+        ));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));
         $routes->add(new Route('editor.spellcheck', [HttpMethod::Post], new PathTemplate('/editor/spellcheck'), new EditorSpellcheckHandler($spellcheck, $viewerResolver)));
         $routes->add(new Route('editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'), new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions)));
@@ -809,6 +858,11 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function contentManagerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'content-manager', 'forwext.csrf.content-manager.v1');
     }
 
     private function spellcheckDictionaryCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
