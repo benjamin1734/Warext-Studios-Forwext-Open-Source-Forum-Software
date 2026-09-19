@@ -18,6 +18,9 @@ use Forwext\App\Web\Editor\EditorPreviewHandler;
 use Forwext\App\Web\Editor\EditorQuoteHandler;
 use Forwext\App\Web\Editor\EditorSpellcheckHandler;
 use Forwext\App\Web\Editor\SpellcheckDictionaryHandler;
+use Forwext\App\Web\EasterEgg\EasterEggManageHandler;
+use Forwext\App\Web\EasterEgg\EasterEggMiddleware;
+use Forwext\App\Web\EasterEgg\EasterEggRenderer;
 use Forwext\App\Web\Forum\AttachmentDownloadHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
@@ -109,6 +112,8 @@ use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\EasterEgg\DatabaseEasterEggRepository;
+use Forwext\Core\EasterEgg\EasterEggService;
 use Forwext\Core\Faq\DatabaseFaqRepository;
 use Forwext\Core\Faq\FaqService;
 use Forwext\Core\Faq\SupportBridge\DatabaseFaqSupportBridgeRepository;
@@ -410,6 +415,22 @@ final readonly class WebApplicationFactory
             $authorizer,
             $giveawayAudit,
         );
+        $easterEggRepository = new DatabaseEasterEggRepository($database);
+        $easterEggs = new EasterEggService(
+            $database,
+            $easterEggRepository,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+        $easterEggAssignments = new DatabaseUserAccessAssignmentProvider($database);
+        $easterEggMiddleware = new EasterEggMiddleware(
+            $easterEggs,
+            $viewerResolver,
+            $easterEggAssignments,
+            $basePath,
+            new EasterEggRenderer(),
+        );
+
         $giveawayFingerprint = new GiveawayFingerprint(
             $secretStore,
             $config->requireString('registration.rate_limit.fingerprint_secret_name'),
@@ -555,6 +576,7 @@ final readonly class WebApplicationFactory
         $portfolioCsrf = $this->portfolioCsrfMiddleware($config);
         $referralCsrf = $this->referralCsrfMiddleware($config);
         $giveawayCsrf = $this->giveawayCsrfMiddleware($config);
+        $easterEggCsrf = $this->easterEggCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -668,6 +690,13 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/faq'),
             new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'easteregg.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/easter-eggs'),
+            new EasterEggManageHandler($easterEggs, $viewerResolver, $basePath),
+            [$easterEggCsrf],
         ));
         $routes->add(new Route(
             'faq.manage',
@@ -1062,7 +1091,7 @@ final readonly class WebApplicationFactory
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath), [$this->profileUrlCsrfMiddleware($config)],
         ));
 
-        return new Router($routes, $basePath);
+        return new Router($routes, $basePath, [$easterEggMiddleware]);
     }
 
     public function contentSecurityPolicy(): string
@@ -1180,6 +1209,11 @@ final readonly class WebApplicationFactory
     private function giveawayCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'giveaway', 'forwext.csrf.giveaway.v1');
+    }
+
+    private function easterEggCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'easteregg', 'forwext.csrf.easteregg.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
