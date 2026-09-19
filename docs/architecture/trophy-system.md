@@ -42,7 +42,7 @@ The ACP also exposes an explicit evaluate-user action, which is permission check
 
 forwext_user_trophies stores one durable grant lifecycle per user/definition. forwext_trophy_history is append-only and records award/revoke events, source, actor, reason and timestamp.
 
-Manual award/revoke requires trophy.award. Definition changes require trophy.manage. Human mutations are written to central administration audit. Rule-engine grants have their own durable history record without inventing a fake human actor.
+Manual award/revoke requires trophy.award. Definition changes require trophy.manage. Human mutations are written to central administration audit. Rule-engine grants have their own durable history record without inventing a fake human actor. Award and revoke events also use the shared notification infrastructure; notification failure is non-authoritative and cannot roll back an already committed grant lifecycle.
 
 Revocation requires a reason. Manual awards may optionally carry a reason.
 

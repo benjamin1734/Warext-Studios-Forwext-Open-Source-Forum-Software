@@ -239,6 +239,7 @@ use Forwext\Core\Support\Ticket\DatabaseSupportTicketRepository;
 use Forwext\Core\Trophy\DatabaseTrophyMetricProvider;
 use Forwext\Core\Trophy\DatabaseTrophyRepository;
 use Forwext\Core\Trophy\TrophyService;
+use Forwext\Core\Trophy\TrophyNotifier;
 use RuntimeException;
 
 final readonly class WebApplicationFactory
@@ -458,12 +459,18 @@ final readonly class WebApplicationFactory
             new GiveawayDrawAlgorithm(),
         );
         $trophyRepository = new DatabaseTrophyRepository($database);
+        $trophyNotificationRegistry = new NotificationRegistry();
+        TrophyNotifier::registerDefinitions($trophyNotificationRegistry);
         $trophies = new TrophyService(
             $database,
             $trophyRepository,
             new DatabaseTrophyMetricProvider($database),
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            new TrophyNotifier(new NotificationDispatcher(
+                $trophyNotificationRegistry,
+                new DatabaseNotificationRepository($database),
+            )),
         );
         $profilePage = new ProfileViewHandler(
             $users,

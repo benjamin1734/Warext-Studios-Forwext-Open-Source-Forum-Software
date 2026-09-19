@@ -17,6 +17,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Notification\NotificationException;
 use InvalidArgumentException;
 
 final readonly class TrophyService
@@ -27,6 +28,7 @@ final readonly class TrophyService
         private TrophyMetricProvider $metrics,
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
+        private ?TrophyNotifier $notifier = null,
     ) {
     }
 
@@ -173,6 +175,8 @@ final readonly class TrophyService
             $this->repository->saveGrant($grant,$history);
             $this->audit->append($event);
         });
+        try{$this->notifier?->revoked($grant,$this->repository->findDefinition($grant->trophyId));}
+        catch(NotificationException){}
         return $grant;
     }
 
@@ -232,6 +236,8 @@ final readonly class TrophyService
             $this->database->transaction(function()use($grant,$history):void{
                 $this->repository->saveGrant($grant,$history);
             });
+            try{$this->notifier?->awarded($grant,$definition);}
+            catch(NotificationException){}
             return $grant;
         }
 
@@ -245,6 +251,8 @@ final readonly class TrophyService
             $this->repository->saveGrant($grant,$history);
             $this->audit->append($event);
         });
+        try{$this->notifier?->awarded($grant,$definition);}
+        catch(NotificationException){}
         return $grant;
     }
 
