@@ -21,6 +21,13 @@ final class NavigationRegistry
         $registry->register(new NavigationItem('portfolio', 'Portfolyo', '/portfolio', 230));
         $registry->register(new NavigationItem('faq', 'SSS', '/faq', 250));
         $registry->register(new NavigationItem(
+            'referrals.own',
+            'Davetlerim',
+            '/account/referrals',
+            260,
+            NavigationAudience::Member,
+        ));
+        $registry->register(new NavigationItem(
             'bugs.mine',
             'Hata Bildirimlerim',
             '/bugs',

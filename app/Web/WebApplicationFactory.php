@@ -52,6 +52,9 @@ use Forwext\App\Web\Portfolio\PortfolioManageHandler;
 use Forwext\App\Web\Portfolio\PortfolioMediaDownloadHandler;
 use Forwext\App\Web\Portfolio\PortfolioMediaUploadHandler;
 use Forwext\App\Web\Portfolio\PortfolioProjectHandler;
+use Forwext\App\Web\Referral\ReferralAccountHandler;
+use Forwext\App\Web\Referral\ReferralManageHandler;
+use Forwext\App\Web\Referral\ReferralRedirectHandler;
 use Forwext\App\Web\Social\BookmarkListHandler;
 use Forwext\App\Web\Social\InteractionCsrfTokenHandler;
 use Forwext\App\Web\Social\PostBookmarkHandler;
@@ -172,6 +175,9 @@ use Forwext\Core\Profile\Url\EngineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\ProfileSlugPolicy;
 use Forwext\Core\Profile\Url\ProfileUrlService;
 use Forwext\Core\Queue\DatabaseQueueDriver;
+use Forwext\Core\Referral\DatabaseReferralRepository;
+use Forwext\Core\Referral\ReferralNotifier;
+use Forwext\Core\Referral\ReferralService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Routing\PathTemplate;
@@ -348,6 +354,20 @@ final readonly class WebApplicationFactory
             $contentManagerPipeline,
             $searchChanges,
         );
+        $referralNotificationRegistry = new NotificationRegistry();
+        ReferralNotifier::registerDefinitions($referralNotificationRegistry);
+        $referralRepository = new DatabaseReferralRepository($database);
+        $referrals = new ReferralService(
+            $database,
+            $referralRepository,
+            $users,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            new ReferralNotifier(new NotificationDispatcher(
+                $referralNotificationRegistry,
+                new DatabaseNotificationRepository($database),
+            )),
+        );
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -475,6 +495,7 @@ final readonly class WebApplicationFactory
         $bugCsrf = $this->bugCsrfMiddleware($config);
         $faqCsrf = $this->faqCsrfMiddleware($config);
         $portfolioCsrf = $this->portfolioCsrfMiddleware($config);
+        $referralCsrf = $this->referralCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -704,6 +725,31 @@ final readonly class WebApplicationFactory
                 $authorizer,
                 new AttachmentDownloadResponseFactory(),
             ),
+        ));
+        $routes->add(new Route(
+            'referral.redirect',
+            [HttpMethod::Get],
+            new PathTemplate('/ref/{code}', ['code'=>'[A-Za-z0-9_-]{24,64}']),
+            new ReferralRedirectHandler($referrals, $basePath),
+        ));
+        $routes->add(new Route(
+            'referral.account',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/referrals'),
+            new ReferralAccountHandler(
+                $referrals,
+                $viewerResolver,
+                $basePath,
+                RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
+            ),
+            [$referralCsrf],
+        ));
+        $routes->add(new Route(
+            'referral.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/referrals/manage'),
+            new ReferralManageHandler($referrals, $viewerResolver, $basePath),
+            [$referralCsrf],
         ));
         $routes->add(new Route(
             'portfolio.index',
@@ -1020,6 +1066,11 @@ final readonly class WebApplicationFactory
     private function portfolioCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'portfolio', 'forwext.csrf.portfolio.v1');
+    }
+
+    private function referralCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'referral', 'forwext.csrf.referral.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
