@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.17-dev
+CURRENT_VERSION = 0.0.7.18-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.03
-CURRENT_STEP = 13.04
-LAST_COMMIT = 31e2d2d28e564d3ccee688631ed2baa46796ab84
+LAST_COMPLETED_SUBSTEP = 13.04
+CURRENT_STEP = 13.05
+LAST_COMMIT = f39c749fffcfcb5e11a2610c1c1595eb26546240
 BLOCKERS = none
-NEXT_STEP = 13.04 - Çekiliş katılım/eligibility/anti-abuse
+NEXT_STEP = 13.05 - Çekiliş kazanan seçimi ve şeffaflık
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 13.04 - Çekiliş katılım/eligibility/anti-abuse
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.03`.
-- Current sub-step: `13.04 — Çekiliş katılım/eligibility/anti-abuse`.
-- Remaining roadmap work after 13.03: **53 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.04`.
+- Current sub-step: `13.05 — Çekiliş kazanan seçimi ve şeffaflık`.
+- Remaining roadmap work after 13.04: **52 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.04
+
+- Added first-party giveaway participation with one durable row per user and weighted `entry_count`, making repeated submissions idempotent instead of granting extra chances.
+- Added configurable eligibility policy for minimum account age, visible post count, verified/active account requirement, allowed roles, qualified inbound/outbound referral conditions, and per-network/per-device-signal duplicate limits.
+- Added backend-authoritative `giveaway.enter` enforcement, owner self-entry blocking, account restriction checks, immutable eligibility after the giveaway start time, and serialized capacity/duplicate enforcement under a giveaway row lock.
+- Added privacy-safe HMAC network/device signals using the installation registration fingerprint secret; raw IP addresses and User-Agent strings are not persisted in giveaway tables or audit snapshots.
+- Added additive migration `20260919150000_giveaway_participation` with eligibility, eligible-role and entry tables, unique per-giveaway/user participation, fingerprint indexes and FK integrity.
+- Added canonical role, visible-post and 13.02 referral context integration without creating a duplicate role, post or referral subsystem.
+- Added native PHP participation UX: eligibility requirements/reasons on giveaway detail, CSRF-protected POST entry endpoint, success/failure feedback, and management controls for all 13.04 policy fields.
+- Added central audit coverage for eligibility-policy mutations while keeping high-volume participant activity represented by its immutable participation record.
+- Added regression coverage for eligibility rules, backend permissions, owner self-abuse, idempotency, duplicate-device detection, participant capacity and policy locking; added `docs/architecture/giveaway-participation.md`.
+- Feature commits: `6887ec74b410614463d8d312af9a5bd023735d80`, `918830dd11ea743c00859fd6542bbb06e4b5ecd2`, `f8f4157125fa3c0029136424dd98395029b999e6`; test/docs commit: `53301fc1c5b7b552282baeb65e0028443b731c87`; bootstrap fix: `f39c749fffcfcb5e11a2610c1c1595eb26546240`.
+- GitHub Actions build run `35448399439`: success; strict-types, lint, PHPUnit on supported PHP jobs and cPanel packaging passed.
+- Database migration smoke run `35448399387`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.05 — Çekiliş kazanan seçimi ve şeffaflık`.
 
 ## Completed in 13.03
 

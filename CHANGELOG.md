@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.04 — Giveaway Participation, Eligibility and Anti-Abuse
+
+- Added durable idempotent participation with weighted entry counts and distinct-user participant capacity.
+- Added account-age, visible-post, verified-account, role and referral eligibility policy plus privacy-safe duplicate network/device controls.
+- Added backend permission enforcement, owner self-entry prevention, row-lock serialized entry checks and eligibility-policy locking once a giveaway starts.
+- Added migration `20260919150000_giveaway_participation` and canonical integrations with roles, forum posts and the 13.02 referral attribution model.
+- Added native PHP eligibility/entry UI, CSRF-protected participation POST handling and management controls.
+- Added HMAC-only abuse signals; raw IP/User-Agent data is not stored in giveaway participation data or audit snapshots.
+- Added participation/anti-abuse regression tests and architecture documentation.
+- Completion commits: `6887ec74b410614463d8d312af9a5bd023735d80`, `918830dd11ea743c00859fd6542bbb06e4b5ecd2`, `f8f4157125fa3c0029136424dd98395029b999e6`, `53301fc1c5b7b552282baeb65e0028443b731c87`, `f39c749fffcfcb5e11a2610c1c1595eb26546240`.
+- GitHub Actions build run `35448399439`: success.
+- Database migration smoke run `35448399387`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.03 — Giveaway Domain and Lifecycle
 
 - Added first-party giveaway creation, prize/terms/schedule fields, per-user entry allowance, maximum participant cap and typed lifecycle states.
