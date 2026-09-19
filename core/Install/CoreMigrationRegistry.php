@@ -31,6 +31,7 @@ use Forwext\Database\Migrations\Core\CreateGiveawayParticipation;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawSystem;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawPopulation;
 use Forwext\Database\Migrations\Core\CreateEasterEggSystem;
+use Forwext\Database\Migrations\Core\AllowNullableEasterEggPath;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -138,6 +139,7 @@ final class CoreMigrationRegistry
             new CreateGiveawayDrawSystem(),
             new CreateGiveawayDrawPopulation(),
             new CreateEasterEggSystem(),
+            new AllowNullableEasterEggPath(),
         ];
     }
 }

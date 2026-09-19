@@ -68,7 +68,9 @@ final readonly class EasterEggService
             ['enabled'=>$enabled],
             $at,
         );
-        $this->audit->mutate($event, fn (): mixed => $this->repository->setGlobalEnabled($enabled, $at));
+        $this->audit->mutate($event, function () use ($enabled, $at): void {
+            $this->repository->setGlobalEnabled($enabled, $at);
+        });
     }
 
     /** @param list<EntityId> $groupIds */
