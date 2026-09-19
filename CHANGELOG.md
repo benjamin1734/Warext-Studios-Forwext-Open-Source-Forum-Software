@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.03 — Giveaway Domain and Lifecycle
+
+- Added first-party giveaway creation, prize/terms/schedule fields, per-user entry allowance, maximum participant cap and typed lifecycle states.
+- Enforced backend owner/staff permissions, immutable ownership, draft editing boundaries and audited create/update/publish/cancel mutations.
+- Added native PHP listing/detail/management routes, dedicated CSRF protection, member navigation and permission-aware search/discovery integration.
+- Added deterministic scheduled/open/closed lifecycle maintenance with cPanel-safe bounded read-repair and optional one-minute advanced scheduler processing.
+- Added migration `20260919143000_giveaway_domain`, architecture documentation and permission/lifecycle/maintenance regression coverage.
+- Deferred participation eligibility/anti-abuse to 13.04, winner selection to 13.05 and shared reward fulfillment to 13.08.
+- Completion commits: `d7e66fad0d5272e9950e1b56a39d2485dd234de8`, `560d6c90cec37066cc20175d24491dc961d9496c`, `7f91334ba68e3c6fa4e41d731231daf153e5f606`, `31e2d2d28e564d3ccee688631ed2baa46796ab84`.
+- GitHub Actions build run `35447590221`: success.
+- Database migration smoke run `35447590228`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.02 — Invitation and Referral System
 
 - Added public high-entropy referral links, campaign/expiry policy, first-touch attribution, privacy-safe anti-fraud signals and qualified referral lifecycle.
