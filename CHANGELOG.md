@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.06 — Easter Egg System
+
+- Added centrally managed Easter Egg definitions with route/path, date-window, query trigger, group visibility, message, visual badge and CSS-only animation controls.
+- Added global safe-off kill-switch, per-definition enablement, backend `easteregg.manage` enforcement, dedicated CSRF and central administration audit.
+- Added fail-open HTML response decoration for Router-native and legacy Community/Report/Moderation paths without affecting APIs, redirects, errors or POST responses.
+- Added XSS-safe rendering, maximum-three response cap and reduced-motion behavior.
+- Added migrations `20260919160000_easter_egg_system` and `20260919160500_easter_egg_path_nullable`.
+- Added native `/admin/easter-eggs` management, routing/runtime regression tests and architecture documentation.
+- Completion commits: `916d66920ade8daf9fd99d428900fa06bf09f431`, `80b67df85b9f0cbc0fa1e7ce8034dc6af3a3117d`, `456bf8e8b742d2b02f40b8036aa9d538d43bd00d`, `2d87d939b4f58ad5c11e9f0586c42a7b8e0a2f03`, `a97a52137a6179cfe58d0d4d6003d0f49bcc58f5`, `424c4db8251dafb0859896fd57e002d3a51886e2`.
+- GitHub Actions build run `35454717154`: success.
+- Database migration smoke run `35454717114`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.05 — Giveaway Winner Selection and Transparency
 
 - Added CSPRNG-backed weighted winner selection using fresh 256-bit seeds, canonical SHA-256 population snapshots and unbiased rejection sampling.

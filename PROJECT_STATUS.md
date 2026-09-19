@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.19-dev
+CURRENT_VERSION = 0.0.7.20-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.05
-CURRENT_STEP = 13.06
-LAST_COMMIT = 69f4097861d30a8374fe4fbe993f3b36ce943760
+LAST_COMPLETED_SUBSTEP = 13.06
+CURRENT_STEP = 13.07
+LAST_COMMIT = 424c4db8251dafb0859896fd57e002d3a51886e2
 BLOCKERS = none
-NEXT_STEP = 13.06 - Easter egg sistemi
+NEXT_STEP = 13.07 - Trophy/rozet/başarım sistemi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 13.06 - Easter egg sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.05`.
-- Current sub-step: `13.06 — Easter egg sistemi`.
-- Remaining roadmap work after 13.05: **51 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.06`.
+- Current sub-step: `13.07 — Trophy/rozet/başarım sistemi`.
+- Remaining roadmap work after 13.06: **50 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.06
+
+- Added first-party Easter Egg definitions with per-definition enabled state, priority, exact route and/or path-prefix targeting, optional UTC date window, automatic/query-token triggers, visual badge labels and CSS-only none/pulse/glow/confetti presentation.
+- Added global runtime kill-switch seeded safely OFF; disabling it bypasses every Easter Egg definition without changing or deleting configuration.
+- Added optional primary/secondary user-group visibility using the existing access-assignment model; empty group scope remains visible to any viewer who already has page access.
+- Added fail-open response decoration: only successful GET/HEAD HTML responses are modified, while Easter Egg subsystem failures return the original forum response instead of causing a site-wide 500.
+- Added Router global middleware support so route attributes are resolved before common middleware; Router-native pages support route-name + path matching and legacy Community/Report/Moderation HTML surfaces receive path-pattern decoration from the front controller.
+- Added XSS-safe rendering, maximum three surprises per response, CSS-only animations and `prefers-reduced-motion` handling without weakening the existing script CSP.
+- Added native `/admin/easter-eggs` management with dedicated CSRF protection, backend-authoritative `easteregg.manage`, global switch, create/edit, schedule, trigger, page/route, animation/badge and group controls.
+- Added central administration audit for global toggle and definition create/update while omitting surprise message text from audit snapshots.
+- Added migrations `20260919160000_easter_egg_system` and additive `20260919160500_easter_egg_path_nullable`; route-name-only definitions remain compatible without rewriting the applied base migration.
+- Kept the 13.06 badge strictly presentational; persistent trophies/badges/achievement history are intentionally owned by 13.07.
+- Added kill-switch, routing, date/token/group, XSS, reduced-motion, fail-open and Router global-middleware regression coverage plus `docs/architecture/easter-egg-system.md`.
+- Feature/fix commits: `916d66920ade8daf9fd99d428900fa06bf09f431`, `80b67df85b9f0cbc0fa1e7ce8034dc6af3a3117d`, `456bf8e8b742d2b02f40b8036aa9d538d43bd00d`, `2d87d939b4f58ad5c11e9f0586c42a7b8e0a2f03`, `a97a52137a6179cfe58d0d4d6003d0f49bcc58f5`; test/docs hardening: `424c4db8251dafb0859896fd57e002d3a51886e2`.
+- GitHub Actions build run `35454717154`: success; strict-types, lint, PHPUnit on PHP 8.4/8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35454717114`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.07 — Trophy/rozet/başarım sistemi`.
 
 ## Completed in 13.05
 
