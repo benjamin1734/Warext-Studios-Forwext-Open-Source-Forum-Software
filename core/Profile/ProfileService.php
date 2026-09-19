@@ -92,7 +92,8 @@ final readonly class ProfileService
         return [
             new ProfileTab('overview', true, ProfileVisibility::Public, 0),
             new ProfileTab('activity', true, ProfileVisibility::Public, 10),
-            new ProfileTab('about', true, ProfileVisibility::Public, 20),
+            new ProfileTab('portfolio', true, ProfileVisibility::Public, 20),
+            new ProfileTab('about', true, ProfileVisibility::Public, 30),
         ];
     }
 }

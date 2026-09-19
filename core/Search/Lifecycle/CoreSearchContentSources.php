@@ -6,6 +6,7 @@ namespace Forwext\Core\Search\Lifecycle;
 
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Faq\Search\DatabaseFaqSearchContentSource;
+use Forwext\Core\Portfolio\Search\DatabasePortfolioSearchContentSource;
 use Forwext\Core\Search\Lifecycle\Source\DatabaseForumSearchContentSource;
 use Forwext\Core\Search\Lifecycle\Source\DatabasePostSearchContentSource;
 use Forwext\Core\Search\Lifecycle\Source\DatabaseThreadSearchContentSource;
@@ -21,6 +22,7 @@ final class CoreSearchContentSources
         $registry->register(new DatabaseThreadSearchContentSource($database));
         $registry->register(new DatabasePostSearchContentSource($database));
         $registry->register(new DatabaseFaqSearchContentSource($database));
+        $registry->register(new DatabasePortfolioSearchContentSource($database));
         return $registry;
     }
 }

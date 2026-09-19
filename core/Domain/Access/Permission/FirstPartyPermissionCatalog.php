@@ -74,6 +74,8 @@ final class FirstPartyPermissionCatalog
             self::flag('portfolio.create', 'Create portfolio entries.'),
             self::flag('portfolio.manage_own', 'Manage own portfolio entries.'),
             self::flag('portfolio.manage_all', 'Manage all portfolio entries.'),
+            self::flag('portfolio.comment.create', 'Comment on visible portfolio projects.'),
+            self::flag('portfolio.reaction.use', 'React to visible portfolio projects.'),
             self::flag('invite.create', 'Create invitation links or codes.'),
             self::flag('invite.view_own', 'View own invitation activity.'),
             self::flag('invite.manage', 'Manage invitation policy and activity.'),
