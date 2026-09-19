@@ -49,6 +49,8 @@ use Forwext\App\Web\Profile\ProfileUrlSettingsHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
 use Forwext\App\Web\Portfolio\PortfolioIndexHandler;
 use Forwext\App\Web\Portfolio\PortfolioManageHandler;
+use Forwext\App\Web\Portfolio\PortfolioMediaDownloadHandler;
+use Forwext\App\Web\Portfolio\PortfolioMediaUploadHandler;
 use Forwext\App\Web\Portfolio\PortfolioProjectHandler;
 use Forwext\App\Web\Social\BookmarkListHandler;
 use Forwext\App\Web\Social\InteractionCsrfTokenHandler;
@@ -145,6 +147,7 @@ use Forwext\Core\Notification\Sound\NotificationSoundService;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
 use Forwext\Core\Portfolio\DatabasePortfolioRepository;
+use Forwext\Core\Portfolio\PortfolioMediaService;
 use Forwext\Core\Portfolio\PortfolioService;
 use Forwext\Core\Portfolio\Search\PortfolioSearchAccessScopeProvider;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
@@ -337,9 +340,10 @@ final readonly class WebApplicationFactory
             new DatabaseFaqSupportBridgeRepository($database),
             $authorizer,
         );
+        $portfolioRepository = new DatabasePortfolioRepository($database);
         $portfolio = new PortfolioService(
             $database,
-            new DatabasePortfolioRepository($database),
+            $portfolioRepository,
             $authorizer,
             $contentManagerPipeline,
             $searchChanges,
@@ -408,6 +412,14 @@ final readonly class WebApplicationFactory
 
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
+        $portfolioMedia = new PortfolioMediaService(
+            $database,
+            $portfolio,
+            $portfolioRepository,
+            $storage,
+            $attachmentInspector,
+            $attachmentQuota,
+        );
         $secretStore = new EncryptedFileSecretStore(
             $this->projectPath($config->requireString('security.secret_store_path')),
             new SecretCipher($this->masterKey($config)),
@@ -704,6 +716,25 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/portfolio/manage'),
             new PortfolioManageHandler($portfolio, $viewerResolver, $basePath),
+            [$portfolioCsrf],
+        ));
+        $routes->add(new Route(
+            'portfolio.media.download',
+            [HttpMethod::Get],
+            new PathTemplate('/portfolio/media/{mediaId}', ['mediaId'=>'[0-9a-f]{32}']),
+            new PortfolioMediaDownloadHandler($portfolioMedia, $viewerResolver),
+        ));
+        $routes->add(new Route(
+            'portfolio.media.upload',
+            [HttpMethod::Post],
+            new PathTemplate('/portfolio/{projectId}/media', ['projectId'=>'[0-9a-f]{32}']),
+            new PortfolioMediaUploadHandler(
+                $portfolioMedia,
+                $viewerResolver,
+                new VerifiedUploadedAttachmentReader(),
+                $attachmentQuota,
+                $basePath,
+            ),
             [$portfolioCsrf],
         ));
         $routes->add(new Route(

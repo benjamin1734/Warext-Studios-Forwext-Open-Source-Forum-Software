@@ -37,6 +37,7 @@ use Forwext\Database\Migrations\Core\CreatePollTables;
 use Forwext\Database\Migrations\Core\CreatePostDomainTables;
 use Forwext\Database\Migrations\Core\CreateProfileActivityTables;
 use Forwext\Database\Migrations\Core\CreatePortfolioSystem;
+use Forwext\Database\Migrations\Core\UpgradePortfolioMediaStorage;
 use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
@@ -101,5 +102,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateNotificationAlertTables::class, $classes);
         self::assertContains(CreateNotificationSoundTables::class, $classes);
         self::assertContains(CreatePortfolioSystem::class, $classes);
+        self::assertContains(UpgradePortfolioMediaStorage::class, $classes);
     }
 }

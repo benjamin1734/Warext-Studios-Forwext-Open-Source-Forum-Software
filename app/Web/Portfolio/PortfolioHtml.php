@@ -79,7 +79,7 @@ final class PortfolioHtml
             $body .= '<div class="portfolio-media">';
             foreach ($project->media as $media) {
                 $body .= '<figure><img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'
-                    . self::e($media->path) . '" alt="' . self::e($media->alt) . '"></figure>';
+                    . self::e($basePath->prepend($media->path)) . '" alt="' . self::e($media->alt) . '"></figure>';
             }
             $body .= '</div>';
         }
@@ -172,15 +172,6 @@ final class PortfolioHtml
         }
 
         $tagValue = $project === null ? '' : implode(', ', $project->tags);
-        $mediaValue = '';
-        if ($project !== null) {
-            $lines = [];
-            foreach ($project->media as $media) {
-                $lines[] = $media->path . ($media->alt === '' ? '' : '|' . $media->alt);
-            }
-            $mediaValue = implode("\n", $lines);
-        }
-
         $body = '<section class="card"><h1>Portfolyo Projesi</h1>'
             . '<p class="muted">Proje metni ortak yazım/AI moderasyon hattından geçirilir; yayımlama gerektiğinde onaya düşebilir.</p>'
             . $notice
@@ -197,9 +188,6 @@ final class PortfolioHtml
             . self::e($project?->description ?? '') . '</textarea></label>'
             . '<label class="search-wide"><span>Etiketler</span><input name="tags" maxlength="2200" value="' . self::e($tagValue)
             . '" placeholder="php, forum, açık-kaynak"></label>'
-            . '<label class="search-wide"><span>Medya</span><textarea name="media" maxlength="16000" rows="6" '
-            . 'placeholder="/uploads/portfolio/ornek.webp|Ekran görüntüsü">' . self::e($mediaValue) . '</textarea>'
-            . '<small class="muted">Her satır: aynı-origin görsel yolu|alternatif metin. En fazla 12 görsel.</small></label>'
             . '<label><input type="checkbox" name="publish" value="1"'
             . ($project?->state->value === 'published' || $project?->state->value === 'pending' ? ' checked' : '')
             . '> Yayımla / incelemeye gönder</label>';
@@ -211,6 +199,38 @@ final class PortfolioHtml
 
         $body .= '<div class="search-actions"><button type="submit">Kaydet</button>'
             . '<a href="' . self::e($basePath->prepend('/portfolio')) . '">Portfolyoya dön</a></div></form>';
+
+        if ($project !== null) {
+            $mediaAction = self::e($basePath->prepend(
+                '/portfolio/' . rawurlencode($project->projectId->value()) . '/media',
+            ));
+            $body .= '<section class="section"><h2>Proje medyası</h2>'
+                . '<p class="muted">Görseller ortak MIME/signature, boyut, piksel ve EXIF güvenlik denetiminden geçirilir. En fazla 12 görsel.</p>';
+            if ($project->media !== []) {
+                $body .= '<div class="portfolio-media">';
+                foreach ($project->media as $media) {
+                    $body .= '<figure><img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'
+                        . self::e($basePath->prepend($media->path)) . '" alt="' . self::e($media->alt) . '">';
+                    if ($media->mediaId !== null) {
+                        $body .= '<form method="post" action="' . $mediaAction . '">'
+                            . self::csrf($csrfToken)
+                            . '<input type="hidden" name="action" value="delete">'
+                            . '<input type="hidden" name="media_id" value="' . self::e($media->mediaId->value()) . '">'
+                            . '<button type="submit">Görseli kaldır</button></form>';
+                    }
+                    $body .= '</figure>';
+                }
+                $body .= '</div>';
+            }
+            $body .= '<form method="post" action="' . $mediaAction . '" enctype="multipart/form-data" class="search-form">'
+                . self::csrf($csrfToken)
+                . '<input type="hidden" name="action" value="upload">'
+                . '<label class="search-wide"><span>Görsel</span><input type="file" name="file" '
+                . 'accept="image/jpeg,image/png,image/gif,image/webp" required></label>'
+                . '<label class="search-wide"><span>Alternatif metin</span><input name="alt" maxlength="200" '
+                . 'placeholder="Görseli erişilebilir biçimde açıklayın"></label>'
+                . '<div class="search-actions"><button type="submit">Görsel yükle</button></div></form></section>';
+        }
 
         if ($canManageAll) {
             $body .= '<details class="section"><summary>Kategori yönetimi</summary>'
@@ -236,7 +256,7 @@ final class PortfolioHtml
         $thumb = $media === null
             ? ''
             : '<img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'
-                . self::e($media->path) . '" alt="' . self::e($media->alt) . '">';
+                . self::e($basePath->prepend($media->path)) . '" alt="' . self::e($media->alt) . '">';
         return '<article class="search-hit">' . $thumb . '<div class="search-hit-type">'
             . self::e($category) . ($project->featured ? ' · Öne Çıkan' : '')
             . '</div><h2><a href="' . $href . '">' . self::e($project->title) . '</a></h2>'

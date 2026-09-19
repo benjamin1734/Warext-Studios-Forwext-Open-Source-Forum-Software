@@ -151,23 +151,7 @@ final readonly class DatabasePortfolioRepository implements PortfolioRepository
                 ));
             }
 
-            $this->database->execute(new CompiledQuery(
-                'DELETE FROM forwext_portfolio_media WHERE project_id=:project_id',
-                ['project_id' => $project->projectId->value()],
-            ));
-            foreach ($project->media as $index => $media) {
-                $this->database->execute(new CompiledQuery(
-                    'INSERT INTO forwext_portfolio_media (media_id,project_id,path,alt_text,sort_order,created_at_utc) '
-                    . 'VALUES (:media_id,:project_id,:path,:alt,:sort_order,UTC_TIMESTAMP(6))',
-                    [
-                        'media_id' => hash('md5', $project->projectId->value() . "\0" . $index . "\0" . $media->path),
-                        'project_id' => $project->projectId->value(),
-                        'path' => $media->path,
-                        'alt' => $media->alt,
-                        'sort_order' => $media->sortOrder,
-                    ],
-                ));
-            }
+
         };
 
         if ($this->database->inTransaction()) {
@@ -313,7 +297,7 @@ final readonly class DatabasePortfolioRepository implements PortfolioRepository
 
         $media = [];
         foreach ($this->database->fetchAll(new CompiledQuery(
-            'SELECT path,alt_text,sort_order FROM forwext_portfolio_media '
+            'SELECT media_id,path,alt_text,sort_order FROM forwext_portfolio_media '
             . 'WHERE project_id=:project_id ORDER BY sort_order,media_id',
             ['project_id' => (string) $row['project_id']],
         )) as $mediaRow) {
@@ -321,6 +305,7 @@ final readonly class DatabasePortfolioRepository implements PortfolioRepository
                 (string) $mediaRow['path'],
                 (string) $mediaRow['alt_text'],
                 (int) $mediaRow['sort_order'],
+                EntityId::fromString((string) $mediaRow['media_id']),
             );
         }
 

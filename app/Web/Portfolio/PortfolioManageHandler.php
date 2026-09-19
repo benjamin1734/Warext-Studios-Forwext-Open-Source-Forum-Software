@@ -15,7 +15,6 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Portfolio\PortfolioCategory;
-use Forwext\Core\Portfolio\PortfolioMedia;
 use Forwext\Core\Portfolio\PortfolioProject;
 use Forwext\Core\Portfolio\PortfolioService;
 use Forwext\Core\Portfolio\PortfolioState;
@@ -131,7 +130,7 @@ final readonly class PortfolioManageHandler implements RequestHandlerInterface
             self::optional($body, 'summary', 500) ?? '',
             self::required($body, 'description', 100000),
             self::tags(self::optional($body, 'tags', 2200) ?? ''),
-            self::media(self::optional($body, 'media', 16000) ?? ''),
+            $existing?->media ?? [],
             self::checked($body, 'publish') ? PortfolioState::Published : PortfolioState::Draft,
             self::checked($body, 'featured'),
             $existing?->createdAt ?? $now,
@@ -203,25 +202,4 @@ final readonly class PortfolioManageHandler implements RequestHandlerInterface
         return $tags;
     }
 
-    /** @return list<PortfolioMedia> */
-    private static function media(string $value): array
-    {
-        if ($value === '') {
-            return [];
-        }
-        $lines = preg_split('/\R/u', $value) ?: [];
-        if (count($lines) > 12) {
-            throw new InvalidArgumentException('Portfolio media limit exceeded.');
-        }
-        $media = [];
-        foreach ($lines as $index => $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
-            }
-            [$path, $alt] = array_pad(explode('|', $line, 2), 2, '');
-            $media[] = new PortfolioMedia(trim($path), trim($alt), $index * 10);
-        }
-        return $media;
-    }
 }
