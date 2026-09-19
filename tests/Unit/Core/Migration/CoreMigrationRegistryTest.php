@@ -25,6 +25,7 @@ use Forwext\Database\Migrations\Core\CreateGiveawayDrawSystem;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawPopulation;
 use Forwext\Database\Migrations\Core\CreateEasterEggSystem;
 use Forwext\Database\Migrations\Core\AllowNullableEasterEggPath;
+use Forwext\Database\Migrations\Core\CreateTrophySystem;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -117,5 +118,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateGiveawayDrawPopulation::class, $classes);
         self::assertContains(CreateEasterEggSystem::class, $classes);
         self::assertContains(AllowNullableEasterEggPath::class, $classes);
+        self::assertContains(CreateTrophySystem::class, $classes);
     }
 }
