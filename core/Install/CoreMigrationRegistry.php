@@ -27,6 +27,7 @@ use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
 use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
 use Forwext\Database\Migrations\Core\CreateGiveawayDomain;
+use Forwext\Database\Migrations\Core\CreateGiveawayParticipation;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -130,6 +131,7 @@ final class CoreMigrationRegistry
             new UpgradePortfolioMediaStorage(),
             new CreateReferralSystem(),
             new CreateGiveawayDomain(),
+            new CreateGiveawayParticipation(),
         ];
     }
 }
