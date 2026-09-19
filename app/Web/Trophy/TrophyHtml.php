@@ -24,10 +24,12 @@ final class TrophyHtml
             .'<section class="section"><h2>Tanımlar</h2>';
         if($definitions===[])$body.='<div class="empty">Henüz tanım yok.</div>';
         foreach($definitions as $d){
+            $name=$canManage
+                ? '<a href="'.self::e($basePath->prepend('/admin/trophies?id='.rawurlencode($d->trophyId->value()))).'">'.self::e($d->name).'</a>'
+                : self::e($d->name);
             $body.='<article class="search-hit"><div class="search-hit-type">'.self::e($d->kind->value)
-                .' · '.($d->active?'Etkin':'Kapalı').' · Öncelik '.$d->priority.'</div><h3><a href="'
-                .self::e($basePath->prepend('/admin/trophies?id='.rawurlencode($d->trophyId->value()))).'">'
-                .self::e($d->name).'</a></h3><p class="muted">'.self::e($d->ruleType->value)
+                .' · '.($d->active?'Etkin':'Kapalı').' · Öncelik '.$d->priority.'</div><h3>'
+                .$name.'</h3><p class="muted">'.self::e($d->ruleType->value)
                 .($d->threshold===null?'':' ≥ '.$d->threshold).'</p></article>';
         }
         $body.='</section>';

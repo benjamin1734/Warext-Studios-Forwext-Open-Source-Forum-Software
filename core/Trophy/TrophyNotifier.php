@@ -32,7 +32,7 @@ final readonly class TrophyNotifier
             $grant->userId,self::AWARDED,
             ['name'=>$definition->name,'kind'=>$definition->kind->value],
             null,
-            'trophy-awarded:'.$grant->grantId->value().':'.$grant->awardedAt->format('YmdHis'),
+            'trophy-awarded:'.$grant->grantId->value().':'.$grant->awardedAt->format('YmdHis.u'),
             '/members',
             ['trophy_id'=>$definition->trophyId->value(),'grant_id'=>$grant->grantId->value()]
         ));
@@ -45,7 +45,7 @@ final readonly class TrophyNotifier
             $grant->userId,self::REVOKED,
             ['name'=>$definition->name,'kind'=>$definition->kind->value],
             null,
-            'trophy-revoked:'.$grant->grantId->value().':'.($grant->revokedAt?->format('YmdHis')??'unknown'),
+            'trophy-revoked:'.$grant->grantId->value().':'.($grant->revokedAt?->format('YmdHis.u')??'unknown'),
             '/members',
             ['trophy_id'=>$definition->trophyId->value(),'grant_id'=>$grant->grantId->value()]
         ));
