@@ -149,6 +149,44 @@ final class ContentPipelineTest extends TestCase
         );
     }
 
+    public function testPreprocessRunsCanonicalStagesWithoutPersistenceSideEffects(): void
+    {
+        $trace = new PipelineTrace();
+        $pipeline = new ContentPipeline(
+            new PipelineDatabase($trace),
+            [
+                new RecordingPipelineProcessor(ContentPipelineStage::Validation, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::Spam, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::Spellcheck, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::AiModeration, $trace),
+                new RecordingPipelineProcessor(ContentPipelineStage::ModerationPolicy, $trace),
+            ],
+            new RecordingPipelineNotifier($trace),
+            new RecordingPipelineIndexer($trace),
+        );
+
+        $processed = $pipeline->preprocess(
+            new ContentPipelineContext(
+                EntityId::fromString(str_repeat('1', 32)),
+                'forum.post',
+                'Reprocess body',
+                100000,
+            ),
+            $this->time(),
+        );
+
+        self::assertSame('Reprocess body', $processed->text);
+        self::assertSame([
+            'validation',
+            'spam',
+            'spellcheck',
+            'ai_moderation',
+            'moderation_policy',
+        ], $trace->events);
+        self::assertNotContains('tx.begin', $trace->events);
+        self::assertNotContains('notify', $trace->events);
+        self::assertNotContains('index', $trace->events);
+    }
     public function testValidationRejectsBeforePersistenceTransactionStarts(): void
     {
         $trace = new PipelineTrace();

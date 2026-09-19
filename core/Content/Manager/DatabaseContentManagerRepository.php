@@ -228,7 +228,11 @@ final readonly class DatabaseContentManagerRepository implements ContentManagerR
         }
         $excerpt = trim((string) $row['excerpt']);
         if (strlen($excerpt) > 500) {
-            $excerpt = substr($excerpt, 0, 497) . '...';
+            $excerpt = substr($excerpt, 0, 497);
+            while ($excerpt !== '' && preg_match('//u', $excerpt) !== 1) {
+                $excerpt = substr($excerpt, 0, -1);
+            }
+            $excerpt .= '...';
         }
         return new ContentManagerItem(
             $type,
