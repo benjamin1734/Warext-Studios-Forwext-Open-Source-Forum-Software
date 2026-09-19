@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.09-dev
+CURRENT_VERSION = 0.0.7.10-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.03
-CURRENT_STEP = 12.04
-LAST_COMMIT = c50d98bb703b04e5e0ff6de1b707d207b57274bd
+LAST_COMPLETED_SUBSTEP = 12.04
+CURRENT_STEP = 12.05
+LAST_COMMIT = 9bf96503232a1a8e066c1bb38dc3ddfc3a4558cf
 BLOCKERS = none
-NEXT_STEP = 12.04 - Yazım denetim sistemi
+NEXT_STEP = 12.05 - Kullanıcı içerik yöneticisi
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 12.04 - Yazım denetim sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.03`.
-- Current sub-step: `12.04 — Yazım denetim sistemi`.
-- Remaining roadmap work after 12.03: **61 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.04`.
+- Current sub-step: `12.05 — Kullanıcı içerik yöneticisi`.
+- Remaining roadmap work after 12.04: **60 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.04
+
+- Added a provider-neutral spellcheck contract with normalized language tags, typed Unicode issue offsets and bounded suggestions.
+- Added the conservative first-party `TurkishSpellcheckProvider` for common Turkish misspellings without treating arbitrary technical/domain vocabulary as incorrect.
+- Added extensible provider registry coverage demonstrating additional language providers can be registered without editor/pipeline changes.
+- Added database-backed per-user and site-wide dictionaries with Turkish-aware word normalization.
+- Added backend-authoritative `spellcheck.use`, `spellcheck.dictionary.manage_own` and `spellcheck.dictionary.manage_site` defaults; site-wide dictionary management is administrator-only by default.
+- Added authenticated `POST /editor/spellcheck` with private/no-store responses and server-side permission enforcement.
+- Added CSRF-protected `GET|POST /account/spellcheck-dictionary` management surface.
+- Added rich-editor **Yazımı denetle** action, marked issue context, selectable highlights and one-click suggestions with stale-result protection.
+- Added advisory `SpellcheckPipelineProcessor`; spelling findings never rewrite or reject valid content automatically.
+- Added graceful pass-through behavior when spellcheck is not configured or the actor lacks the use permission.
+- Added additive idempotent migration `20260919080000_spellcheck_system`.
+- Added architecture, domain, pipeline, editor-view and web-handler regression coverage.
+- Feature commit: `9bf96503232a1a8e066c1bb38dc3ddfc3a4558cf`.
+- GitHub Actions build run `35429688616`: success; strict-types, lint and PHPUnit passed on PHP 8.4 and PHP 8.5.
+- Database migration smoke run `35429688617`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `12.05 — Kullanıcı içerik yöneticisi`.
 
 ## Completed in 12.03
 

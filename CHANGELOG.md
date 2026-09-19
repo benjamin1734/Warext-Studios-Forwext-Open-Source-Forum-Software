@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.04 — Turkish Spellcheck and Dictionaries
+
+- Replaced the spellcheck placeholder with a provider-neutral advisory spelling-assistance service and pipeline processor.
+- Added a conservative first-party Turkish provider with Unicode-safe issue offsets and deterministic suggestions for common misspellings.
+- Added extensible language-provider registry plus database-backed personal and site dictionaries.
+- Added backend permission defaults for spellcheck use, own dictionary management and administrator-only site dictionary management.
+- Added authenticated `/editor/spellcheck` and CSRF-protected `/account/spellcheck-dictionary` native web surfaces.
+- Added rich-editor spelling checks with marked context, selectable findings, one-click replacements and stale-result protection.
+- Added additive migration `20260919080000_spellcheck_system` and regression coverage across provider, dictionary, pipeline and editor/web integrations.
+
 ### 12.03 — AI Privacy, Cost and Prompt Management
 
 - Integrated AI provider credentials with the encrypted first-party secret store.
