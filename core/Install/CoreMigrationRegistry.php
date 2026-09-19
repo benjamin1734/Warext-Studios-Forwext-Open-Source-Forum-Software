@@ -54,6 +54,7 @@ use Forwext\Database\Migrations\Core\CreateSearchIndexLifecycleTables;
 use Forwext\Database\Migrations\Core\CreateSearchIndexTables;
 use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
 use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
+use Forwext\Database\Migrations\Core\CreateThreadFreshnessSystem;
 use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserPresenceTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
@@ -118,6 +119,7 @@ final class CoreMigrationRegistry
             new CreateAiModerationPrivacyCostPolicy(),
             new CreateSpellcheckSystem(),
             new CreateContentManagerSystem(),
+            new CreateThreadFreshnessSystem(),
         ];
     }
 }

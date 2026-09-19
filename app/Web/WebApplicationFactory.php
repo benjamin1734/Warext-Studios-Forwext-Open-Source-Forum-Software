@@ -23,6 +23,7 @@ use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
 use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
+use Forwext\App\Web\Forum\ThreadFreshnessHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
 use Forwext\App\Web\Notification\NotificationRealtimeHandler;
 use Forwext\App\Web\Notification\NotificationRealtimeSseHandler;
@@ -30,6 +31,8 @@ use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
 use Forwext\App\Web\Notification\NotificationSoundCsrfTokenHandler;
 use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
 use Forwext\App\Web\Moderation\DisciplineAccountHandler;
+use Forwext\App\Web\Moderation\ThreadFreshnessPolicyHandler;
+use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -115,6 +118,9 @@ use Forwext\Core\Forum\Editor\PinnedHttpsLinkPreviewTransport;
 use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
 use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
 use Forwext\Core\Forum\Editor\UserMentionResolver;
+use Forwext\Core\Forum\Freshness\DatabaseThreadFreshnessRepository;
+use Forwext\Core\Forum\Freshness\ThreadFreshnessNotifier;
+use Forwext\Core\Forum\Freshness\ThreadFreshnessService;
 use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
@@ -294,6 +300,20 @@ final readonly class WebApplicationFactory
             $authorizer,
             $contentManagerQueue,
         );
+        $freshnessRepository = new DatabaseThreadFreshnessRepository($database);
+        $freshnessNotificationRegistry = new NotificationRegistry();
+        ThreadFreshnessNotifier::registerDefinitions($freshnessNotificationRegistry);
+        $freshnessNotifier = new ThreadFreshnessNotifier(new NotificationDispatcher(
+            $freshnessNotificationRegistry,
+            new DatabaseNotificationRepository($database),
+        ));
+        $freshness = new ThreadFreshnessService(
+            $freshnessRepository,
+            $nodes,
+            $authorizer,
+            $searchChanges,
+            $freshnessNotifier,
+        );
         $faqRepository = new DatabaseFaqRepository($database);
         $faq = new FaqService(
             $database,
@@ -421,6 +441,7 @@ final readonly class WebApplicationFactory
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
         $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
+        $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -657,6 +678,24 @@ final readonly class WebApplicationFactory
             new ContentManagerOperationHandler($contentManager, $contentManagerProcessor, $viewerResolver, $basePath),
             [$contentManagerCsrf],
         ));
+        $routes->add(new Route(
+            'thread.freshness', [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/threads/{threadId}/freshness', ['threadId'=>'[0-9a-f]{32}']),
+            new ThreadFreshnessHandler($freshness, $viewerResolver, $basePath),
+            [$freshnessCsrf],
+        ));
+        $routes->add(new Route(
+            'moderation.freshness', [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/moderation/freshness'),
+            new ThreadFreshnessReviewHandler($freshness, $viewerResolver, $basePath),
+            [$freshnessCsrf],
+        ));
+        $routes->add(new Route(
+            'moderation.freshness.policy', [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/moderation/freshness/policy'),
+            new ThreadFreshnessPolicyHandler($freshness, $nodes, $viewerResolver, $basePath),
+            [$freshnessCsrf],
+        ));
         $routes->add(new Route('editor.preview', [HttpMethod::Post], new PathTemplate('/editor/preview'), new EditorPreviewHandler($editorPreview, $viewerResolver)));
         $routes->add(new Route('editor.spellcheck', [HttpMethod::Post], new PathTemplate('/editor/spellcheck'), new EditorSpellcheckHandler($spellcheck, $viewerResolver)));
         $routes->add(new Route('editor.mention', [HttpMethod::Get], new PathTemplate('/editor/mention'), new EditorMentionLookupHandler($users, $viewerResolver, $basePath, $mentionSuggestions)));
@@ -858,6 +897,11 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function freshnessCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'thread-freshness', 'forwext.csrf.thread-freshness.v1');
     }
 
     private function contentManagerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

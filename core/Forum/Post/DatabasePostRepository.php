@@ -55,11 +55,13 @@ final readonly class DatabasePostRepository implements PostRepository
             $threadId, $authorUserId, $body, $requiresApproval, $mustBeFirst, $now,
         ): Post {
             $threadRow = $database->fetchOne(new CompiledQuery(
-                'SELECT `thread_id` FROM `forwext_threads` WHERE `thread_id` = :thread_id FOR UPDATE',
+                'SELECT `thread_id`, `deleted`, `archived`, `merged_into_thread_id` FROM `forwext_threads` WHERE `thread_id` = :thread_id FOR UPDATE',
                 ['thread_id' => $threadId->value()],
                 true,
             ));
-            if ($threadRow === null) {
+            if ($threadRow === null || (bool) ($threadRow['deleted'] ?? false)
+                || (bool) ($threadRow['archived'] ?? false) || ($threadRow['merged_into_thread_id'] ?? null) !== null
+            ) {
                 throw new PostOperationException('Post thread is not available.');
             }
 
@@ -97,6 +99,13 @@ final readonly class DatabasePostRepository implements PostRepository
             if ($affected !== 1) {
                 throw new PostConcurrencyException('Post creation failed because its position was claimed concurrently.');
             }
+            $database->execute(new CompiledQuery(
+                'INSERT INTO `forwext_thread_freshness_state` (`thread_id`,`last_activity_at_utc`,`renew_count`) '
+                . 'VALUES (:thread_id,:last_activity_at_utc,0) '
+                . 'ON DUPLICATE KEY UPDATE `last_activity_at_utc`=GREATEST(`last_activity_at_utc`,VALUES(`last_activity_at_utc`)), '
+                . '`notified_at_utc`=NULL,`review_requested_at_utc`=NULL,`last_evaluated_at_utc`=NULL',
+                ['thread_id'=>$threadId->value(),'last_activity_at_utc'=>self::format($post->updatedAt())],
+            ));
             $post->markPersisted(1);
             return $post;
         });

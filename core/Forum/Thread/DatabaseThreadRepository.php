@@ -27,7 +27,7 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
         ThreadId::assert($threadId);
         $row = $this->database->fetchOne(new CompiledQuery(
             $this->selectSql()
-            . ' WHERE `thread_id` = :thread_id AND `deleted` = 0 AND `merged_into_thread_id` IS NULL LIMIT 1',
+            . ' WHERE `thread_id` = :thread_id AND `deleted` = 0 AND `archived` = 0 AND `merged_into_thread_id` IS NULL LIMIT 1',
             ['thread_id' => $threadId->value()],
         ));
 
@@ -43,7 +43,7 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
 
         $rows = $this->database->fetchAll(new CompiledQuery(
             $this->selectSql()
-            . ' WHERE `forum_node_id` = :forum_node_id AND `deleted` = 0 AND `merged_into_thread_id` IS NULL '
+            . ' WHERE `forum_node_id` = :forum_node_id AND `deleted` = 0 AND `archived` = 0 AND `merged_into_thread_id` IS NULL '
             . 'ORDER BY `sticky` DESC, `featured` DESC, `updated_at_utc` DESC, `thread_id` DESC '
             . 'LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['forum_node_id' => $forumNodeId->value()],
@@ -96,7 +96,7 @@ final readonly class DatabaseThreadRepository implements ThreadRepository
                         . '`sticky` = :sticky, `featured` = :featured, `version` = :version, '
                         . '`updated_at_utc` = :updated_at '
                         . 'WHERE `thread_id` = :thread_id AND `version` = :expected_version '
-                        . 'AND `deleted` = 0 AND `merged_into_thread_id` IS NULL',
+                        . 'AND `deleted` = 0 AND `archived` = 0 AND `merged_into_thread_id` IS NULL',
                         $parameters,
                     ));
                 }

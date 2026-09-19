@@ -40,6 +40,7 @@ use Forwext\Database\Migrations\Core\CreateRoleAppearanceTable;
 use Forwext\Database\Migrations\Core\CreateRoleGroupTables;
 use Forwext\Database\Migrations\Core\CreateSocialInteractionTables;
 use Forwext\Database\Migrations\Core\CreateThreadDomainTables;
+use Forwext\Database\Migrations\Core\CreateThreadFreshnessSystem;
 use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
 use PHPUnit\Framework\TestCase;
 
@@ -90,6 +91,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateAiModerationPrivacyCostPolicy::class, $classes);
         self::assertContains(CreateSpellcheckSystem::class, $classes);
         self::assertContains(CreateContentManagerSystem::class, $classes);
+        self::assertContains(CreateThreadFreshnessSystem::class, $classes);
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);

@@ -26,14 +26,14 @@ final readonly class DatabasePostSearchContentSource extends AbstractDatabaseSea
         $row = $this->database->fetchOne(new CompiledQuery(
             'SELECT p.`post_id`,p.`author_user_id`,p.`body_source`,p.`moderation_state`,p.`deleted`,p.`updated_at_utc`,'
             . 't.`thread_id`,t.`title` AS `thread_title`,t.`forum_node_id`,t.`type_key`,t.`moderation_state` AS `thread_state`,'
-            . 't.`deleted` AS `thread_deleted`,t.`merged_into_thread_id`,n.`visibility` AS `node_visibility` '
+            . 't.`deleted` AS `thread_deleted`,t.`archived` AS `thread_archived`,t.`merged_into_thread_id`,n.`visibility` AS `node_visibility` '
             . 'FROM `forwext_posts` p INNER JOIN `forwext_threads` t ON t.`thread_id`=p.`thread_id` '
             . 'INNER JOIN `forwext_nodes` n ON n.`node_id`=t.`forum_node_id` WHERE p.`post_id`=:post_id LIMIT 1',
             ['post_id' => $documentId],
         ));
         if ($row === null || (bool) ($row['deleted'] ?? false)
             || (string) ($row['moderation_state'] ?? '') !== PostModerationState::Visible->value
-            || (bool) ($row['thread_deleted'] ?? false) || ($row['merged_into_thread_id'] ?? null) !== null
+            || (bool) ($row['thread_deleted'] ?? false) || (bool) ($row['thread_archived'] ?? false) || ($row['merged_into_thread_id'] ?? null) !== null
             || (string) ($row['thread_state'] ?? '') !== ThreadModerationState::Visible->value
             || (string) ($row['node_visibility'] ?? '') === ForumNodeVisibility::Disabled->value) return null;
         foreach (['body_source','thread_title','forum_node_id','updated_at_utc'] as $key) {

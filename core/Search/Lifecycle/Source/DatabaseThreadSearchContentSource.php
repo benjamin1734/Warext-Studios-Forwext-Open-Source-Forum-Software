@@ -23,12 +23,12 @@ final readonly class DatabaseThreadSearchContentSource extends AbstractDatabaseS
     {
         $this->validateId($documentId);
         $row = $this->database->fetchOne(new CompiledQuery(
-            'SELECT t.`thread_id`,t.`forum_node_id`,t.`author_user_id`,t.`type_key`,t.`title`,t.`moderation_state`,t.`deleted`,'
+            'SELECT t.`thread_id`,t.`forum_node_id`,t.`author_user_id`,t.`type_key`,t.`title`,t.`moderation_state`,t.`deleted`,t.`archived`,'
             . 't.`merged_into_thread_id`,t.`updated_at_utc`,n.`visibility` AS `node_visibility` '
             . 'FROM `forwext_threads` t INNER JOIN `forwext_nodes` n ON n.`node_id`=t.`forum_node_id` '
             . 'WHERE t.`thread_id`=:thread_id LIMIT 1', ['thread_id' => $documentId],
         ));
-        if ($row === null || (bool) ($row['deleted'] ?? false) || ($row['merged_into_thread_id'] ?? null) !== null
+        if ($row === null || (bool) ($row['deleted'] ?? false) || (bool) ($row['archived'] ?? false) || ($row['merged_into_thread_id'] ?? null) !== null
             || (string) ($row['moderation_state'] ?? '') !== ThreadModerationState::Visible->value
             || (string) ($row['node_visibility'] ?? '') === ForumNodeVisibility::Disabled->value) return null;
         foreach (['forum_node_id','type_key','title','updated_at_utc'] as $key) {
