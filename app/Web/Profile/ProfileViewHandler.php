@@ -25,6 +25,8 @@ use Forwext\Core\Profile\SocialLink;
 use Forwext\Core\Profile\UserProfile;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
+use Forwext\Core\Trophy\TrophyHistoryAction;
+use Forwext\Core\Trophy\TrophyService;
 use InvalidArgumentException;
 
 final readonly class ProfileViewHandler implements RequestHandlerInterface
@@ -50,6 +52,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private BasePath $basePath,
         private ?ProfileMusicService $music = null,
         private ?PortfolioService $portfolio = null,
+        private ?TrophyService $trophies = null,
     ) {
     }
 
@@ -92,6 +95,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             $label = match ($tab->key) {
                 'overview' => 'Genel Bakış',
                 'portfolio' => 'Portfolyo',
+                'achievements' => 'Başarımlar',
                 default => 'Hakkımda',
             };
             $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
@@ -110,6 +114,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 );
             } elseif ($tab->key === 'portfolio') {
                 $sections .= $this->portfolioSection($profile, $viewerId);
+            } elseif ($tab->key === 'achievements') {
+                $sections .= $this->trophySection($profile->userId, $viewerId);
             } elseif ($tab->key === 'about') {
                 $sections .= $this->aboutSection($profile, $viewerId);
             }
@@ -154,7 +160,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $tabs = array_values(array_filter(
             $profile->tabs,
             fn (ProfileTab $tab): bool => $tab->enabled
-                && in_array($tab->key, ['overview', 'portfolio', 'about'], true)
+                && in_array($tab->key, ['overview', 'portfolio', 'achievements', 'about'], true)
                 && $this->accessPolicy->canViewSection($profile, $tab->visibility, $viewerId),
         ));
         usort(
@@ -207,6 +213,48 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
 
         return '<section class="section" id="portfolio"><h2>Portfolyo</h2>' . $content . '</section>';
+    }
+
+    private function trophySection(EntityId $userId, ?EntityId $viewerId): string
+    {
+        if($this->trophies===null||$viewerId===null)return '';
+
+        try{
+            $awards=$this->trophies->profileAwards($viewerId,$userId,50);
+            $history=$this->trophies->profileHistory($viewerId,$userId,20);
+        }catch(PermissionDeniedException|InvalidArgumentException){
+            return '';
+        }
+
+        $cards='';
+        foreach($awards as $item){
+            $definition=$item['definition'];
+            $grant=$item['grant'];
+            $icon=$definition->iconPath===null?'':'<img class="trophy-icon" src="'
+                .ProfileHtml::escape($this->basePath->prepend($definition->iconPath)).'" alt="">';
+            $banner=$definition->bannerPath===null?'':'<img class="trophy-banner" src="'
+                .ProfileHtml::escape($this->basePath->prepend($definition->bannerPath)).'" alt="">';
+            $cards.='<article class="trophy-card">'.$banner.'<div class="trophy-card-body">'.$icon
+                .'<div><div class="search-hit-type">'.ProfileHtml::escape($definition->kind->value)
+                .' · Öncelik '.$definition->priority.'</div><h3>'.ProfileHtml::escape($definition->name).'</h3>'
+                .($definition->description===''?'':'<p>'.ProfileHtml::escape($definition->description).'</p>')
+                .'<p class="muted">Kazanım: '.ProfileHtml::escape($grant->awardedAt->format('Y-m-d H:i')).' UTC</p>'
+                .'</div></div></article>';
+        }
+        if($cards==='')$cards='<p class="muted">Henüz görüntülenebilir kupa, rozet veya başarım yok.</p>';
+
+        $timeline='';
+        foreach($history as $item){
+            $definition=$item['definition'];
+            $event=$item['history'];
+            $action=$event->action===TrophyHistoryAction::Awarded?'Kazanıldı':'Geri alındı';
+            $timeline.='<li><strong>'.ProfileHtml::escape($definition->name).'</strong> · '
+                .$action.' · '.ProfileHtml::escape($event->occurredAt->format('Y-m-d H:i')).' UTC</li>';
+        }
+        if($timeline!=='')$timeline='<div class="section"><h3>Başarım geçmişi</h3><ul class="trophy-history">'.$timeline.'</ul></div>';
+
+        return '<section class="section" id="achievements"><h2>Kupa, Rozet ve Başarımlar</h2>'
+            .'<div class="trophy-grid">'.$cards.'</div>'.$timeline.'</section>';
     }
 
     private function aboutSection(UserProfile $profile, ?EntityId $viewerId): string

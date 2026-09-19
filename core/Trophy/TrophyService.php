@@ -30,6 +30,17 @@ final readonly class TrophyService
     ) {
     }
 
+    /** @return array{can_manage:bool,can_award:bool,definitions:list<TrophyDefinition>} */
+    public function managementSnapshot(EntityId $actor): array
+    {
+        $canManage=$this->authorizer->allows($actor,PermissionKey::fromString('trophy.manage'));
+        $canAward=$this->authorizer->allows($actor,PermissionKey::fromString('trophy.award'));
+        if(!$canManage&&!$canAward){
+            $this->require($actor,'trophy.manage');
+        }
+        return ['can_manage'=>$canManage,'can_award'=>$canAward,'definitions'=>$this->repository->definitions(false)];
+    }
+
     /** @return list<TrophyDefinition> */
     public function definitions(EntityId $actor): array
     {
@@ -79,6 +90,38 @@ final readonly class TrophyService
         $this->require($viewer,'trophy.view');
         UserId::assert($userId);
         return $this->repository->historyForUser($userId,$limit,$offset);
+    }
+
+    /** @return list<array{definition:TrophyDefinition,history:TrophyHistoryEntry}> */
+    public function profileHistory(?EntityId $viewer, EntityId $userId, int $limit=30): array
+    {
+        if($viewer===null)return [];
+        $this->require($viewer,'trophy.view');
+        $items=[];
+        foreach($this->repository->historyForUser($userId,$limit,0) as $history){
+            $definition=$this->repository->findDefinition($history->trophyId);
+            if($definition!==null){
+                $items[]=['definition'=>$definition,'history'=>$history];
+            }
+        }
+        return $items;
+    }
+
+    public function evaluateUserForActor(
+        EntityId $actor,
+        EntityId $userId,
+        DateTimeImmutable $now,
+        ?AuditRequestId $requestId=null,
+    ): int {
+        $this->require($actor,'trophy.award');
+        $count=$this->evaluateUser($userId,$now);
+        $this->audit->append(new AuditEvent(
+            AuditEvent::generateId(),AuditScope::Administration,$actor,
+            AuditAction::fromString('trophy.evaluate_user'),'trophy.user',$userId->value(),null,
+            'trophy.evaluate_user',$requestId??AuditRequestId::generate(),[],
+            ['user_id'=>$userId->value(),'awarded_count'=>$count],self::utc($now),
+        ));
+        return $count;
     }
 
     public function awardManual(
