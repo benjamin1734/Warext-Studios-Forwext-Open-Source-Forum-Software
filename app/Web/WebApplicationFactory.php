@@ -66,6 +66,9 @@ use Forwext\App\Web\Faq\FaqArticleIdHandler;
 use Forwext\App\Web\Faq\FaqIndexHandler;
 use Forwext\App\Web\Faq\FaqManageHandler;
 use Forwext\App\Web\Faq\FaqSupportDraftHandler;
+use Forwext\App\Web\Giveaway\GiveawayDetailHandler;
+use Forwext\App\Web\Giveaway\GiveawayIndexHandler;
+use Forwext\App\Web\Giveaway\GiveawayManageHandler;
 use Forwext\App\Web\Support\MyTicketsHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportStaffDashboardHandler;
@@ -135,6 +138,9 @@ use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Giveaway\DatabaseGiveawayRepository;
+use Forwext\Core\Giveaway\GiveawayService;
+use Forwext\Core\Giveaway\Search\GiveawaySearchAccessScopeProvider;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
@@ -368,6 +374,14 @@ final readonly class WebApplicationFactory
                 new DatabaseNotificationRepository($database),
             )),
         );
+        $giveawayRepository = new DatabaseGiveawayRepository($database);
+        $giveaways = new GiveawayService(
+            $database,
+            $giveawayRepository,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $searchChanges,
+        );
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -385,6 +399,7 @@ final readonly class WebApplicationFactory
                 new ForumSearchAccessScopeProvider($nodes, $authorizer),
                 new FaqSearchAccessScopeProvider($authorizer),
                 new PortfolioSearchAccessScopeProvider($authorizer),
+                new GiveawaySearchAccessScopeProvider($authorizer),
             ],
             new SavedSearchQueryRegistry(),
         );
@@ -496,6 +511,7 @@ final readonly class WebApplicationFactory
         $faqCsrf = $this->faqCsrfMiddleware($config);
         $portfolioCsrf = $this->portfolioCsrfMiddleware($config);
         $referralCsrf = $this->referralCsrfMiddleware($config);
+        $giveawayCsrf = $this->giveawayCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -725,6 +741,25 @@ final readonly class WebApplicationFactory
                 $authorizer,
                 new AttachmentDownloadResponseFactory(),
             ),
+        ));
+        $routes->add(new Route(
+            'giveaway.index',
+            [HttpMethod::Get],
+            new PathTemplate('/giveaways'),
+            new GiveawayIndexHandler($giveaways, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'giveaway.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/giveaways/manage'),
+            new GiveawayManageHandler($giveaways, $viewerResolver, $basePath),
+            [$giveawayCsrf],
+        ));
+        $routes->add(new Route(
+            'giveaway.detail',
+            [HttpMethod::Get],
+            new PathTemplate('/giveaways/{giveawayId}', ['giveawayId'=>'[0-9a-f]{32}']),
+            new GiveawayDetailHandler($giveaways, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'referral.redirect',
@@ -1071,6 +1106,11 @@ final readonly class WebApplicationFactory
     private function referralCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'referral', 'forwext.csrf.referral.v1');
+    }
+
+    private function giveawayCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'giveaway', 'forwext.csrf.giveaway.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

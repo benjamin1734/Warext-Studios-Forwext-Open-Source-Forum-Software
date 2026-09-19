@@ -47,6 +47,16 @@ final readonly class GiveawayService
         return $this->giveaways->list($actor, false, $limit);
     }
 
+    /** @return list<Giveaway> */
+    public function manageable(EntityId $actor, int $limit = 100): array
+    {
+        if ($this->allows($actor, 'giveaway.manage')) {
+            return $this->giveaways->list(null, false, $limit);
+        }
+        $this->require($actor, 'giveaway.create');
+        return $this->giveaways->list($actor, false, $limit);
+    }
+
     public function find(EntityId $actor, EntityId $giveawayId): Giveaway
     {
         $giveaway = $this->giveaways->find($giveawayId)
