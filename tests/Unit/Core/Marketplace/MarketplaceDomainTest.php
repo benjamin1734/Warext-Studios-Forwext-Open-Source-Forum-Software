@@ -69,8 +69,8 @@ final class MarketplaceDomainTest extends TestCase
     {
         $repo=new MemoryMarketplaceRepository();
         $manager=UserId::generate();
-        $a=$this->category(str_repeat('1',32),null,'a','a-category');
-        $b=$this->category(str_repeat('2',32),$a->categoryId,'b','b-category');
+        $a=$this->category(str_repeat('1',32),null,'aa','a-category');
+        $b=$this->category(str_repeat('2',32),$a->categoryId,'bb','b-category');
         $repo->saveCategory($a);
         $repo->saveCategory($b);
 
@@ -79,7 +79,7 @@ final class MarketplaceDomainTest extends TestCase
         ]);
 
         $cycle=new MarketplaceCategory(
-            $a->categoryId,$b->categoryId,'a','a-category','A','',true,10,$a->createdAt,$this->at('2026-09-19 19:05:00')
+            $a->categoryId,$b->categoryId,'aa','a-category','A','',true,10,$a->createdAt,$this->at('2026-09-19 19:05:00')
         );
 
         $this->expectException(InvalidArgumentException::class);
