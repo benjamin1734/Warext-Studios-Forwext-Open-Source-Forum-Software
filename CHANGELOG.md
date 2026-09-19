@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.07 — Trophy, Badge and Achievement System
+
+- Added trophy/badge/achievement definitions with priority, active state, same-origin icon/banner paths and typed manual/rule configuration.
+- Added account-age, visible-post, qualified-referral and current-giveaway-win rules with idempotent automatic evaluation and a persistent batch cursor.
+- Added durable grants plus append-only award/revoke history; manual revocation blocks silent automatic re-award.
+- Added backend `trophy.view`, `trophy.manage` and `trophy.award` separation, dedicated CSRF and central audit for human mutations.
+- Added native `/admin/trophies` management and an `achievements` profile tab with priority ordering, icon/banner presentation and history.
+- Added shared award/revoke notifications that do not roll back committed grant state when notification delivery fails.
+- Added migration `20260919170000_trophy_system`, hourly bounded evaluation support, regression tests and architecture documentation.
+- Completion commits: `f3c417600192b2f1eb568ef351996342b2aac50e`, `ace0c158d74cdc43ce26f22ee79e2d31aa412207`, `75523b638fafa8e9bcc5b4295ff6b11dfdeed13f`, `749d7d89e6a0bcf35171195bc54a77b9359568cd`, `46c90927621d42a8a2f4e61d9e89bec259a026d9`, `aad78cc0593d7c1044f242c367d4b4d55182a326`, `0189a1ca16d87d293d2a4ca0cf576042305e0a15`.
+- GitHub Actions build run `35457856516`: success.
+- Database migration smoke run `35457856525`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.06 — Easter Egg System
 
 - Added centrally managed Easter Egg definitions with route/path, date-window, query trigger, group visibility, message, visual badge and CSS-only animation controls.

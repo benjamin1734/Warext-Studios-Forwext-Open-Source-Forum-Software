@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.20-dev
+CURRENT_VERSION = 0.0.7.21-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.06
-CURRENT_STEP = 13.07
-LAST_COMMIT = 424c4db8251dafb0859896fd57e002d3a51886e2
+LAST_COMPLETED_SUBSTEP = 13.07
+CURRENT_STEP = 13.08
+LAST_COMMIT = 0189a1ca16d87d293d2a4ca0cf576042305e0a15
 BLOCKERS = none
-NEXT_STEP = 13.07 - Trophy/rozet/başarım sistemi
+NEXT_STEP = 13.08 - User promotions ve ödül provider sistemi
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 13.07 - Trophy/rozet/başarım sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.06`.
-- Current sub-step: `13.07 — Trophy/rozet/başarım sistemi`.
-- Remaining roadmap work after 13.06: **50 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.07`.
+- Current sub-step: `13.08 — User promotions ve ödül provider sistemi`.
+- Remaining roadmap work after 13.07: **49 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.07
+
+- Added first-party trophy/badge/achievement definitions with stable keys, kind, active state, priority, description, optional same-origin icon/banner paths and typed rule configuration.
+- Added deterministic built-in rule metrics for account age, visible post count, qualified referrals and current giveaway wins while keeping manual grants as an explicit rule type.
+- Added durable one-per-user/definition grant lifecycle plus append-only award/revoke history with source, actor, reason and timestamp.
+- Added automatic idempotent rule evaluation with an hourly bounded 200-user batch, persistent cursor and explicit cPanel-safe single-user evaluation action.
+- Made manual revocation authoritative against the automatic evaluator: a revoked rule grant is not silently re-awarded; only an authorized manual award can restore it.
+- Added backend-authoritative `trophy.view`, `trophy.manage` and `trophy.award` defaults with separate definition-management and award/revoke authority.
+- Added central administration audit for definition create/update, manual award/revoke and human-triggered user evaluation; automated rule grants retain durable domain history without inventing a human actor.
+- Added shared `trophy.awarded` / `trophy.revoked` notifications after committed grant mutations; notification failure is non-authoritative and cannot roll back a persisted achievement.
+- Added the `achievements` profile tab for existing/new profiles, active achievement cards ordered by priority, same-origin icon/banner presentation and recent award/revoke history.
+- Added native `/admin/trophies` management with dedicated CSRF, definition editing, rule thresholds, manual award/revoke by username and bounded rule evaluation.
+- Added migration `20260919170000_trophy_system` for definitions, grants, append-only history and evaluation cursor state.
+- Hardened icon/banner paths against traversal, external/protocol-relative URLs, query strings, fragments and control characters.
+- Added rule idempotency, revocation, priority ordering, profile history, asset safety and scheduler regression tests plus `docs/architecture/trophy-system.md`.
+- Feature/fix commits: `f3c417600192b2f1eb568ef351996342b2aac50e`, `ace0c158d74cdc43ce26f22ee79e2d31aa412207`, `75523b638fafa8e9bcc5b4295ff6b11dfdeed13f`, `749d7d89e6a0bcf35171195bc54a77b9359568cd`, `46c90927621d42a8a2f4e61d9e89bec259a026d9`, `aad78cc0593d7c1044f242c367d4b4d55182a326`, `0189a1ca16d87d293d2a4ca0cf576042305e0a15`.
+- GitHub Actions build run `35457856516`: success; strict-types, lint, PHPUnit on PHP 8.4/8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35457856525`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.08 — User promotions ve ödül provider sistemi`.
 
 ## Completed in 13.06
 
