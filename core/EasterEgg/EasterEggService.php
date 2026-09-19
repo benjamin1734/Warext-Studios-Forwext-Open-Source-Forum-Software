@@ -39,6 +39,13 @@ final readonly class EasterEggService
         return $this->repository->find($id);
     }
 
+    /** @return list<EasterEggGroupOption> */
+    public function availableGroups(EntityId $actor): array
+    {
+        $this->requireManage($actor);
+        return $this->repository->availableGroups();
+    }
+
     /** @return list<EntityId> */
     public function groups(EntityId $actor, EntityId $id): array
     {

@@ -28,4 +28,7 @@ interface EasterEggRepository
 
     /** @param list<EntityId> $groupIds */
     public function replaceGroups(EntityId $easterEggId, array $groupIds): void;
+
+    /** @return list<EasterEggGroupOption> */
+    public function availableGroups(): array;
 }

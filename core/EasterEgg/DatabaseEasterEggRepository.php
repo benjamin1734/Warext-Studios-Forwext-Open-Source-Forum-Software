@@ -136,6 +136,19 @@ final readonly class DatabaseEasterEggRepository implements EasterEggRepository
         });
     }
 
+    public function availableGroups(): array
+    {
+        return array_map(
+            static fn (array $row): EasterEggGroupOption => new EasterEggGroupOption(
+                EntityId::fromString((string) $row['group_id']),
+                (string) $row['name'],
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT group_id,name FROM forwext_user_groups ORDER BY sort_order,name,group_id',
+            )),
+        );
+    }
+
     /** @param array<string,mixed> $row */
     private function hydrate(array $row): EasterEggDefinition
     {
