@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Giveaway;
 
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Giveaway\Giveaway;
+use Forwext\Core\Giveaway\GiveawayDrawProof;
 use Forwext\Core\Giveaway\GiveawayEligibilityDecision;
 use Forwext\Core\Giveaway\GiveawayEligibilityPolicy;
 use Forwext\Core\Giveaway\GiveawayEligibilityRoleOption;
@@ -104,6 +105,12 @@ final class GiveawayHtml
         }
         $body .= '</section>';
 
+        if ($giveaway->state === GiveawayState::Closed) {
+            $body .= '<p><a href="' . self::e($basePath->prepend(
+                '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/proof',
+            )) . '">Kazanan seçim kanıtını incele</a></p>';
+        }
+
         if ($canManage) {
             $body .= '<p><a href="' . self::e($basePath->prepend(
                 '/giveaways/manage?giveaway=' . rawurlencode($giveaway->giveawayId->value()),
@@ -118,12 +125,14 @@ final class GiveawayHtml
     /**
      * @param list<Giveaway> $giveaways
      * @param list<GiveawayEligibilityRoleOption> $roleOptions
+     * @param list<GiveawayDrawProof> $drawProofs
      */
     public static function manage(
         array $giveaways,
         ?Giveaway $giveaway,
         ?GiveawayEligibilityPolicy $policy,
         array $roleOptions,
+        array $drawProofs,
         BasePath $basePath,
         string $csrfToken,
         bool $updated,
@@ -227,6 +236,32 @@ final class GiveawayHtml
                 . '</form></section>';
         }
 
+        if ($giveaway !== null && $giveaway->state === GiveawayState::Closed) {
+            $body .= '<section class="section"><h2>Kazanan seçimi</h2>';
+            if ($drawProofs === []) {
+                $body .= '<p class="muted">Henüz kazanan seçilmedi. İlk seçim yalnız bir kez oluşturulabilir ve kalıcı audit kaydı bırakır.</p>'
+                    . self::actionForm($action, $csrfToken, 'draw', $giveaway, 'Kriptografik kazanan seçimi yap');
+            } else {
+                $latestProof = $drawProofs[count($drawProofs) - 1];
+                $body .= '<p>Güncel kazanan kullanıcı kimliği: <code>'
+                    . self::e($latestProof->draw->winnerUserId->value()) . '</code></p>'
+                    . '<p class="muted">Draw #' . $latestProof->draw->sequence
+                    . ' · Kanıt: ' . ($latestProof->verified ? 'Doğrulandı' : 'Doğrulanamadı') . '</p>'
+                    . '<p><a href="' . self::e($basePath->prepend(
+                        '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/proof',
+                    )) . '">Tüm seçim/audit zincirini aç</a></p>'
+                    . '<form method="post" action="' . $action . '" class="search-form">'
+                    . self::csrf($csrfToken)
+                    . '<input type="hidden" name="action" value="redraw">'
+                    . '<input type="hidden" name="giveaway_id" value="' . self::e($giveaway->giveawayId->value()) . '">'
+                    . '<label class="search-wide"><span>Yeniden çekim gerekçesi</span>'
+                    . '<textarea name="redraw_reason" minlength="10" maxlength="500" rows="4" required></textarea></label>'
+                    . '<div class="search-actions"><button type="submit">Gerekçeli yeniden çekim yap</button></div>'
+                    . '</form>';
+            }
+            $body .= '</section>';
+        }
+
         if ($giveaway !== null) {
             $body .= '<section class="section"><h2>Yaşam döngüsü</h2><p class="muted">Mevcut durum: '
                 . self::e(self::stateLabel($giveaway->state)) . '</p>';
@@ -241,6 +276,55 @@ final class GiveawayHtml
 
         $body .= '</section>';
         return ProfileHtml::page('Çekiliş Yönetimi', $body, $basePath, authenticated:true);
+    }
+
+    /**
+     * @param list<GiveawayDrawProof> $proofs
+     * @param array<string,string> $winnerNames
+     */
+    public static function proof(
+        Giveaway $giveaway,
+        array $proofs,
+        array $winnerNames,
+        BasePath $basePath,
+    ): string {
+        $body = '<section class="card"><h1>Kazanan Seçim Kanıtı</h1>'
+            . '<p><a href="' . self::e($basePath->prepend(
+                '/giveaways/' . rawurlencode($giveaway->giveawayId->value()),
+            )) . '">← Çekilişe dön</a></p>'
+            . '<p class="muted">Algoritma: <code>' . self::e(\Forwext\Core\Giveaway\GiveawayDraw::ALGORITHM)
+            . '</code>. Her kayıt immutable population snapshot, açıklanan CSPRNG seed ve rejection-sampling bileti ile tekrar doğrulanır.</p>';
+
+        if ($proofs === []) {
+            $body .= '<div class="empty">Bu çekiliş için henüz kazanan seçimi yapılmadı.</div>';
+        } else {
+            foreach ($proofs as $proof) {
+                $draw = $proof->draw;
+                $winner = $winnerNames[$draw->winnerUserId->value()] ?? 'Silinmiş veya erişilemeyen kullanıcı';
+                $body .= '<article class="section"><h2>Draw #' . $draw->sequence
+                    . ($proof->current ? ' · Güncel sonuç' : ' · Önceki sonuç') . '</h2>'
+                    . '<p><strong>' . ($proof->verified ? 'Kanıt doğrulandı' : 'Kanıt doğrulanamadı') . '</strong></p>'
+                    . '<dl>'
+                    . '<dt>Tür</dt><dd>' . self::e($draw->kind->value) . '</dd>'
+                    . '<dt>Kazanan</dt><dd>' . self::e($winner) . ' · <code>'
+                    . self::e($draw->winnerUserId->value()) . '</code></dd>'
+                    . '<dt>Katılımcı snapshot</dt><dd>' . $draw->participantCount . ' kullanıcı · '
+                    . $draw->totalWeight . ' toplam hak</dd>'
+                    . '<dt>Seçilen bilet</dt><dd>' . $draw->selectedTicket . '</dd>'
+                    . '<dt>Population SHA-256</dt><dd><code>' . self::e($draw->populationHash) . '</code></dd>'
+                    . '<dt>Seed</dt><dd><code>' . self::e($draw->seedHex) . '</code></dd>'
+                    . '<dt>Proof SHA-256</dt><dd><code>' . self::e($draw->proofHash) . '</code></dd>'
+                    . '<dt>Zaman</dt><dd>' . self::e(self::date($draw->createdAt)) . '</dd>'
+                    . '</dl>';
+                if ($draw->redrawReason !== null) {
+                    $body .= '<p><strong>Yeniden çekim gerekçesi:</strong> ' . self::e($draw->redrawReason) . '</p>';
+                }
+                $body .= '</article>';
+            }
+        }
+        $body .= '</section>';
+
+        return ProfileHtml::page('Kazanan Seçim Kanıtı', $body, $basePath, authenticated:true);
     }
 
     private static function actionForm(

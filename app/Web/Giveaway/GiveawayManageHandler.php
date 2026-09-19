@@ -11,6 +11,8 @@ use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Giveaway\Giveaway;
+use Forwext\Core\Giveaway\GiveawayDrawException;
+use Forwext\Core\Giveaway\GiveawayDrawService;
 use Forwext\Core\Giveaway\GiveawayEligibilityPolicy;
 use Forwext\Core\Giveaway\GiveawayException;
 use Forwext\Core\Giveaway\GiveawayParticipationException;
@@ -32,6 +34,7 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
     public function __construct(
         private GiveawayService $giveaways,
         private GiveawayParticipationService $participation,
+        private GiveawayDrawService $draws,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
     ) {
@@ -82,13 +85,15 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
                 $selected,
                 $selected === null ? null : $this->participation->policy($actor, $selected->giveawayId),
                 $selected === null ? [] : $this->participation->roleOptions($actor, $selected->giveawayId),
+                $selected === null || $selected->state !== GiveawayState::Closed
+                    ? [] : $this->draws->proof($actor, $selected->giveawayId),
                 $this->basePath,
                 $token,
                 ($request->query()['updated'] ?? null) === '1',
             ))->withHeader('Cache-Control', 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
-        } catch (GiveawayException|GiveawayParticipationException|InvalidArgumentException) {
+        } catch (GiveawayException|GiveawayParticipationException|GiveawayDrawException|InvalidArgumentException) {
             return Response::text('Bad Request', 400)->withHeader('Cache-Control', 'no-store');
         }
     }
@@ -137,6 +142,25 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
                 HttpAuditRequestId::fromRequest($request),
             );
             return $giveawayId;
+        }
+
+        if ($action === 'draw') {
+            return $this->draws->draw(
+                $actor,
+                self::id($body['giveaway_id'] ?? null),
+                $now,
+                HttpAuditRequestId::fromRequest($request),
+            )->giveawayId;
+        }
+
+        if ($action === 'redraw') {
+            return $this->draws->redraw(
+                $actor,
+                self::id($body['giveaway_id'] ?? null),
+                self::required($body, 'redraw_reason', 500),
+                $now,
+                HttpAuditRequestId::fromRequest($request),
+            )->giveawayId;
         }
 
         if ($action === 'publish') {

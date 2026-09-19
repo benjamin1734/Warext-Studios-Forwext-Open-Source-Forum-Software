@@ -70,6 +70,7 @@ use Forwext\App\Web\Giveaway\GiveawayDetailHandler;
 use Forwext\App\Web\Giveaway\GiveawayEnterHandler;
 use Forwext\App\Web\Giveaway\GiveawayIndexHandler;
 use Forwext\App\Web\Giveaway\GiveawayManageHandler;
+use Forwext\App\Web\Giveaway\GiveawayProofHandler;
 use Forwext\App\Web\Support\MyTicketsHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportStaffDashboardHandler;
@@ -139,10 +140,14 @@ use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Giveaway\DatabaseGiveawayDrawRepository;
 use Forwext\Core\Giveaway\DatabaseGiveawayEligibilityContextProvider;
 use Forwext\Core\Giveaway\DatabaseGiveawayParticipationRepository;
 use Forwext\Core\Giveaway\DatabaseGiveawayRepository;
+use Forwext\Core\Giveaway\GiveawayDrawAlgorithm;
+use Forwext\Core\Giveaway\GiveawayDrawService;
 use Forwext\Core\Giveaway\GiveawayFingerprint;
+use Forwext\Core\Giveaway\GiveawayNotifier;
 use Forwext\Core\Giveaway\GiveawayParticipationService;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Giveaway\Search\GiveawaySearchAccessScopeProvider;
@@ -384,6 +389,7 @@ final readonly class WebApplicationFactory
             )),
         );
         $giveawayRepository = new DatabaseGiveawayRepository($database);
+        $giveawayParticipationRepository = new DatabaseGiveawayParticipationRepository($database);
         $giveawayAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $giveaways = new GiveawayService(
             $database,
@@ -395,7 +401,7 @@ final readonly class WebApplicationFactory
         $giveawayParticipation = new GiveawayParticipationService(
             $database,
             $giveawayRepository,
-            new DatabaseGiveawayParticipationRepository($database),
+            $giveawayParticipationRepository,
             new DatabaseGiveawayEligibilityContextProvider(
                 $database,
                 $users,
@@ -407,6 +413,21 @@ final readonly class WebApplicationFactory
         $giveawayFingerprint = new GiveawayFingerprint(
             $secretStore,
             $config->requireString('registration.rate_limit.fingerprint_secret_name'),
+        );
+        $giveawayNotificationRegistry = new NotificationRegistry();
+        GiveawayNotifier::registerDefinitions($giveawayNotificationRegistry);
+        $giveawayDraws = new GiveawayDrawService(
+            $database,
+            $giveawayRepository,
+            $giveawayParticipationRepository,
+            new DatabaseGiveawayDrawRepository($database),
+            $authorizer,
+            $giveawayAudit,
+            new GiveawayNotifier(new NotificationDispatcher(
+                $giveawayNotificationRegistry,
+                new DatabaseNotificationRepository($database),
+            )),
+            new GiveawayDrawAlgorithm(),
         );
         $profilePage = new ProfileViewHandler(
             $users,
@@ -774,7 +795,7 @@ final readonly class WebApplicationFactory
             'giveaway.manage',
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/giveaways/manage'),
-            new GiveawayManageHandler($giveaways, $giveawayParticipation, $viewerResolver, $basePath),
+            new GiveawayManageHandler($giveaways, $giveawayParticipation, $giveawayDraws, $viewerResolver, $basePath),
             [$giveawayCsrf],
         ));
         $routes->add(new Route(
@@ -789,6 +810,12 @@ final readonly class WebApplicationFactory
                 $basePath,
             ),
             [$giveawayCsrf],
+        ));
+        $routes->add(new Route(
+            'giveaway.proof',
+            [HttpMethod::Get],
+            new PathTemplate('/giveaways/{giveawayId}/proof', ['giveawayId'=>'[0-9a-f]{32}']),
+            new GiveawayProofHandler($giveaways, $giveawayDraws, $users, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'giveaway.enter',
