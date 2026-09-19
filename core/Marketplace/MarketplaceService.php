@@ -85,6 +85,9 @@ final readonly class MarketplaceService
         $this->require($actor,'marketplace.category.manage');
         if($this->repository->category($field->categoryId)===null)throw new InvalidArgumentException('Marketplace custom field category was not found.');
         $before=$this->repository->customField($field->fieldId);
+        if($before!==null&&!$before->categoryId->equals($field->categoryId)){
+            throw new InvalidArgumentException('Marketplace custom field category is immutable after creation.');
+        }
         $event=new AuditEvent(
             AuditEvent::generateId(),AuditScope::Administration,$actor,
             AuditAction::fromString($before===null?'marketplace.field.create':'marketplace.field.update'),
@@ -243,8 +246,13 @@ final readonly class MarketplaceService
             $values[$key]=$byKey[$key]->normalize($value);
         }
         foreach($definitions as $definition){
-            if($definition->required&&!array_key_exists($definition->key,$values)){
+            if(!$definition->required)continue;
+            if(!array_key_exists($definition->key,$values)){
                 throw new InvalidArgumentException('Marketplace listing is missing a required custom field.');
+            }
+            $value=$values[$definition->key];
+            if(is_string($value)&&trim($value)===''){
+                throw new InvalidArgumentException('Marketplace required custom field cannot be empty.');
             }
         }
         return $values;

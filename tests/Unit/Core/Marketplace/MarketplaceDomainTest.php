@@ -137,6 +137,41 @@ final class MarketplaceDomainTest extends TestCase
         self::assertSame(['condition'=>'used'],$active->customValues);
     }
 
+    public function testRequiredTextValueCannotBeEmptyAndFieldCategoryIsImmutable():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $manager=UserId::generate();
+        $seller=UserId::generate();
+        $categoryA=$this->category(str_repeat('6',32),null,'hardware','hardware');
+        $categoryB=$this->category(str_repeat('7',32),null,'software','software');
+        $repo->saveCategory($categoryA);
+        $repo->saveCategory($categoryB);
+        $field=new MarketplaceCustomFieldDefinition(
+            EntityId::fromString(str_repeat('8',32)),$categoryA->categoryId,'license','Lisans',
+            MarketplaceCustomFieldType::Text,true,[],10,true
+        );
+        $repo->saveCustomField($field);
+
+        $service=$this->service($repo,[
+            $seller->value()=>['marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true],
+            $manager->value()=>['marketplace.category.manage'=>true],
+        ]);
+
+        try{
+            $service->saveListing($seller,$this->listing(
+                MarketplaceListing::generateId(),$seller,$categoryA->categoryId,['license'=>'   ']
+            ));
+            self::fail('Required text custom field cannot normalize to empty.');
+        }catch(InvalidArgumentException){}
+
+        $moved=new MarketplaceCustomFieldDefinition(
+            $field->fieldId,$categoryB->categoryId,$field->key,$field->label,$field->type,
+            $field->required,$field->options,$field->sortOrder,$field->active
+        );
+        $this->expectException(InvalidArgumentException::class);
+        $service->saveCustomField($manager,$moved,$this->at('2026-09-19 19:30:00'));
+    }
+
     public function testSellerIdentityAndDirectStateEditsAreImmutable():void
     {
         $repo=new MemoryMarketplaceRepository();
