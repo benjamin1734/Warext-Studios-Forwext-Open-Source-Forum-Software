@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.02 — Invitation and Referral System
+
+- Added public high-entropy referral links, campaign/expiry policy, first-touch attribution, privacy-safe anti-fraud signals and qualified referral lifecycle.
+- Kept referral attribution isolated from security-sensitive registration invite gating and made referral failures non-blocking after successful registration.
+- Added member referral/reward analytics, staff campaign/review management, same-origin capture cookies and bounded cPanel/manual plus scheduler qualification paths.
+- Added central audit and notification integration and an idempotent reward ledger that will connect to the shared reward-provider API in 13.08.
+- Added migration `20260919140000_referral_system`, architecture documentation and anti-fraud/lifecycle/registration regression coverage.
+- Completion/hardening commits: `37a9dd847bb3bad0cc8ad7530c2db781f7436fa9`, `9be41d11a9c855968c1fac180d4c55eafa13a3c5`, `8f604b7ad2596142c2507fd7b72715729335e81b`.
+- GitHub Actions build run `35439089180`: success.
+- Database migration smoke run `35439089182`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.01 — Portfolio System
 
 - Added portfolio projects, categories/tags, comments/reactions, featured projects and profile-tab integration.

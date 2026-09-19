@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.15-dev
+CURRENT_VERSION = 0.0.7.16-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.01
-CURRENT_STEP = 13.02
-LAST_COMMIT = 0eb61484c67e611b0676064848431b5cb0025438
+LAST_COMPLETED_SUBSTEP = 13.02
+CURRENT_STEP = 13.03
+LAST_COMMIT = 37a9dd847bb3bad0cc8ad7530c2db781f7436fa9
 BLOCKERS = none
-NEXT_STEP = 13.02 - Davet/referans sistemi
+NEXT_STEP = 13.03 - Çekiliş sistemi domain
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 13.02 - Davet/referans sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01`.
-- Current sub-step: `13.02 — Davet/referans sistemi`.
-- Remaining roadmap work after 13.01: **55 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.02`.
+- Current sub-step: `13.03 — Çekiliş sistemi domain`.
+- Remaining roadmap work after 13.02: **54 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.02
+
+- Added a first-party referral campaign domain with active/start/end windows, attribution lifetime, qualification delay, duplicate-network/device thresholds, optional per-referrer caps and reward key/units.
+- Kept security-sensitive registration invite gating separate from public referral attribution; existing `RegistrationInviteStore` remains authoritative for invite-only registration.
+- Added cryptographically random per-user campaign links, click tracking, host-only referral capture cookie and same-origin redirect behavior without an open-redirect target.
+- Added first-touch registration attribution after the successful account transaction using existing HMAC IP/device fingerprints; raw IP/user-agent values are not persisted by referral tables.
+- Made referral attribution optional/graceful: malformed, expired or unavailable referral state cannot invalidate an otherwise successful registration.
+- Added self-referral rejection, duplicate privacy-safe fingerprint review, active-account qualification, pending-account deferral, restricted-account rejection and optional referrer qualification caps.
+- Added idempotent referral reward ledger persistence; common cross-system reward fulfillment remains intentionally assigned to 13.08.
+- Added native member `/account/referrals`, staff `/referrals/manage` and public `/ref/{code}` surfaces with backend permission checks and dedicated CSRF protection for mutations.
+- Added central audit coverage for campaign mutations and staff attribution decisions plus existing notification infrastructure for successful qualification.
+- Added bounded manual qualification for cPanel deployments and optional ten-minute `referral.qualify` scheduler/queue integration for advanced deployments.
+- Added additive migration `20260919140000_referral_system` for campaigns, links, clicks, attributions and rewards with conservative permission-template defaults.
+- Added registration, anti-fraud, lifecycle/idempotency and maintenance-schedule regression coverage plus `docs/architecture/referral-system.md`.
+- Feature commits: `91903f0941b0c348f2f0722b7e6029fe5b27e8f2`, `93c5266430c056fd3dbc4126b48b0526f2d0c5eb`, `acc5d44df732c45de2017bae41fa81f187b1a1ec`, `dfa06f8d98d5cf3e49150a7b1c74b2eb9074b5dc`, `37a9dd847bb3bad0cc8ad7530c2db781f7436fa9`; test/docs hardening: `9be41d11a9c855968c1fac180d4c55eafa13a3c5`, `8f604b7ad2596142c2507fd7b72715729335e81b`.
+- GitHub Actions build run `35439089180`: success; strict-types, lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel package checks passed.
+- Database migration smoke run `35439089182`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.03 — Çekiliş sistemi domain`.
 
 ## Completed in 13.01
 
