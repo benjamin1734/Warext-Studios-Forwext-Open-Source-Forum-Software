@@ -17,6 +17,8 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Notification\NotificationException;
+use Forwext\Core\Reward\RewardGrantGateway;
+use Throwable;
 
 final readonly class GiveawayDrawService
 {
@@ -29,6 +31,7 @@ final readonly class GiveawayDrawService
         private AuditRecorder $audit,
         private GiveawayNotifier $notifier,
         private GiveawayDrawAlgorithm $algorithm = new GiveawayDrawAlgorithm(),
+        private ?RewardGrantGateway $rewardGateway = null,
     ) {
     }
 
@@ -43,7 +46,7 @@ final readonly class GiveawayDrawService
             ?? throw new GiveawayException('Giveaway was not found.');
         $this->assertClosed($giveaway);
 
-        return $this->create(
+        $draw = $this->create(
             $actor,
             $giveawayId,
             GiveawayDrawKind::Primary,
@@ -51,6 +54,8 @@ final readonly class GiveawayDrawService
             $at,
             $requestId,
         );
+        $this->safeRewardFulfill($draw, $at);
+        return $draw;
     }
 
     public function redraw(
@@ -66,7 +71,8 @@ final readonly class GiveawayDrawService
             ?? throw new GiveawayException('Giveaway was not found.');
         $this->assertClosed($giveaway);
 
-        return $this->create(
+        $previous = $this->draws->latest($giveawayId);
+        $draw = $this->create(
             $actor,
             $giveawayId,
             GiveawayDrawKind::Redraw,
@@ -74,6 +80,11 @@ final readonly class GiveawayDrawService
             $at,
             $requestId,
         );
+        if ($previous !== null) {
+            $this->safeRewardRevoke($previous, $at);
+        }
+        $this->safeRewardFulfill($draw, $at);
+        return $draw;
     }
 
     /** @return list<GiveawayDrawProof> */
@@ -221,6 +232,37 @@ final readonly class GiveawayDrawService
 
             return $draw;
         });
+    }
+
+    private function safeRewardFulfill(GiveawayDraw $draw, DateTimeImmutable $at): void
+    {
+        if ($this->rewardGateway === null) return;
+        try {
+            $this->rewardGateway->fulfillBindings(
+                'giveaway',
+                $draw->giveawayId,
+                $draw->drawId->value(),
+                $draw->winnerUserId,
+                $at,
+            );
+        } catch (Throwable) {
+            // Draw is already immutable and audited; reward fulfillment is retryable and non-authoritative.
+        }
+    }
+
+    private function safeRewardRevoke(GiveawayDraw $draw, DateTimeImmutable $at): void
+    {
+        if ($this->rewardGateway === null) return;
+        try {
+            $this->rewardGateway->revokeSource(
+                'giveaway',
+                $draw->drawId->value(),
+                $draw->winnerUserId,
+                $at,
+            );
+        } catch (Throwable) {
+            // Redraw result remains authoritative; reward reconciliation can be repaired independently.
+        }
     }
 
     private function assertClosed(Giveaway $giveaway): void

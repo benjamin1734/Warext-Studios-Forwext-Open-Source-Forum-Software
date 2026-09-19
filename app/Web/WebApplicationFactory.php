@@ -203,6 +203,11 @@ use Forwext\Core\Queue\DatabaseQueueDriver;
 use Forwext\Core\Referral\DatabaseReferralRepository;
 use Forwext\Core\Referral\ReferralNotifier;
 use Forwext\Core\Referral\ReferralService;
+use Forwext\Core\Reward\DatabaseRewardRepository;
+use Forwext\Core\Reward\DatabaseRoleRewardProvider;
+use Forwext\Core\Reward\DatabaseSecondaryGroupRewardProvider;
+use Forwext\Core\Reward\RewardProviderRegistry;
+use Forwext\Core\Reward\RewardService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Routing\PathTemplate;
@@ -387,6 +392,19 @@ final readonly class WebApplicationFactory
             $contentManagerPipeline,
             $searchChanges,
         );
+        $rewardRepository = new DatabaseRewardRepository($database);
+        $rewardProviders = new RewardProviderRegistry([
+            new DatabaseRoleRewardProvider($database),
+            new DatabaseSecondaryGroupRewardProvider($database),
+        ]);
+        $rewards = new RewardService(
+            $database,
+            $rewardRepository,
+            $rewardProviders,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+
         $referralNotificationRegistry = new NotificationRegistry();
         ReferralNotifier::registerDefinitions($referralNotificationRegistry);
         $referralRepository = new DatabaseReferralRepository($database);
@@ -400,6 +418,7 @@ final readonly class WebApplicationFactory
                 $referralNotificationRegistry,
                 new DatabaseNotificationRepository($database),
             )),
+            $rewards,
         );
         $giveawayRepository = new DatabaseGiveawayRepository($database);
         $giveawayParticipationRepository = new DatabaseGiveawayParticipationRepository($database);
@@ -457,6 +476,7 @@ final readonly class WebApplicationFactory
                 new DatabaseNotificationRepository($database),
             )),
             new GiveawayDrawAlgorithm(),
+            $rewards,
         );
         $trophyRepository = new DatabaseTrophyRepository($database);
         $trophyNotificationRegistry = new NotificationRegistry();
@@ -471,6 +491,7 @@ final readonly class WebApplicationFactory
                 $trophyNotificationRegistry,
                 new DatabaseNotificationRepository($database),
             )),
+            $rewards,
         );
         $profilePage = new ProfileViewHandler(
             $users,

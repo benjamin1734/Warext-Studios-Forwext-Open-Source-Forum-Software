@@ -17,6 +17,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Reward\RewardGrantGateway;
 use Throwable;
 use InvalidArgumentException;
 
@@ -29,6 +30,7 @@ final readonly class TrophyService
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
         private ?TrophyNotifier $notifier = null,
+        private ?RewardGrantGateway $rewardGateway = null,
     ) {
     }
 
@@ -177,6 +179,7 @@ final readonly class TrophyService
         });
         try{$this->notifier?->revoked($grant,$this->repository->findDefinition($grant->trophyId));}
         catch(Throwable){}
+        $this->safeRewardRevoke($grant,$now);
         return $grant;
     }
 
@@ -238,6 +241,7 @@ final readonly class TrophyService
             });
             try{$this->notifier?->awarded($grant,$definition);}
             catch(Throwable){}
+            $this->safeRewardFulfill($definition,$grant,$now);
             return $grant;
         }
 
@@ -253,7 +257,29 @@ final readonly class TrophyService
         });
         try{$this->notifier?->awarded($grant,$definition);}
         catch(Throwable){}
+        $this->safeRewardFulfill($definition,$grant,$now);
         return $grant;
+    }
+
+    private function safeRewardFulfill(
+        TrophyDefinition $definition,
+        TrophyGrant $grant,
+        DateTimeImmutable $now,
+    ): void {
+        if($this->rewardGateway===null)return;
+        try{
+            $this->rewardGateway->fulfillBindings(
+                'trophy',$definition->trophyId,$grant->grantId->value(),$grant->userId,$now
+            );
+        }catch(Throwable){}
+    }
+
+    private function safeRewardRevoke(TrophyGrant $grant,DateTimeImmutable $now):void
+    {
+        if($this->rewardGateway===null)return;
+        try{
+            $this->rewardGateway->revokeSource('trophy',$grant->grantId->value(),$grant->userId,$now);
+        }catch(Throwable){}
     }
 
     private function require(EntityId $actor,string $permission):void

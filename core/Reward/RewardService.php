@@ -38,7 +38,7 @@ final readonly class RewardService implements RewardGrantGateway
                 throw new InvalidArgumentException('Reward recipient was not found.');
             }
             $existing=$this->repository->grantByRequest($request);
-            if($existing!==null&&in_array($existing->state,[RewardGrantState::Applied,RewardGrantState::Revoked],true)){
+            if($existing!==null&&$existing->state===RewardGrantState::Applied){
                 return $existing;
             }
 
@@ -179,6 +179,12 @@ final readonly class RewardService implements RewardGrantGateway
         EntityId $actor,RewardBinding $binding,DateTimeImmutable $now,?AuditRequestId $requestId=null
     ):void{
         $this->require($actor,'reward.manage');
+        if(!in_array($binding->sourceType,['giveaway','trophy'],true)){
+            throw new InvalidArgumentException('Reward bindings only support first-party giveaway or trophy definitions.');
+        }
+        if($this->repository->definitionByKey($binding->rewardKey)===null){
+            throw new InvalidArgumentException('Reward binding references an unknown reward definition.');
+        }
         $event=new AuditEvent(
             AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('reward.binding.save'),
             'reward.binding',$binding->bindingId->value(),null,'reward.binding.save',$requestId??AuditRequestId::generate(),

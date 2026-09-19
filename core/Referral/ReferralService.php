@@ -19,6 +19,8 @@ use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Domain\User\UserStatus;
+use Forwext\Core\Reward\RewardGrantGateway;
+use Forwext\Core\Reward\RewardGrantRequest;
 use InvalidArgumentException;
 use Throwable;
 
@@ -31,6 +33,7 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
         private ?ReferralNotifier $notifier = null,
+        private ?RewardGrantGateway $rewardGateway = null,
     ) {
     }
 
@@ -335,8 +338,28 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
                 ));
             }
         });
+        $this->safeRewardGrant($qualified, $campaign, $at);
         if ($notify) {
             $this->safeNotify($qualified, $campaign);
+        }
+    }
+
+    private function safeRewardGrant(
+        ReferralAttribution $attribution,
+        ReferralCampaign $campaign,
+        DateTimeImmutable $at,
+    ): void {
+        if ($this->rewardGateway === null) return;
+        try {
+            $this->rewardGateway->grant(new RewardGrantRequest(
+                $attribution->referrerUserId,
+                'referral',
+                $attribution->attributionId->value(),
+                $campaign->rewardKey,
+                $campaign->rewardUnits,
+            ), $at);
+        } catch (Throwable) {
+            // Referral qualification/local reward ledger is authoritative; common fulfillment retries independently.
         }
     }
 
