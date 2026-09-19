@@ -21,6 +21,7 @@ final readonly class RegistrationRequest
         public array $acceptedLegalVersions = [],
         #[SensitiveParameter] public ?string $password = null,
         public ?string $clientUserAgent = null,
+        public ?string $referralCode = null,
     ) {
         if (filter_var($clientIp, FILTER_VALIDATE_IP) === false) {
             throw new InvalidArgumentException('Registration client IP is invalid.');

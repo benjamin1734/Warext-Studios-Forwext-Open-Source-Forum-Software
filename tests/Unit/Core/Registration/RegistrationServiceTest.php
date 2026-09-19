@@ -28,6 +28,7 @@ use Forwext\Core\Moderation\Abuse\AbuseEventType;
 use Forwext\Core\Moderation\Abuse\AbuseRepository;
 use Forwext\Core\Moderation\Abuse\AbuseRule;
 use Forwext\Core\Moderation\Abuse\AbuseSignal;
+use Forwext\Core\Referral\ReferralRegistrationAttribution;
 use Forwext\Core\Registration\Captcha\CaptchaVerification;
 use Forwext\Core\Registration\Captcha\CaptchaVerifier;
 use Forwext\Core\Registration\DisposableEmailChecker;
@@ -269,6 +270,81 @@ final class RegistrationServiceTest extends TestCase
         ));
     }
 
+    public function testReferralAttributionUsesPrivacySafeSignalsAndCannotBreakRegistration(): void
+    {
+        $users = new MemoryRegistrationUserRepository();
+        $referrals = new MemoryReferralRegistrationAttribution();
+        $service = $this->service(
+            new RegistrationTransactionDatabase(),
+            $users,
+            new RegistrationPolicy(
+                mode: RegistrationMode::Open,
+                emailVerificationRequired: false,
+                captchaRequired: false,
+            ),
+            new SuccessfulCaptchaVerifier(),
+            new NeverDisposableChecker(),
+            new AllowingRateLimiter(),
+            new MemoryInviteStore(),
+            new MemoryLegalAcceptanceStore(),
+            new MemoryEmailVerificationTokenStore(),
+            new MemoryRegistrationCredentialProvisioner(),
+            referrals: $referrals,
+        );
+
+        $result = $service->register(new RegistrationRequest(
+            username: 'referred_user',
+            email: 'referred@example.com',
+            locale: 'tr-TR',
+            timezone: 'Europe/Istanbul',
+            clientIp: '203.0.113.77',
+            password: 'Correct Horse Battery Staple 5!',
+            clientUserAgent: 'Forwext Referral Test/1.0',
+            referralCode: 'ABCDEFGHIJKLMNOPQRSTUVWX12345678',
+        ));
+
+        self::assertSame(UserStatus::Active, $result->status);
+        self::assertSame(1, $referrals->calls);
+        self::assertSame('ABCDEFGHIJKLMNOPQRSTUVWX12345678', $referrals->code);
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/D', $referrals->ipFingerprint ?? '');
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/D', $referrals->deviceFingerprint ?? '');
+        self::assertNotSame('203.0.113.77', $referrals->ipFingerprint);
+        self::assertNotNull($users->find($result->userId));
+
+        $failingUsers = new MemoryRegistrationUserRepository();
+        $failing = new MemoryReferralRegistrationAttribution(true);
+        $failingService = $this->service(
+            new RegistrationTransactionDatabase(),
+            $failingUsers,
+            new RegistrationPolicy(
+                mode: RegistrationMode::Open,
+                emailVerificationRequired: false,
+                captchaRequired: false,
+            ),
+            new SuccessfulCaptchaVerifier(),
+            new NeverDisposableChecker(),
+            new AllowingRateLimiter(),
+            new MemoryInviteStore(),
+            new MemoryLegalAcceptanceStore(),
+            new MemoryEmailVerificationTokenStore(),
+            new MemoryRegistrationCredentialProvisioner(),
+            referrals: $failing,
+        );
+
+        $fallbackResult = $failingService->register(new RegistrationRequest(
+            username: 'referral_fallback',
+            email: 'referral-fallback@example.com',
+            locale: 'en-US',
+            timezone: 'UTC',
+            clientIp: '203.0.113.78',
+            password: 'Correct Horse Battery Staple 6!',
+            referralCode: 'ZYXWVUTSRQPONMLKJIHGFEDC12345678',
+        ));
+
+        self::assertSame(UserStatus::Active, $fallbackResult->status);
+        self::assertNotNull($failingUsers->find($fallbackResult->userId));
+    }
+
     public function testEmailVerificationConsumesGrantAndTransitionsAccount(): void
     {
         $database = new RegistrationTransactionDatabase();
@@ -310,6 +386,7 @@ final class RegistrationServiceTest extends TestCase
         EmailVerificationTokenStore $tokens,
         CredentialProvisioner $credentials,
         ?AbuseEngine $abuse = null,
+        ?ReferralRegistrationAttribution $referrals = null,
     ): RegistrationService {
         return new RegistrationService(
             $database,
@@ -327,7 +404,36 @@ final class RegistrationServiceTest extends TestCase
             $credentials,
             new FrozenRegistrationClock('2026-09-14 21:00:00'),
             $abuse,
+            $referrals,
         );
+    }
+}
+
+final class MemoryReferralRegistrationAttribution implements ReferralRegistrationAttribution
+{
+    public int $calls = 0;
+    public ?string $code = null;
+    public ?string $ipFingerprint = null;
+    public ?string $deviceFingerprint = null;
+
+    public function __construct(private bool $throw = false)
+    {
+    }
+
+    public function attributeRegistration(
+        EntityId $referredUserId,
+        ?string $code,
+        string $ipFingerprint,
+        ?string $deviceFingerprint,
+        DateTimeImmutable $at,
+    ): void {
+        ++$this->calls;
+        if ($this->throw) {
+            throw new \RuntimeException('Synthetic referral outage.');
+        }
+        $this->code = $code;
+        $this->ipFingerprint = $ipFingerprint;
+        $this->deviceFingerprint = $deviceFingerprint;
     }
 }
 

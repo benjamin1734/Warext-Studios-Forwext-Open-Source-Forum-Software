@@ -20,7 +20,9 @@ use Forwext\Core\Moderation\Abuse\AbuseContext;
 use Forwext\Core\Moderation\Abuse\AbuseDecision;
 use Forwext\Core\Moderation\Abuse\AbuseEngine;
 use Forwext\Core\Moderation\Abuse\AbuseEventType;
+use Forwext\Core\Referral\ReferralRegistrationAttribution;
 use Forwext\Core\Registration\Captcha\CaptchaVerifier;
+use Throwable;
 
 final readonly class RegistrationService
 {
@@ -38,6 +40,7 @@ final readonly class RegistrationService
         private CredentialProvisioner $credentials,
         private Clock $clock = new SystemClock(),
         private ?AbuseEngine $abuse = null,
+        private ?ReferralRegistrationAttribution $referrals = null,
     ) {
     }
 
@@ -58,6 +61,9 @@ final readonly class RegistrationService
         $now = $this->clock->now();
         $ipFingerprint = $this->fingerprint->ip($request->clientIp);
         $emailFingerprint = $this->fingerprint->email($email);
+        $deviceFingerprint = $request->clientUserAgent === null
+            ? null
+            : $this->fingerprint->device($request->clientUserAgent);
 
         if (!$this->rateLimiter->consume(
             'registration.ip',
@@ -83,7 +89,7 @@ final readonly class RegistrationService
                 null,
                 $emailFingerprint,
                 $ipFingerprint,
-                $request->clientUserAgent === null ? null : $this->fingerprint->device($request->clientUserAgent),
+                $deviceFingerprint,
             );
             $abuseDecision = $this->abuse->evaluate($abuseContext, $now);
             if ($abuseDecision->isRejected()) {
@@ -105,7 +111,7 @@ final readonly class RegistrationService
         }
         $this->assertLegalAcceptance($request);
 
-        return $this->database->transaction(function () use (
+        $result = $this->database->transaction(function () use (
             $request,
             $password,
             $username,
@@ -166,6 +172,22 @@ final readonly class RegistrationService
 
             return new RegistrationResult($user->id(), $user->status(), $verificationToken);
         });
+
+        if ($this->referrals !== null && $request->referralCode !== null) {
+            try {
+                $this->referrals->attributeRegistration(
+                    $result->userId,
+                    $request->referralCode,
+                    $ipFingerprint,
+                    $deviceFingerprint,
+                    $now,
+                );
+            } catch (Throwable) {
+                // Referral attribution is optional and must never invalidate a successful account registration.
+            }
+        }
+
+        return $result;
     }
 
     private function assertLegalAcceptance(RegistrationRequest $request): void
