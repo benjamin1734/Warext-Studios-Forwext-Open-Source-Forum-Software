@@ -66,10 +66,25 @@ final readonly class AiModerationService
             );
         }
 
+        $providerKey = $policy?->providerKey ?? $this->providerKey;
+        try {
+            $prompt = $policy === null ? $request->prompt : $this->prompts->require($policy->promptVersion);
+        } catch (InvalidArgumentException) {
+            return AiModerationAssessment::fallback(
+                $providerKey,
+                'unavailable',
+                'configuration_error',
+                $this->fallbackRiskScore,
+                new AiModerationUsage(),
+                $policy?->promptVersion ?? $request->prompt->version,
+                false,
+            );
+        }
+
         return $this->evaluateConfigured(
             $request,
-            $policy?->providerKey ?? $this->providerKey,
-            $policy === null ? $request->prompt : $this->prompts->require($policy->promptVersion),
+            $providerKey,
+            $prompt,
             $policy?->redactSensitiveData ?? true,
             $policy?->costPolicy() ?? $this->costPolicy,
         );
@@ -82,7 +97,20 @@ final readonly class AiModerationService
         bool $redactSensitiveData,
         AiModerationCostPolicy $costPolicy,
     ): AiModerationAssessment {
-        $provider = $this->providers->require($providerKey);
+        try {
+            $provider = $this->providers->require($providerKey);
+        } catch (AiModerationProviderException) {
+            return AiModerationAssessment::fallback(
+                $providerKey,
+                'unavailable',
+                'provider_unavailable',
+                $this->fallbackRiskScore,
+                new AiModerationUsage(),
+                $prompt->version,
+                false,
+            );
+        }
+
         $redaction = $redactSensitiveData
             ? $this->redactor->redact($request->text)
             : new AiModerationRedactionResult($request->text, false);

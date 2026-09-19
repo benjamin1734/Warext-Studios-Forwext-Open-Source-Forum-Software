@@ -177,6 +177,7 @@ use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
 use Forwext\Core\Search\Lifecycle\DatabaseSearchIndexChangeStore;
 use Forwext\Core\Search\NativeDatabaseSearchDriver;
+use Forwext\Core\Search\ResilientSearchDriver;
 use Forwext\Core\Search\PermissionAwareSearchService;
 use Forwext\Core\Search\Saved\SavedSearchQueryRegistry;
 use Forwext\Core\Session\DatabaseSessionStore;
@@ -333,7 +334,7 @@ final readonly class WebApplicationFactory
             $authorizer,
         );
         $searchService = new PermissionAwareSearchService(
-            new NativeDatabaseSearchDriver($database),
+            new ResilientSearchDriver(new NativeDatabaseSearchDriver($database)),
             $authorizer,
             [
                 new PublicSearchAccessScopeProvider(),
