@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.05 — Giveaway Winner Selection and Transparency
+
+- Added CSPRNG-backed weighted winner selection using fresh 256-bit seeds, canonical SHA-256 population snapshots and unbiased rejection sampling.
+- Added immutable primary/redraw chains with public-safe redraw reasons, previous-winner exclusion, proof hashes and central administration audit.
+- Added migrations `20260919153000_giveaway_draw_system` and `20260919153500_giveaway_draw_population` with durable privacy-safe draw snapshots.
+- Added atomic row-lock winner selection, backend `giveaway.manage` enforcement and closed-state requirements.
+- Added winner and replaced-winner notifications plus native PHP management and proof/audit UI.
+- Added deterministic proof recomputation and regression coverage for duplicate primary draws, redraw rules, notification, permissions and transaction locking.
+- Completion commits: `f8c8cb4c7df7b3ab799aaee628e3ab4123bcff2f`, `060d6bc9fb111a548362dccb8d9df4a9d197ee13`, `9eb43463864dc8cf6d846b164c93ec8b355859ca`, `532a3cb7aae7ac579483a8233ed6a8cebdb81825`, `69f4097861d30a8374fe4fbe993f3b36ce943760`.
+- GitHub Actions build run `35453970888`: success.
+- Database migration smoke run `35453970881`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.04 — Giveaway Participation, Eligibility and Anti-Abuse
 
 - Added durable idempotent participation with weighted entry counts and distinct-user participant capacity.

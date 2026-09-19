@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.18-dev
+CURRENT_VERSION = 0.0.7.19-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 13.04
-CURRENT_STEP = 13.05
-LAST_COMMIT = f39c749fffcfcb5e11a2610c1c1595eb26546240
+LAST_COMPLETED_SUBSTEP = 13.05
+CURRENT_STEP = 13.06
+LAST_COMMIT = 69f4097861d30a8374fe4fbe993f3b36ce943760
 BLOCKERS = none
-NEXT_STEP = 13.05 - Çekiliş kazanan seçimi ve şeffaflık
+NEXT_STEP = 13.06 - Easter egg sistemi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 13.05 - Çekiliş kazanan seçimi ve şeffaflık
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.04`.
-- Current sub-step: `13.05 — Çekiliş kazanan seçimi ve şeffaflık`.
-- Remaining roadmap work after 13.04: **52 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.05`.
+- Current sub-step: `13.06 — Easter egg sistemi`.
+- Remaining roadmap work after 13.05: **51 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.05
+
+- Added cryptographically secure winner selection using a fresh 256-bit `random_bytes` seed, SHA-256 canonical population hashing and unbiased 63-bit rejection sampling over weighted entry tickets.
+- Added immutable draw records with sequence/kind/parent lineage, disclosed seed, population hash, selected ticket, winner entry/user, proof hash, actor and timestamp.
+- Added additive migrations `20260919153000_giveaway_draw_system` and `20260919153500_giveaway_draw_population` for draw history plus privacy-safe immutable population snapshots.
+- Kept draw proof durable across later account/participation cleanup by snapshotting only entry id, pseudonymous user id and weight; IP/User-Agent and anti-abuse fingerprints are excluded.
+- Made primary draw creation atomic under the giveaway row lock and database transaction; concurrent primary draws are also constrained by unique giveaway/sequence and parent-chain indexes.
+- Restricted winner selection and redraw to backend-authoritative `giveaway.manage` and the closed giveaway lifecycle state.
+- Added explicit redraw rules: an existing draw is required, a 10-500 byte public reason is mandatory, the old record remains immutable, all previous winners are excluded, and no-unused-participant redraws are rejected.
+- Added central administration audit events for primary/redraw selection with proof metadata and previous/current winner references.
+- Added durable `giveaway.winner` notification and best-effort `giveaway.winner_replaced` notification with proof-page navigation.
+- Added native PHP management controls for primary draw and justified redraw plus authenticated `/giveaways/{giveawayId}/proof` audit/proof UI showing chain state, winner, seed, population hash, ticket and proof verification result.
+- Added deterministic algorithm, atomic lock, permission, duplicate-primary, redraw exclusion/reason, notification and proof-chain regression tests plus `docs/architecture/giveaway-draw-system.md`.
+- Feature commits: `f8c8cb4c7df7b3ab799aaee628e3ab4123bcff2f`, `060d6bc9fb111a548362dccb8d9df4a9d197ee13`, `9eb43463864dc8cf6d846b164c93ec8b355859ca`, `532a3cb7aae7ac579483a8233ed6a8cebdb81825`; test/docs hardening: `69f4097861d30a8374fe4fbe993f3b36ce943760`.
+- GitHub Actions build run `35453970888`: success; strict-types, lint, PHPUnit on PHP 8.4/8.5, production dependency baseline and cPanel package checks passed.
+- Database migration smoke run `35453970881`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.06 — Easter egg sistemi`.
 
 ## Completed in 13.04
 
