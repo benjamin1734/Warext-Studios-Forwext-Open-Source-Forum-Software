@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.12-dev
+CURRENT_VERSION = 0.0.7.13-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.06
-CURRENT_STEP = 12.07
-LAST_COMMIT = 614416b4b5743b08f10a45eb5ab26b6a03706384
+LAST_COMPLETED_SUBSTEP = 12.07
+CURRENT_STEP = 12.08
+LAST_COMMIT = d20173c7267cf633b5d3dad859945c184c5b39c3
 BLOCKERS = none
-NEXT_STEP = 12.07 - Cross-system audit/permission integration
+NEXT_STEP = 12.08 - Failure ve graceful degradation testleri
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 12.07 - Cross-system audit/permission integration
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.06`.
-- Current sub-step: `12.07 — Cross-system audit/permission integration`.
-- Remaining roadmap work after 12.06: **58 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.07`.
+- Current sub-step: `12.08 — Failure ve graceful degradation testleri`.
+- Remaining roadmap work after 12.07: **57 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.07
+
+- Unified AI moderation, spellcheck, user content manager and thread freshness around the same backend-authoritative permission and core audit boundaries.
+- Reconciled the stale catalog-only `freshness.*` permission aliases with the real node-scoped `forum.thread.freshness.*` keys used by the 12.06 runtime.
+- Added idempotent migration `20260919110000_content_governance_integration`: non-conflicting legacy global/node rules are copied to canonical keys, existing canonical rules win, legacy template/global/node rules and definitions are removed, and verification fails closed if aliases remain.
+- Added central audit coverage for AI moderation feedback, personal/site spellcheck dictionary mutation, content-manager enqueue, freshness policy saves, thread renewal, review resolution and human-triggered maintenance.
+- Kept raw spellcheck dictionary words and AI feedback notes out of audit snapshots; spellcheck entries use SHA-256 fingerprints and existing audit redaction remains active.
+- Added native HTTP request-id propagation into these audit events through `HttpAuditRequestId`.
+- Made audited single-operation mutations use `AuditRecorder::mutate` so state and audit persistence share the same transaction where the underlying drivers support it.
+- Hardened manual freshness maintenance against cross-forum permission escalation: only threads whose forum currently grants `forum.thread.freshness.review` to the actor may be mutated.
+- Kept scheduled freshness maintenance as a system operation without inventing a fake user actor; durable freshness/review state remains its system record.
+- Added focused migration compatibility, canonical permission, content-manager audit, spellcheck privacy, AI feedback permission/privacy and freshness node-scope regression coverage.
+- Feature commit: `0e0a1d4b6fcd64678d54b8c3f2232f5a08a9e1e8`; hardening/completion commit: `d20173c7267cf633b5d3dad859945c184c5b39c3`.
+- GitHub Actions build run `35436134573`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel FULL build passed.
+- Database migration smoke run `35436134592`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `12.08 — Failure ve graceful degradation testleri`.
 
 ## Completed in 12.06
 

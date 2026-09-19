@@ -6,6 +6,21 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.07 — Cross-system Audit / Permission Integration
+
+- Unified AI moderation, spellcheck, user content manager and thread-freshness mutations around the shared backend permission and core audit infrastructure.
+- Added request-id propagation from native HTTP mutation handlers into central audit events for log/audit correlation.
+- Added central audit coverage for AI moderation feedback, personal/site spellcheck dictionary changes, content-manager enqueue, freshness policy changes, renewal, review resolution and moderator-triggered maintenance.
+- Kept sensitive payloads out of audit snapshots: spellcheck words are fingerprinted and AI feedback notes are not copied into the audit stream.
+- Fixed the permission catalog drift between legacy `freshness.*` aliases and the real node-scoped `forum.thread.freshness.*` runtime permissions.
+- Added additive migration `20260919110000_content_governance_integration` to preserve non-conflicting legacy global/node grants, prefer existing canonical rules and remove shadow permission aliases.
+- Hardened the manual freshness maintenance path so a reviewer can only mutate threads in forums where `forum.thread.freshness.review` is currently allowed.
+- Preserved scheduler maintenance as a system path without fabricating a user actor in the human audit stream.
+- Added migration, permission, audit privacy and node-scope regression coverage.
+- Feature commit: `0e0a1d4b6fcd64678d54b8c3f2232f5a08a9e1e8`; hardening/completion commit: `d20173c7267cf633b5d3dad859945c184c5b39c3`.
+- GitHub Actions build run `35436134573`: success; strict-types, lint and PHPUnit passed on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel FULL build passed.
+- Database migration smoke run `35436134592`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+
 ### 12.06 — Thread Freshness Policies
 
 - Added per-forum stale windows, author-notification, auto-unfeature, auto-lock, moderator-review and auto-archive thresholds with renewal cooldowns.
