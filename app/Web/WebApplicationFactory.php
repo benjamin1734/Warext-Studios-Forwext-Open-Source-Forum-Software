@@ -406,7 +406,7 @@ final readonly class WebApplicationFactory
         );
         $giveawayFingerprint = new GiveawayFingerprint(
             $secretStore,
-            $config->requireString('registration.fingerprint_secret_name'),
+            $config->requireString('registration.rate_limit.fingerprint_secret_name'),
         );
         $profilePage = new ProfileViewHandler(
             $users,
