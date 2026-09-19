@@ -39,6 +39,14 @@ final class NavigationPresenceStatsTest extends TestCase
             'module.support',
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
         );
+        self::assertContains(
+            'giveaways',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
+        );
+        self::assertNotContains(
+            'giveaways',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
+        );
     }
 
     public function testMemberDirectoryEscapesLikeWildcardsAndKeepsPublicProfileFilter(): void
