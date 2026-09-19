@@ -19,6 +19,9 @@ interface GiveawayParticipationRepository
 
     public function participantCount(EntityId $giveawayId): int;
 
+    /** @return list<GiveawayEntry> */
+    public function entriesForDraw(EntityId $giveawayId): array;
+
     public function fingerprintParticipantCount(EntityId $giveawayId, string $kind, string $fingerprint): int;
 
     public function saveEntry(GiveawayEntry $entry): void;

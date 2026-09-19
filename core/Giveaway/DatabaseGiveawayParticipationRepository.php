@@ -124,6 +124,18 @@ final readonly class DatabaseGiveawayParticipationRepository implements Giveaway
         ));
     }
 
+    public function entriesForDraw(EntityId $giveawayId): array
+    {
+        return array_map(
+            $this->hydrateEntry(...),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT * FROM forwext_giveaway_entries WHERE giveaway_id=:giveaway_id '
+                . 'ORDER BY user_id,entry_id',
+                ['giveaway_id'=>$giveawayId->value()],
+            )),
+        );
+    }
+
     public function fingerprintParticipantCount(EntityId $giveawayId, string $kind, string $fingerprint): int
     {
         if (preg_match('/^[a-f0-9]{64}$/D', $fingerprint) !== 1) {
