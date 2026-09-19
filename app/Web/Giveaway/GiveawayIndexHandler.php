@@ -35,7 +35,7 @@ final readonly class GiveawayIndexHandler implements RequestHandlerInterface
             return Response::html(GiveawayHtml::index(
                 $this->giveaways->visible($actor, 100),
                 $this->basePath,
-                $this->giveaways->canCreate($actor) || $this->giveaways->canManage($actor),
+                $this->giveaways->canCreate($actor),
             ))->withHeader('Cache-Control', 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
