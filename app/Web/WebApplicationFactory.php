@@ -36,6 +36,7 @@ use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
 use Forwext\App\Web\Moderation\DisciplineAccountHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessPolicyHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
+use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -165,6 +166,8 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
+use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
 use Forwext\Core\Notification\NotificationDispatcher;
 use Forwext\Core\Notification\NotificationRegistry;
@@ -397,6 +400,13 @@ final readonly class WebApplicationFactory
             $contentManagerPipeline,
             $searchChanges,
         );
+        $marketplace = new MarketplaceService(
+            $database,
+            new DatabaseMarketplaceRepository($database),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+
         $rewardRepository = new DatabaseRewardRepository($database);
         $rewardProviders = new RewardProviderRegistry([
             new DatabaseRoleRewardProvider($database),
@@ -639,6 +649,7 @@ final readonly class WebApplicationFactory
         $trophyCsrf = $this->trophyCsrfMiddleware($config);
         $rewardCsrf = $this->rewardCsrfMiddleware($config);
         $promotionCsrf = $this->promotionCsrfMiddleware($config);
+        $marketplaceCategoryCsrf = $this->marketplaceCategoryCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -752,6 +763,13 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/faq'),
             new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'marketplace.category.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/marketplace/categories'),
+            new MarketplaceCategoryManageHandler($marketplace, $viewerResolver, $basePath),
+            [$marketplaceCategoryCsrf],
         ));
         $routes->add(new Route(
             'reward.manage',
@@ -1354,6 +1372,11 @@ final readonly class WebApplicationFactory
     private function promotionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'promotion', 'forwext.csrf.promotion.v1');
+    }
+
+    private function marketplaceCategoryCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'marketplace-category', 'forwext.csrf.marketplace-category.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

@@ -39,6 +39,30 @@ final readonly class MarketplaceService
         return $this->repository->categories(!$includeDisabled);
     }
 
+    /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
+    public function managementSnapshot(EntityId $actor):array
+    {
+        $this->require($actor,'marketplace.category.manage');
+        $categories=$this->repository->categories(false);
+        $fields=[];
+        foreach($categories as $category){
+            $fields[$category->categoryId->value()]=$this->repository->customFields($category->categoryId,false);
+        }
+        return ['categories'=>$categories,'fields'=>$fields];
+    }
+
+    public function managementCategory(EntityId $actor,EntityId $categoryId):?MarketplaceCategory
+    {
+        $this->require($actor,'marketplace.category.manage');
+        return $this->repository->category($categoryId);
+    }
+
+    public function managementCustomField(EntityId $actor,EntityId $fieldId):?MarketplaceCustomFieldDefinition
+    {
+        $this->require($actor,'marketplace.category.manage');
+        return $this->repository->customField($fieldId);
+    }
+
     public function saveCategory(EntityId $actor,MarketplaceCategory $category,DateTimeImmutable $now,?AuditRequestId $requestId=null):void
     {
         $this->require($actor,'marketplace.category.manage');
