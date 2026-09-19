@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.08 — Failure and Graceful Degradation
+
+- Verified that the core forum content pipeline persists normally with AI disabled and without a long-running worker runtime.
+- Hardened missing AI provider and removed-prompt configurations into human-review fallback assessments instead of request-failing exceptions.
+- Kept AI outage safety fail-closed-to-review: operational/configuration fallbacks enter moderation queue rather than bypassing moderation or rejecting solely because an optional provider is unavailable.
+- Added `ResilientSearchDriver` so optional external-search query failures fall back to native search.
+- Kept native search current during external index-write failures while surfacing a retryable error to the existing search lifecycle backoff/retry mechanism.
+- Routed native web search through the resilient driver with the native DB search driver as the minimum-profile fallback.
+- Added optional-service failure architecture documentation and regression coverage for AI, worker-independent persistence, external-search fallback and retryable index synchronization.
+- Feature/completion commit: `c9b18c331ed0fe4a5647c6d3f7a9055756246266`.
+- GitHub Actions build run `35436742890`: success on PHP 8.4/8.5 with production package checks.
+- Database migration smoke run `35436742879`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+
 ### 12.07 — Cross-system Audit / Permission Integration
 
 - Unified AI moderation, spellcheck, user content manager and thread-freshness mutations around the shared backend permission and core audit infrastructure.

@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.13-dev
-LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.07
-CURRENT_STEP = 12.08
-LAST_COMMIT = d20173c7267cf633b5d3dad859945c184c5b39c3
+CURRENT_VERSION = 0.0.7.14-dev
+LAST_COMPLETED_MAIN_STEP = 12
+LAST_COMPLETED_SUBSTEP = 12.08
+CURRENT_STEP = 13.01
+LAST_COMMIT = c9b18c331ed0fe4a5647c6d3f7a9055756246266
 BLOCKERS = none
-NEXT_STEP = 12.08 - Failure ve graceful degradation testleri
+NEXT_STEP = 13.01 - Portfolyo sistemi
 ```
 
 ## Current position
@@ -20,14 +20,33 @@ NEXT_STEP = 12.08 - Failure ve graceful degradation testleri
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.07`.
-- Current sub-step: `12.08 — Failure ve graceful degradation testleri`.
-- Remaining roadmap work after 12.07: **57 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`.
+- Current sub-step: `13.01 — Portfolyo sistemi`.
+- Remaining roadmap work after 12.08: **56 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.08
+
+- Defined and verified the minimum-runtime graceful-degradation contract for optional AI, worker and external-search services.
+- Confirmed the normal forum content pipeline persists without an AI service and without any long-running worker runtime.
+- Hardened stale AI configuration: removed/unregistered providers now return `provider_unavailable` and removed prompt versions return `configuration_error` instead of crashing the content request.
+- Preserved moderation safety during AI failures: any AI operational/configuration fallback is mapped to human-review `queue`, never an automatic allow or reject caused solely by provider availability.
+- Added `ResilientSearchDriver` for advanced deployments: search queries fall back to the maintained native driver when the optional primary fails.
+- Search index writes update the fallback first and still raise a retryable failure when the optional primary write fails, allowing `SearchIndexLifecycleService` backoff/retry without leaving native search stale.
+- Routed the native web search runtime through `ResilientSearchDriver` with `NativeDatabaseSearchDriver` as the baseline fallback.
+- Documented that worker absence delays asynchronous work rather than blocking ordinary forum read/write paths; content-manager/freshness bounded manual paths and durable search-change retries remain available.
+- Added `docs/architecture/graceful-degradation.md` with supported minimum profile, failure matrix and explicit non-degradable boundaries such as database/permission failures.
+- Added `OptionalServiceGracefulDegradationTest` covering AI-disabled persistence, missing provider, stale prompt, external-search query fallback and retryable index synchronization.
+- No schema migration was required; 12.08 changes runtime failure behavior and regression coverage only.
+- Feature/completion commit: `c9b18c331ed0fe4a5647c6d3f7a9055756246266`.
+- GitHub Actions build run `35436742890`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel FULL build passed.
+- Database migration smoke run `35436742879`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Main step 12 is complete.
+- Next: `13.01 — Portfolyo sistemi`.
 
 ## Completed in 12.07
 
