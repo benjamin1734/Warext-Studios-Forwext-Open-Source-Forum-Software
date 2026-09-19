@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.01 — Marketplace Domain and Category System
+
+- Added marketplace listings with immutable seller identity, category, unique slug, minor-unit price/currency, description, tags, internal media metadata, typed custom values and explicit lifecycle states.
+- Added hierarchical categories with cycle/depth protection and category-scoped text/integer/boolean/select custom fields.
+- Added backend ownership/state-transition rules and the new `marketplace.category.manage` permission with conservative template defaults.
+- Added native `/admin/marketplace/categories` category/custom-field management with dedicated CSRF and central audit.
+- Added migration `20260919210000_marketplace_domain` for categories, listings, tags, media metadata, custom fields/values and lifecycle history.
+- Hardened required custom-field values, custom-field category immutability, seller immutability and internal media ownership paths.
+- Added marketplace domain/permission regression tests and `docs/architecture/marketplace-domain.md`.
+- Completion commits: `f12a21851c8292e356e97a979c0adcceaa94c99d`, `5ac18d1d89d5073efc382fd22848b5684c393c2f`, `b6e369440028b3f3b11b650fc65a29e2750ca55d`, `cedbe6254320eff2997745ec85b89ac1e8ad1305`, `2025833cf8040174935dfc273ff7b026ace6bc49`.
+- GitHub Actions build run `35463934099`: success.
+- Database migration smoke run `35463934061`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 13.08 — User Promotions and Shared Reward Provider
 
 - Added a shared reward provider/ledger API for first-party referral, giveaway and trophy fulfillment with durable idempotent grant state and retry support.

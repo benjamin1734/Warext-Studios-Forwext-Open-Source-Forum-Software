@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.22-dev
+CURRENT_VERSION = 0.0.7.23-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 13.08
-CURRENT_STEP = 14.01
-LAST_COMMIT = 08c884d79eb2fbc5d427f710e873edd8ebaeef48
+LAST_COMPLETED_SUBSTEP = 14.01
+CURRENT_STEP = 14.02
+LAST_COMMIT = 2025833cf8040174935dfc273ff7b026ace6bc49
 BLOCKERS = none
-NEXT_STEP = 14.01 - Marketplace domain ve kategori sistemi
+NEXT_STEP = 14.02 - Marketplace listing UX ve arama
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 14.01 - Marketplace domain ve kategori sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`.
-- Current sub-step: `14.01 — Marketplace domain ve kategori sistemi`.
-- Remaining roadmap work after 13.08: **48 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01`.
+- Current sub-step: `14.02 — Marketplace listing UX ve arama`.
+- Remaining roadmap work after 14.01: **47 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.01
+
+- Added a first-party marketplace listing domain with immutable seller identity, category, unique slug, title/description, integer minor-unit price, three-letter currency, tags, typed media metadata, typed category custom values, lifecycle state and UTC timestamps.
+- Added hierarchical marketplace categories with optional parent, stable key/slug, enabled state, sort order, self-parent/cycle detection and an eight-ancestor depth limit.
+- Added typed category custom fields for text, integer, boolean and select values; select options are explicit, required values are backend-validated and existing fields cannot be moved across categories after creation.
+- Added internal marketplace media metadata constraints for JPEG/PNG/WebP and listing-owned private-storage style paths; arbitrary external media URLs and cross-listing paths are rejected at the domain boundary.
+- Added explicit listing lifecycle rules: new listings start draft; sellers may submit/pause/mark sold/close through service transitions; direct state edits are rejected; only `marketplace.listing.manage_all` can approve pending listings or archive terminal listings.
+- Added backend-authoritative seller ownership using existing `marketplace.listing.create`, `marketplace.listing.manage_own`, `marketplace.listing.manage_all` and `marketplace.listing.view`; added `marketplace.category.manage` for category/custom-field schema administration.
+- Added conservative permission-template defaults: members/verified users can create/manage their own listings, moderators can manage all listings but not category schema by default, and administrators receive full category/listing management.
+- Added central administration audit for category/custom-field mutations and staff listing approval/archive; listing create/update/state transitions retain dedicated marketplace lifecycle history.
+- Added native `/admin/marketplace/categories` management with dedicated CSRF, category parent selection, enable/sort controls and typed custom-field editing.
+- Added migration `20260919210000_marketplace_domain` creating categories, listings, tags, media metadata, custom-field definitions/values and listing history.
+- Kept listing grid/search/reviews/seller-profile/featured-pinned UX in 14.02, external-link mode in 14.03 and payment/order concerns in their later owning substeps.
+- Added architecture documentation at `docs/architecture/marketplace-domain.md` and regression coverage for money/media validation, category cycles, required typed fields, immutable field category/seller, permission boundaries and draft→pending→staff-approval lifecycle.
+- Completion commits: `f12a21851c8292e356e97a979c0adcceaa94c99d`, `5ac18d1d89d5073efc382fd22848b5684c393c2f`, `b6e369440028b3f3b11b650fc65a29e2750ca55d`, `cedbe6254320eff2997745ec85b89ac1e8ad1305`, `2025833cf8040174935dfc273ff7b026ace6bc49`.
+- GitHub Actions build run `35463934099`: success; strict-types, lint, PHPUnit on supported PHP jobs, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35463934061`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `14.02 — Marketplace listing UX ve arama`.
 
 ## Completed in 13.08
 
