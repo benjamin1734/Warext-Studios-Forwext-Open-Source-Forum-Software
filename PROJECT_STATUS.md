@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.14-dev
+CURRENT_VERSION = 0.0.7.15-dev
 LAST_COMPLETED_MAIN_STEP = 12
-LAST_COMPLETED_SUBSTEP = 12.08
-CURRENT_STEP = 13.01
-LAST_COMMIT = c9b18c331ed0fe4a5647c6d3f7a9055756246266
+LAST_COMPLETED_SUBSTEP = 13.01
+CURRENT_STEP = 13.02
+LAST_COMMIT = 0eb61484c67e611b0676064848431b5cb0025438
 BLOCKERS = none
-NEXT_STEP = 13.01 - Portfolyo sistemi
+NEXT_STEP = 13.02 - Davet/referans sistemi
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 13.01 - Portfolyo sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`; main step `13` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`.
-- Current sub-step: `13.01 — Portfolyo sistemi`.
-- Remaining roadmap work after 12.08: **56 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01`.
+- Current sub-step: `13.02 — Davet/referans sistemi`.
+- Remaining roadmap work after 13.01: **55 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 13.01
+
+- Added a first-party portfolio domain with projects, categories, tags, typed lifecycle states, comments, reactions, featured projects and per-project history.
+- Added backend-authoritative `portfolio.*` permissions and conservative defaults for members, moderators and administrators.
+- Added a native PHP portfolio index, project detail, project management and profile portfolio tab while keeping backend permission checks authoritative.
+- Added public portfolio navigation and global-discovery/search integration through `portfolio.item`.
+- Integrated project text and comments with the shared validation → spam → spellcheck → AI moderation → moderation policy pipeline, preserving graceful pass-through when optional AI is unavailable.
+- Integrated portfolio projects/comments with the common moderation approval queue; staff approval/rejection is audited and project search index changes are synchronized.
+- Added secure image media handling through the common attachment inspection policy: MIME/signature validation, pixel limits, metadata sanitation, private storage, integrity verification and actor-bound project authorization.
+- Added migrations `20260919130000_portfolio_system` and `20260919133000_portfolio_media_storage` with existing-user profile-tab seeding and additive upgrade compatibility.
+- Added regression coverage for domain validation, unsafe media paths, migration registration, navigation/search integration, backend edit authorization, publish-to-review behavior, featured authority and self-reaction prevention.
+- Feature commits: `c943bfd2a666f2be9aed6962b306cb4c7557dabb`, `9eb476320f94304b652c0ab0191cc902d5e4c25b`, `9e02b3c9dea6da24944a115d104694bbc413aaba`; hardening/completion commit: `0eb61484c67e611b0676064848431b5cb0025438`.
+- GitHub Actions build run `35438353652`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel package checks passed.
+- Database migration smoke run `35438353632`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `13.02 — Davet/referans sistemi`.
 
 ## Completed in 12.08
 

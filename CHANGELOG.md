@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 13.01 — Portfolio System
+
+- Added portfolio projects, categories/tags, comments/reactions, featured projects and profile-tab integration.
+- Added backend portfolio permission defaults, native PHP management/detail/listing surfaces and public navigation.
+- Integrated portfolio content with shared spellcheck/AI moderation pipeline, approval queue, central moderation audit and global discovery search.
+- Added secure portfolio image uploads using the existing attachment inspection policy, private storage and integrity-checked media delivery.
+- Added additive migrations for portfolio schema/profile-tab defaults and storage-backed media metadata.
+- Added regression coverage for permissions, lifecycle moderation, navigation/search and media safety.
+- Completion commit: `0eb61484c67e611b0676064848431b5cb0025438`.
+- GitHub Actions build run `35438353652`: success.
+- Database migration smoke run `35438353632`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 12.08 — Failure and Graceful Degradation
 
 - Verified that the core forum content pipeline persists normally with AI disabled and without a long-running worker runtime.
