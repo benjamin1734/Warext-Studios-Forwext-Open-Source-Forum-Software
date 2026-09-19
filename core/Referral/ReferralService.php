@@ -54,6 +54,7 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
     public function ensureLink(EntityId $actor, EntityId $campaignId, DateTimeImmutable $at): ReferralLink
     {
         $this->require($actor, 'referral.view_own');
+        $this->require($actor, 'invite.create');
         $campaign = $this->referrals->campaign($campaignId)
             ?? throw new ReferralException('Referral campaign was not found.');
         if (!$campaign->isOpen($at)) {
@@ -259,10 +260,10 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
             }
             $campaign = $this->referrals->campaign($attribution->campaignId)
                 ?? throw new ReferralException('Referral campaign was not found.');
-            $after = $this->qualifiedCopy($attribution, $at);
+            $after = $this->qualifiedCopy($attribution, $at, true);
             $event = $this->reviewAudit($actor, $attribution, $after, 'referral.review.approve', $requestId, $at);
             $this->audit->mutate($event, function () use ($attribution, $campaign, $at): void {
-                $this->grant($attribution, $campaign, $at, notify:false);
+                $this->grant($attribution, $campaign, $at, notify:false, markReviewed:true);
             });
             $this->safeNotify($after, $campaign);
             return;
@@ -278,6 +279,13 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
     {
         $this->require($actor, 'referral.manage');
         return $this->referrals->reviewQueue($limit);
+    }
+
+    /** @return list<ReferralLink> */
+    public function ownLinks(EntityId $actor): array
+    {
+        $this->require($actor, 'referral.view_own');
+        return $this->referrals->linksForOwner($actor);
     }
 
     public function ownAnalytics(EntityId $actor): ReferralAnalytics
@@ -309,8 +317,9 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
         ReferralCampaign $campaign,
         DateTimeImmutable $at,
         bool $notify = true,
+        bool $markReviewed = false,
     ): void {
-        $qualified = $this->qualifiedCopy($attribution, $at);
+        $qualified = $this->qualifiedCopy($attribution, $at, $markReviewed);
         $this->database->transaction(function () use ($qualified, $campaign, $at): void {
             $this->referrals->saveAttribution($qualified);
             if ($this->referrals->rewardForAttribution($qualified->attributionId) === null) {
@@ -367,7 +376,11 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
         $this->referrals->saveAttribution($this->rejectedCopy($attribution, $risk, $at));
     }
 
-    private function qualifiedCopy(ReferralAttribution $attribution, DateTimeImmutable $at): ReferralAttribution
+    private function qualifiedCopy(
+        ReferralAttribution $attribution,
+        DateTimeImmutable $at,
+        bool $markReviewed = false,
+    ): ReferralAttribution
     {
         return new ReferralAttribution(
             $attribution->attributionId,
@@ -382,7 +395,7 @@ final readonly class ReferralService implements ReferralRegistrationAttribution
             $attribution->attributedAt,
             $attribution->eligibleAt,
             self::utc($at),
-            $attribution->reviewedAt,
+            $markReviewed ? self::utc($at) : $attribution->reviewedAt,
         );
     }
 
