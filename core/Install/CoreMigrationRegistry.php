@@ -29,6 +29,7 @@ use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
 use Forwext\Database\Migrations\Core\CreateGiveawayDomain;
 use Forwext\Database\Migrations\Core\CreateGiveawayParticipation;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawSystem;
+use Forwext\Database\Migrations\Core\CreateGiveawayDrawPopulation;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -134,6 +135,7 @@ final class CoreMigrationRegistry
             new CreateGiveawayDomain(),
             new CreateGiveawayParticipation(),
             new CreateGiveawayDrawSystem(),
+            new CreateGiveawayDrawPopulation(),
         ];
     }
 }

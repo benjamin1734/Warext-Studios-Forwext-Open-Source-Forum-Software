@@ -13,5 +13,9 @@ interface GiveawayDrawRepository
     /** @return list<GiveawayDraw> */
     public function history(EntityId $giveawayId): array;
 
-    public function save(GiveawayDraw $draw): void;
+    /** @param list<GiveawayDrawCandidate> $population */
+    public function save(GiveawayDraw $draw, array $population): void;
+
+    /** @return list<GiveawayDrawCandidate> */
+    public function population(EntityId $drawId): array;
 }

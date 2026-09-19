@@ -11,7 +11,7 @@ final readonly class GiveawayDrawSelection
         public int $participantCount,
         public int $totalWeight,
         public int $selectedTicket,
-        public GiveawayEntry $winner,
+        public GiveawayDrawCandidate $winner,
     ) {
     }
 }

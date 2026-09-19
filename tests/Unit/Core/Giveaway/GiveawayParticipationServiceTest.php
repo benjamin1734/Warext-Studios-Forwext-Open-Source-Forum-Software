@@ -398,6 +398,18 @@ final class MemoryParticipationRepository implements GiveawayParticipationReposi
         ));
     }
 
+    public function entriesForDraw(EntityId $giveawayId): array
+    {
+        $entries = array_values(array_filter(
+            $this->entries,
+            static fn (GiveawayEntry $entry): bool => $entry->giveawayId->equals($giveawayId),
+        ));
+        usort($entries, static fn (GiveawayEntry $a, GiveawayEntry $b): int =>
+            [$a->userId->value(), $a->entryId->value()] <=> [$b->userId->value(), $b->entryId->value()]
+        );
+        return $entries;
+    }
+
     public function fingerprintParticipantCount(EntityId $giveawayId, string $kind, string $fingerprint): int
     {
         return count(array_filter(

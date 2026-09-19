@@ -8,7 +8,7 @@ use InvalidArgumentException;
 
 final class GiveawayDrawAlgorithm
 {
-    /** @param list<GiveawayEntry> $entries */
+    /** @param list<GiveawayDrawCandidate> $entries */
     public function select(array $entries, string $seedHex): GiveawayDrawSelection
     {
         if (preg_match('/^[a-f0-9]{64}$/D', $seedHex) !== 1) {
@@ -18,7 +18,7 @@ final class GiveawayDrawAlgorithm
             throw new GiveawayDrawException('Giveaway draw requires at least one participant.');
         }
 
-        usort($entries, static fn (GiveawayEntry $a, GiveawayEntry $b): int =>
+        usort($entries, static fn (GiveawayDrawCandidate $a, GiveawayDrawCandidate $b): int =>
             [$a->userId->value(), $a->entryId->value()] <=> [$b->userId->value(), $b->entryId->value()]
         );
 
@@ -31,11 +31,11 @@ final class GiveawayDrawAlgorithm
                 throw new GiveawayDrawException('Giveaway draw population contains duplicate users.');
             }
             $users[$userKey] = true;
-            $totalWeight += $entry->entryCount;
+            $totalWeight += $entry->weight;
             if ($totalWeight > PHP_INT_MAX) {
                 throw new GiveawayDrawException('Giveaway draw weight exceeds the supported integer range.');
             }
-            $lines[] = $entry->entryId->value() . ':' . $userKey . ':' . $entry->entryCount;
+            $lines[] = $entry->entryId->value() . ':' . $userKey . ':' . $entry->weight;
         }
 
         $populationHash = hash('sha256', "forwext-giveaway-population-v1\n" . implode("\n", $lines));
@@ -43,7 +43,7 @@ final class GiveawayDrawAlgorithm
 
         $cursor = 0;
         foreach ($entries as $entry) {
-            $cursor += $entry->entryCount;
+            $cursor += $entry->weight;
             if ($ticket <= $cursor) {
                 return new GiveawayDrawSelection(
                     $populationHash,
@@ -58,7 +58,7 @@ final class GiveawayDrawAlgorithm
         throw new GiveawayDrawException('Giveaway draw ticket could not be mapped to a participant.');
     }
 
-    /** @param list<GiveawayEntry> $entries */
+    /** @param list<GiveawayDrawCandidate> $entries */
     public function verifies(GiveawayDraw $draw, array $entries): bool
     {
         try {
@@ -73,7 +73,7 @@ final class GiveawayDrawAlgorithm
             && $selection->selectedTicket === $draw->selectedTicket
             && $selection->winner->userId->equals($draw->winnerUserId)
             && $selection->winner->entryId->equals($draw->winnerEntryId)
-            && $selection->winner->entryCount === $draw->winnerEntryWeight;
+            && $selection->winner->weight === $draw->winnerEntryWeight;
     }
 
     private function ticket(string $seedHex, string $populationHash, int $totalWeight): int
