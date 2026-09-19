@@ -80,7 +80,7 @@ final readonly class TrophyDefinition
         if ($path === null) {
             return;
         }
-        if ($path === '' || strlen($path) > 512 || $path[0] !== '/'
+        if ($path === '' || strlen($path) > 512 || $path[0] !== '/' || str_starts_with($path, '//')
             || str_contains($path, '..') || str_contains($path, '?') || str_contains($path, '#')
             || preg_match('/[\x00-\x1F\x7F]/', $path) === 1
         ) {

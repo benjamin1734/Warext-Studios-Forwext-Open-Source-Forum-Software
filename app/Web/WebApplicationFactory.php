@@ -79,6 +79,7 @@ use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportStaffDashboardHandler;
 use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
+use Forwext\App\Web\Trophy\TrophyManageHandler;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -235,6 +236,9 @@ use Forwext\Core\Support\Intake\SupportContextRegistry;
 use Forwext\Core\Support\Intake\ThreadSupportContextResolver;
 use Forwext\Core\Support\Reporting\DatabaseSupportReportingRepository;
 use Forwext\Core\Support\Ticket\DatabaseSupportTicketRepository;
+use Forwext\Core\Trophy\DatabaseTrophyMetricProvider;
+use Forwext\Core\Trophy\DatabaseTrophyRepository;
+use Forwext\Core\Trophy\TrophyService;
 use RuntimeException;
 
 final readonly class WebApplicationFactory
@@ -453,6 +457,14 @@ final readonly class WebApplicationFactory
             )),
             new GiveawayDrawAlgorithm(),
         );
+        $trophyRepository = new DatabaseTrophyRepository($database);
+        $trophies = new TrophyService(
+            $database,
+            $trophyRepository,
+            new DatabaseTrophyMetricProvider($database),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -461,6 +473,7 @@ final readonly class WebApplicationFactory
             $basePath,
             $musicService,
             $portfolio,
+            $trophies,
         );
         $searchService = new PermissionAwareSearchService(
             new ResilientSearchDriver(new NativeDatabaseSearchDriver($database)),
@@ -580,6 +593,7 @@ final readonly class WebApplicationFactory
         $referralCsrf = $this->referralCsrfMiddleware($config);
         $giveawayCsrf = $this->giveawayCsrfMiddleware($config);
         $easterEggCsrf = $this->easterEggCsrfMiddleware($config);
+        $trophyCsrf = $this->trophyCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -693,6 +707,13 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/faq'),
             new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'trophy.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/trophies'),
+            new TrophyManageHandler($trophies, $users, $viewerResolver, $basePath),
+            [$trophyCsrf],
         ));
         $routes->add(new Route(
             'easteregg.manage',
@@ -1259,6 +1280,11 @@ final readonly class WebApplicationFactory
     private function easterEggCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'easteregg', 'forwext.csrf.easteregg.v1');
+    }
+
+    private function trophyCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'trophy', 'forwext.csrf.trophy.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
