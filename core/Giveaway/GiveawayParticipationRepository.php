@@ -22,4 +22,7 @@ interface GiveawayParticipationRepository
     public function fingerprintParticipantCount(EntityId $giveawayId, string $kind, string $fingerprint): int;
 
     public function saveEntry(GiveawayEntry $entry): void;
+
+    /** @return list<GiveawayEligibilityRoleOption> */
+    public function availableRoles(): array;
 }

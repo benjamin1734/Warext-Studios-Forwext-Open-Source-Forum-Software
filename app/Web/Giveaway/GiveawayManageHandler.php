@@ -11,7 +11,11 @@ use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Giveaway\Giveaway;
+use Forwext\Core\Giveaway\GiveawayEligibilityPolicy;
 use Forwext\Core\Giveaway\GiveawayException;
+use Forwext\Core\Giveaway\GiveawayParticipationException;
+use Forwext\Core\Giveaway\GiveawayParticipationService;
+use Forwext\Core\Giveaway\GiveawayReferralRequirement;
 use Forwext\Core\Giveaway\GiveawayPrize;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Giveaway\GiveawayState;
@@ -27,6 +31,7 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
 {
     public function __construct(
         private GiveawayService $giveaways,
+        private GiveawayParticipationService $participation,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
     ) {
@@ -75,13 +80,15 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
             return Response::html(GiveawayHtml::manage(
                 $this->giveaways->manageable($actor, 100),
                 $selected,
+                $selected === null ? null : $this->participation->policy($actor, $selected->giveawayId),
+                $selected === null ? [] : $this->participation->roleOptions($actor, $selected->giveawayId),
                 $this->basePath,
                 $token,
                 ($request->query()['updated'] ?? null) === '1',
             ))->withHeader('Cache-Control', 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
-        } catch (GiveawayException|InvalidArgumentException) {
+        } catch (GiveawayException|GiveawayParticipationException|InvalidArgumentException) {
             return Response::text('Bad Request', 400)->withHeader('Cache-Control', 'no-store');
         }
     }
@@ -97,6 +104,39 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
         if ($action === 'sync_due') {
             $this->giveaways->syncDue($now, 100);
             return null;
+        }
+
+        if ($action === 'policy_save') {
+            $giveawayId = self::id($body['giveaway_id'] ?? null);
+            $referral = GiveawayReferralRequirement::tryFrom(self::required($body, 'referral_requirement', 24))
+                ?? throw new InvalidArgumentException('Giveaway referral requirement is invalid.');
+            $roles = [];
+            $rawRoles = $body['role_ids'] ?? [];
+            if (!is_array($rawRoles)) {
+                throw new InvalidArgumentException('Giveaway role selection is invalid.');
+            }
+            foreach ($rawRoles as $roleId) {
+                $roles[] = self::id($roleId);
+            }
+            $this->participation->savePolicy(
+                $actor,
+                new GiveawayEligibilityPolicy(
+                    $giveawayId,
+                    self::integer($body, 'min_account_age_days', 0, 36_500, 0),
+                    self::integer($body, 'min_post_count', 0, 100_000_000, 0),
+                    self::checked($body, 'require_verified_account'),
+                    $roles,
+                    $referral,
+                    $referral === GiveawayReferralRequirement::QualifiedReferrer
+                        ? self::integer($body, 'min_qualified_referrals', 1, 1_000_000, 1)
+                        : 0,
+                    self::integer($body, 'duplicate_network_limit', 0, 1000, 3),
+                    self::integer($body, 'duplicate_device_limit', 0, 1000, 1),
+                ),
+                $now,
+                HttpAuditRequestId::fromRequest($request),
+            );
+            return $giveawayId;
         }
 
         if ($action === 'publish') {
@@ -206,6 +246,12 @@ final readonly class GiveawayManageHandler implements RequestHandlerInterface
     }
 
     /** @param array<string,mixed> $body */
+    /** @param array<string,mixed> $body */
+    private static function checked(array $body, string $key): bool
+    {
+        return ($body[$key] ?? null) === '1' || ($body[$key] ?? null) === 1 || ($body[$key] ?? null) === true;
+    }
+
     private static function nullableInteger(array $body, string $key, int $min, int $max): ?int
     {
         if (!array_key_exists($key, $body) || $body[$key] === '') {

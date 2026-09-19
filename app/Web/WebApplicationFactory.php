@@ -67,6 +67,7 @@ use Forwext\App\Web\Faq\FaqIndexHandler;
 use Forwext\App\Web\Faq\FaqManageHandler;
 use Forwext\App\Web\Faq\FaqSupportDraftHandler;
 use Forwext\App\Web\Giveaway\GiveawayDetailHandler;
+use Forwext\App\Web\Giveaway\GiveawayEnterHandler;
 use Forwext\App\Web\Giveaway\GiveawayIndexHandler;
 use Forwext\App\Web\Giveaway\GiveawayManageHandler;
 use Forwext\App\Web\Support\MyTicketsHandler;
@@ -138,7 +139,11 @@ use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
+use Forwext\Core\Giveaway\DatabaseGiveawayEligibilityContextProvider;
+use Forwext\Core\Giveaway\DatabaseGiveawayParticipationRepository;
 use Forwext\Core\Giveaway\DatabaseGiveawayRepository;
+use Forwext\Core\Giveaway\GiveawayFingerprint;
+use Forwext\Core\Giveaway\GiveawayParticipationService;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Giveaway\Search\GiveawaySearchAccessScopeProvider;
 use Forwext\Core\Http\HttpMethod;
@@ -230,6 +235,10 @@ final readonly class WebApplicationFactory
     {
         $config = $this->config();
         $database = $this->database($config);
+        $secretStore = new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
         $authorizer = $this->permissionAuthorizer($database);
         $users = new DatabaseUserRepository($database);
         $discipline = new DatabaseDisciplineRepository($database);
@@ -375,12 +384,29 @@ final readonly class WebApplicationFactory
             )),
         );
         $giveawayRepository = new DatabaseGiveawayRepository($database);
+        $giveawayAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $giveaways = new GiveawayService(
             $database,
             $giveawayRepository,
             $authorizer,
-            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $giveawayAudit,
             $searchChanges,
+        );
+        $giveawayParticipation = new GiveawayParticipationService(
+            $database,
+            $giveawayRepository,
+            new DatabaseGiveawayParticipationRepository($database),
+            new DatabaseGiveawayEligibilityContextProvider(
+                $database,
+                $users,
+                new DatabaseUserAccessAssignmentProvider($database),
+            ),
+            $authorizer,
+            $giveawayAudit,
+        );
+        $giveawayFingerprint = new GiveawayFingerprint(
+            $secretStore,
+            $config->requireString('registration.fingerprint_secret_name'),
         );
         $profilePage = new ProfileViewHandler(
             $users,
@@ -454,10 +480,6 @@ final readonly class WebApplicationFactory
             $storage,
             $attachmentInspector,
             $attachmentQuota,
-        );
-        $secretStore = new EncryptedFileSecretStore(
-            $this->projectPath($config->requireString('security.secret_store_path')),
-            new SecretCipher($this->masterKey($config)),
         );
         $bugReports = new DatabaseBugReportRepository($database);
         $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
@@ -752,14 +774,34 @@ final readonly class WebApplicationFactory
             'giveaway.manage',
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/giveaways/manage'),
-            new GiveawayManageHandler($giveaways, $viewerResolver, $basePath),
+            new GiveawayManageHandler($giveaways, $giveawayParticipation, $viewerResolver, $basePath),
             [$giveawayCsrf],
         ));
         $routes->add(new Route(
             'giveaway.detail',
             [HttpMethod::Get],
             new PathTemplate('/giveaways/{giveawayId}', ['giveawayId'=>'[0-9a-f]{32}']),
-            new GiveawayDetailHandler($giveaways, $viewerResolver, $basePath),
+            new GiveawayDetailHandler(
+                $giveaways,
+                $giveawayParticipation,
+                $giveawayFingerprint,
+                $viewerResolver,
+                $basePath,
+            ),
+            [$giveawayCsrf],
+        ));
+        $routes->add(new Route(
+            'giveaway.enter',
+            [HttpMethod::Post],
+            new PathTemplate('/giveaways/{giveawayId}/enter', ['giveawayId'=>'[0-9a-f]{32}']),
+            new GiveawayEnterHandler(
+                $giveaways,
+                $giveawayParticipation,
+                $giveawayFingerprint,
+                $viewerResolver,
+                $basePath,
+            ),
+            [$giveawayCsrf],
         ));
         $routes->add(new Route(
             'referral.redirect',

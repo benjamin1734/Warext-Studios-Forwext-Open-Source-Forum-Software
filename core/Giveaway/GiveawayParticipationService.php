@@ -76,6 +76,31 @@ final readonly class GiveawayParticipationService
         });
     }
 
+    public function canEnter(EntityId $actor): bool
+    {
+        return $this->authorizer->allows($actor, PermissionKey::fromString('giveaway.view'))
+            && $this->authorizer->allows($actor, PermissionKey::fromString('giveaway.enter'));
+    }
+
+    public function requirements(EntityId $actor, EntityId $giveawayId): GiveawayEligibilityPolicy
+    {
+        $this->require($actor, 'giveaway.view');
+        if ($this->giveaways->find($giveawayId) === null) {
+            throw new GiveawayException('Giveaway was not found.');
+        }
+        return $this->participation->policy($giveawayId)
+            ?? GiveawayEligibilityPolicy::defaults($giveawayId);
+    }
+
+    /** @return list<GiveawayEligibilityRoleOption> */
+    public function roleOptions(EntityId $actor, EntityId $giveawayId): array
+    {
+        $giveaway = $this->giveaways->find($giveawayId)
+            ?? throw new GiveawayException('Giveaway was not found.');
+        $this->requireManager($actor, $giveaway);
+        return $this->participation->availableRoles();
+    }
+
     public function entry(EntityId $actor, EntityId $giveawayId): ?GiveawayEntry
     {
         $this->require($actor, 'giveaway.view');

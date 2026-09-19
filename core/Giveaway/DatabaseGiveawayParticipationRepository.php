@@ -159,6 +159,19 @@ final readonly class DatabaseGiveawayParticipationRepository implements Giveaway
         ));
     }
 
+    public function availableRoles(): array
+    {
+        return array_map(
+            static fn (array $row): GiveawayEligibilityRoleOption => new GiveawayEligibilityRoleOption(
+                EntityId::fromString((string) $row['role_id']),
+                (string) $row['name'],
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT role_id,name FROM forwext_roles ORDER BY priority DESC,name,role_id',
+            )),
+        );
+    }
+
     /** @param array<string,mixed> $row */
     private function hydrateEntry(array $row): GiveawayEntry
     {

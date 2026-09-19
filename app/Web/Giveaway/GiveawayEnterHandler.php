@@ -11,16 +11,17 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Giveaway\GiveawayException;
 use Forwext\Core\Giveaway\GiveawayFingerprint;
+use Forwext\Core\Giveaway\GiveawayParticipationException;
 use Forwext\Core\Giveaway\GiveawayParticipationService;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
-use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
+use InvalidArgumentException;
 
-final readonly class GiveawayDetailHandler implements RequestHandlerInterface
+final readonly class GiveawayEnterHandler implements RequestHandlerInterface
 {
     public function __construct(
         private GiveawayService $giveaways,
@@ -33,45 +34,42 @@ final readonly class GiveawayDetailHandler implements RequestHandlerInterface
 
     public function handle(Request $request): Response
     {
+        $actor = $this->viewers->resolve($request);
+        if ($actor === null) {
+            return Response::text('Authentication required.', 401)->withHeader('Cache-Control', 'no-store');
+        }
         $giveawayId = $this->giveawayId($request);
         if ($giveawayId === null) {
             return Response::text('Not Found', 404)->withHeader('Cache-Control', 'no-store');
         }
 
-        $actor = $this->viewers->resolve($request);
-        if ($actor === null) {
-            return Response::text('Authentication required.', 401)->withHeader('Cache-Control', 'no-store');
-        }
-
         try {
-            $this->giveaways->syncDue(new DateTimeImmutable('now', new DateTimeZone('UTC')), 100);
-            $giveaway = $this->giveaways->find($actor, $giveawayId);
-            $entry = $this->participation->entry($actor, $giveawayId);
-            $policy = $this->participation->requirements($actor, $giveawayId);
-            $decision = null;
-            $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
-            $csrf = is_string($token) && $token !== '' ? $token : null;
-            if ($entry === null && $csrf !== null && $this->participation->canEnter($actor)) {
-                [$network, $device] = GiveawayRequestFingerprint::fromRequest($request, $this->fingerprint);
-                $decision = $this->participation->decision($actor, $giveawayId, $network, $device, new DateTimeImmutable('now', new DateTimeZone('UTC')));
-            }
-            return Response::html(GiveawayHtml::detail(
-                $giveaway,
-                $policy,
-                $entry,
-                $decision,
-                $this->basePath,
-                $this->giveaways->canManageGiveaway($actor, $giveaway),
-                $this->participation->canEnter($actor),
-                $csrf,
-                ($request->query()['entered'] ?? null) === '1',
-                is_string($request->query()['entry_error'] ?? null)
-                    ? $request->query()['entry_error'] : null,
-            ))->withHeader('Cache-Control', 'private, no-store');
+            $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $this->giveaways->syncDue($now, 100);
+            [$network, $device] = GiveawayRequestFingerprint::fromRequest($request, $this->fingerprint);
+            $this->participation->enter($actor, $giveawayId, $network, $device, $now);
+            return Response::text('', 303)
+                ->withHeader('Location', $this->basePath->prepend(
+                    '/giveaways/' . rawurlencode($giveawayId->value()) . '?entered=1',
+                ))
+                ->withHeader('Cache-Control', 'no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
+        } catch (GiveawayParticipationException $exception) {
+            $reason = $exception->reasonCodes[0] ?? 'ineligible';
+            if (preg_match('/^[a-z_]{1,40}$/D', $reason) !== 1) {
+                $reason = 'ineligible';
+            }
+            return Response::text('', 303)
+                ->withHeader('Location', $this->basePath->prepend(
+                    '/giveaways/' . rawurlencode($giveawayId->value())
+                    . '?entry_error=' . rawurlencode($reason),
+                ))
+                ->withHeader('Cache-Control', 'no-store');
         } catch (GiveawayException) {
             return Response::text('Not Found', 404)->withHeader('Cache-Control', 'no-store');
+        } catch (InvalidArgumentException) {
+            return Response::text('Bad Request', 400)->withHeader('Cache-Control', 'no-store');
         }
     }
 

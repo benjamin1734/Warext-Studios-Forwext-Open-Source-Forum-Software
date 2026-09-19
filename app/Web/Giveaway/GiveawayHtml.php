@@ -6,6 +6,11 @@ namespace Forwext\App\Web\Giveaway;
 
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Giveaway\Giveaway;
+use Forwext\Core\Giveaway\GiveawayEligibilityDecision;
+use Forwext\Core\Giveaway\GiveawayEligibilityPolicy;
+use Forwext\Core\Giveaway\GiveawayEligibilityRoleOption;
+use Forwext\Core\Giveaway\GiveawayEntry;
+use Forwext\Core\Giveaway\GiveawayReferralRequirement;
 use Forwext\Core\Giveaway\GiveawayState;
 use Forwext\Core\Routing\BasePath;
 
@@ -41,20 +46,34 @@ final class GiveawayHtml
 
     public static function detail(
         Giveaway $giveaway,
+        GiveawayEligibilityPolicy $policy,
+        ?GiveawayEntry $entry,
+        ?GiveawayEligibilityDecision $decision,
         BasePath $basePath,
         bool $canManage,
+        bool $canEnter,
+        ?string $csrfToken,
+        bool $entered,
+        ?string $entryError,
     ): string {
         $body = '<article class="card"><div class="search-hit-type">'
             . self::e(self::stateLabel($giveaway->state))
             . '</div><h1>' . self::e($giveaway->title) . '</h1>'
             . '<p class="muted">Başlangıç: ' . self::e(self::date($giveaway->startsAt))
-            . ' · Bitiş: ' . self::e(self::date($giveaway->endsAt)) . '</p>'
-            . '<section class="section"><h2>Ödül</h2><p><strong>'
-            . self::e($giveaway->prize->title) . '</strong> × ' . $giveaway->prize->quantity . '</p>';
+            . ' · Bitiş: ' . self::e(self::date($giveaway->endsAt)) . '</p>';
 
+        if ($entered) {
+            $body .= '<div class="notice success">Çekiliş katılımınız kaydedildi.</div>';
+        } elseif ($entryError !== null) {
+            $body .= '<div class="notice error">' . self::e(self::eligibilityReason($entryError)) . '</div>';
+        }
+
+        $body .= '<section class="section"><h2>Ödül</h2><p><strong>'
+            . self::e($giveaway->prize->title) . '</strong> × ' . $giveaway->prize->quantity . '</p>';
         if ($giveaway->prize->description !== '') {
             $body .= '<div class="about">' . nl2br(self::e($giveaway->prize->description), false) . '</div>';
         }
+
         $body .= '</section><section class="section"><h2>Açıklama</h2><div class="about">'
             . nl2br(self::e($giveaway->description), false)
             . '</div></section><section class="section"><h2>Katılım koşulları</h2><div class="about">'
@@ -62,7 +81,28 @@ final class GiveawayHtml
             . '</div><p class="muted">Kişi başı hak: ' . $giveaway->entriesPerUser
             . ' · Maksimum katılımcı: '
             . ($giveaway->maxParticipants === null ? 'Sınırsız' : (string) $giveaway->maxParticipants)
-            . '</p></section>';
+            . '</p><ul>'
+            . '<li>Minimum hesap yaşı: ' . $policy->minAccountAgeDays . ' gün</li>'
+            . '<li>Minimum görünür mesaj: ' . $policy->minPostCount . '</li>'
+            . '<li>Doğrulanmış hesap: ' . ($policy->requireVerifiedAccount ? 'Gerekli' : 'Zorunlu değil') . '</li>'
+            . '<li>Rol koşulu: ' . ($policy->allowedRoleIds === [] ? 'Yok' : count($policy->allowedRoleIds) . ' izinli rolden biri') . '</li>'
+            . '<li>Referral koşulu: ' . self::e(self::referralLabel($policy)) . '</li>'
+            . '</ul>';
+
+        if ($entry !== null) {
+            $body .= '<div class="notice success">Katılım aktif · ' . $entry->entryCount . ' hak.</div>';
+        } elseif (!$canEnter) {
+            $body .= '<p class="muted">Hesabınızın bu çekilişe katılma izni yok.</p>';
+        } elseif ($decision !== null && !$decision->eligible) {
+            $labels = array_map(self::eligibilityReason(...), $decision->reasons);
+            $body .= '<div class="notice error">Şu anda uygun değilsiniz: ' . self::e(implode(' · ', $labels)) . '</div>';
+        } elseif ($giveaway->state === GiveawayState::Open && $csrfToken !== null) {
+            $body .= '<form method="post" action="' . self::e($basePath->prepend(
+                '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/enter',
+            )) . '" class="presence-settings">' . self::csrf($csrfToken)
+                . '<button type="submit">Çekilişe katıl</button></form>';
+        }
+        $body .= '</section>';
 
         if ($canManage) {
             $body .= '<p><a href="' . self::e($basePath->prepend(
@@ -75,9 +115,15 @@ final class GiveawayHtml
     }
 
     /** @param list<Giveaway> $giveaways */
+    /**
+     * @param list<Giveaway> $giveaways
+     * @param list<GiveawayEligibilityRoleOption> $roleOptions
+     */
     public static function manage(
         array $giveaways,
         ?Giveaway $giveaway,
+        ?GiveawayEligibilityPolicy $policy,
+        array $roleOptions,
         BasePath $basePath,
         string $csrfToken,
         bool $updated,
@@ -89,7 +135,7 @@ final class GiveawayHtml
         $notice = $updated ? '<div class="notice success">Çekiliş işlemi kaydedildi.</div>' : '';
 
         $body = '<section class="card"><h1>Çekiliş Yönetimi</h1>'
-            . '<p class="muted">Bu ekran zamanlama ve yaşam döngüsünü yönetir. Uygunluk/katılım 13.04, kazanan seçimi 13.05 kapsamındadır.</p>'
+            . '<p class="muted">Zamanlama, yaşam döngüsü ve katılım uygunluk kuralları bu ekrandan yönetilir.</p>'
             . $notice
             . '<form method="post" action="' . $action . '" class="presence-settings">'
             . self::csrf($csrfToken)
@@ -140,6 +186,47 @@ final class GiveawayHtml
                 . '<div class="search-actions"><button type="submit">Taslak olarak kaydet</button></div></form></section>';
         }
 
+        if ($giveaway !== null && $policy !== null && $editable) {
+            $selectedRoles = array_fill_keys(
+                array_map(static fn ($id): string => $id->value(), $policy->allowedRoleIds),
+                true,
+            );
+            $roleFields = '';
+            foreach ($roleOptions as $option) {
+                $checked = isset($selectedRoles[$option->roleId->value()]) ? ' checked' : '';
+                $roleFields .= '<label><input type="checkbox" name="role_ids[]" value="'
+                    . self::e($option->roleId->value()) . '"' . $checked . '> ' . self::e($option->name) . '</label>';
+            }
+            if ($roleFields === '') {
+                $roleFields = '<p class="muted">Tanımlı rol bulunmuyor; rol koşulu uygulanmayacak.</p>';
+            }
+            $body .= '<section class="section"><h2>Katılım uygunluğu</h2>'
+                . '<form method="post" action="' . $action . '" class="search-form">'
+                . self::csrf($csrfToken)
+                . '<input type="hidden" name="action" value="policy_save">'
+                . '<input type="hidden" name="giveaway_id" value="' . self::e($giveaway->giveawayId->value()) . '">'
+                . '<label><span>Minimum hesap yaşı (gün)</span><input type="number" name="min_account_age_days" min="0" max="36500" value="'
+                . $policy->minAccountAgeDays . '"></label>'
+                . '<label><span>Minimum görünür mesaj</span><input type="number" name="min_post_count" min="0" max="100000000" value="'
+                . $policy->minPostCount . '"></label>'
+                . '<label><input type="checkbox" name="require_verified_account" value="1"'
+                . ($policy->requireVerifiedAccount ? ' checked' : '') . '> Doğrulanmış hesap gerekli</label>'
+                . '<fieldset class="search-wide"><legend>İzinli roller (boş = tüm roller)</legend>' . $roleFields . '</fieldset>'
+                . '<label><span>Referral koşulu</span><select name="referral_requirement">'
+                . self::option('none', 'Yok', $policy->referralRequirement->value)
+                . self::option('referred_qualified', 'Nitelikli referral ile gelmiş kullanıcı', $policy->referralRequirement->value)
+                . self::option('qualified_referrer', 'Nitelikli referral kazandırmış kullanıcı', $policy->referralRequirement->value)
+                . '</select></label>'
+                . '<label><span>Minimum nitelikli referral</span><input type="number" name="min_qualified_referrals" min="1" max="1000000" value="'
+                . max(1, $policy->minQualifiedReferrals) . '"></label>'
+                . '<label><span>Aynı ağdan maksimum hesap (0 = kapalı)</span><input type="number" name="duplicate_network_limit" min="0" max="1000" value="'
+                . $policy->duplicateNetworkLimit . '"></label>'
+                . '<label><span>Aynı cihaz sinyalinden maksimum hesap (0 = kapalı)</span><input type="number" name="duplicate_device_limit" min="0" max="1000" value="'
+                . $policy->duplicateDeviceLimit . '"></label>'
+                . '<div class="search-actions"><button type="submit">Uygunluk kurallarını kaydet</button></div>'
+                . '</form></section>';
+        }
+
         if ($giveaway !== null) {
             $body .= '<section class="section"><h2>Yaşam döngüsü</h2><p class="muted">Mevcut durum: '
                 . self::e(self::stateLabel($giveaway->state)) . '</p>';
@@ -181,6 +268,39 @@ final class GiveawayHtml
             . '<p>' . self::e($giveaway->prize->title) . ' × ' . $giveaway->prize->quantity . '</p>'
             . '<p class="muted">' . self::e(self::date($giveaway->startsAt))
             . ' → ' . self::e(self::date($giveaway->endsAt)) . '</p></article>';
+    }
+
+    private static function option(string $value, string $label, string $selected): string
+    {
+        return '<option value="' . self::e($value) . '"' . ($value === $selected ? ' selected' : '') . '>'
+            . self::e($label) . '</option>';
+    }
+
+    private static function referralLabel(GiveawayEligibilityPolicy $policy): string
+    {
+        return match ($policy->referralRequirement) {
+            GiveawayReferralRequirement::None => 'Yok',
+            GiveawayReferralRequirement::ReferredQualified => 'Nitelikli referral ile kayıt olmuş olmalı',
+            GiveawayReferralRequirement::QualifiedReferrer => 'En az ' . $policy->minQualifiedReferrals . ' nitelikli referral',
+        };
+    }
+
+    private static function eligibilityReason(string $reason): string
+    {
+        return match ($reason) {
+            'self_entry' => 'Çekiliş sahibi kendi çekilişine katılamaz.',
+            'not_open' => 'Çekiliş şu anda katılıma açık değil.',
+            'account_restricted' => 'Hesap durumu katılıma uygun değil.',
+            'account_not_verified' => 'Doğrulanmış hesap gerekli.',
+            'account_age' => 'Minimum hesap yaşı koşulu karşılanmıyor.',
+            'post_count' => 'Minimum görünür mesaj koşulu karşılanmıyor.',
+            'role' => 'Gerekli rol koşulu karşılanmıyor.',
+            'referral' => 'Referral koşulu karşılanmıyor.',
+            'duplicate_network' => 'Aynı ağ için katılım sınırına ulaşıldı.',
+            'duplicate_device' => 'Aynı cihaz sinyali için katılım sınırına ulaşıldı.',
+            'capacity_reached' => 'Maksimum katılımcı sayısına ulaşıldı.',
+            default => 'Katılım uygunluk koşulları karşılanmıyor.',
+        };
     }
 
     private static function stateLabel(GiveawayState $state): string
