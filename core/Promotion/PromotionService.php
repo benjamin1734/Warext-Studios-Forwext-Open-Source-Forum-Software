@@ -19,6 +19,8 @@ use Forwext\Core\Domain\User\UserId;
 use Forwext\Core\Reward\RewardGrant;
 use Forwext\Core\Reward\RewardGrantGateway;
 use Forwext\Core\Reward\RewardGrantRequest;
+use Forwext\Core\Reward\RewardDefinition;
+use Forwext\Core\Reward\RewardRepository;
 use InvalidArgumentException;
 
 final readonly class PromotionService
@@ -29,6 +31,7 @@ final readonly class PromotionService
         private RewardGrantGateway $rewards,
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
+        private ?RewardRepository $rewardCatalog = null,
     ) {
     }
 
@@ -37,6 +40,17 @@ final readonly class PromotionService
     {
         $this->require($actor,'promotion.manage');
         return $this->repository->definitions(false);
+    }
+
+    /** @return list<RewardDefinition> */
+    public function rewardOptions(EntityId $actor):array
+    {
+        $this->require($actor,'promotion.manage');
+        if($this->rewardCatalog===null)return [];
+        return array_values(array_filter(
+            $this->rewardCatalog->definitions(),
+            static fn(RewardDefinition $definition):bool=>$definition->active
+        ));
     }
 
     public function definition(EntityId $actor,EntityId $promotionId):?PromotionDefinition
@@ -49,6 +63,12 @@ final readonly class PromotionService
         EntityId $actor,PromotionDefinition $definition,DateTimeImmutable $now,?AuditRequestId $requestId=null
     ):void{
         $this->require($actor,'promotion.manage');
+        if($this->rewardCatalog!==null){
+            $reward=$this->rewardCatalog->definitionByKey($definition->rewardKey);
+            if($reward===null||!$reward->active){
+                throw new InvalidArgumentException('Promotion reward key must reference an active reward definition.');
+            }
+        }
         $before=$this->repository->find($definition->promotionId);
         $event=new AuditEvent(
             AuditEvent::generateId(),AuditScope::Administration,$actor,

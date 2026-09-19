@@ -195,6 +195,15 @@ final readonly class DatabaseRewardRepository implements RewardRepository
         );
     }
 
+    public function binding(EntityId $bindingId):?RewardBinding
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT * FROM forwext_reward_bindings WHERE binding_id=:binding_id LIMIT 1',
+            ['binding_id'=>$bindingId->value()]
+        ));
+        return $row===null?null:$this->hydrateBinding($row);
+    }
+
     public function saveBinding(RewardBinding $binding):void
     {
         $this->database->execute(new CompiledQuery(

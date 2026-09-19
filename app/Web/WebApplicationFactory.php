@@ -50,6 +50,8 @@ use Forwext\App\Web\Profile\ProfilePostReactionHandler;
 use Forwext\App\Web\Profile\ProfilePostsHandler;
 use Forwext\App\Web\Profile\ProfileUrlSettingsHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
+use Forwext\App\Web\Promotion\PromotionManageHandler;
+use Forwext\App\Web\Reward\RewardManageHandler;
 use Forwext\App\Web\Portfolio\PortfolioIndexHandler;
 use Forwext\App\Web\Portfolio\PortfolioManageHandler;
 use Forwext\App\Web\Portfolio\PortfolioMediaDownloadHandler;
@@ -199,6 +201,9 @@ use Forwext\Core\Profile\Url\DatabaseProfileUrlStore;
 use Forwext\Core\Profile\Url\EngineProfileUrlPermissionResolver;
 use Forwext\Core\Profile\Url\ProfileSlugPolicy;
 use Forwext\Core\Profile\Url\ProfileUrlService;
+use Forwext\Core\Promotion\DatabasePromotionMetricProvider;
+use Forwext\Core\Promotion\DatabasePromotionRepository;
+use Forwext\Core\Promotion\PromotionService;
 use Forwext\Core\Queue\DatabaseQueueDriver;
 use Forwext\Core\Referral\DatabaseReferralRepository;
 use Forwext\Core\Referral\ReferralNotifier;
@@ -403,6 +408,16 @@ final readonly class WebApplicationFactory
             $rewardProviders,
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+
+        $promotionRepository = new DatabasePromotionRepository($database);
+        $promotions = new PromotionService(
+            $promotionRepository,
+            new DatabasePromotionMetricProvider($database),
+            $rewards,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $rewardRepository,
         );
 
         $referralNotificationRegistry = new NotificationRegistry();
@@ -622,6 +637,8 @@ final readonly class WebApplicationFactory
         $giveawayCsrf = $this->giveawayCsrfMiddleware($config);
         $easterEggCsrf = $this->easterEggCsrfMiddleware($config);
         $trophyCsrf = $this->trophyCsrfMiddleware($config);
+        $rewardCsrf = $this->rewardCsrfMiddleware($config);
+        $promotionCsrf = $this->promotionCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -735,6 +752,20 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/faq'),
             new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'reward.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/rewards'),
+            new RewardManageHandler($rewards, $viewerResolver, $basePath),
+            [$rewardCsrf],
+        ));
+        $routes->add(new Route(
+            'promotion.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/promotions'),
+            new PromotionManageHandler($promotions, $users, $viewerResolver, $basePath),
+            [$promotionCsrf],
         ));
         $routes->add(new Route(
             'trophy.manage',
@@ -1313,6 +1344,16 @@ final readonly class WebApplicationFactory
     private function trophyCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'trophy', 'forwext.csrf.trophy.v1');
+    }
+
+    private function rewardCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'reward', 'forwext.csrf.reward.v1');
+    }
+
+    private function promotionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'promotion', 'forwext.csrf.promotion.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

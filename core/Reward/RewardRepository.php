@@ -43,6 +43,8 @@ interface RewardRepository
     /** @return list<RewardBinding> */
     public function allBindings(int $limit = 500): array;
 
+    public function binding(EntityId $bindingId): ?RewardBinding;
+
     public function saveBinding(RewardBinding $binding): void;
 
     /** @return list<RewardSourceOption> */

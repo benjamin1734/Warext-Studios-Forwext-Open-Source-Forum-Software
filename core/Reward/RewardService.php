@@ -165,6 +165,18 @@ final readonly class RewardService implements RewardGrantGateway
         ];
     }
 
+    public function definition(EntityId $actor,EntityId $rewardId):?RewardDefinition
+    {
+        $this->require($actor,'reward.manage');
+        return $this->repository->definition($rewardId);
+    }
+
+    public function binding(EntityId $actor,EntityId $bindingId):?RewardBinding
+    {
+        $this->require($actor,'reward.manage');
+        return $this->repository->binding($bindingId);
+    }
+
     public function saveDefinition(
         EntityId $actor,RewardDefinition $definition,DateTimeImmutable $now,?AuditRequestId $requestId=null
     ):void{
