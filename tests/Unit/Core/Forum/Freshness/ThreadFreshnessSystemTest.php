@@ -6,6 +6,9 @@ namespace Forwext\Tests\Unit\Core\Forum\Freshness;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
@@ -143,6 +146,103 @@ final class ThreadFreshnessSystemTest extends TestCase
         self::assertSame(0, $result->notified);
         self::assertTrue($repository->evaluated);
         self::assertSame(['thread:' . $threadId->value(), 'post:' . $postId->value()], $search->recorded);
+    }
+
+    public function testManualMaintenanceIsNodeScopedAndAudited(): void
+    {
+        $now = $this->time();
+        $actor = $this->id('1');
+        $forumId = $this->id('2');
+        $threadId = $this->id('3');
+        $postId = $this->id('5');
+
+        $allowedRepository = new RecordingFreshnessRepository(
+            new ThreadFreshnessPolicy($forumId, true, 30, null, 50, 80, 40, 60, 24),
+            new ThreadFreshnessSnapshot(
+                $threadId,
+                $forumId,
+                $this->id('4'),
+                'Old thread',
+                $now->modify('-100 days'),
+                100,
+                true,
+                false,
+                false,
+                true,
+                null,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+            ),
+            $postId,
+        );
+        $audit = new FreshnessRecordingAudit();
+        $allowed = new ThreadFreshnessService(
+            $allowedRepository,
+            new EmptyFreshnessNodes(),
+            new PermissionAuthorizer(
+                new PermissionEngine(new ScopedFreshnessReviewRules($actor, $forumId)),
+                new ScopedFreshnessAssignments($actor),
+            ),
+            new RecordingFreshnessSearchChanges(),
+            null,
+            $audit,
+        );
+
+        $result = $allowed->maintainForActor(
+            $actor,
+            $now,
+            100,
+            AuditRequestId::fromString('req-freshness-maintenance'),
+        );
+
+        self::assertSame(1, $result->scanned);
+        self::assertTrue($allowedRepository->evaluated);
+        self::assertCount(1, $audit->events);
+        self::assertSame('forum.thread.freshness.maintenance.manual', $audit->events[0]->action->value());
+        self::assertSame('req-freshness-maintenance', $audit->events[0]->requestId->value());
+
+        $deniedRepository = new RecordingFreshnessRepository(
+            new ThreadFreshnessPolicy($forumId, true, 30, null, 50, 80, 40, 60, 24),
+            new ThreadFreshnessSnapshot(
+                $threadId,
+                $forumId,
+                $this->id('4'),
+                'Old thread',
+                $now->modify('-100 days'),
+                100,
+                true,
+                false,
+                false,
+                true,
+                null,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+            ),
+            $postId,
+        );
+        $denied = new ThreadFreshnessService(
+            $deniedRepository,
+            new EmptyFreshnessNodes(),
+            new PermissionAuthorizer(
+                new PermissionEngine(new EmptyFreshnessPermissionRules()),
+                new EmptyFreshnessAssignments(),
+            ),
+            new RecordingFreshnessSearchChanges(),
+            null,
+            new FreshnessRecordingAudit(),
+        );
+
+        $deniedResult = $denied->maintainForActor($actor, $now, 100);
+        self::assertSame(0, $deniedResult->scanned);
+        self::assertFalse($deniedRepository->evaluated);
     }
 
     public function testMaintenanceTaskUsesExistingMaintenanceQueueContract(): void
@@ -307,5 +407,73 @@ final class EmptyFreshnessAssignments implements UserAccessAssignmentProvider
     public function find(EntityId $userId): ?UserAccessAssignment
     {
         return null;
+    }
+}
+
+
+final class FreshnessRecordingAudit implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events = [];
+
+    public function append(AuditEvent $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        $result = $mutation();
+        $this->events[] = $event;
+        return $result;
+    }
+}
+
+final readonly class ScopedFreshnessReviewRules implements PermissionRuleRepository
+{
+    public function __construct(private EntityId $actor, private EntityId $forumId)
+    {
+    }
+
+    public function definition(PermissionKey $key): ?\Forwext\Core\Domain\Access\Permission\PermissionDefinition
+    {
+        return $key->value() === 'forum.thread.freshness.review'
+            ? new \Forwext\Core\Domain\Access\Permission\PermissionDefinition(
+                $key,
+                \Forwext\Core\Domain\Access\Permission\PermissionValueType::Flag,
+            )
+            : null;
+    }
+
+    public function rules(PermissionKey $key, UserAccessAssignment $assignment, ?EntityId $nodeId): array
+    {
+        if ($key->value() !== 'forum.thread.freshness.review'
+            || !$assignment->userId()->equals($this->actor)
+            || $nodeId === null
+            || !$nodeId->equals($this->forumId)
+        ) {
+            return [];
+        }
+
+        return [new \Forwext\Core\Domain\Access\Permission\PermissionRule(
+            \Forwext\Core\Domain\Access\Permission\PermissionSubjectType::User,
+            $this->actor,
+            \Forwext\Core\Domain\Access\Permission\PermissionEffect::Allow,
+            $this->forumId,
+        )];
+    }
+}
+
+final readonly class ScopedFreshnessAssignments implements UserAccessAssignmentProvider
+{
+    public function __construct(private EntityId $actor)
+    {
+    }
+
+    public function find(EntityId $userId): ?UserAccessAssignment
+    {
+        return $userId->equals($this->actor)
+            ? new UserAccessAssignment($this->actor, EntityId::fromString(str_repeat('9', 32)))
+            : null;
     }
 }

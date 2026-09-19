@@ -49,7 +49,10 @@ final class PermissionNamespaceMigrationTest extends TestCase
             'audit.review',
             'spellcheck.dictionary.manage_site',
             'content_manager.execute',
-            'freshness.manage',
+            'forum.thread.freshness.renew_own',
+            'forum.thread.freshness.renew_any',
+            'forum.thread.freshness.review',
+            'forum.thread.freshness.manage_policy',
             'giveaway.manage',
             'easteregg.manage',
             'trophy.award',
@@ -68,6 +71,9 @@ final class PermissionNamespaceMigrationTest extends TestCase
         ] as $requiredKey) {
             self::assertContains($requiredKey, $catalogKeys);
         }
+        self::assertNotContains('freshness.renew_own', $catalogKeys);
+        self::assertNotContains('freshness.review', $catalogKeys);
+        self::assertNotContains('freshness.manage', $catalogKeys);
         self::assertSame([
             'profile.custom_url.use' => 'allow',
             'profile.music.use' => 'allow',
