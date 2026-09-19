@@ -34,6 +34,7 @@ use Forwext\Database\Migrations\Core\CreateEasterEggSystem;
 use Forwext\Database\Migrations\Core\AllowNullableEasterEggPath;
 use Forwext\Database\Migrations\Core\CreateTrophySystem;
 use Forwext\Database\Migrations\Core\CreateRewardPromotionSystem;
+use Forwext\Database\Migrations\Core\CreatePromotionSystem;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -144,6 +145,7 @@ final class CoreMigrationRegistry
             new AllowNullableEasterEggPath(),
             new CreateTrophySystem(),
             new CreateRewardPromotionSystem(),
+            new CreatePromotionSystem(),
         ];
     }
 }
