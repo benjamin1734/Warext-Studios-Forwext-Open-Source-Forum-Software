@@ -6,6 +6,26 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.03 — AI Privacy, Cost and Prompt Management
+
+- Integrated AI provider credentials with the encrypted first-party secret store.
+- Added sensitive-data redaction before external AI requests while preserving original-content fingerprints.
+- Added versioned prompt registry and prompt-version propagation to prompt-based and custom providers.
+- Added normalized token usage, configurable micro-cost calculation and durable usage metrics.
+- Added per-forum provider, prompt, redaction, threshold and pricing policies.
+- Added persisted false-positive/false-negative moderation feedback and `ai.manage`-gated feedback service.
+- Added additive migration `20260919070000_ai_moderation_privacy_cost_policy` and architecture/regression coverage.
+
+### 12.02 — AI Content Moderation
+
+- Added provider abstraction for OpenAI, Gemini, Anthropic, OpenRouter and hardened custom HTTPS endpoints.
+- Added normalized moderation risk scoring with allow, flag, queue and reject actions.
+- Added timeout/provider-error fallback that defaults to human review.
+- Added exact-content human overrides, persistent decisions and `ai.moderation.override` permission defaults.
+- Added SSRF-resistant endpoint validation and pinned HTTPS transport.
+- Integrated AI moderation into the common forum content pipeline while retaining an AI-disabled pass-through mode.
+- Added additive migration `20260918030000_ai_moderation_workflow` and provider/policy/override regression coverage.
+
 ### Root front-controller routing repair — 0.0.7.08-dev
 
 - Fixed cPanel/LiteSpeed installs where the home page loaded but clean routes such as `/search`, `/members`, `/faq` and `/stats` returned server-level 404 responses.

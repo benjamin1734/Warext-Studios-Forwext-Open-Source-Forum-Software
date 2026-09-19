@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.08-dev
+CURRENT_VERSION = 0.0.7.09-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.01
-CURRENT_STEP = 12.02
-LAST_COMMIT = c9379444d854798ffc104e66a0dade0cf90ef217
+LAST_COMPLETED_SUBSTEP = 12.03
+CURRENT_STEP = 12.04
+LAST_COMMIT = c50d98bb703b04e5e0ff6de1b707d207b57274bd
 BLOCKERS = none
-NEXT_STEP = 12.02 - AI içerik denetimi
+NEXT_STEP = 12.04 - Yazım denetim sistemi
 ```
 
 ## Current position
@@ -21,13 +21,45 @@ NEXT_STEP = 12.02 - AI içerik denetimi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01`.
-- Current sub-step: `12.02 — AI içerik denetimi`.
-- Remaining roadmap work after 12.01: **63 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.03`.
+- Current sub-step: `12.04 — Yazım denetim sistemi`.
+- Remaining roadmap work after 12.03: **61 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.03
+
+- Added encrypted AI provider credential integration through the existing first-party encrypted secret store without placing API keys in normal configuration or policy tables.
+- Added privacy redaction for common email, IP, Turkish mobile-number and token-like secrets before external AI requests while preserving fingerprints from original content.
+- Added versioned prompt registry with `core.v1` and provider request propagation for Gemini, Anthropic, OpenRouter and custom endpoints.
+- Added normalized provider token usage, configurable input/output per-million-token pricing and integer-micro cost calculation.
+- Added durable per-forum AI policies for enabled state, provider, prompt version, redaction, moderation thresholds and pricing.
+- Added forum-node propagation through thread/post content pipeline contexts so AI execution and moderation policy resolve the same forum policy.
+- Added durable AI usage/cost metrics and false-positive/false-negative feedback storage.
+- Added `ai.manage`-gated feedback service and database-backed forum-policy/metrics/feedback repositories.
+- Added additive idempotent migration `20260919070000_ai_moderation_privacy_cost_policy`.
+- Added architecture documentation and regression coverage for redaction, encrypted credential namespacing, prompt/provider selection, forum-scoped metrics and cost calculation.
+- Feature commit: `c50d98bb703b04e5e0ff6de1b707d207b57274bd`.
+- GitHub Actions build run `35428696597`: success; strict-types, lint and PHPUnit passed on PHP 8.4 and PHP 8.5.
+- Database migration smoke run `35428696476`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `12.04 — Yazım denetim sistemi`.
+
+## Completed in 12.02
+
+- Replaced the 12.01 AI pass-through extension point with a provider-neutral moderation service and registry.
+- Added first-party OpenAI, Gemini, Anthropic, OpenRouter and custom HTTPS provider implementations.
+- Added normalized risk scores and `allow / flag / queue / reject` policy thresholds.
+- Added deterministic timeout/provider-error fallback that routes content to human review instead of silently allowing it.
+- Added exact-content human overrides with backend permission enforcement and persistent override/decision storage.
+- Added hardened HTTPS endpoint validation and pinned transport protections against private/reserved network access and unsafe request targets.
+- Added additive idempotent migration `20260918030000_ai_moderation_workflow` and `ai.moderation.override` permission defaults.
+- Integrated AI moderation and policy processors into `ForumContentPipelineFactory` while keeping AI optional.
+- Added provider, policy, fallback, override and persistence regression coverage.
+- Feature commit: `4219669f7840a84e427ac15ac459937ba12d8770`.
+- GitHub Actions build run `35428220289`: success.
+- Database migration smoke run `35428220245`: success on MySQL 8.4 and MariaDB 10.11.
 
 ## Completed in 12.01
 
