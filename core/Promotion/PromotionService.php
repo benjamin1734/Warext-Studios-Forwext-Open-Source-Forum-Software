@@ -86,10 +86,20 @@ final readonly class PromotionService
         UserId::assert($userId);
         $grants=[];
         foreach($this->repository->definitions(true) as $definition){
-            if($this->metrics->metric($userId,$definition->ruleType,$now)<$definition->threshold)continue;
-            $grants[]=$this->rewards->grant(new RewardGrantRequest(
-                $userId,'promotion',$definition->promotionId->value(),$definition->rewardKey,$definition->units
-            ),$now);
+            $qualified=$this->metrics->metric($userId,$definition->ruleType,$now)>=$definition->threshold;
+            if($qualified){
+                $grants[]=$this->rewards->grant(new RewardGrantRequest(
+                    $userId,'promotion',$definition->promotionId->value(),$definition->rewardKey,$definition->units
+                ),$now);
+                continue;
+            }
+            if($definition->revokeWhenUnqualified){
+                foreach($this->rewards->revokeSource(
+                    'promotion',$definition->promotionId->value(),$userId,$now
+                ) as $revoked){
+                    $grants[]=$revoked;
+                }
+            }
         }
         return $grants;
     }
@@ -150,7 +160,8 @@ final readonly class PromotionService
         return [
             'key'=>$definition->key,'active'=>$definition->active,'priority'=>$definition->priority,
             'rule_type'=>$definition->ruleType->value,'threshold'=>$definition->threshold,
-            'reward_key'=>$definition->rewardKey,'units'=>$definition->units
+            'reward_key'=>$definition->rewardKey,'units'=>$definition->units,
+            'revoke_when_unqualified'=>$definition->revokeWhenUnqualified
         ];
     }
 

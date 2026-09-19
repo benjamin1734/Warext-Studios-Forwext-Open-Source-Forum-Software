@@ -80,6 +80,7 @@ final readonly class PromotionManageHandler implements RequestHandlerInterface
                 self::integer($body,'threshold',1,1_000_000_000,1),
                 strtolower(self::required($body,'reward_key',64)),
                 self::integer($body,'units',1,1_000_000,1),
+                self::checked($body,'revoke_when_unqualified'),
                 $existing?->createdAt??$now,$now
             );
             $this->promotions->save($actor,$definition,$now,HttpAuditRequestId::fromRequest($request));

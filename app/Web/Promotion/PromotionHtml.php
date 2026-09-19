@@ -49,6 +49,8 @@ final class PromotionHtml
             .'<label><span>Units</span><input type="number" name="units" min="1" max="1000000" value="'.($selected?->units??1).'"></label>'
             .'<label><span>Öncelik</span><input type="number" name="priority" min="0" max="65535" value="'.($selected?->priority??100).'"></label>'
             .'<label><input type="checkbox" name="active" value="1"'.(($selected?->active??true)?' checked':'').'> Etkin</label>'
+            .'<label class="search-wide"><input type="checkbox" name="revoke_when_unqualified" value="1"'
+            .(($selected?->revokeWhenUnqualified??false)?' checked':'').'> Koşul artık sağlanmıyorsa promotion tarafından yönetilen reward atamasını güvenli biçimde geri al</label>'
             .'<div class="search-actions"><button type="submit">Promotion kaydet</button></div></form></section>';
 
         $body.='<section class="section"><h2>cPanel / manuel değerlendirme</h2>'

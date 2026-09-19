@@ -24,6 +24,7 @@ final readonly class PromotionDefinition
         public int $threshold,
         public string $rewardKey,
         public int $units,
+        public bool $revokeWhenUnqualified,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
     ) {

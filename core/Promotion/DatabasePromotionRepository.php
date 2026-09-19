@@ -46,7 +46,7 @@ final readonly class DatabasePromotionRepository implements PromotionRepository
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_promotions '
             . '(promotion_id,promotion_key,name,active,priority,rule_type,threshold,reward_key,units,created_at_utc,updated_at_utc) '
-            . 'VALUES (:id,:key,:name,:active,:priority,:rule_type,:threshold,:reward_key,:units,:created,:updated) '
+            . 'VALUES (:id,:key,:name,:active,:priority,:rule_type,:threshold,:reward_key,:units,:revoke_when_unqualified,:created,:updated) '
             . 'ON DUPLICATE KEY UPDATE promotion_key=VALUES(promotion_key),name=VALUES(name),active=VALUES(active),'
             . 'priority=VALUES(priority),rule_type=VALUES(rule_type),threshold=VALUES(threshold),'
             . 'reward_key=VALUES(reward_key),units=VALUES(units),updated_at_utc=VALUES(updated_at_utc)',
@@ -55,6 +55,7 @@ final readonly class DatabasePromotionRepository implements PromotionRepository
                 'active'=>$definition->active?1:0,'priority'=>$definition->priority,
                 'rule_type'=>$definition->ruleType->value,'threshold'=>$definition->threshold,
                 'reward_key'=>$definition->rewardKey,'units'=>$definition->units,
+                'revoke_when_unqualified'=>$definition->revokeWhenUnqualified?1:0,
                 'created'=>self::format($definition->createdAt),'updated'=>self::format($definition->updatedAt)
             ]
         ));
@@ -99,7 +100,7 @@ final readonly class DatabasePromotionRepository implements PromotionRepository
         return new PromotionDefinition(
             EntityId::fromString((string)$row['promotion_id']),(string)$row['promotion_key'],(string)$row['name'],
             (bool)$row['active'],(int)$row['priority'],$rule,(int)$row['threshold'],(string)$row['reward_key'],
-            (int)$row['units'],self::parse((string)$row['created_at_utc']),self::parse((string)$row['updated_at_utc'])
+            (int)$row['units'],(bool)$row['revoke_when_unqualified'],self::parse((string)$row['created_at_utc']),self::parse((string)$row['updated_at_utc'])
         );
     }
 
