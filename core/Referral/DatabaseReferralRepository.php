@@ -97,6 +97,16 @@ final readonly class DatabaseReferralRepository implements ReferralRepository
         return $row === null ? null : $this->hydrateLink($row);
     }
 
+    public function linksForOwner(EntityId $ownerUserId): array
+    {
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT * FROM forwext_referral_links WHERE owner_user_id=:owner_user_id '
+            . 'ORDER BY created_at_utc DESC,link_id DESC',
+            ['owner_user_id'=>$ownerUserId->value()],
+        ));
+        return array_map($this->hydrateLink(...), $rows);
+    }
+
     public function saveLink(ReferralLink $link, DateTimeImmutable $at): void
     {
         $this->database->execute(new CompiledQuery(

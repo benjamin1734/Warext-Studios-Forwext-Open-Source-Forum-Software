@@ -20,6 +20,9 @@ interface ReferralRepository
 
     public function linkByCode(string $code): ?ReferralLink;
 
+    /** @return list<ReferralLink> */
+    public function linksForOwner(EntityId $ownerUserId): array;
+
     public function saveLink(ReferralLink $link, DateTimeImmutable $at): void;
 
     public function recordClick(ReferralLink $link, DateTimeImmutable $at): void;
