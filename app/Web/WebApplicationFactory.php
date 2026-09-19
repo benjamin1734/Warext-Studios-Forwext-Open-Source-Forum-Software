@@ -157,6 +157,9 @@ use Forwext\Core\Giveaway\GiveawayParticipationService;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Giveaway\Search\GiveawaySearchAccessScopeProvider;
 use Forwext\Core\Http\HttpMethod;
+use Forwext\Core\Http\Middleware\CallableRequestHandler;
+use Forwext\Core\Http\Request;
+use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
@@ -1092,6 +1095,48 @@ final readonly class WebApplicationFactory
         ));
 
         return new Router($routes, $basePath, [$easterEggMiddleware]);
+    }
+
+    public function decorateLegacyEasterEgg(Request $request, Response $response): Response
+    {
+        $config = $this->config();
+        $database = $this->database($config);
+        $users = new DatabaseUserRepository($database);
+        $sessions = new AuthSessionManager(
+            $this->sessionStore($config, $database),
+            new DatabaseCredentialStore($database),
+            $config->requireInt('authentication.session.ttl_seconds'),
+        );
+        $viewerResolver = new AuthSessionProfileViewerResolver(
+            $sessions,
+            $users,
+            $config->requireString('authentication.session.cookie_name'),
+            new DatabaseDisciplineAuthenticationAvailability($database),
+        );
+        $authorizer = $this->permissionAuthorizer($database);
+        $basePath = new BasePath(parse_url(
+            RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
+            PHP_URL_PATH,
+        ) ?: '');
+        $service = new EasterEggService(
+            $database,
+            new DatabaseEasterEggRepository($database),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+        $middleware = new EasterEggMiddleware(
+            $service,
+            $viewerResolver,
+            new DatabaseUserAccessAssignmentProvider($database),
+            $basePath,
+            new EasterEggRenderer(),
+        );
+        $routed = $request->withAttribute(Router::ATTRIBUTE_ROUTE_NAME, 'legacy.path');
+
+        return $middleware->process(
+            $routed,
+            new CallableRequestHandler(static fn (Request $_request): Response => $response),
+        );
     }
 
     public function contentSecurityPolicy(): string

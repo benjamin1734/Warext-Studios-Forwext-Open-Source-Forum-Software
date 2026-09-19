@@ -68,6 +68,7 @@ try {
     $response = $seoFactory->handle($request);
 
     if ($response === null) {
+        $handledByWeb = false;
         $moderationFactory = new ModerationApplicationFactory($root);
         $response = $moderationFactory->handle($request);
 
@@ -85,10 +86,14 @@ try {
         if ($response === null) {
             $application = $webFactory->create($version->value());
             $response = $application->handle($request);
+            $handledByWeb = true;
         }
 
         $response = $seoFactory->decorate($request, $response)
             ->withHeader('Content-Security-Policy', $webFactory->contentSecurityPolicy());
+        if (!$handledByWeb) {
+            $response = $webFactory->decorateLegacyEasterEgg($request, $response);
+        }
     }
 
     $response = $response
