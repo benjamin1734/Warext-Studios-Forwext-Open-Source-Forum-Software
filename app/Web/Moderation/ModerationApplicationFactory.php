@@ -37,6 +37,8 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Approval\ApprovalQueueRegistry;
 use Forwext\Core\Moderation\Approval\ApprovalQueueService;
 use Forwext\Core\Moderation\Approval\ForumApprovalQueueProvider;
+use Forwext\Core\Portfolio\Moderation\PortfolioApprovalQueueProvider;
+use Forwext\Core\Search\Lifecycle\DatabaseSearchIndexChangeStore;
 use Forwext\Core\Moderation\Abuse\AbuseModerationService;
 use Forwext\Core\Moderation\Abuse\AbuseOperationException;
 use Forwext\Core\Moderation\Abuse\DatabaseAbuseRepository;
@@ -159,6 +161,15 @@ final class ModerationApplicationFactory
         );
         $approvalRegistry = new ApprovalQueueRegistry([
             new ForumApprovalQueueProvider($database, $nodes, $gate, $contentModeration),
+            new PortfolioApprovalQueueProvider(
+                $database,
+                $gate,
+                new DatabaseSearchIndexChangeStore($database),
+                new \Forwext\Core\Audit\CoreAuditRecorder(
+                    $database,
+                    new DatabaseAuditEventStore($database),
+                ),
+            ),
         ]);
         $approvalService = new ApprovalQueueService($approvalRegistry, $gate);
         $abuseService = new AbuseModerationService(

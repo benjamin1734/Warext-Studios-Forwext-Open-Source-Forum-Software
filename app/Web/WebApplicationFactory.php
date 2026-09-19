@@ -47,6 +47,9 @@ use Forwext\App\Web\Profile\ProfilePostReactionHandler;
 use Forwext\App\Web\Profile\ProfilePostsHandler;
 use Forwext\App\Web\Profile\ProfileUrlSettingsHandler;
 use Forwext\App\Web\Profile\ProfileViewHandler;
+use Forwext\App\Web\Portfolio\PortfolioIndexHandler;
+use Forwext\App\Web\Portfolio\PortfolioManageHandler;
+use Forwext\App\Web\Portfolio\PortfolioProjectHandler;
 use Forwext\App\Web\Social\BookmarkListHandler;
 use Forwext\App\Web\Social\InteractionCsrfTokenHandler;
 use Forwext\App\Web\Social\PostBookmarkHandler;
@@ -141,6 +144,9 @@ use Forwext\Core\Notification\Sound\NotificationSoundCatalog;
 use Forwext\Core\Notification\Sound\NotificationSoundService;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
+use Forwext\Core\Portfolio\DatabasePortfolioRepository;
+use Forwext\Core\Portfolio\PortfolioService;
+use Forwext\Core\Portfolio\Search\PortfolioSearchAccessScopeProvider;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
 use Forwext\Core\Realtime\DatabaseRealtimeMessageStore;
 use Forwext\Core\Realtime\PollingRealtimeTransport;
@@ -253,8 +259,6 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_url.maximum_changes_per_window'),
         );
         $basePath = $this->basePath($config);
-        $profilePage = new ProfileViewHandler($users, $profileService, $accessPolicy, $viewerResolver, $basePath, $musicService);
-
         $editorLinks = new SafeEditorLinkPolicy();
         $editorPreview = new EditorPreviewService(
             new BbCodeRenderer(
@@ -333,6 +337,22 @@ final readonly class WebApplicationFactory
             new DatabaseFaqSupportBridgeRepository($database),
             $authorizer,
         );
+        $portfolio = new PortfolioService(
+            $database,
+            new DatabasePortfolioRepository($database),
+            $authorizer,
+            $contentManagerPipeline,
+            $searchChanges,
+        );
+        $profilePage = new ProfileViewHandler(
+            $users,
+            $profileService,
+            $accessPolicy,
+            $viewerResolver,
+            $basePath,
+            $musicService,
+            $portfolio,
+        );
         $searchService = new PermissionAwareSearchService(
             new ResilientSearchDriver(new NativeDatabaseSearchDriver($database)),
             $authorizer,
@@ -340,6 +360,7 @@ final readonly class WebApplicationFactory
                 new PublicSearchAccessScopeProvider(),
                 new ForumSearchAccessScopeProvider($nodes, $authorizer),
                 new FaqSearchAccessScopeProvider($authorizer),
+                new PortfolioSearchAccessScopeProvider($authorizer),
             ],
             new SavedSearchQueryRegistry(),
         );
@@ -441,6 +462,7 @@ final readonly class WebApplicationFactory
         $supportCsrf = $this->supportCsrfMiddleware($config);
         $bugCsrf = $this->bugCsrfMiddleware($config);
         $faqCsrf = $this->faqCsrfMiddleware($config);
+        $portfolioCsrf = $this->portfolioCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -670,6 +692,26 @@ final readonly class WebApplicationFactory
                 $authorizer,
                 new AttachmentDownloadResponseFactory(),
             ),
+        ));
+        $routes->add(new Route(
+            'portfolio.index',
+            [HttpMethod::Get],
+            new PathTemplate('/portfolio'),
+            new PortfolioIndexHandler($portfolio, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'portfolio.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/portfolio/manage'),
+            new PortfolioManageHandler($portfolio, $viewerResolver, $basePath),
+            [$portfolioCsrf],
+        ));
+        $routes->add(new Route(
+            'portfolio.project',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/portfolio/{projectId}', ['projectId'=>'[0-9a-f]{32}']),
+            new PortfolioProjectHandler($portfolio, $viewerResolver, $basePath),
+            [$portfolioCsrf],
         ));
         $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
         $routes->add(new Route(
@@ -942,6 +984,11 @@ final readonly class WebApplicationFactory
     private function faqCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'faq', 'forwext.csrf.faq.v1');
+    }
+
+    private function portfolioCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'portfolio', 'forwext.csrf.portfolio.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

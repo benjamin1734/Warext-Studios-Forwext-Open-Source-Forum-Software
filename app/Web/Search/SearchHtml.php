@@ -193,6 +193,10 @@ final class SearchHtml
             $href = ProfileHtml::escape($basePath->prepend('/faq/articles/' . rawurlencode($hit->documentId)));
             $heading = '<a href="' . $href . '">' . $title . '</a>';
         }
+        elseif ($hit->documentType === 'portfolio.item') {
+            $href = ProfileHtml::escape($basePath->prepend('/portfolio/' . rawurlencode($hit->documentId)));
+            $heading = '<a href="' . $href . '">' . $title . '</a>';
+        }
         return '<article class="search-hit"><div class="search-hit-type">' . $type . '</div><h3>'
             . $heading . '</h3><div class="muted search-hit-id">' . $id . '</div></article>';
     }

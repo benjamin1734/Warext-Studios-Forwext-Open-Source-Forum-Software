@@ -130,6 +130,11 @@ final readonly class CreatePortfolioSystem implements Migration
             . "VALUES ('general','Genel','Genel portfolyo projeleri.',10,1,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))",
         ));
 
+        $context->execute(new CompiledQuery(
+            'INSERT IGNORE INTO forwext_user_profile_tabs (user_id,tab_key,enabled,visibility,sort_order) '
+            . "SELECT user_id,'portfolio',1,'public',20 FROM forwext_users",
+        ));
+
         foreach (self::PERMISSIONS as $key => $description) {
             $context->execute(new CompiledQuery(
                 'INSERT INTO forwext_permissions(permission_key,value_type,description,created_at_utc,updated_at_utc) '
@@ -177,8 +182,13 @@ final readonly class CreatePortfolioSystem implements Migration
         $starter = (int) $context->fetchValue(new CompiledQuery(
             "SELECT COUNT(*) FROM forwext_portfolio_categories WHERE category_key='general'",
         ));
+        $profileTabs = (int) $context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM forwext_user_profile_tabs t INNER JOIN forwext_users u ON u.user_id=t.user_id "
+            . "WHERE t.tab_key='portfolio'",
+        ));
+        $users = (int) $context->fetchValue(new CompiledQuery('SELECT COUNT(*) FROM forwext_users'));
 
-        return $tables === 7 && $permissions === 6 && $rules === 30 && $starter === 1
+        return $tables === 7 && $permissions === 6 && $rules === 30 && $starter === 1 && $profileTabs === $users
             ? MigrationVerification::passed()
             : MigrationVerification::failed('Portfolio schema or permission defaults are incomplete.');
     }

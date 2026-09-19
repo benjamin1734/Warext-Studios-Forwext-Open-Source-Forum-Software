@@ -18,6 +18,7 @@ final class NavigationRegistry
         $registry->register(new NavigationItem('search', 'Ara', '/search', 100));
         $registry->register(new NavigationItem('members', 'Üyeler', '/members', 200));
         $registry->register(new NavigationItem('members.online', 'Çevrimiçi', '/members/online', 210));
+        $registry->register(new NavigationItem('portfolio', 'Portfolyo', '/portfolio', 230));
         $registry->register(new NavigationItem('faq', 'SSS', '/faq', 250));
         $registry->register(new NavigationItem(
             'bugs.mine',

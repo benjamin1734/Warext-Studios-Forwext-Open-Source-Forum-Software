@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Profile;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserRepository;
 use Forwext\Core\Domain\User\UserStatus;
@@ -13,6 +14,7 @@ use Forwext\Core\Domain\User\Username;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Portfolio\PortfolioService;
 use Forwext\Core\Profile\Music\ProfileMusicService;
 use Forwext\Core\Profile\Music\ProfileMusicSourceType;
 use Forwext\Core\Profile\ProfileAccessPolicy;
@@ -47,6 +49,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
         private ?ProfileMusicService $music = null,
+        private ?PortfolioService $portfolio = null,
     ) {
     }
 
@@ -86,7 +89,11 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $visibleTabs = $this->visibleSupportedTabs($profile, $viewerId);
         $tabNav = '';
         foreach ($visibleTabs as $tab) {
-            $label = $tab->key === 'overview' ? 'Genel Bakış' : 'Hakkımda';
+            $label = match ($tab->key) {
+                'overview' => 'Genel Bakış',
+                'portfolio' => 'Portfolyo',
+                default => 'Hakkımda',
+            };
             $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
         }
         $tabNav = $tabNav === ''
@@ -101,6 +108,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                     $viewerId,
                     $user->createdAt()->format('Y-m-d'),
                 );
+            } elseif ($tab->key === 'portfolio') {
+                $sections .= $this->portfolioSection($profile, $viewerId);
             } elseif ($tab->key === 'about') {
                 $sections .= $this->aboutSection($profile, $viewerId);
             }
@@ -145,7 +154,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $tabs = array_values(array_filter(
             $profile->tabs,
             fn (ProfileTab $tab): bool => $tab->enabled
-                && in_array($tab->key, ['overview', 'about'], true)
+                && in_array($tab->key, ['overview', 'portfolio', 'about'], true)
                 && $this->accessPolicy->canViewSection($profile, $tab->visibility, $viewerId),
         ));
         usort(
@@ -167,6 +176,37 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
 
         return '<section class="section" id="overview"><h2>Genel Bakış</h2>' . $content . '</section>';
+    }
+
+    private function portfolioSection(UserProfile $profile, ?EntityId $viewerId): string
+    {
+        if ($this->portfolio === null) {
+            return '';
+        }
+
+        try {
+            $projects = $this->portfolio->projects($viewerId, $profile->userId, false, 12);
+        } catch (PermissionDeniedException|InvalidArgumentException) {
+            return '';
+        }
+
+        $content = '';
+        foreach ($projects as $project) {
+            $href = $this->basePath->prepend('/portfolio/' . rawurlencode($project->projectId->value()));
+            $content .= '<article class="search-hit"><div class="search-hit-type">'
+                . ProfileHtml::escape($project->categoryKey)
+                . ($project->featured ? ' · Öne Çıkan' : '')
+                . '</div><h3><a href="' . ProfileHtml::escape($href) . '">'
+                . ProfileHtml::escape($project->title) . '</a></h3>'
+                . ($project->summary === '' ? '' : '<p>' . ProfileHtml::escape($project->summary) . '</p>')
+                . '</article>';
+        }
+
+        if ($content === '') {
+            $content = '<p class="muted">Henüz yayımlanmış portfolyo projesi yok.</p>';
+        }
+
+        return '<section class="section" id="portfolio"><h2>Portfolyo</h2>' . $content . '</section>';
     }
 
     private function aboutSection(UserProfile $profile, ?EntityId $viewerId): string

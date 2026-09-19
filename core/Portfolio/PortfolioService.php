@@ -100,10 +100,10 @@ final readonly class PortfolioService
             $now,
         );
 
-        $state = $staff && $candidate->state === PortfolioState::Published && !$context->requiresReview
-            ? PortfolioState::Published
-            : ($candidate->state === PortfolioState::Draft && $existing === null && !$context->requiresReview
-                ? PortfolioState::Draft
+        $state = $candidate->state === PortfolioState::Draft
+            ? PortfolioState::Draft
+            : ($staff && !$context->requiresReview
+                ? PortfolioState::Published
                 : PortfolioState::Pending);
 
         $project = new PortfolioProject(
@@ -203,6 +203,26 @@ final readonly class PortfolioService
     {
         $this->project($projectId, $actor);
         return $this->portfolio->reactionSummary($projectId);
+    }
+
+    public function canCreate(EntityId $actor): bool
+    {
+        return $this->allows($actor, 'portfolio.create');
+    }
+
+    public function canManageAll(EntityId $actor): bool
+    {
+        return $this->allows($actor, 'portfolio.manage_all');
+    }
+
+    public function canManageProject(EntityId $actor, PortfolioProject $project): bool
+    {
+        return $this->canManage($actor, $project);
+    }
+
+    public function decision(EntityId $actor, string $permission): \Forwext\Core\Domain\Access\Permission\PermissionDecision
+    {
+        return $this->authorizer->resolve($actor, PermissionKey::fromString($permission));
     }
 
     private function canManage(EntityId $actor, PortfolioProject $project): bool
