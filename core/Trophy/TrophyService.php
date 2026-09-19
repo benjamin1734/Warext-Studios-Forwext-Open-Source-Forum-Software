@@ -183,7 +183,7 @@ final readonly class TrophyService
         foreach($this->repository->definitions(true) as $definition){
             if($definition->ruleType===TrophyRuleType::Manual||$definition->threshold===null) continue;
             $existing=$this->repository->grantForUser($definition->trophyId,$userId);
-            if($existing!==null&&$existing->active()) continue;
+            if($existing!==null) continue;
             if($this->metrics->metric($userId,$definition->ruleType,$now)<$definition->threshold) continue;
             $this->grant($definition,$userId,'rule.'.$definition->ruleType->value,null,null,$now,null);
             ++$awarded;
@@ -229,7 +229,9 @@ final readonly class TrophyService
         );
 
         if($actor===null){
-            $this->repository->saveGrant($grant,$history);
+            $this->database->transaction(function()use($grant,$history):void{
+                $this->repository->saveGrant($grant,$history);
+            });
             return $grant;
         }
 

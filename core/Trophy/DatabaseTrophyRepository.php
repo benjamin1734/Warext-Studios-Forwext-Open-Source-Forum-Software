@@ -104,32 +104,30 @@ final readonly class DatabaseTrophyRepository implements TrophyRepository
 
     public function saveGrant(TrophyGrant $grant, TrophyHistoryEntry $history): void
     {
-        $this->database->transaction(function () use ($grant,$history): void {
-            $this->database->execute(new CompiledQuery(
-                'INSERT INTO forwext_user_trophies '
-                . '(grant_id,trophy_id,user_id,source,awarded_by_user_id,awarded_at_utc,revoked_by_user_id,revoked_at_utc,reason) '
-                . 'VALUES (:grant_id,:trophy_id,:user_id,:source,:awarded_by,:awarded_at,:revoked_by,:revoked_at,:reason) '
-                . 'ON DUPLICATE KEY UPDATE source=VALUES(source),awarded_by_user_id=VALUES(awarded_by_user_id),'
-                . 'awarded_at_utc=VALUES(awarded_at_utc),revoked_by_user_id=VALUES(revoked_by_user_id),'
-                . 'revoked_at_utc=VALUES(revoked_at_utc),reason=VALUES(reason)',
-                [
-                    'grant_id'=>$grant->grantId->value(),'trophy_id'=>$grant->trophyId->value(),'user_id'=>$grant->userId->value(),
-                    'source'=>$grant->source,'awarded_by'=>$grant->awardedByUserId?->value(),'awarded_at'=>self::format($grant->awardedAt),
-                    'revoked_by'=>$grant->revokedByUserId?->value(),'revoked_at'=>$grant->revokedAt===null?null:self::format($grant->revokedAt),
-                    'reason'=>$grant->reason,
-                ],
-            ));
-            $this->database->execute(new CompiledQuery(
-                'INSERT INTO forwext_trophy_history '
-                . '(grant_id,trophy_id,user_id,action,source,actor_user_id,reason,occurred_at_utc) '
-                . 'VALUES (:grant_id,:trophy_id,:user_id,:action,:source,:actor,:reason,:occurred)',
-                [
-                    'grant_id'=>$history->grantId->value(),'trophy_id'=>$history->trophyId->value(),'user_id'=>$history->userId->value(),
-                    'action'=>$history->action->value,'source'=>$history->source,'actor'=>$history->actorUserId?->value(),
-                    'reason'=>$history->reason,'occurred'=>self::format($history->occurredAt),
-                ],
-            ));
-        });
+        $this->database->execute(new CompiledQuery(
+            'INSERT INTO forwext_user_trophies '
+            . '(grant_id,trophy_id,user_id,source,awarded_by_user_id,awarded_at_utc,revoked_by_user_id,revoked_at_utc,reason) '
+            . 'VALUES (:grant_id,:trophy_id,:user_id,:source,:awarded_by,:awarded_at,:revoked_by,:revoked_at,:reason) '
+            . 'ON DUPLICATE KEY UPDATE source=VALUES(source),awarded_by_user_id=VALUES(awarded_by_user_id),'
+            . 'awarded_at_utc=VALUES(awarded_at_utc),revoked_by_user_id=VALUES(revoked_by_user_id),'
+            . 'revoked_at_utc=VALUES(revoked_at_utc),reason=VALUES(reason)',
+            [
+                'grant_id'=>$grant->grantId->value(),'trophy_id'=>$grant->trophyId->value(),'user_id'=>$grant->userId->value(),
+                'source'=>$grant->source,'awarded_by'=>$grant->awardedByUserId?->value(),'awarded_at'=>self::format($grant->awardedAt),
+                'revoked_by'=>$grant->revokedByUserId?->value(),'revoked_at'=>$grant->revokedAt===null?null:self::format($grant->revokedAt),
+                'reason'=>$grant->reason,
+            ],
+        ));
+        $this->database->execute(new CompiledQuery(
+            'INSERT INTO forwext_trophy_history '
+            . '(grant_id,trophy_id,user_id,action,source,actor_user_id,reason,occurred_at_utc) '
+            . 'VALUES (:grant_id,:trophy_id,:user_id,:action,:source,:actor,:reason,:occurred)',
+            [
+                'grant_id'=>$history->grantId->value(),'trophy_id'=>$history->trophyId->value(),'user_id'=>$history->userId->value(),
+                'action'=>$history->action->value,'source'=>$history->source,'actor'=>$history->actorUserId?->value(),
+                'reason'=>$history->reason,'occurred'=>self::format($history->occurredAt),
+            ],
+        ));
     }
 
     public function evaluationCursor(): ?EntityId
