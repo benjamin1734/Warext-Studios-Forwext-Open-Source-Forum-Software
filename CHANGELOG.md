@@ -6,6 +6,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 12.05 — User Content Manager
+
+- Added a permission-gated user content inventory across forum threads and posts with user/type/forum/state/deleted/text filters.
+- Added dry-run previews and immutable frozen target sets before queued execution.
+- Added bounded bulk delete, restore, move, approve, reindex and reprocess actions with a 5,000-target safety boundary.
+- Reused existing moderation persistence/audit behavior for state-changing operations and native search lifecycle changes for discoverability updates.
+- Added `ContentPipeline::preprocess()` for side-effect-free reprocessing through the canonical pre-persist stages.
+- Added durable operation/item progress, SKIP LOCKED processing claims, stale-work recovery and the `content.manager.execute` queue job.
+- Added native CSRF-protected content-manager and operation-progress surfaces, including a bounded cPanel-safe manual processing fallback.
+- Activated backend-authoritative `content_manager.access` / `content_manager.execute` defaults for moderator and administrator templates and re-check execute permission at worker time.
+- Added additive migration `20260919090000_content_manager_system`, architecture documentation and regression coverage.
+- Hardened UTF-8-safe content excerpt truncation.
+
 ### 12.04 — Turkish Spellcheck and Dictionaries
 
 - Replaced the spellcheck placeholder with a provider-neutral advisory spelling-assistance service and pipeline processor.

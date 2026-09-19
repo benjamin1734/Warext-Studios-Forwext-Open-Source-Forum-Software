@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.10-dev
+CURRENT_VERSION = 0.0.7.11-dev
 LAST_COMPLETED_MAIN_STEP = 11
-LAST_COMPLETED_SUBSTEP = 12.04
-CURRENT_STEP = 12.05
-LAST_COMMIT = 9bf96503232a1a8e066c1bb38dc3ddfc3a4558cf
+LAST_COMPLETED_SUBSTEP = 12.05
+CURRENT_STEP = 12.06
+LAST_COMMIT = 2c5607f6e7e02366293cc13d63862155a0bce5d8
 BLOCKERS = none
-NEXT_STEP = 12.05 - Kullanıcı içerik yöneticisi
+NEXT_STEP = 12.06 - Konu güncellik politikaları
 ```
 
 ## Current position
@@ -21,13 +21,36 @@ NEXT_STEP = 12.05 - Kullanıcı içerik yöneticisi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`; main step `12` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.04`.
-- Current sub-step: `12.05 — Kullanıcı içerik yöneticisi`.
-- Remaining roadmap work after 12.04: **60 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.05`.
+- Current sub-step: `12.06 — Konu güncellik politikaları`.
+- Remaining roadmap work after 12.05: **59 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 12.05
+
+- Added a permission-gated user content inventory across forum threads and posts with user, content-type, forum, moderation-state, soft-delete and bounded text filters.
+- Added dry-run previews with thread/post target counts before any mutation is created.
+- Added immutable frozen target sets so later content creation or filter changes cannot expand a queued bulk operation.
+- Added bounded bulk `delete`, `restore`, `move`, `approve`, `reindex` and `reprocess` actions with a 5,000-target safety limit.
+- Reused existing moderation persistence/audit behavior for delete, restore, move and approve instead of adding parallel mutation rules.
+- Added search lifecycle synchronization after mutations; thread changes also enqueue related posts so inherited visibility/forum scope remains consistent.
+- Added `ContentPipeline::preprocess()` so reprocess runs validation, spam, spellcheck, AI-moderation and moderation-policy stages without persistence, notification or direct indexing side effects.
+- Added durable operation/item progress with queued/running/completed/partial/failed operation states and pending/processing/succeeded/skipped/failed target states.
+- Added `FOR UPDATE SKIP LOCKED` bounded claims and stale processing recovery for interrupted workers.
+- Added `content.manager.execute` queue jobs plus a native bounded manual-processing fallback suitable for cPanel environments without a long-running worker.
+- Added backend-authoritative `content_manager.access` and `content_manager.execute` defaults for moderator/administrator templates, including permission re-check immediately before queued execution.
+- Added actor-bound operation detail access, preventing an operation id from becoming an authorization token.
+- Added native CSRF-protected `/content-manager` and `/content-manager/operations/{operationId}` management/progress surfaces.
+- Added additive idempotent migration `20260919090000_content_manager_system`.
+- Added architecture and regression coverage for dry-run/frozen-target semantics, execute permission enforcement, move validation and pipeline preprocessing.
+- Hardened UTF-8 excerpt truncation so list rendering cannot split a multibyte character.
+- Feature commit: `2ecdc03e3cf089499ad9d719ab7bddd0c6965853`; hardening/completion commit: `2c5607f6e7e02366293cc13d63862155a0bce5d8`.
+- GitHub Actions build run `35430548522`: success; strict-types, lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel FULL build passed.
+- Database migration smoke run `35430548524`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Next: `12.06 — Konu güncellik politikaları`.
 
 ## Completed in 12.04
 
