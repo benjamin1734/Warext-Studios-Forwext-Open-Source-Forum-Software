@@ -1,0 +1,309 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Forwext\Tests\Unit\Core\Marketplace;
+
+use Closure;
+use DateTimeImmutable;
+use DateTimeZone;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Database\CompiledQuery;
+use Forwext\Core\Database\TransactionalQueryExecutor;
+use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
+use Forwext\Core\Domain\Access\Permission\PermissionDefinition;
+use Forwext\Core\Domain\Access\Permission\PermissionEffect;
+use Forwext\Core\Domain\Access\Permission\PermissionEngine;
+use Forwext\Core\Domain\Access\Permission\PermissionKey;
+use Forwext\Core\Domain\Access\Permission\PermissionRule;
+use Forwext\Core\Domain\Access\Permission\PermissionRuleRepository;
+use Forwext\Core\Domain\Access\Permission\PermissionSubjectType;
+use Forwext\Core\Domain\Access\Permission\PermissionValueType;
+use Forwext\Core\Domain\Access\UserAccessAssignment;
+use Forwext\Core\Domain\Access\UserAccessAssignmentProvider;
+use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Marketplace\MarketplaceCategory;
+use Forwext\Core\Marketplace\MarketplaceCustomFieldDefinition;
+use Forwext\Core\Marketplace\MarketplaceCustomFieldType;
+use Forwext\Core\Marketplace\MarketplaceListing;
+use Forwext\Core\Marketplace\MarketplaceListingState;
+use Forwext\Core\Marketplace\MarketplaceMedia;
+use Forwext\Core\Marketplace\MarketplaceMoney;
+use Forwext\Core\Marketplace\MarketplaceRepository;
+use Forwext\Core\Marketplace\MarketplaceService;
+use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
+
+final class MarketplaceDomainTest extends TestCase
+{
+    public function testMoneyAndMediaRejectUnsafeValues():void
+    {
+        try{
+            new MarketplaceMoney(-1,'TRY');
+            self::fail('Negative price must be rejected.');
+        }catch(InvalidArgumentException){}
+
+        try{
+            new MarketplaceMoney(100,'try');
+            self::fail('Currency must use the canonical uppercase representation.');
+        }catch(InvalidArgumentException){}
+
+        $listingId=EntityId::fromString(str_repeat('a',32));
+        $this->expectException(InvalidArgumentException::class);
+        new MarketplaceListing(
+            $listingId,UserId::generate(),EntityId::fromString(str_repeat('b',32)),
+            'safe-listing','Safe listing','Description',new MarketplaceMoney(12500,'TRY'),[],
+            [new MarketplaceMedia(
+                EntityId::fromString(str_repeat('c',32)),
+                'marketplace/'.str_repeat('d',32).'/'.str_repeat('e',64).'.webp',
+                'image/webp','',0
+            )],
+            [],MarketplaceListingState::Draft,$this->at('2026-09-19 19:00:00'),$this->at('2026-09-19 19:00:00')
+        );
+    }
+
+    public function testCategoryCycleIsRejectedBeforePersistence():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $manager=UserId::generate();
+        $a=$this->category(str_repeat('1',32),null,'a','a-category');
+        $b=$this->category(str_repeat('2',32),$a->categoryId,'b','b-category');
+        $repo->saveCategory($a);
+        $repo->saveCategory($b);
+
+        $service=$this->service($repo,[
+            $manager->value()=>['marketplace.category.manage'=>true],
+        ]);
+
+        $cycle=new MarketplaceCategory(
+            $a->categoryId,$b->categoryId,'a','a-category','A','',true,10,$a->createdAt,$this->at('2026-09-19 19:05:00')
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $service->saveCategory($manager,$cycle,$this->at('2026-09-19 19:05:00'));
+    }
+
+    public function testRequiredTypedCustomFieldAndListingLifecycleAreBackendAuthoritative():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $seller=UserId::generate();
+        $staff=UserId::generate();
+        $category=$this->category(str_repeat('3',32),null,'games','games');
+        $repo->saveCategory($category);
+        $field=new MarketplaceCustomFieldDefinition(
+            EntityId::fromString(str_repeat('4',32)),$category->categoryId,'condition','Durum',
+            MarketplaceCustomFieldType::Select,true,['new','used'],10,true
+        );
+        $repo->saveCustomField($field);
+
+        $service=$this->service($repo,[
+            $seller->value()=>[
+                'marketplace.listing.view'=>true,
+                'marketplace.listing.create'=>true,
+                'marketplace.listing.manage_own'=>true,
+                'marketplace.listing.manage_all'=>false,
+            ],
+            $staff->value()=>[
+                'marketplace.listing.view'=>true,
+                'marketplace.listing.manage_all'=>true,
+            ],
+        ]);
+
+        $id=MarketplaceListing::generateId();
+        $missing=$this->listing($id,$seller,$category->categoryId,[]);
+        try{
+            $service->saveListing($seller,$missing);
+            self::fail('Required marketplace custom field must be enforced.');
+        }catch(InvalidArgumentException){}
+
+        $draft=$this->listing($id,$seller,$category->categoryId,['condition'=>'used']);
+        $saved=$service->saveListing($seller,$draft);
+        self::assertSame(MarketplaceListingState::Draft,$saved->state);
+
+        $pending=$service->submit($seller,$id,$this->at('2026-09-19 19:10:00'));
+        self::assertSame(MarketplaceListingState::Pending,$pending->state);
+
+        try{
+            $service->approve($seller,$id,$this->at('2026-09-19 19:11:00'));
+            self::fail('Seller cannot approve own marketplace listing.');
+        }catch(PermissionDeniedException){}
+
+        $active=$service->approve($staff,$id,$this->at('2026-09-19 19:12:00'));
+        self::assertSame(MarketplaceListingState::Active,$active->state);
+        self::assertTrue($active->state->publicVisible());
+        self::assertSame(['condition'=>'used'],$active->customValues);
+    }
+
+    public function testSellerIdentityAndDirectStateEditsAreImmutable():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $seller=UserId::generate();
+        $other=UserId::generate();
+        $category=$this->category(str_repeat('5',32),null,'services','services');
+        $repo->saveCategory($category);
+        $service=$this->service($repo,[
+            $seller->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+            ],
+        ]);
+        $id=MarketplaceListing::generateId();
+        $draft=$this->listing($id,$seller,$category->categoryId,[]);
+        $service->saveListing($seller,$draft);
+
+        $changedSeller=$this->listing($id,$other,$category->categoryId,[]);
+        try{
+            $service->saveListing($seller,$changedSeller);
+            self::fail('Marketplace seller identity must be immutable.');
+        }catch(InvalidArgumentException){}
+
+        $directState=new MarketplaceListing(
+            $draft->listingId,$draft->sellerUserId,$draft->categoryId,$draft->slug,$draft->title,$draft->description,
+            $draft->price,$draft->tags,$draft->media,$draft->customValues,MarketplaceListingState::Active,
+            $draft->createdAt,$this->at('2026-09-19 19:20:00')
+        );
+        $this->expectException(InvalidArgumentException::class);
+        $service->saveListing($seller,$directState);
+    }
+
+    private function category(string $id,?EntityId $parent,string $key,string $slug):MarketplaceCategory
+    {
+        $at=$this->at('2026-09-19 18:00:00');
+        return new MarketplaceCategory(
+            EntityId::fromString($id),$parent,$key,$slug,strtoupper($key),'',true,10,$at,$at
+        );
+    }
+
+    /** @param array<string,string|int|bool> $custom */
+    private function listing(EntityId $id,EntityId $seller,EntityId $category,array $custom):MarketplaceListing
+    {
+        $at=$this->at('2026-09-19 19:00:00');
+        return new MarketplaceListing(
+            $id,$seller,$category,'listing-'.$id->value(),'Marketplace item','A marketplace listing description.',
+            new MarketplaceMoney(250000,'TRY'),['digital'],[],$custom,MarketplaceListingState::Draft,$at,$at
+        );
+    }
+
+    /** @param array<string,array<string,bool>> $permissions */
+    private function service(MemoryMarketplaceRepository $repo,array $permissions):MarketplaceService
+    {
+        return new MarketplaceService(
+            new MarketplaceTestDatabase(),$repo,
+            new PermissionAuthorizer(
+                new PermissionEngine(new MarketplacePermissionRules($permissions)),
+                new MarketplaceAssignments(array_keys($permissions))
+            ),
+            new MarketplaceAudit()
+        );
+    }
+
+    private function at(string $value):DateTimeImmutable
+    {
+        return new DateTimeImmutable($value,new DateTimeZone('UTC'));
+    }
+}
+
+final class MemoryMarketplaceRepository implements MarketplaceRepository
+{
+    /** @var array<string,MarketplaceCategory> */
+    private array $categories=[];
+    /** @var array<string,MarketplaceCustomFieldDefinition> */
+    private array $fields=[];
+    /** @var array<string,MarketplaceListing> */
+    private array $listings=[];
+    /** @var list<array{listing:string,action:string,from:?string,to:?string}> */
+    public array $history=[];
+
+    public function categories(bool $enabledOnly=true):array
+    {
+        return array_values(array_filter(
+            $this->categories,static fn(MarketplaceCategory $c):bool=>!$enabledOnly||$c->enabled
+        ));
+    }
+    public function category(EntityId $categoryId):?MarketplaceCategory{return $this->categories[$categoryId->value()]??null;}
+    public function saveCategory(MarketplaceCategory $category):void{$this->categories[$category->categoryId->value()]=$category;}
+    public function customFields(EntityId $categoryId,bool $activeOnly=true):array
+    {
+        return array_values(array_filter(
+            $this->fields,
+            static fn(MarketplaceCustomFieldDefinition $f):bool=>
+                $f->categoryId->equals($categoryId)&&(!$activeOnly||$f->active)
+        ));
+    }
+    public function customField(EntityId $fieldId):?MarketplaceCustomFieldDefinition{return $this->fields[$fieldId->value()]??null;}
+    public function saveCustomField(MarketplaceCustomFieldDefinition $field):void{$this->fields[$field->fieldId->value()]=$field;}
+    public function listing(EntityId $listingId):?MarketplaceListing{return $this->listings[$listingId->value()]??null;}
+    public function sellerListings(EntityId $sellerUserId,bool $publicOnly=false,int $limit=100):array
+    {
+        $items=array_values(array_filter(
+            $this->listings,
+            static fn(MarketplaceListing $l):bool=>$l->sellerUserId->equals($sellerUserId)&&(!$publicOnly||$l->state->publicVisible())
+        ));
+        return array_slice($items,0,$limit);
+    }
+    public function saveListing(MarketplaceListing $listing):void{$this->listings[$listing->listingId->value()]=$listing;}
+    public function recordHistory(EntityId $listingId,EntityId $actor,string $action,?string $fromState,?string $toState):void
+    {
+        $this->history[]=['listing'=>$listingId->value(),'action'=>$action,'from'=>$fromState,'to'=>$toState];
+    }
+}
+
+final class MarketplacePermissionRules implements PermissionRuleRepository
+{
+    /** @param array<string,array<string,bool>> $permissions */
+    public function __construct(private array $permissions){}
+    public function definition(PermissionKey $key):?PermissionDefinition
+    {
+        return new PermissionDefinition($key,PermissionValueType::Flag);
+    }
+    public function rules(PermissionKey $key,UserAccessAssignment $assignment,?EntityId $nodeId):array
+    {
+        $allowed=$this->permissions[$assignment->userId()->value()][$key->value()]??false;
+        return [new PermissionRule(
+            PermissionSubjectType::User,$assignment->userId(),
+            $allowed?PermissionEffect::Allow:PermissionEffect::Deny
+        )];
+    }
+}
+
+final class MarketplaceAssignments implements UserAccessAssignmentProvider
+{
+    /** @var array<string,true> */
+    private array $ids;
+    /** @param list<string> $ids */
+    public function __construct(array $ids){$this->ids=array_fill_keys($ids,true);}
+    public function find(EntityId $userId):?UserAccessAssignment
+    {
+        return isset($this->ids[$userId->value()])
+            ?new UserAccessAssignment($userId,EntityId::fromString(str_repeat('f',32)))
+            :null;
+    }
+}
+
+final class MarketplaceAudit implements AuditRecorder
+{
+    /** @var list<AuditEvent> */
+    public array $events=[];
+    public function append(AuditEvent $event):void{$this->events[]=$event;}
+    public function mutate(AuditEvent $event,callable $mutation):mixed
+    {
+        $result=$mutation();$this->events[]=$event;return $result;
+    }
+}
+
+final class MarketplaceTestDatabase implements TransactionalQueryExecutor
+{
+    private int $depth=0;
+    public function execute(CompiledQuery $query):int{return 1;}
+    public function fetchOne(CompiledQuery $query):?array{return null;}
+    public function fetchAll(CompiledQuery $query):array{return [];}
+    public function fetchValue(CompiledQuery $query):mixed{return null;}
+    public function inTransaction():bool{return $this->depth>0;}
+    public function transaction(Closure $callback):mixed
+    {
+        ++$this->depth;
+        try{return $callback($this);}finally{--$this->depth;}
+    }
+}
