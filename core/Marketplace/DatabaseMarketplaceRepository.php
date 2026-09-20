@@ -255,6 +255,28 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
         return array_map($this->hydrateListing(...),$rows);
     }
 
+    public function manageListings(?EntityId $sellerUserId=null,?MarketplaceListingState $state=null,int $limit=100):array
+    {
+        if($limit<1||$limit>200)throw new InvalidArgumentException('Marketplace management listing limit is invalid.');
+        $parts=[];$params=[];
+        if($sellerUserId!==null){
+            UserId::assert($sellerUserId);
+            $parts[]='seller_user_id=:seller';
+            $params['seller']=$sellerUserId->value();
+        }
+        if($state!==null){
+            $parts[]='state=:state';
+            $params['state']=$state->value;
+        }
+        $where=$parts===[]?'':' WHERE '.implode(' AND ',$parts);
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_listings'.$where
+            .' ORDER BY updated_at_utc DESC,listing_id DESC LIMIT '.$limit,
+            $params
+        ));
+        return array_map($this->hydrateListing(...),$rows);
+    }
+
     public function saveListing(MarketplaceListing $listing):void
     {
         $persist=function()use($listing):void{

@@ -143,6 +143,67 @@ final readonly class MarketplaceService
         return $after;
     }
 
+    public function category(EntityId $categoryId,?EntityId $actor=null):MarketplaceCategory
+    {
+        if($actor!==null)$this->require($actor,'marketplace.listing.view');
+        $category=$this->repository->category($categoryId)
+            ?? throw new InvalidArgumentException('Marketplace category was not found.');
+        if(!$category->enabled&&($actor===null||!$this->allows($actor,'marketplace.category.manage'))){
+            throw new InvalidArgumentException('Marketplace category is unavailable.');
+        }
+        return $category;
+    }
+
+    /** @return list<MarketplaceCustomFieldDefinition> */
+    public function customFieldsForCategory(EntityId $categoryId,?EntityId $actor=null):array
+    {
+        $this->category($categoryId,$actor);
+        return $this->repository->customFields($categoryId,true);
+    }
+
+    /** @return list<MarketplaceListing> */
+    public function manageableListings(EntityId $actor,?MarketplaceListingState $state=null,int $limit=100):array
+    {
+        if($this->allows($actor,'marketplace.listing.manage_all')){
+            return $this->repository->manageListings(null,$state,$limit);
+        }
+        $this->require($actor,'marketplace.listing.manage_own');
+        return $this->repository->manageListings($actor,$state,$limit);
+    }
+
+    public function managementListing(EntityId $actor,EntityId $listingId):MarketplaceListing
+    {
+        $listing=$this->repository->listing($listingId)
+            ?? throw new InvalidArgumentException('Marketplace listing was not found.');
+        if(!$this->canManage($actor,$listing))$this->require($actor,'marketplace.listing.manage_all');
+        return $listing;
+    }
+
+    /** @return list<MarketplaceReview> */
+    public function managementReviews(EntityId $actor,EntityId $listingId,int $limit=100):array
+    {
+        $this->require($actor,'marketplace.review.manage');
+        $this->repository->listing($listingId)
+            ?? throw new InvalidArgumentException('Marketplace listing was not found.');
+        return $this->repository->reviews($listingId,false,$limit,0);
+    }
+
+    public function ownReview(EntityId $actor,EntityId $listingId):?MarketplaceReview
+    {
+        $this->listing($listingId,$actor);
+        return $this->repository->reviewForUser($listingId,$actor);
+    }
+
+    public function canCreate(EntityId $actor):bool{return $this->allows($actor,'marketplace.listing.create');}
+    public function canManageListing(EntityId $actor,MarketplaceListing $listing):bool{return $this->canManage($actor,$listing);}
+    public function canManageAll(EntityId $actor):bool{return $this->allows($actor,'marketplace.listing.manage_all');}
+    public function canReview(EntityId $actor,MarketplaceListing $listing):bool
+    {
+        return !$listing->sellerUserId->equals($actor)&&$this->allows($actor,'marketplace.review.create');
+    }
+    public function canFeature(EntityId $actor):bool{return $this->allows($actor,'marketplace.feature.manage');}
+    public function canModerateReviews(EntityId $actor):bool{return $this->allows($actor,'marketplace.review.manage');}
+
     /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
     public function managementSnapshot(EntityId $actor):array
     {

@@ -35,6 +35,8 @@ interface MarketplaceRepository
     public function saveReview(MarketplaceReview $review):void;
     /** @return list<MarketplaceListing> */
     public function sellerListings(EntityId $sellerUserId,bool $publicOnly=false,int $limit=100):array;
+    /** @return list<MarketplaceListing> */
+    public function manageListings(?EntityId $sellerUserId=null,?MarketplaceListingState $state=null,int $limit=100):array;
     public function saveListing(MarketplaceListing $listing):void;
     public function recordHistory(EntityId $listingId,EntityId $actor,string $action,?string $fromState,?string $toState):void;
 }

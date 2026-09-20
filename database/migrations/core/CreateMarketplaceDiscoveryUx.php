@@ -42,9 +42,15 @@ final readonly class CreateMarketplaceDiscoveryUx implements Migration
             . 'CONSTRAINT fk_forwext_market_review_user FOREIGN KEY(reviewer_user_id) REFERENCES forwext_users(user_id) ON DELETE CASCADE'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         ));
-        $context->execute(new CompiledQuery(
-            'CREATE INDEX idx_forwext_market_listing_price ON forwext_marketplace_listings(state,currency,price_minor,updated_at_utc)'
+        $priceIndex=(int)$context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() "
+            . "AND TABLE_NAME='forwext_marketplace_listings' AND INDEX_NAME='idx_forwext_market_listing_price'"
         ));
+        if($priceIndex===0){
+            $context->execute(new CompiledQuery(
+                'CREATE INDEX idx_forwext_market_listing_price ON forwext_marketplace_listings(state,currency,price_minor,updated_at_utc)'
+            ));
+        }
 
         $permissions=[
             'marketplace.feature.manage'=>'Manage featured and pinned marketplace placement.',
@@ -78,6 +84,15 @@ final readonly class CreateMarketplaceDiscoveryUx implements Migration
         $context->execute(new CompiledQuery(
             "INSERT IGNORE INTO forwext_user_profile_tabs(user_id,tab_key,enabled,visibility,sort_order) "
             . "SELECT user_id,'marketplace',1,'public',28 FROM forwext_user_profiles"
+        ));
+    }
+
+        $context->execute(new CompiledQuery(
+            "INSERT INTO forwext_search_index_changes(document_type,document_id,revision,attempts,available_at_utc,locked_until_utc,last_error_code,updated_at_utc) "
+            . "SELECT 'marketplace.listing',listing_id,1,0,UTC_TIMESTAMP(6),NULL,NULL,UTC_TIMESTAMP(6) "
+            . "FROM forwext_marketplace_listings WHERE state IN ('active','sold') "
+            . "ON DUPLICATE KEY UPDATE revision=revision+1,attempts=0,available_at_utc=UTC_TIMESTAMP(6),"
+            . "locked_until_utc=NULL,last_error_code=NULL,updated_at_utc=UTC_TIMESTAMP(6)"
         ));
     }
 
