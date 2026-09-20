@@ -95,7 +95,13 @@ final readonly class MarketplaceMediaService
             if($changed!==1)throw new InvalidArgumentException('Marketplace media was not found.');
             $this->repository->recordHistory($listing->listingId,$actor,'media.delete',$listing->state->value,$listing->state->value);
         });
-        try{$this->storage->delete($path,StorageVisibility::Private);}catch(Throwable){}
+        $remaining=(int)$this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_marketplace_listing_media WHERE storage_path=:path',
+            ['path'=>$path->value()]
+        ));
+        if($remaining===0){
+            try{$this->storage->delete($path,StorageVisibility::Private);}catch(Throwable){}
+        }
     }
 
     public function download(EntityId $mediaId,?EntityId $actor):MarketplaceMediaDownload
