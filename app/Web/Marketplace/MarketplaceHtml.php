@@ -119,11 +119,9 @@ final class MarketplaceHtml
     /** @param list<MarketplaceListingCard> $cards */
     public static function seller(string $username,array $cards,int $page,int $total,BasePath $basePath,bool $authenticated):string
     {
-        $count=0;$sum=0;foreach($cards as $c){$count+=$c->reviewCount;$sum+=$c->ratingTotal;}
-        $rating=$count===0?null:$sum/$count;
         $body='<section class="card"><h1>'.self::e($username).' · Marketplace</h1><p class="muted">'
             .'<a href="'.self::e(ProfileHtml::memberPath($basePath,$username)).'">Forum profiline git</a> · '
-            .$total.' herkese açık ilan · '.self::e(self::rating($rating,$count)).'</p></section>'
+            .$total.' herkese açık ilan</p></section>'
             .'<section class="section">'.self::cards($cards,$basePath,'grid')
             .self::sellerPagination($basePath,$username,$page,$total).'</section>';
         return ProfileHtml::page($username.' Marketplace',$body,$basePath,authenticated:$authenticated);
