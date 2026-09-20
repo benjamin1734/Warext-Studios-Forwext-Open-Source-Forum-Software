@@ -50,17 +50,13 @@ final readonly class MarketplaceMediaService
         ));
         if($count>=20)throw new AttachmentOperationException('Marketplace media limit has been reached.');
 
-        $storagePath=sprintf('marketplace/%s/%s.%s',$listingId->value(),$inspection->sha256,$inspection->extension);
-        $duplicate=(int)$this->database->fetchValue(new CompiledQuery(
-            'SELECT COUNT(*) FROM forwext_marketplace_listing_media WHERE listing_id=:listing AND storage_path=:path',
-            ['listing'=>$listingId->value(),'path'=>$storagePath]
-        ));
-        if($duplicate>0)throw new AttachmentOperationException('This image is already attached to the marketplace listing.');
-
+        $mediaId=MarketplaceMedia::generateId();
+        $objectDigest=hash('sha256',$inspection->contents.'|'.$mediaId->value());
+        $storagePath=sprintf('marketplace/%s/%s.%s',$listingId->value(),$objectDigest,$inspection->extension);
         $path=StoragePath::fromString($storagePath);
         $this->storage->put($path,$inspection->contents,StorageVisibility::Private,$inspection->mediaType);
         $media=new MarketplaceMedia(
-            MarketplaceMedia::generateId(),$storagePath,$inspection->mediaType,trim($alt),min(1000,($count+1)*10)
+            $mediaId,$storagePath,$inspection->mediaType,trim($alt),min(1000,($count+1)*10)
         );
 
         try{
@@ -119,7 +115,9 @@ final readonly class MarketplaceMediaService
             throw new InvalidArgumentException('Marketplace media record is invalid.');
         }
         $contents=$this->storage->read(StoragePath::fromString($pathValue),StorageVisibility::Private);
-        if(!hash_equals($match[1],hash('sha256',$contents))){
+        $scopedDigest=hash('sha256',$contents.'|'.$mediaId->value());
+        $legacyDigest=hash('sha256',$contents);
+        if(!hash_equals($match[1],$scopedDigest)&&!hash_equals($match[1],$legacyDigest)){
             throw new AttachmentOperationException('Marketplace media integrity verification failed.');
         }
         return new MarketplaceMediaDownload($contents,$type,'marketplace-'.$mediaId->value().'.'.$match[2]);

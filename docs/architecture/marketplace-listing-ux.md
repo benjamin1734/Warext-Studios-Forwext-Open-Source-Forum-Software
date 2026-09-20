@@ -84,9 +84,9 @@ Uploads:
 - accept JPEG, PNG and WebP only;
 - use sanitized inspected contents;
 - are limited by the existing upload-size policy and 20-media listing limit;
-- reject duplicate content on the same listing to avoid two database rows sharing one content-addressed object.
+- derive each private object digest from the sanitized bytes plus the random media id, so concurrent duplicate uploads cannot share one deletable storage object.
 
-Public image URLs are controlled `/marketplace/media/{mediaId}` application routes rather than raw storage paths. The download service rechecks listing visibility/management access and verifies the stored bytes against the SHA-256 encoded in the storage path before returning content with `nosniff`.
+Public image URLs are controlled `/marketplace/media/{mediaId}` application routes rather than raw storage paths. The download service rechecks listing visibility/management access and verifies the stored bytes and media id against the SHA-256 binding encoded in the storage path before returning content with `nosniff`; the direct-content digest is accepted only as a compatibility path for the earliest 14.02 development records.
 
 Private listing media is therefore not made public merely by knowing a storage path.
 
