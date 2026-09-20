@@ -32,12 +32,20 @@ final readonly class MarketplaceSellerHandler implements RequestHandlerInterface
         $user=$this->users->findByUsername($username);
         if($user===null||$user->status()!==UserStatus::Active)return Response::text('Not Found',404);
         $actor=$this->viewers->resolve($request);
+        $rawPage=$request->query()['page']??null;
+        $page=1;
+        if($rawPage!==null){
+            if(!is_string($rawPage)||preg_match('/^[1-9][0-9]{0,3}$/D',$rawPage)!==1||(int)$rawPage>1000){
+                return Response::text('Bad Request',400)->withHeader('X-Robots-Tag','noindex, nofollow');
+            }
+            $page=(int)$rawPage;
+        }
         try{
             $query=new MarketplaceListingQuery(sellerUserId:$user->id(),sort:MarketplaceListingSort::Featured);
-            $cards=$this->marketplace->browse($actor,$query,48,0);
+            $cards=$this->marketplace->browse($actor,$query,24,($page-1)*24);
             $total=$this->marketplace->browseCount($actor,$query);
             return Response::html(MarketplaceHtml::seller(
-                $user->username()->display(),$cards,1,$total,$this->basePath,$actor!==null
+                $user->username()->display(),$cards,$page,$total,$this->basePath,$actor!==null
             ));
         }catch(\Forwext\Core\Domain\Access\Permission\PermissionDeniedException){
             return Response::text('Forbidden',403);

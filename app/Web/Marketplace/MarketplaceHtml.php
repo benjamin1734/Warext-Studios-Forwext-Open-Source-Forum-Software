@@ -124,7 +124,8 @@ final class MarketplaceHtml
         $body='<section class="card"><h1>'.self::e($username).' · Marketplace</h1><p class="muted">'
             .'<a href="'.self::e(ProfileHtml::memberPath($basePath,$username)).'">Forum profiline git</a> · '
             .$total.' herkese açık ilan · '.self::e(self::rating($rating,$count)).'</p></section>'
-            .'<section class="section">'.self::cards($cards,$basePath,'grid').'</section>';
+            .'<section class="section">'.self::cards($cards,$basePath,'grid')
+            .self::sellerPagination($basePath,$username,$page,$total).'</section>';
         return ProfileHtml::page($username.' Marketplace',$body,$basePath,authenticated:$authenticated);
     }
 
@@ -272,6 +273,18 @@ final class MarketplaceHtml
             $links.='<a'.($p===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$p.'</a>';
         }
         return '<nav class="pagination" aria-label="Marketplace sayfaları">'.$links.'</nav>';
+    }
+
+    private static function sellerPagination(BasePath $basePath,string $username,int $page,int $total):string
+    {
+        $last=max(1,(int)ceil($total/24));
+        if($last<=1)return '';
+        $links='';
+        foreach(array_unique(array_filter([$page-1,$page,$page+1],static fn(int $p):bool=>$p>=1&&$p<=$last)) as $target){
+            $href=$basePath->prepend('/marketplace/sellers/'.rawurlencode($username)).'?page='.$target;
+            $links.='<a'.($target===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$target.'</a>';
+        }
+        return '<nav class="pagination" aria-label="Satıcı ilan sayfaları">'.$links.'</nav>';
     }
 
     /** @param list<MarketplaceCategory> $categories */
