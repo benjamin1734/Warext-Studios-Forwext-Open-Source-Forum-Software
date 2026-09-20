@@ -98,6 +98,150 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
         return $row===null?null:$this->hydrateListing($row);
     }
 
+    public function browse(MarketplaceListingQuery $query,int $limit=24,int $offset=0):array
+    {
+        self::page($limit,$offset);
+        [$where,$params]=$this->browseWhere($query);
+        $order=match($query->sort){
+            MarketplaceListingSort::Newest=>'l.updated_at_utc DESC,l.listing_id DESC',
+            MarketplaceListingSort::PriceAsc=>'l.price_minor ASC,l.updated_at_utc DESC,l.listing_id DESC',
+            MarketplaceListingSort::PriceDesc=>'l.price_minor DESC,l.updated_at_utc DESC,l.listing_id DESC',
+            MarketplaceListingSort::Rating=>'COALESCE(rv.average_rating,0) DESC,COALESCE(rv.review_count,0) DESC,l.updated_at_utc DESC,l.listing_id DESC',
+            MarketplaceListingSort::Featured=>'IF(p.pinned_until_utc>UTC_TIMESTAMP(6),1,0) DESC,IF(p.featured_until_utc>UTC_TIMESTAMP(6),1,0) DESC,l.updated_at_utc DESC,l.listing_id DESC',
+        };
+        if($query->sort!==MarketplaceListingSort::Featured){
+            $order='IF(p.pinned_until_utc>UTC_TIMESTAMP(6),1,0) DESC,'.$order;
+        }
+
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT l.listing_id,l.seller_user_id,l.category_id,l.slug,l.title,l.price_minor,l.currency,l.state,l.updated_at_utc,'
+            . 'u.username AS seller_username,c.name AS category_name,'
+            . 'IF(p.featured_until_utc>UTC_TIMESTAMP(6),1,0) AS featured,'
+            . 'IF(p.pinned_until_utc>UTC_TIMESTAMP(6),1,0) AS pinned,'
+            . 'COALESCE(rv.review_count,0) AS review_count,COALESCE(rv.rating_total,0) AS rating_total '
+            . 'FROM forwext_marketplace_listings l '
+            . 'INNER JOIN forwext_users u ON u.user_id=l.seller_user_id '
+            . 'INNER JOIN forwext_marketplace_categories c ON c.category_id=l.category_id '
+            . 'LEFT JOIN forwext_marketplace_listing_promotions p ON p.listing_id=l.listing_id '
+            . "LEFT JOIN (SELECT listing_id,COUNT(*) AS review_count,SUM(rating) AS rating_total,AVG(rating) AS average_rating "
+            . "FROM forwext_marketplace_reviews WHERE state='visible' GROUP BY listing_id) rv ON rv.listing_id=l.listing_id "
+            . 'WHERE '.$where.' ORDER BY '.$order.' LIMIT '.$limit.' OFFSET '.$offset,
+            $params
+        ));
+        return array_map(static fn(array $row):MarketplaceListingCard=>new MarketplaceListingCard(
+            EntityId::fromString((string)$row['listing_id']),
+            UserId::fromStored((string)$row['seller_user_id']),
+            EntityId::fromString((string)$row['category_id']),
+            (string)$row['slug'],(string)$row['title'],
+            new MarketplaceMoney((int)$row['price_minor'],(string)$row['currency']),
+            MarketplaceListingState::from((string)$row['state']),
+            (string)$row['seller_username'],(string)$row['category_name'],
+            (bool)$row['featured'],(bool)$row['pinned'],
+            (int)$row['review_count'],(int)$row['rating_total'],
+            self::parse((string)$row['updated_at_utc'])
+        ),$rows);
+    }
+
+    public function browseCount(MarketplaceListingQuery $query):int
+    {
+        [$where,$params]=$this->browseWhere($query);
+        return (int)$this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_marketplace_listings l '
+            . 'LEFT JOIN forwext_marketplace_listing_promotions p ON p.listing_id=l.listing_id '
+            . 'WHERE '.$where,
+            $params
+        ));
+    }
+
+    public function promotion(EntityId $listingId):?MarketplaceListingPromotion
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT listing_id,featured_until_utc,pinned_until_utc,updated_by_user_id,updated_at_utc '
+            . 'FROM forwext_marketplace_listing_promotions WHERE listing_id=:id LIMIT 1',
+            ['id'=>$listingId->value()]
+        ));
+        return $row===null?null:new MarketplaceListingPromotion(
+            EntityId::fromString((string)$row['listing_id']),
+            isset($row['featured_until_utc'])&&is_string($row['featured_until_utc'])?self::parse($row['featured_until_utc']):null,
+            isset($row['pinned_until_utc'])&&is_string($row['pinned_until_utc'])?self::parse($row['pinned_until_utc']):null,
+            UserId::fromStored((string)$row['updated_by_user_id']),
+            self::parse((string)$row['updated_at_utc'])
+        );
+    }
+
+    public function savePromotion(MarketplaceListingPromotion $promotion):void
+    {
+        $this->database->execute(new CompiledQuery(
+            'INSERT INTO forwext_marketplace_listing_promotions '
+            . '(listing_id,featured_until_utc,pinned_until_utc,updated_by_user_id,updated_at_utc) '
+            . 'VALUES (:listing,:featured,:pinned,:actor,:updated) '
+            . 'ON DUPLICATE KEY UPDATE featured_until_utc=VALUES(featured_until_utc),pinned_until_utc=VALUES(pinned_until_utc),'
+            . 'updated_by_user_id=VALUES(updated_by_user_id),updated_at_utc=VALUES(updated_at_utc)',
+            [
+                'listing'=>$promotion->listingId->value(),
+                'featured'=>$promotion->featuredUntil===null?null:self::format($promotion->featuredUntil),
+                'pinned'=>$promotion->pinnedUntil===null?null:self::format($promotion->pinnedUntil),
+                'actor'=>$promotion->updatedByUserId->value(),
+                'updated'=>self::format($promotion->updatedAt),
+            ]
+        ));
+    }
+
+    public function review(EntityId $reviewId):?MarketplaceReview
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_reviews WHERE review_id=:id LIMIT 1',['id'=>$reviewId->value()]
+        ));
+        return $row===null?null:$this->hydrateReview($row);
+    }
+
+    public function reviewForUser(EntityId $listingId,EntityId $userId):?MarketplaceReview
+    {
+        UserId::assert($userId);
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_reviews WHERE listing_id=:listing AND reviewer_user_id=:user LIMIT 1',
+            ['listing'=>$listingId->value(),'user'=>$userId->value()]
+        ));
+        return $row===null?null:$this->hydrateReview($row);
+    }
+
+    public function reviews(EntityId $listingId,bool $visibleOnly=true,int $limit=100,int $offset=0):array
+    {
+        self::page($limit,$offset);
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_reviews WHERE listing_id=:listing'
+            .($visibleOnly?" AND state='visible'":'')
+            .' ORDER BY updated_at_utc DESC,review_id DESC LIMIT '.$limit.' OFFSET '.$offset,
+            ['listing'=>$listingId->value()]
+        ));
+        return array_map($this->hydrateReview(...),$rows);
+    }
+
+    public function reviewSummary(EntityId $listingId):MarketplaceReviewSummary
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            "SELECT COUNT(*) AS review_count,COALESCE(SUM(rating),0) AS rating_total "
+            . "FROM forwext_marketplace_reviews WHERE listing_id=:listing AND state='visible'",
+            ['listing'=>$listingId->value()]
+        ));
+        return new MarketplaceReviewSummary((int)($row['review_count']??0),(int)($row['rating_total']??0));
+    }
+
+    public function saveReview(MarketplaceReview $review):void
+    {
+        $this->database->execute(new CompiledQuery(
+            'INSERT INTO forwext_marketplace_reviews '
+            . '(review_id,listing_id,reviewer_user_id,rating,body,state,created_at_utc,updated_at_utc) '
+            . 'VALUES (:id,:listing,:reviewer,:rating,:body,:state,:created,:updated) '
+            . 'ON DUPLICATE KEY UPDATE rating=VALUES(rating),body=VALUES(body),state=VALUES(state),updated_at_utc=VALUES(updated_at_utc)',
+            [
+                'id'=>$review->reviewId->value(),'listing'=>$review->listingId->value(),'reviewer'=>$review->reviewerUserId->value(),
+                'rating'=>$review->rating,'body'=>$review->body,'state'=>$review->state->value,
+                'created'=>self::format($review->createdAt),'updated'=>self::format($review->updatedAt)
+            ]
+        ));
+    }
+
     public function sellerListings(EntityId $sellerUserId,bool $publicOnly=false,int $limit=100):array
     {
         UserId::assert($sellerUserId);
@@ -179,6 +323,49 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
                 'action'=>$action,'from_state'=>$fromState,'to_state'=>$toState
             ]
         ));
+    }
+
+    /** @return array{0:string,1:array<string,mixed>} */
+    private function browseWhere(MarketplaceListingQuery $query):array
+    {
+        $parts=["l.state IN ('active','sold')"];
+        $params=[];
+        if($query->text!==null){
+            $parts[]='LOCATE(LOWER(:text),LOWER(CONCAT(l.title," ",l.description)))>0';
+            $params['text']=$query->text;
+        }
+        if($query->categoryId!==null){$parts[]='l.category_id=:category';$params['category']=$query->categoryId->value();}
+        if($query->sellerUserId!==null){$parts[]='l.seller_user_id=:seller';$params['seller']=$query->sellerUserId->value();}
+        if($query->currency!==null){$parts[]='l.currency=:currency';$params['currency']=$query->currency;}
+        if($query->minPriceMinor!==null){$parts[]='l.price_minor>=:min_price';$params['min_price']=$query->minPriceMinor;}
+        if($query->maxPriceMinor!==null){$parts[]='l.price_minor<=:max_price';$params['max_price']=$query->maxPriceMinor;}
+        if($query->tag!==null){
+            $parts[]='EXISTS(SELECT 1 FROM forwext_marketplace_listing_tags mt WHERE mt.listing_id=l.listing_id AND mt.tag_key=:tag)';
+            $params['tag']=$query->tag;
+        }
+        if($query->featuredOnly)$parts[]='p.featured_until_utc>UTC_TIMESTAMP(6)';
+        if($query->pinnedOnly)$parts[]='p.pinned_until_utc>UTC_TIMESTAMP(6)';
+        return [implode(' AND ',$parts),$params];
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateReview(array $row):MarketplaceReview
+    {
+        return new MarketplaceReview(
+            EntityId::fromString((string)$row['review_id']),
+            EntityId::fromString((string)$row['listing_id']),
+            UserId::fromStored((string)$row['reviewer_user_id']),
+            (int)$row['rating'],(string)$row['body'],
+            MarketplaceReviewState::from((string)$row['state']),
+            self::parse((string)$row['created_at_utc']),self::parse((string)$row['updated_at_utc'])
+        );
+    }
+
+    private static function page(int $limit,int $offset):void
+    {
+        if($limit<1||$limit>100||$offset<0||$offset>10000){
+            throw new InvalidArgumentException('Marketplace pagination is invalid.');
+        }
     }
 
     /** @param array<string,mixed> $row */

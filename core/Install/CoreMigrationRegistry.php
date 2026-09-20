@@ -37,6 +37,7 @@ use Forwext\Database\Migrations\Core\CreateRewardPromotionSystem;
 use Forwext\Database\Migrations\Core\CreatePromotionSystem;
 use Forwext\Database\Migrations\Core\AddPromotionRevocationPolicy;
 use Forwext\Database\Migrations\Core\CreateMarketplaceDomain;
+use Forwext\Database\Migrations\Core\CreateMarketplaceDiscoveryUx;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -150,6 +151,7 @@ final class CoreMigrationRegistry
             new CreatePromotionSystem(),
             new AddPromotionRevocationPolicy(),
             new CreateMarketplaceDomain(),
+            new CreateMarketplaceDiscoveryUx(),
         ];
     }
 }

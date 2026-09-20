@@ -11,22 +11,29 @@ use Forwext\Core\Audit\AuditEvent;
 use Forwext\Core\Audit\AuditRecorder;
 use Forwext\Core\Audit\AuditRequestId;
 use Forwext\Core\Audit\AuditScope;
+use Forwext\Core\Content\Pipeline\ContentPipeline;
+use Forwext\Core\Content\Pipeline\ContentPipelineContext;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Search\Lifecycle\SearchIndexChangeStore;
 use InvalidArgumentException;
 
 final readonly class MarketplaceService
 {
+    public const SEARCH_TYPE='marketplace.listing';
     public function __construct(
         private TransactionalQueryExecutor $database,
         private MarketplaceRepository $repository,
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
+        private ?SearchIndexChangeStore $searchChanges=null,
+        private ?ContentPipeline $contentPipeline=null,
     ){}
+
 
     /** @return list<MarketplaceCategory> */
     public function categories(?EntityId $actor=null,bool $includeDisabled=false):array
@@ -37,6 +44,103 @@ final readonly class MarketplaceService
             $this->require($actor,'marketplace.category.manage');
         }
         return $this->repository->categories(!$includeDisabled);
+    }
+
+    /** @return list<MarketplaceListingCard> */
+    public function browse(?EntityId $actor,MarketplaceListingQuery $query,int $limit=24,int $offset=0):array
+    {
+        if($actor!==null)$this->require($actor,'marketplace.listing.view');
+        return $this->repository->browse($query,$limit,$offset);
+    }
+
+    public function browseCount(?EntityId $actor,MarketplaceListingQuery $query):int
+    {
+        if($actor!==null)$this->require($actor,'marketplace.listing.view');
+        return $this->repository->browseCount($query);
+    }
+
+    public function promotion(EntityId $listingId,?EntityId $actor):?MarketplaceListingPromotion
+    {
+        $this->listing($listingId,$actor);
+        return $this->repository->promotion($listingId);
+    }
+
+    public function setPromotion(
+        EntityId $actor,
+        EntityId $listingId,
+        ?DateTimeImmutable $featuredUntil,
+        ?DateTimeImmutable $pinnedUntil,
+        DateTimeImmutable $now,
+        ?AuditRequestId $requestId=null,
+    ):MarketplaceListingPromotion{
+        $this->require($actor,'marketplace.feature.manage');
+        $listing=$this->repository->listing($listingId)??throw new InvalidArgumentException('Marketplace listing was not found.');
+        if(!$listing->state->publicVisible())throw new InvalidArgumentException('Only public marketplace listings can be promoted.');
+        $before=$this->repository->promotion($listingId);
+        $promotion=new MarketplaceListingPromotion($listingId,$featuredUntil,$pinnedUntil,$actor,self::utc($now));
+        $event=new AuditEvent(
+            AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('marketplace.promotion.update'),
+            'marketplace.listing_promotion',$listingId->value(),null,'marketplace.promotion.update',
+            $requestId??AuditRequestId::generate(),
+            $before===null?[]:['featured_until'=>$before->featuredUntil?->format(DATE_ATOM),'pinned_until'=>$before->pinnedUntil?->format(DATE_ATOM)],
+            ['featured_until'=>$promotion->featuredUntil?->format(DATE_ATOM),'pinned_until'=>$promotion->pinnedUntil?->format(DATE_ATOM)],
+            self::utc($now)
+        );
+        $this->audit->mutate($event,fn():mixed=>$this->repository->savePromotion($promotion));
+        return $promotion;
+    }
+
+    /** @return list<MarketplaceReview> */
+    public function reviews(EntityId $listingId,?EntityId $actor,int $limit=100,int $offset=0):array
+    {
+        $this->listing($listingId,$actor);
+        return $this->repository->reviews($listingId,true,$limit,$offset);
+    }
+
+    public function reviewSummary(EntityId $listingId,?EntityId $actor):MarketplaceReviewSummary
+    {
+        $this->listing($listingId,$actor);
+        return $this->repository->reviewSummary($listingId);
+    }
+
+    public function saveReview(EntityId $actor,EntityId $listingId,int $rating,string $body,DateTimeImmutable $now):MarketplaceReview
+    {
+        $this->require($actor,'marketplace.review.create');
+        $listing=$this->listing($listingId,$actor);
+        if($listing->sellerUserId->equals($actor))throw new InvalidArgumentException('Sellers cannot review their own listing.');
+        $existing=$this->repository->reviewForUser($listingId,$actor);
+        $state=$existing?->state??MarketplaceReviewState::Visible;
+        if($this->contentPipeline!==null){
+            $context=$this->contentPipeline->preprocess(
+                new ContentPipelineContext($actor,'marketplace.review',$body,5000),self::utc($now)
+            );
+            if($context->requiresReview)$state=MarketplaceReviewState::Pending;
+            elseif($existing===null||$existing->state!==MarketplaceReviewState::Hidden)$state=MarketplaceReviewState::Visible;
+        }
+        $review=new MarketplaceReview(
+            $existing?->reviewId??MarketplaceReview::generateId(),$listingId,$actor,$rating,trim($body),$state,
+            $existing?->createdAt??self::utc($now),self::utc($now)
+        );
+        $this->repository->saveReview($review);
+        return $review;
+    }
+
+    public function moderateReview(
+        EntityId $actor,EntityId $reviewId,bool $visible,DateTimeImmutable $now,?AuditRequestId $requestId=null
+    ):MarketplaceReview{
+        $this->require($actor,'marketplace.review.manage');
+        $before=$this->repository->review($reviewId)??throw new InvalidArgumentException('Marketplace review was not found.');
+        $after=new MarketplaceReview(
+            $before->reviewId,$before->listingId,$before->reviewerUserId,$before->rating,$before->body,
+            $visible?MarketplaceReviewState::Visible:MarketplaceReviewState::Hidden,$before->createdAt,self::utc($now)
+        );
+        $event=new AuditEvent(
+            AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('marketplace.review.moderate'),
+            'marketplace.review',$reviewId->value(),null,'marketplace.review.moderate',$requestId??AuditRequestId::generate(),
+            ['state'=>$before->state->value],['state'=>$after->state->value],self::utc($now)
+        );
+        $this->audit->mutate($event,fn():mixed=>$this->repository->saveReview($after));
+        return $after;
     }
 
     /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
@@ -151,6 +255,7 @@ final readonly class MarketplaceService
         );
         $this->database->transaction(function()use($listing,$actor,$existing):void{
             $this->repository->saveListing($listing);
+            $this->searchChanges?->record(self::SEARCH_TYPE,$listing->listingId->value());
             $this->repository->recordHistory(
                 $listing->listingId,$actor,$existing===null?'listing.create':'listing.update',
                 $existing?->state->value,$listing->state->value
@@ -229,6 +334,7 @@ final readonly class MarketplaceService
         );
         $this->database->transaction(function()use($updated,$actor,$existing,$action):void{
             $this->repository->saveListing($updated);
+            $this->searchChanges?->record(self::SEARCH_TYPE,$updated->listingId->value());
             $this->repository->recordHistory($updated->listingId,$actor,$action,$existing->state->value,$updated->state->value);
         });
         return $updated;

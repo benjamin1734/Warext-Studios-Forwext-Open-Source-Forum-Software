@@ -199,6 +199,9 @@ final class SearchHtml
         } elseif ($hit->documentType === 'giveaway.item') {
             $href = ProfileHtml::escape($basePath->prepend('/giveaways/' . rawurlencode($hit->documentId)));
             $heading = '<a href="' . $href . '">' . $title . '</a>';
+        } elseif ($hit->documentType === 'marketplace.listing') {
+            $href = ProfileHtml::escape($basePath->prepend('/marketplace/listings/' . rawurlencode($hit->documentId)));
+            $heading = '<a href="' . $href . '">' . $title . '</a>';
         }
         return '<article class="search-hit"><div class="search-hit-type">' . $type . '</div><h3>'
             . $heading . '</h3><div class="muted search-hit-id">' . $id . '</div></article>';
