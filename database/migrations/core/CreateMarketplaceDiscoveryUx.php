@@ -85,8 +85,6 @@ final readonly class CreateMarketplaceDiscoveryUx implements Migration
             "INSERT IGNORE INTO forwext_user_profile_tabs(user_id,tab_key,enabled,visibility,sort_order) "
             . "SELECT user_id,'marketplace',1,'public',28 FROM forwext_user_profiles"
         ));
-    }
-
         $context->execute(new CompiledQuery(
             "INSERT INTO forwext_search_index_changes(document_type,document_id,revision,attempts,available_at_utc,locked_until_utc,last_error_code,updated_at_utc) "
             . "SELECT 'marketplace.listing',listing_id,1,0,UTC_TIMESTAMP(6),NULL,NULL,UTC_TIMESTAMP(6) "
