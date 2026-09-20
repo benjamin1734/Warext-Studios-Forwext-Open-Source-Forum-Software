@@ -68,6 +68,12 @@ final class MarketplaceHtml
         if($promotion?->pinnedAt($now))$badges.='<span class="market-badge">Sabit</span>';
         if($promotion?->featuredAt($now))$badges.='<span class="market-badge">Öne Çıkan</span>';
         if($listing->state->value==='sold')$badges.='<span class="market-badge">Satıldı</span>';
+        $gallery='';
+        foreach($listing->media as $media){
+            $gallery.='<figure><img loading="lazy" src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value()))
+                .'" alt="'.self::e($media->altText).'"></figure>';
+        }
+        if($gallery!=='')$gallery='<div class="market-media">'.$gallery.'</div>';
         $sellerProfile=ProfileHtml::memberPath($basePath,$sellerUsername);
         $sellerMarket=$basePath->prepend('/marketplace/sellers/'.rawurlencode($sellerUsername));
         $custom='';
@@ -103,7 +109,7 @@ final class MarketplaceHtml
             .'<a href="'.self::e($sellerMarket).'">Satıcının ilanları</a> · '
             .self::e(self::rating($summary->average(),$summary->count)).'</p>'
             .($tags===''?'':'<div class="market-tags">'.$tags.'</div>')
-            .'<section class="section"><h2>Açıklama</h2><div class="about">'.nl2br(self::e($listing->description),false).'</div></section>'
+            .$gallery.'<section class="section"><h2>Açıklama</h2><div class="about">'.nl2br(self::e($listing->description),false).'</div></section>'
             .($custom===''?'':'<section class="section"><h2>Özellikler</h2><dl class="market-specs">'.$custom.'</dl></section>')
             .($canManage?'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">Bu ilanı yönet</a></p>':'')
             .'<section class="section"><h2>Değerlendirmeler</h2>'.$reviewHtml.$reviewForm.'</section></article>';
@@ -171,6 +177,16 @@ final class MarketplaceHtml
         }
 
         if($selected!==null){
+            $body.='<section class="section"><h2>İlan görselleri</h2><div class="market-media">';
+            foreach($selected->media as $media){
+                $body.='<figure><img src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value())).'" alt="'.self::e($media->altText).'">'
+                    .'<form method="post" enctype="multipart/form-data" action="'.self::e($basePath->prepend('/marketplace/listings/'.$selected->listingId->value().'/media')).'">'
+                    .self::csrf($csrf).'<input type="hidden" name="action" value="delete"><input type="hidden" name="media_id" value="'.$media->mediaId->value().'">'
+                    .'<button type="submit">Görseli sil</button></form></figure>';
+            }
+            $body.='</div><form method="post" enctype="multipart/form-data" action="'.self::e($basePath->prepend('/marketplace/listings/'.$selected->listingId->value().'/media')).'" class="search-form">'
+                .self::csrf($csrf).'<label><span>Görsel (JPEG/PNG/WebP)</span><input type="file" name="file" accept="image/jpeg,image/png,image/webp" required></label>'
+                .'<label><span>Alt metin</span><input name="alt" maxlength="500"></label><div class="search-actions"><button type="submit">Görsel yükle</button></div></form></section>';
             $body.='<section class="section"><h2>Yaşam döngüsü</h2><div class="market-actions">'
                 .self::stateActions($selected,$action,$csrf,$canManageAll).'</div></section>';
             if($canFeature&&$selected->state->publicVisible()){

@@ -40,6 +40,8 @@ use Forwext\App\Web\Marketplace\MarketplaceBrowseHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceDetailHandler;
 use Forwext\App\Web\Marketplace\MarketplaceManageHandler;
+use Forwext\App\Web\Marketplace\MarketplaceMediaDownloadHandler;
+use Forwext\App\Web\Marketplace\MarketplaceMediaUploadHandler;
 use Forwext\App\Web\Marketplace\MarketplaceReviewHandler;
 use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
@@ -173,6 +175,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
 use Forwext\Core\Marketplace\MarketplaceService;
+use Forwext\Core\Marketplace\MarketplaceMediaService;
 use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
 use Forwext\Core\Notification\NotificationDispatcher;
@@ -406,9 +409,10 @@ final readonly class WebApplicationFactory
             $contentManagerPipeline,
             $searchChanges,
         );
+        $marketplaceRepository = new DatabaseMarketplaceRepository($database);
         $marketplace = new MarketplaceService(
             $database,
-            new DatabaseMarketplaceRepository($database),
+            $marketplaceRepository,
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
             $searchChanges,
@@ -602,6 +606,13 @@ final readonly class WebApplicationFactory
             $attachmentInspector,
             $attachmentQuota,
         );
+        $marketplaceMedia = new MarketplaceMediaService(
+            $database,
+            $marketplace,
+            $marketplaceRepository,
+            $storage,
+            $attachmentInspector,
+        );
         $bugReports = new DatabaseBugReportRepository($database);
         $bugDiagnostics = new DatabaseBugDiagnosticContextRepository($database);
         $bugIntake = new DatabaseBugReportIntakeRepository($database);
@@ -786,6 +797,21 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/marketplace/listings/{listingId}',['listingId'=>'[0-9a-f]{32}']),
             new MarketplaceDetailHandler($marketplace,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.media.download',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/media/{mediaId}',['mediaId'=>'[0-9a-f]{32}']),
+            new MarketplaceMediaDownloadHandler($marketplaceMedia,$viewerResolver),
+        ));
+        $routes->add(new Route(
+            'marketplace.media.upload',
+            [HttpMethod::Post],
+            new PathTemplate('/marketplace/listings/{listingId}/media',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceMediaUploadHandler(
+                $marketplaceMedia,$viewerResolver,new VerifiedUploadedAttachmentReader(),$attachmentQuota,$basePath
+            ),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
