@@ -61,7 +61,7 @@ final class MarketplaceHtml
     public static function detail(
         MarketplaceListing $listing,MarketplaceCategory $category,string $sellerUsername,array $fields,
         ?MarketplaceListingPromotion $promotion,array $reviews,array $reviewAuthors,MarketplaceReviewSummary $summary,
-        bool $canReview,?MarketplaceReview $ownReview,?string $csrf,bool $canManage,BasePath $basePath,bool $reviewed
+        bool $canReview,?MarketplaceReview $ownReview,?string $csrf,bool $canManage,BasePath $basePath,bool $reviewed,bool $authenticated
     ):string{
         $now=new \DateTimeImmutable('now',new \DateTimeZone('UTC'));
         $badges='';
@@ -113,7 +113,7 @@ final class MarketplaceHtml
             .($custom===''?'':'<section class="section"><h2>Özellikler</h2><dl class="market-specs">'.$custom.'</dl></section>')
             .($canManage?'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">Bu ilanı yönet</a></p>':'')
             .'<section class="section"><h2>Değerlendirmeler</h2>'.$reviewHtml.$reviewForm.'</section></article>';
-        return ProfileHtml::page($listing->title,$body,$basePath,authenticated:$csrf!==null);
+        return ProfileHtml::page($listing->title,$body,$basePath,authenticated:$authenticated);
     }
 
     /** @param list<MarketplaceListingCard> $cards */
@@ -225,7 +225,9 @@ final class MarketplaceHtml
             if($card->pinned)$badges.='<span class="market-badge">Sabit</span>';
             if($card->featured)$badges.='<span class="market-badge">Öne Çıkan</span>';
             if($card->state->value==='sold')$badges.='<span class="market-badge">Satıldı</span>';
-            $body.='<article class="market-card"><div>'.$badges.'<div class="search-hit-type">'.self::e($card->categoryName).'</div>'
+            $cover=$card->coverMediaId===null?'':'<a class="market-cover" href="'.self::e($basePath->prepend('/marketplace/listings/'.$card->listingId->value()))
+                .'"><img loading="lazy" src="'.self::e($basePath->prepend('/marketplace/media/'.$card->coverMediaId->value())).'" alt=""></a>';
+            $body.='<article class="market-card">'.$cover.'<div>'.$badges.'<div class="search-hit-type">'.self::e($card->categoryName).'</div>'
                 .'<h3><a href="'.self::e($basePath->prepend('/marketplace/listings/'.$card->listingId->value())).'">'.self::e($card->title).'</a></h3>'
                 .'<p class="market-price">'.self::e(self::money($card->price->minorUnits,$card->price->currency)).'</p>'
                 .'<p class="muted">Satıcı: <a href="'.self::e($basePath->prepend('/marketplace/sellers/'.rawurlencode($card->sellerUsername))).'">'

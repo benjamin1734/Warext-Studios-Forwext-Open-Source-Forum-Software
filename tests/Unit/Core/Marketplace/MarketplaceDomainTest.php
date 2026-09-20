@@ -347,6 +347,7 @@ final class MemoryMarketplaceRepository implements MarketplaceRepository
                 $listing->price,$listing->state,'seller',$category?->name??'Category',
                 $promotion?->featuredAt(new DateTimeImmutable('2026-09-20 09:00:00',new DateTimeZone('UTC')))??false,
                 $promotion?->pinnedAt(new DateTimeImmutable('2026-09-20 09:00:00',new DateTimeZone('UTC')))??false,
+                $listing->media[0]->mediaId??null,
                 $summary->count,$summary->ratingTotal,$listing->updatedAt
             );
         }

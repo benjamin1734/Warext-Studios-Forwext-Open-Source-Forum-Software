@@ -118,6 +118,7 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
             . 'u.username AS seller_username,c.name AS category_name,'
             . 'IF(p.featured_until_utc>UTC_TIMESTAMP(6),1,0) AS featured,'
             . 'IF(p.pinned_until_utc>UTC_TIMESTAMP(6),1,0) AS pinned,'
+            . '(SELECT mm.media_id FROM forwext_marketplace_listing_media mm WHERE mm.listing_id=l.listing_id ORDER BY mm.sort_order,mm.media_id LIMIT 1) AS cover_media_id,'
             . 'COALESCE(rv.review_count,0) AS review_count,COALESCE(rv.rating_total,0) AS rating_total '
             . 'FROM forwext_marketplace_listings l '
             . 'INNER JOIN forwext_users u ON u.user_id=l.seller_user_id '
@@ -137,6 +138,7 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
             MarketplaceListingState::from((string)$row['state']),
             (string)$row['seller_username'],(string)$row['category_name'],
             (bool)$row['featured'],(bool)$row['pinned'],
+            isset($row['cover_media_id'])&&is_string($row['cover_media_id'])?EntityId::fromString($row['cover_media_id']):null,
             (int)$row['review_count'],(int)$row['rating_total'],
             self::parse((string)$row['updated_at_utc'])
         ),$rows);
@@ -353,7 +355,7 @@ final readonly class DatabaseMarketplaceRepository implements MarketplaceReposit
         $parts=["l.state IN ('active','sold')"];
         $params=[];
         if($query->text!==null){
-            $parts[]='LOCATE(LOWER(:text),LOWER(CONCAT(l.title," ",l.description)))>0';
+            $parts[]='LOCATE(LOWER(:text),LOWER(CONCAT(l.title,CHAR(32),l.description)))>0';
             $params['text']=$query->text;
         }
         if($query->categoryId!==null){$parts[]='l.category_id=:category';$params['category']=$query->categoryId->value();}

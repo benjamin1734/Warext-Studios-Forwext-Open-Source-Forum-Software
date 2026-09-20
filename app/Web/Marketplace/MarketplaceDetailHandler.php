@@ -48,7 +48,7 @@ final readonly class MarketplaceDetailHandler implements RequestHandlerInterface
                 $this->marketplace->reviewSummary($id,$actor),$canReview,
                 $actor===null?null:$this->marketplace->ownReview($actor,$id),
                 $csrf,$actor!==null&&$this->marketplace->canManageListing($actor,$listing),
-                $this->basePath,($request->query()['reviewed']??null)==='1'
+                $this->basePath,($request->query()['reviewed']??null)==='1',$actor!==null
             ))->withHeader('Cache-Control',$actor===null?'public, max-age=30':'private, no-store');
         }catch(PermissionDeniedException){
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');

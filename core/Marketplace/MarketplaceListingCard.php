@@ -26,11 +26,15 @@ final readonly class MarketplaceListingCard
         public string $categoryName,
         public bool $featured,
         public bool $pinned,
+        public ?EntityId $coverMediaId,
         public int $reviewCount,
         public int $ratingTotal,
         DateTimeImmutable $updatedAt,
     ){
         UserId::assert($this->sellerUserId);
+        if($this->coverMediaId!==null&&preg_match('/^[a-f0-9]{32}$/D',$this->coverMediaId->value())!==1){
+            throw new InvalidArgumentException('Marketplace listing cover media id is invalid.');
+        }
         if($this->reviewCount<0||$this->ratingTotal<0||$this->ratingTotal>$this->reviewCount*5){
             throw new InvalidArgumentException('Marketplace listing rating aggregate is invalid.');
         }
