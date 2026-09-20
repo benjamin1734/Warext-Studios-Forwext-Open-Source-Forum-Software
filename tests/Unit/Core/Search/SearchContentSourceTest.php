@@ -8,6 +8,8 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Faq\Search\DatabaseFaqSearchContentSource;
 use Forwext\Core\Faq\Search\FaqSearchAccessScopeProvider;
+use Forwext\Core\Marketplace\Search\DatabaseMarketplaceSearchContentSource;
+use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
 use Forwext\Core\Search\Lifecycle\SearchIndexScope;
 use Forwext\Core\Search\Lifecycle\Source\DatabasePostSearchContentSource;
 use Forwext\Core\Search\Lifecycle\Source\DatabaseUserSearchContentSource;
@@ -83,6 +85,42 @@ final class SearchContentSourceTest extends TestCase
         self::assertSame([FaqSearchAccessScopeProvider::MEMBERS], $document->accessScopes);
         self::assertSame(['support','help'], $document->attributes['tag']);
         self::assertSame('tr', $document->locale);
+    }
+
+    public function testMarketplaceIndexOnlyPublishesPublicListingsAndCarriesSellerStateAndTags(): void
+    {
+        $database = new SourceRecordingDatabase();
+        $database->one = [[
+            'listing_id'=>'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            'seller_user_id'=>'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'title'=>'RTX 5070 Laptop',
+            'description'=>'Temiz cihaz',
+            'state'=>'active',
+            'updated_at_utc'=>'2026-09-20 10:00:00.000000',
+            'category_name'=>'Donanım',
+        ]];
+        $database->all = [[['tag_key'=>'laptop'],['tag_key'=>'rtx']]];
+        $source = new DatabaseMarketplaceSearchContentSource($database);
+
+        $document = $source->document('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+
+        self::assertNotNull($document);
+        self::assertSame('marketplace.listing',$document->documentType);
+        self::assertSame([MarketplaceSearchAccessScopeProvider::MEMBERS],$document->accessScopes);
+        self::assertSame(['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],$document->attributes['user']);
+        self::assertSame(['active'],$document->attributes['state']);
+        self::assertSame(['laptop','rtx'],$document->attributes['tag']);
+
+        $database->one = [[
+            'listing_id'=>'ffffffffffffffffffffffffffffffff',
+            'seller_user_id'=>'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'title'=>'Draft',
+            'description'=>'private',
+            'state'=>'draft',
+            'updated_at_utc'=>'2026-09-20 10:00:00.000000',
+            'category_name'=>'Donanım',
+        ]];
+        self::assertNull($source->document('ffffffffffffffffffffffffffffffff'));
     }
 
     public function testVisiblePostCarriesOnlyItsForumPermissionScope(): void

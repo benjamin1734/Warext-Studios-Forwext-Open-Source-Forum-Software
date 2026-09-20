@@ -62,7 +62,7 @@ final class PortfolioSystemTest extends TestCase
     {
         $keys = array_map(static fn ($tab): string => $tab->key, ProfileService::defaultTabs());
 
-        self::assertSame(['overview', 'activity', 'portfolio', 'achievements', 'about'], $keys);
+        self::assertSame(['overview', 'activity', 'portfolio', 'achievements', 'marketplace', 'about'], $keys);
     }
 
     public function testProjectRejectsMoreThanTwelveMediaItems(): void

@@ -28,10 +28,17 @@ use Forwext\Core\Marketplace\MarketplaceCategory;
 use Forwext\Core\Marketplace\MarketplaceCustomFieldDefinition;
 use Forwext\Core\Marketplace\MarketplaceCustomFieldType;
 use Forwext\Core\Marketplace\MarketplaceListing;
+use Forwext\Core\Marketplace\MarketplaceListingCard;
+use Forwext\Core\Marketplace\MarketplaceListingPromotion;
+use Forwext\Core\Marketplace\MarketplaceListingQuery;
+use Forwext\Core\Marketplace\MarketplaceListingSort;
 use Forwext\Core\Marketplace\MarketplaceListingState;
 use Forwext\Core\Marketplace\MarketplaceMedia;
 use Forwext\Core\Marketplace\MarketplaceMoney;
 use Forwext\Core\Marketplace\MarketplaceRepository;
+use Forwext\Core\Marketplace\MarketplaceReview;
+use Forwext\Core\Marketplace\MarketplaceReviewState;
+use Forwext\Core\Marketplace\MarketplaceReviewSummary;
 use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use InvalidArgumentException;
@@ -172,6 +179,57 @@ final class MarketplaceDomainTest extends TestCase
         $service->saveCustomField($manager,$moved,$this->at('2026-09-19 19:30:00'));
     }
 
+    public function testReviewSelfAbusePromotionPermissionAndReviewUpdateAreEnforced():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $seller=UserId::generate();
+        $buyer=UserId::generate();
+        $staff=UserId::generate();
+        $category=$this->category(str_repeat('9',32),null,'market','market');
+        $repo->saveCategory($category);
+        $service=$this->service($repo,[
+            $seller->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+                'marketplace.review.create'=>true,'marketplace.listing.view'=>true,
+            ],
+            $buyer->value()=>[
+                'marketplace.review.create'=>true,'marketplace.listing.view'=>true,
+                'marketplace.feature.manage'=>false,
+            ],
+            $staff->value()=>[
+                'marketplace.listing.manage_all'=>true,'marketplace.listing.view'=>true,
+                'marketplace.feature.manage'=>true,'marketplace.review.manage'=>true,
+            ],
+        ]);
+        $id=MarketplaceListing::generateId();
+        $service->saveListing($seller,$this->listing($id,$seller,$category->categoryId,[]));
+        $service->submit($seller,$id,$this->at('2026-09-20 09:00:00'));
+        $service->approve($staff,$id,$this->at('2026-09-20 09:01:00'));
+
+        try{
+            $service->saveReview($seller,$id,5,'Kendi ilanım',$this->at('2026-09-20 09:02:00'));
+            self::fail('Seller must not review own listing.');
+        }catch(InvalidArgumentException){}
+
+        $first=$service->saveReview($buyer,$id,4,'Gayet iyi',$this->at('2026-09-20 09:03:00'));
+        $second=$service->saveReview($buyer,$id,5,'Fikrimi güncelledim',$this->at('2026-09-20 09:04:00'));
+        self::assertSame($first->reviewId->value(),$second->reviewId->value());
+        self::assertSame(1,$repo->reviewSummary($id)->count);
+        self::assertSame(5,$repo->reviewSummary($id)->ratingTotal);
+
+        try{
+            $service->setPromotion($buyer,$id,$this->at('2026-09-21 09:00:00'),null,$this->at('2026-09-20 09:05:00'));
+            self::fail('Ordinary buyer cannot feature listings.');
+        }catch(PermissionDeniedException){}
+
+        $promotion=$service->setPromotion(
+            $staff,$id,$this->at('2026-09-21 09:00:00'),$this->at('2026-09-20 18:00:00'),
+            $this->at('2026-09-20 09:05:00')
+        );
+        self::assertNotNull($promotion->featuredUntil);
+        self::assertNotNull($repo->promotion($id));
+    }
+
     public function testSellerIdentityAndDirectStateEditsAreImmutable():void
     {
         $repo=new MemoryMarketplaceRepository();
@@ -250,6 +308,10 @@ final class MemoryMarketplaceRepository implements MarketplaceRepository
     private array $listings=[];
     /** @var list<array{listing:string,action:string,from:?string,to:?string}> */
     public array $history=[];
+    /** @var array<string,MarketplaceListingPromotion> */
+    private array $promotions=[];
+    /** @var array<string,MarketplaceReview> */
+    private array $reviews=[];
 
     public function categories(bool $enabledOnly=true):array
     {
@@ -270,11 +332,69 @@ final class MemoryMarketplaceRepository implements MarketplaceRepository
     public function customField(EntityId $fieldId):?MarketplaceCustomFieldDefinition{return $this->fields[$fieldId->value()]??null;}
     public function saveCustomField(MarketplaceCustomFieldDefinition $field):void{$this->fields[$field->fieldId->value()]=$field;}
     public function listing(EntityId $listingId):?MarketplaceListing{return $this->listings[$listingId->value()]??null;}
+    public function browse(MarketplaceListingQuery $query,int $limit=24,int $offset=0):array
+    {
+        $items=[];
+        foreach($this->listings as $listing){
+            if(!$listing->state->publicVisible())continue;
+            if($query->sellerUserId!==null&&!$listing->sellerUserId->equals($query->sellerUserId))continue;
+            if($query->categoryId!==null&&!$listing->categoryId->equals($query->categoryId))continue;
+            $summary=$this->reviewSummary($listing->listingId);
+            $promotion=$this->promotion($listing->listingId);
+            $category=$this->categories[$listing->categoryId->value()]??null;
+            $items[]=new MarketplaceListingCard(
+                $listing->listingId,$listing->sellerUserId,$listing->categoryId,$listing->slug,$listing->title,
+                $listing->price,$listing->state,'seller',$category?->name??'Category',
+                $promotion?->featuredAt(new DateTimeImmutable('2026-09-20 09:00:00',new DateTimeZone('UTC')))??false,
+                $promotion?->pinnedAt(new DateTimeImmutable('2026-09-20 09:00:00',new DateTimeZone('UTC')))??false,
+                $summary->count,$summary->ratingTotal,$listing->updatedAt
+            );
+        }
+        return array_slice($items,$offset,$limit);
+    }
+    public function browseCount(MarketplaceListingQuery $query):int{return count($this->browse($query,100,0));}
+    public function promotion(EntityId $listingId):?MarketplaceListingPromotion{return $this->promotions[$listingId->value()]??null;}
+    public function savePromotion(MarketplaceListingPromotion $promotion):void{$this->promotions[$promotion->listingId->value()]=$promotion;}
+    public function review(EntityId $reviewId):?MarketplaceReview{return $this->reviews[$reviewId->value()]??null;}
+    public function reviewForUser(EntityId $listingId,EntityId $userId):?MarketplaceReview
+    {
+        foreach($this->reviews as $review)if($review->listingId->equals($listingId)&&$review->reviewerUserId->equals($userId))return $review;
+        return null;
+    }
+    public function reviews(EntityId $listingId,bool $visibleOnly=true,int $limit=100,int $offset=0):array
+    {
+        $items=array_values(array_filter($this->reviews,static fn(MarketplaceReview $r):bool=>
+            $r->listingId->equals($listingId)&&(!$visibleOnly||$r->state===MarketplaceReviewState::Visible)
+        ));
+        return array_slice($items,$offset,$limit);
+    }
+    public function reviewSummary(EntityId $listingId):MarketplaceReviewSummary
+    {
+        $count=0;$total=0;
+        foreach($this->reviews($listingId,true,100,0) as $review){++$count;$total+=$review->rating;}
+        return new MarketplaceReviewSummary($count,$total);
+    }
+    public function saveReview(MarketplaceReview $review):void
+    {
+        foreach($this->reviews as $id=>$existing){
+            if($existing->listingId->equals($review->listingId)&&$existing->reviewerUserId->equals($review->reviewerUserId)&&$id!==$review->reviewId->value()){
+                unset($this->reviews[$id]);
+            }
+        }
+        $this->reviews[$review->reviewId->value()]=$review;
+    }
     public function sellerListings(EntityId $sellerUserId,bool $publicOnly=false,int $limit=100):array
     {
         $items=array_values(array_filter(
             $this->listings,
             static fn(MarketplaceListing $l):bool=>$l->sellerUserId->equals($sellerUserId)&&(!$publicOnly||$l->state->publicVisible())
+        ));
+        return array_slice($items,0,$limit);
+    }
+    public function manageListings(?EntityId $sellerUserId=null,?MarketplaceListingState $state=null,int $limit=100):array
+    {
+        $items=array_values(array_filter($this->listings,static fn(MarketplaceListing $l):bool=>
+            ($sellerUserId===null||$l->sellerUserId->equals($sellerUserId))&&($state===null||$l->state===$state)
         ));
         return array_slice($items,0,$limit);
     }

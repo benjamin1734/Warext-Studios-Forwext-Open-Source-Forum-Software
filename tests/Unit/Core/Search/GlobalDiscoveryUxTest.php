@@ -76,6 +76,7 @@ final class GlobalDiscoveryUxTest extends TestCase
                 new SearchHit('support.ticket', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 9.0, 'Destek kaydı'),
                 new SearchHit('portfolio.item', 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', 8.5, 'Portfolyo projesi'),
                 new SearchHit('giveaway.item', 'ffffffffffffffffffffffffffffffff', 8.25, 'Çekiliş'),
+                new SearchHit('marketplace.listing', '11111111111111111111111111111111', 8.1, 'Marketplace ilanı'),
                 new SearchHit('user', 'cccccccccccccccccccccccccccccccc', 8.0, 'alice'),
             ],
             ['q' => 'alpha'],
@@ -90,6 +91,7 @@ final class GlobalDiscoveryUxTest extends TestCase
         self::assertStringContainsString('>Üyeler <small', $html);
         self::assertStringContainsString('/community/portfolio/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', $html);
         self::assertStringContainsString('/community/giveaways/ffffffffffffffffffffffffffffffff', $html);
+        self::assertStringContainsString('/community/marketplace/listings/11111111111111111111111111111111', $html);
         self::assertStringContainsString('/community/members/alice', $html);
         self::assertStringNotContainsString('href="/community/support', $html);
     }

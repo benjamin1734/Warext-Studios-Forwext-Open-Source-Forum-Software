@@ -47,7 +47,9 @@ final class MarketplaceHtml
             .'<label><input type="checkbox" name="featured" value="1"'.($query->featuredOnly?' checked':'').'> Sadece öne çıkanlar</label>'
             .'<div class="search-actions"><button type="submit">Filtrele</button><a href="'.$action.'">Temizle</a></div></form></section>'
             .'<section class="section"><div class="market-result-head"><h2>İlanlar</h2><span class="muted">'.$total.' sonuç</span></div>'
-            .self::cards($cards,$basePath,$view).self::pagination($basePath,$query,$view,$page,$total).'</section>';
+            .self::cards($cards,$basePath,$view).self::pagination(
+                $basePath,$query,self::selectedCategorySlug($categories,$query->categoryId),$view,$page,$total
+            ).'</section>';
         return ProfileHtml::page('Marketplace',$body,$basePath,authenticated:$authenticated);
     }
 
@@ -235,13 +237,14 @@ final class MarketplaceHtml
     }
 
     /** @param array<string,mixed> $query */
-    private static function pagination(BasePath $basePath,MarketplaceListingQuery $query,string $view,int $page,int $total):string
+    private static function pagination(BasePath $basePath,MarketplaceListingQuery $query,?string $categorySlug,string $view,int $page,int $total):string
     {
         $last=max(1,(int)ceil($total/24));if($last<=1)return '';
         $links='';
         foreach(array_unique(array_filter([$page-1,$page,$page+1],static fn(int $p):bool=>$p>=1&&$p<=$last)) as $p){
             $params=['page'=>$p,'view'=>$view,'sort'=>$query->sort->value];
             if($query->text!==null)$params['q']=$query->text;
+            if($categorySlug!==null)$params['category']=$categorySlug;
             if($query->currency!==null)$params['currency']=$query->currency;
             if($query->minPriceMinor!==null)$params['min']=self::decimal($query->minPriceMinor);
             if($query->maxPriceMinor!==null)$params['max']=self::decimal($query->maxPriceMinor);
@@ -251,6 +254,16 @@ final class MarketplaceHtml
             $links.='<a'.($p===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$p.'</a>';
         }
         return '<nav class="pagination" aria-label="Marketplace sayfaları">'.$links.'</nav>';
+    }
+
+    /** @param list<MarketplaceCategory> $categories */
+    private static function selectedCategorySlug(array $categories,?EntityId $categoryId):?string
+    {
+        if($categoryId===null)return null;
+        foreach($categories as $category){
+            if($category->categoryId->equals($categoryId))return $category->slug;
+        }
+        return null;
     }
 
     /** @param array<string,string|int|bool> $current */
