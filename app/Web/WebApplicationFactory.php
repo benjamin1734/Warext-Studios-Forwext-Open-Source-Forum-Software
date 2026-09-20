@@ -36,7 +36,12 @@ use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
 use Forwext\App\Web\Moderation\DisciplineAccountHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessPolicyHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
+use Forwext\App\Web\Marketplace\MarketplaceBrowseHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
+use Forwext\App\Web\Marketplace\MarketplaceDetailHandler;
+use Forwext\App\Web\Marketplace\MarketplaceManageHandler;
+use Forwext\App\Web\Marketplace\MarketplaceReviewHandler;
+use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -168,6 +173,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
 use Forwext\Core\Marketplace\MarketplaceService;
+use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
 use Forwext\Core\Notification\NotificationDispatcher;
 use Forwext\Core\Notification\NotificationRegistry;
@@ -405,6 +411,8 @@ final readonly class WebApplicationFactory
             new DatabaseMarketplaceRepository($database),
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $searchChanges,
+            $contentManagerPipeline,
         );
 
         $rewardRepository = new DatabaseRewardRepository($database);
@@ -527,6 +535,7 @@ final readonly class WebApplicationFactory
             $musicService,
             $portfolio,
             $trophies,
+            $marketplace,
         );
         $searchService = new PermissionAwareSearchService(
             new ResilientSearchDriver(new NativeDatabaseSearchDriver($database)),
@@ -537,6 +546,7 @@ final readonly class WebApplicationFactory
                 new FaqSearchAccessScopeProvider($authorizer),
                 new PortfolioSearchAccessScopeProvider($authorizer),
                 new GiveawaySearchAccessScopeProvider($authorizer),
+                new MarketplaceSearchAccessScopeProvider($authorizer),
             ],
             new SavedSearchQueryRegistry(),
         );
@@ -650,6 +660,7 @@ final readonly class WebApplicationFactory
         $rewardCsrf = $this->rewardCsrfMiddleware($config);
         $promotionCsrf = $this->promotionCsrfMiddleware($config);
         $marketplaceCategoryCsrf = $this->marketplaceCategoryCsrfMiddleware($config);
+        $marketplaceCsrf = $this->marketplaceCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -763,6 +774,39 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/faq'),
             new FaqIndexHandler($faq, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'marketplace.index',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace'),
+            new MarketplaceBrowseHandler($marketplace,$viewerResolver,$basePath),
+        ));
+        $routes->add(new Route(
+            'marketplace.detail',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/listings/{listingId}',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceDetailHandler($marketplace,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.review',
+            [HttpMethod::Post],
+            new PathTemplate('/marketplace/listings/{listingId}/review',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceReviewHandler($marketplace,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.seller',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/sellers/{username}'),
+            new MarketplaceSellerHandler($marketplace,$users,$viewerResolver,$basePath),
+        ));
+        $routes->add(new Route(
+            'marketplace.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/manage'),
+            new MarketplaceManageHandler($marketplace,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
         ));
         $routes->add(new Route(
             'marketplace.category.manage',
@@ -1377,6 +1421,11 @@ final readonly class WebApplicationFactory
     private function marketplaceCategoryCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'marketplace-category', 'forwext.csrf.marketplace-category.v1');
+    }
+
+    private function marketplaceCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'marketplace', 'forwext.csrf.marketplace.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

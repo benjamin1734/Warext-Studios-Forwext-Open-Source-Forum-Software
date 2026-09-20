@@ -14,6 +14,9 @@ use Forwext\Core\Domain\User\Username;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Marketplace\MarketplaceListingQuery;
+use Forwext\Core\Marketplace\MarketplaceListingSort;
+use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Portfolio\PortfolioService;
 use Forwext\Core\Profile\Music\ProfileMusicService;
 use Forwext\Core\Profile\Music\ProfileMusicSourceType;
@@ -53,6 +56,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private ?ProfileMusicService $music = null,
         private ?PortfolioService $portfolio = null,
         private ?TrophyService $trophies = null,
+        private ?MarketplaceService $marketplace = null,
     ) {
     }
 
@@ -96,6 +100,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 'overview' => 'Genel Bakış',
                 'portfolio' => 'Portfolyo',
                 'achievements' => 'Başarımlar',
+                'marketplace' => 'Marketplace',
                 default => 'Hakkımda',
             };
             $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
@@ -116,6 +121,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 $sections .= $this->portfolioSection($profile, $viewerId);
             } elseif ($tab->key === 'achievements') {
                 $sections .= $this->trophySection($profile->userId, $viewerId);
+            } elseif ($tab->key === 'marketplace') {
+                $sections .= $this->marketplaceSection($profile->userId, $viewerId);
             } elseif ($tab->key === 'about') {
                 $sections .= $this->aboutSection($profile, $viewerId);
             }
@@ -160,7 +167,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $tabs = array_values(array_filter(
             $profile->tabs,
             fn (ProfileTab $tab): bool => $tab->enabled
-                && in_array($tab->key, ['overview', 'portfolio', 'achievements', 'about'], true)
+                && in_array($tab->key, ['overview', 'portfolio', 'achievements', 'marketplace', 'about'], true)
                 && $this->accessPolicy->canViewSection($profile, $tab->visibility, $viewerId),
         ));
         usort(
@@ -255,6 +262,31 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
 
         return '<section class="section" id="achievements"><h2>Kupa, Rozet ve Başarımlar</h2>'
             .'<div class="trophy-grid">'.$cards.'</div>'.$timeline.'</section>';
+    }
+
+    private function marketplaceSection(EntityId $userId,?EntityId $viewerId):string
+    {
+        if($this->marketplace===null)return '';
+        try{
+            $cards=$this->marketplace->browse(
+                $viewerId,
+                new MarketplaceListingQuery(sellerUserId:$userId,sort:MarketplaceListingSort::Featured),
+                12,0
+            );
+        }catch(PermissionDeniedException|InvalidArgumentException){
+            return '';
+        }
+        $content='';
+        foreach($cards as $card){
+            $content.='<article class="search-hit"><div class="search-hit-type">'
+                .ProfileHtml::escape($card->categoryName).($card->featured?' · Öne Çıkan':'')
+                .'</div><h3><a href="'.ProfileHtml::escape($this->basePath->prepend('/marketplace/listings/'.$card->listingId->value())).'">'
+                .ProfileHtml::escape($card->title).'</a></h3><p class="muted">'
+                .ProfileHtml::escape(number_format($card->price->minorUnits/100,2,',','.').' '.$card->price->currency)
+                .'</p></article>';
+        }
+        if($content==='')$content='<p class="muted">Henüz herkese açık Marketplace ilanı yok.</p>';
+        return '<section class="section" id="marketplace"><h2>Marketplace</h2>'.$content.'</section>';
     }
 
     private function aboutSection(UserProfile $profile, ?EntityId $viewerId): string

@@ -94,6 +94,7 @@ final readonly class ProfileService
             new ProfileTab('activity', true, ProfileVisibility::Public, 10),
             new ProfileTab('portfolio', true, ProfileVisibility::Public, 20),
             new ProfileTab('achievements', true, ProfileVisibility::Public, 25),
+            new ProfileTab('marketplace', true, ProfileVisibility::Public, 28),
             new ProfileTab('about', true, ProfileVisibility::Public, 30),
         ];
     }
