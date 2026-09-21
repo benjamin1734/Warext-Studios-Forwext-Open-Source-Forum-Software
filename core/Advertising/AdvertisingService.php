@@ -134,7 +134,7 @@ final readonly class AdvertisingService
      * @return array{
      * campaigns:list<AdvertisingCampaign>,analytics:list<array{
      * campaign_id:EntityId,name:string,kind:AdvertisingKind,currency:string,impressions:int,clicks:int,revenue_minor:int
-     * }>,placements:array<string,string>
+     * }>,placements:array<string,string>,groups:list<array{id:EntityId,name:string}>,forums:list<array{id:EntityId,title:string}>
      * }
      */
     public function managementSnapshot(EntityId $actor,DateTimeImmutable $from,DateTimeImmutable $to):array
@@ -152,7 +152,13 @@ final readonly class AdvertisingService
             $this->repository->analytics($from,$to),
             static fn(array $row):bool=>isset($allowedIds[$row['campaign_id']->value()])
         ));
-        return ['campaigns'=>$campaigns,'analytics'=>$analytics,'placements'=>AdvertisingPlacementRegistry::all()];
+        return [
+            'campaigns'=>$campaigns,
+            'analytics'=>$analytics,
+            'placements'=>AdvertisingPlacementRegistry::all(),
+            'groups'=>$this->repository->groups(),
+            'forums'=>$this->repository->forums(),
+        ];
     }
 
     public function editableCampaign(EntityId $actor,EntityId $campaignId):?AdvertisingCampaign
