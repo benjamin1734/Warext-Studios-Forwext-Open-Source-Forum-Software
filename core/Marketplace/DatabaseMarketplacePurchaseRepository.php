@@ -199,6 +199,29 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
         return array_map($this->hydrateOrder(...),$rows);
     }
 
+    public function orderHistory(EntityId $orderId,int $limit=200):array
+    {
+        if($limit<1||$limit>500)throw new InvalidArgumentException('Marketplace order history limit is invalid.');
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_order_history WHERE order_id=:order_id '
+            . 'ORDER BY created_at_utc,history_id LIMIT '.$limit,
+            ['order_id'=>$orderId->value()]
+        ));
+        return array_map(static fn(array $row):MarketplaceOrderHistoryEntry=>new MarketplaceOrderHistoryEntry(
+            EntityId::fromString((string)$row['history_id']),
+            EntityId::fromString((string)$row['order_id']),
+            ($row['actor_user_id']??null)===null?null:EntityId::fromString((string)$row['actor_user_id']),
+            (string)$row['action'],
+            MarketplaceOrderState::from((string)$row['from_order_state']),
+            MarketplaceOrderState::from((string)$row['to_order_state']),
+            MarketplacePaymentState::from((string)$row['from_payment_state']),
+            MarketplacePaymentState::from((string)$row['to_payment_state']),
+            MarketplaceDeliveryState::from((string)$row['from_delivery_state']),
+            MarketplaceDeliveryState::from((string)$row['to_delivery_state']),
+            self::at((string)$row['created_at_utc'])
+        ),$rows);
+    }
+
     public function saveOrderStates(MarketplaceOrder $order):void
     {
         $this->database->execute(new CompiledQuery(
