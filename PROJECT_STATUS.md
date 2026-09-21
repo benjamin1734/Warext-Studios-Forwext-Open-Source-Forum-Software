@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.28-dev
+CURRENT_VERSION = 0.0.7.29-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.06
-CURRENT_STEP = 14.07
-LAST_COMMIT = f5f79aae32b63e56579185dbc5ad6a9c3e972ed0
+LAST_COMPLETED_SUBSTEP = 14.07
+CURRENT_STEP = 14.08
+LAST_COMMIT = b343eec151a98e1d37316db6d34fd6def5dd8193
 BLOCKERS = none
-NEXT_STEP = 14.07 - Abonelik/user upgrades
+NEXT_STEP = 14.08 - Reklam/notice/placement sistemi
 ```
 
 ## Current position
@@ -21,14 +21,33 @@ NEXT_STEP = 14.07 - Abonelik/user upgrades
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.06`.
-- Current sub-step: `14.07 — Abonelik/user upgrades`.
-- Remaining roadmap work after 14.06: **42 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.07`.
+- Current sub-step: `14.08 — Reklam/notice/placement sistemi`.
+- Remaining roadmap work after 14.07: **41 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
+## Completed in 14.07
+
+- Added timed and lifetime upgrade plans with stable keys, active state, price/currency, duration snapshots and deterministic ordering.
+- Added durable user subscriptions with `active` / `expired` / `revoked` lifecycle and one aggregate entitlement per user/plan.
+- Added runtime role overlays through the existing `UserAccessAssignment` path and runtime flag-permission overlays through the common permission repository.
+- Runtime authorization checks the database UTC end time directly, so expired access disappears even before durable cleanup changes the row state.
+- Added safe role eligibility and sensitive-permission filtering so staff/system/protected roles and administration-grade permission classes are not directly exposed as upgrade entitlements.
+- Added provider-backed subscription purchase snapshots with idempotency, immutable amount/currency/duration, provider reference/action state and one-active-payment-attempt protection.
+- Added verified server-to-server subscription payment webhooks with provider/reference/amount/currency validation, provider-scoped event dedupe, monotonic state application and SHA-256-only raw-payload persistence.
+- Added one-time paid activation, timed renewal from the existing future end date, lifetime entitlement semantics, manual admin grant/renew, explicit revoke and bounded expiry normalization.
+- Added native member `/account/upgrades`, purchase POST, `/admin/subscriptions`, dedicated subscription CSRF and `Upgrades` member navigation.
+- Added migration `20260921220000_subscription_upgrade_system` for plans, bindings, subscriptions, purchases, webhook events and entitlement history plus built-in permission defaults.
+- Added `/account/upgrades` to post-install navigation smoke for both root and `/public` deployments and added regression coverage for entitlement/security/webhook wiring.
+- Added architecture documentation at `docs/architecture/subscription-user-upgrades.md` and milestone notes at `docs/changelog/14.07-subscription-user-upgrades.md`.
+- Final implementation/fix commit: `b343eec151a98e1d37316db6d34fd6def5dd8193`; final regression-test correction: `aa08744311a29537df306af049c763a57807f0b8`.
+- GitHub Actions build run `35627236876`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35627236887`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.29-dev`.
+- Next: `14.08 — Reklam/notice/placement sistemi`.
 ## Completed in 14.06
 
 - Added first-party Marketplace delivery types for download, license, key and manual fulfillment, with immutable per-order-item delivery snapshots so later listing configuration changes do not rewrite existing orders.
