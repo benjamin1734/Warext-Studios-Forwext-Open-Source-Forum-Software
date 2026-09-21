@@ -31,7 +31,9 @@ final class MarketplaceHtml
             $category.='<option value="'.self::e($c->slug).'"'.$selected.'>'.self::e($c->name).'</option>';
         }
         $body='<section class="card market-head"><div><h1>Marketplace</h1><p class="muted">Topluluk ilanlarını keşfedin, filtreleyin ve satıcı profillerini inceleyin.</p></div>'
-            .($authenticated?'<a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/manage')).'">İlanlarımı yönet</a>':'')
+            .($authenticated?'<div class="market-actions"><a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/manage')).'">İlanlarımı yönet</a>'
+                .'<a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/cart')).'">Sepet</a>'
+                .'<a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/orders')).'">Siparişler</a></div>':'')
             .'<form method="get" action="'.$action.'" class="search-form">'
             .'<label class="search-wide"><span>Ara</span><input name="q" maxlength="200" value="'.self::e($query->text??'').'" placeholder="İlan başlığı veya açıklama"></label>'
             .'<label><span>Kategori</span><select name="category"><option value="">Tümü</option>'.$category.'</select></label>'
@@ -62,7 +64,7 @@ final class MarketplaceHtml
         MarketplaceListing $listing,MarketplaceCategory $category,string $sellerUsername,array $fields,
         ?MarketplaceListingPromotion $promotion,array $reviews,array $reviewAuthors,MarketplaceReviewSummary $summary,
         bool $canReview,?MarketplaceReview $ownReview,?string $csrf,bool $canManage,bool $hasExternalSale,
-        BasePath $basePath,bool $reviewed,bool $authenticated
+        bool $hasInternalPurchase,BasePath $basePath,bool $reviewed,bool $authenticated
     ):string{
         $now=new \DateTimeImmutable('now',new \DateTimeZone('UTC'));
         $badges='';
@@ -113,6 +115,8 @@ final class MarketplaceHtml
             .$gallery.'<section class="section"><h2>Açıklama</h2><div class="about">'.nl2br(self::e($listing->description),false).'</div></section>'
             .($custom===''?'':'<section class="section"><h2>Özellikler</h2><dl class="market-specs">'.$custom.'</dl></section>')
             .($hasExternalSale?'<p class="market-actions"><a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/external')).'">Haricî siteden satın al</a></p>':'')
+            .($hasInternalPurchase&&$csrf!==null?'<form method="post" action="'.self::e($basePath->prepend('/marketplace/cart/'.$listing->listingId->value())).'" class="market-actions">'
+                .self::csrf($csrf).'<input type="hidden" name="action" value="add"><button type="submit">Sepete ekle</button></form>':'')
             .($canManage?'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">Bu ilanı yönet</a></p>':'')
             .'<section class="section"><h2>Değerlendirmeler</h2>'.$reviewHtml.$reviewForm.'</section></article>';
         return ProfileHtml::page($listing->title,$body,$basePath,authenticated:$authenticated);
@@ -140,7 +144,7 @@ final class MarketplaceHtml
         array $listings,array $categories,?MarketplaceListing $selected,?EntityId $newCategoryId,array $fields,
         ?MarketplaceListingPromotion $promotion,array $reviews,array $reviewAuthors,
         bool $canCreate,bool $canManageAll,bool $canFeature,bool $canModerateReviews,bool $canExternalSale,
-        BasePath $basePath,string $csrf,bool $updated
+        bool $canInternalSale,BasePath $basePath,string $csrf,bool $updated
     ):string{
         $action=self::e($basePath->prepend('/marketplace/manage'));
         $body='<section class="card"><h1>Marketplace İlan Yönetimi</h1><p class="muted">İlan oluşturun, düzenleyin ve yaşam döngüsünü yönetin.</p>'
@@ -180,6 +184,9 @@ final class MarketplaceHtml
         if($selected!==null){
             if($canExternalSale){
                 $body.='<section class="section"><h2>Haricî satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/external/'.$selected->listingId->value())).'">Haricî satış bağlantısını yönet</a></p></section>';
+            }
+            if($canInternalSale){
+                $body.='<section class="section"><h2>Dahili satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/internal/'.$selected->listingId->value())).'">Dahili satın alımı yönet</a></p></section>';
             }
             $body.='<section class="section"><h2>İlan görselleri</h2><div class="market-media">';
             foreach($selected->media as $media){
