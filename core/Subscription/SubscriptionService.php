@@ -126,7 +126,11 @@ final readonly class SubscriptionService
         $plan=$this->subscriptions->plan($planId)
             ??throw new InvalidArgumentException('Subscription plan was not found.');
         $at=self::utc($now);
-        $after=$this->activate($userId,$plan->durationDays,$planId,$at,null,$actor,'subscription.manual_grant');
+        $after=$this->database->transaction(
+            fn():UserSubscription=>$this->activate(
+                $userId,$plan->durationDays,$planId,$at,null,$actor,'subscription.manual_grant'
+            )
+        );
 
         $this->audit->append(new AuditEvent(
             AuditEvent::generateId(),AuditScope::Administration,$actor,
