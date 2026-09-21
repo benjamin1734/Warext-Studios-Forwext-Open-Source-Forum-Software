@@ -33,6 +33,7 @@ final readonly class PaymentService
         private MarketplacePurchaseRepository $orders,
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
+        private ?PaymentOrderPaidListener $paidListener=null,
     ){}
 
     /** @return list<string> */
@@ -140,7 +141,10 @@ final readonly class PaymentService
             return $attempt;
         });
 
-        if($attempt->providerReference!==null||$attempt->state!==PaymentAttemptState::Pending)return $attempt;
+        if($attempt->providerReference!==null||$attempt->state!==PaymentAttemptState::Pending){
+            $this->notifyPaid($attempt,$at);
+            return $attempt;
+        }
 
         try{
             $result=$provider->create(new PaymentCreateRequest(
@@ -154,7 +158,7 @@ final readonly class PaymentService
             throw new PaymentProviderException('Payment provider returned an invalid initiation state.');
         }
 
-        return $this->database->transaction(function()use($attempt,$result,$buyer,$at):PaymentAttempt{
+        $final=$this->database->transaction(function()use($attempt,$result,$buyer,$at):PaymentAttempt{
             $current=$this->payments->attempt($attempt->attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
             if($current->providerReference!==null&&$result->providerReference!==null
@@ -183,6 +187,8 @@ final readonly class PaymentService
             $this->syncOrderFromAttempt($updated,$buyer,$at,'payment.provider.'.$updated->state->value);
             return $updated;
         });
+        $this->notifyPaid($final,$at);
+        return $final;
     }
 
     public function handleWebhook(
@@ -221,7 +227,7 @@ final readonly class PaymentService
             throw new InvalidArgumentException('Partial webhook refunds are not supported by the core refund model.');
         }
 
-        return $this->database->transaction(function()use($providerKey,$request,$event,$attempt):PaymentAttempt{
+        $final=$this->database->transaction(function()use($providerKey,$request,$event,$attempt):PaymentAttempt{
             $current=$this->payments->attempt($attempt->attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
             if($this->payments->webhookEventExists($providerKey,$event->eventId))return $current;
@@ -273,6 +279,8 @@ final readonly class PaymentService
             );
             return $updated;
         });
+        $this->notifyPaid($final,$request->receivedAt);
+        return $final;
     }
 
     public function refund(
@@ -594,6 +602,13 @@ final readonly class PaymentService
             $attempt->attemptId,$attempt->orderId,$attempt->buyerUserId,$attempt->providerKey,$attempt->idempotencyKey,
             $attempt->amountMinor,$attempt->currency,$state,$reference,$checkoutUrl,$errorCode,$attempt->createdAt,$at
         );
+    }
+
+    private function notifyPaid(PaymentAttempt $attempt,DateTimeImmutable $at):void
+    {
+        if($attempt->state===PaymentAttemptState::Paid&&$this->paidListener!==null){
+            $this->paidListener->onOrderPaid($attempt->orderId,self::utc($at));
+        }
     }
 
     private static function shouldApplyState(PaymentAttemptState $current,PaymentAttemptState $target):bool
