@@ -100,30 +100,45 @@ if ($rootResponse->headers()->first('Content-Security-Policy') === null) {
     throw new RuntimeException('Post-install home response is missing Content-Security-Policy.');
 }
 
-foreach (['/search', '/members', '/faq', '/members/online', '/stats'] as $route) {
+$navigationRoutes = [
+    '/search',
+    '/members',
+    '/members/online',
+    '/portfolio',
+    '/giveaways',
+    '/marketplace',
+    '/faq',
+    '/account/referrals',
+    '/bugs',
+    '/stats',
+];
+
+foreach ($navigationRoutes as $route) {
     $response = $handle($route);
-    if ($response->status() === 404) {
+    if ($response->status() === 404 || $response->status() >= 500) {
         throw new RuntimeException(sprintf(
-            'Post-install navigation route %s unexpectedly returned HTTP 404.',
+            'Post-install navigation route %s is not usable (HTTP %d).',
             $route,
+            $response->status(),
         ));
     }
 }
 
 $_SERVER['SCRIPT_NAME'] = '/public/index.php';
-foreach (['/', '/search', '/members', '/faq', '/members/online', '/stats'] as $route) {
+foreach (array_merge(['/'], $navigationRoutes) as $route) {
     $requestPath = '/public' . $route;
     $response = $handle($requestPath);
-    if ($response->status() === 404) {
+    if ($response->status() === 404 || $response->status() >= 500) {
         throw new RuntimeException(sprintf(
-            'Subfolder deployment route %s unexpectedly returned HTTP 404.',
+            'Subfolder deployment route %s is not usable (HTTP %d).',
             $requestPath,
+            $response->status(),
         ));
     }
 }
 
 printf(
-    "Post-install web bootstrap smoke passed: version=%s migrations_applied=%d migrations_skipped=%d navigation_and_subfolder_routes=ok.\n",
+    "Post-install web bootstrap smoke passed: version=%s migrations_applied=%d migrations_skipped=%d all_navigation_and_subfolder_routes=ok.\n",
     $version->value(),
     count($report->applied),
     count($report->skipped),
