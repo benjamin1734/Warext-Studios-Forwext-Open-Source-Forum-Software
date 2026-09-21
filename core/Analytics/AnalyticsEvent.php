@@ -43,8 +43,13 @@ final readonly class AnalyticsEvent
             if(!is_string($key)||preg_match('/^[a-z][a-z0-9_]{0,63}$/D',$key)!==1){
                 throw new InvalidArgumentException('Analytics dimension key is invalid.');
             }
-            if(is_string($value)&&strlen($value)>191){
-                throw new InvalidArgumentException('Analytics dimension value is too long.');
+            if(is_string($value)){
+                if(strlen($value)>96||preg_match('/^[A-Za-z0-9._:-]*$/D',$value)!==1){
+                    throw new InvalidArgumentException('Analytics string dimension must be a bounded token.');
+                }
+                if(filter_var($value,FILTER_VALIDATE_IP)!==false){
+                    throw new InvalidArgumentException('Analytics dimensions may not contain raw IP addresses.');
+                }
             }
             if(is_float($value)&&!is_finite($value)){
                 throw new InvalidArgumentException('Analytics numeric dimension is invalid.');
