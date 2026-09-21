@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.27-dev
+CURRENT_VERSION = 0.0.7.28-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.05
-CURRENT_STEP = 14.06
-LAST_COMMIT = 6f80b195eeac7f8355b585b5d3b3e3f0b3491e26
+LAST_COMPLETED_SUBSTEP = 14.06
+CURRENT_STEP = 14.07
+LAST_COMMIT = f5f79aae32b63e56579185dbc5ad6a9c3e972ed0
 BLOCKERS = none
-NEXT_STEP = 14.06 - Dijital teslimat ve sipariş yönetimi
+NEXT_STEP = 14.07 - Abonelik/user upgrades
 ```
 
 ## Current position
@@ -21,13 +21,34 @@ NEXT_STEP = 14.06 - Dijital teslimat ve sipariş yönetimi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.05`.
-- Current sub-step: `14.06 — Dijital teslimat ve sipariş yönetimi`.
-- Remaining roadmap work after 14.05: **43 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.06`.
+- Current sub-step: `14.07 — Abonelik/user upgrades`.
+- Remaining roadmap work after 14.06: **42 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.06
+
+- Added first-party Marketplace delivery types for download, license, key and manual fulfillment, with immutable per-order-item delivery snapshots so later listing configuration changes do not rewrite existing orders.
+- Added private delivery assets backed by the shared storage/attachment inspection stack, controlled MIME allowlists, SHA-256/size integrity checks and authenticated download responses with no-store, nosniff and no-referrer protections.
+- Added encrypted license/key pools with HMAC fingerprints, duplicate suppression, atomic checkout-time reservation, paid-settlement activation, cancellation release and buyer-only reveal flows.
+- Added manual seller fulfillment that is available only for paid eligible orders and advances shared order delivery state/history through the same domain service.
+- Added shared `marketplace.delivery.manage_own` and `marketplace.delivery.manage_all` permissions with backend-authoritative seller/staff checks and conservative permission-template defaults.
+- Added native PHP delivery management at `/marketplace/manage/delivery/{listingId}`, including verified private file upload, delivery-type configuration and bounded bulk key ingestion.
+- Added native order fulfillment routes at `/marketplace/orders/{orderId}/delivery/{itemId}/{action}` for manual fulfillment, buyer reveal and controlled download, all with order/item binding and IDOR-safe access checks.
+- Added order-detail delivery state/actions, append-only order history presentation and a Marketplace-order support/dispute link using the common Support context registry.
+- Added `marketplace_order` support context resolution for buyer/seller/authorized staff while preventing unrelated users from probing order existence.
+- Added migration `20260919215000_marketplace_digital_delivery` for delivery assets/settings/key pools/order-item delivery state plus upgrade-safe order-item snapshots and permission defaults.
+- Expanded post-install web smoke coverage to every core navigation page in both root and `/public` subfolder deployments, treating both 404 and 5xx responses as failures.
+- Added regression coverage for the new permissions, order-support IDOR boundary, delivery web routes, CSRF wiring and secret/download response policy.
+- Added architecture documentation at `docs/architecture/marketplace-digital-delivery.md`.
+- Final implementation commit: `f5f79aae32b63e56579185dbc5ad6a9c3e972ed0`; final test correction: `c3d67a6bd5558304a05a1d7e3fa19d8e463a22b4`.
+- GitHub Actions build run `35591402493`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35591402451`: success on MySQL 8.4 and MariaDB 10.11, including the expanded navigation/subfolder smoke.
+- Version: `0.0.7.28-dev`.
+- Next: `14.07 — Abonelik/user upgrades`.
 
 ## Completed in 14.05
 

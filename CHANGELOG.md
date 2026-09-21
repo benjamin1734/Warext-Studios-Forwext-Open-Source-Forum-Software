@@ -6,6 +6,22 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.06 — Digital Delivery and Order Management
+
+- Added download, license, key and manual Marketplace delivery modes with immutable checkout-time delivery snapshots.
+- Added private delivery assets using the shared upload/storage pipeline, MIME allowlists, SHA-256/size integrity validation and controlled buyer downloads.
+- Added encrypted license/key inventory with duplicate-safe HMAC fingerprints, atomic reservation, paid activation and cancellation release.
+- Added paid-order manual seller fulfillment plus buyer-only secret reveal/download flows and synchronized order delivery state.
+- Added backend `marketplace.delivery.manage_own` / `marketplace.delivery.manage_all` permissions, IDOR-safe order/item access and central audit integration.
+- Added native PHP delivery setup, order delivery actions, append-only order history and Marketplace-order support/dispute context.
+- Added migration `20260919215000_marketplace_digital_delivery`, permission defaults and Support `marketplace_order` context wiring.
+- Expanded post-install navigation smoke coverage to all ten core navigation routes in root and `/public` subfolder deployments, rejecting both 404 and 5xx results.
+- Added regression tests for permission catalog completeness, support-context privacy, delivery route/CSRF wiring and security response policy.
+- Added architecture documentation at `docs/architecture/marketplace-digital-delivery.md`.
+- Final implementation commit: `f5f79aae32b63e56579185dbc5ad6a9c3e972ed0`; final test correction: `c3d67a6bd5558304a05a1d7e3fa19d8e463a22b4`.
+- GitHub Actions build run `35591402493`: success.
+- Database migration smoke run `35591402451`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 14.05 — Payment Provider Abstraction
 
 - Added provider-agnostic payment contracts, typed attempt/refund lifecycles and an injectable duplicate-safe `PaymentProviderRegistry` without making a commercial payment SDK mandatory for cPanel deployments.
