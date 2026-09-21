@@ -9,7 +9,7 @@ use Forwext\Core\Domain\Entity\EntityId;
 
 interface PaymentRepository
 {
-    public function attempt(EntityId $attemptId):?PaymentAttempt;
+    public function attempt(EntityId $attemptId,bool $forUpdate=false):?PaymentAttempt;
     public function attemptByIdempotency(EntityId $orderId,string $providerKey,string $idempotencyKey):?PaymentAttempt;
     public function attemptByProviderReference(string $providerKey,string $providerReference):?PaymentAttempt;
     public function insertAttempt(PaymentAttempt $attempt):void;
