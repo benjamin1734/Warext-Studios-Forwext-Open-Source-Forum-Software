@@ -42,7 +42,7 @@ final class SubscriptionHtml
                 .'<p class="muted">Süre: '.self::e($duration).'</p>';
             if($subscription!==null){
                 $body.='<p><strong>Durum:</strong> '.self::e($subscription->state->value)
-                    .' · <strong>Bitiş:</strong> '.self::e($subscription->endsAt?->format('Y-m-d H:i').' UTC'??'Süresiz').'</p>';
+                    .' · <strong>Bitiş:</strong> '.self::e($subscription->endsAt===null?'Süresiz':$subscription->endsAt->format('Y-m-d H:i').' UTC').'</p>';
             }
             if($canPurchase&&$plan->priceMinor>0&&$providers!==[]){
                 $action=self::e($basePath->prepend('/account/upgrades/'.$plan->planId->value().'/purchase'));
