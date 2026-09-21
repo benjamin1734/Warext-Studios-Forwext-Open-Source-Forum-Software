@@ -98,6 +98,22 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
     public function createOrder(MarketplaceOrder $order,array $items):void
     {
         if($items===[])throw new InvalidArgumentException('Marketplace order must contain at least one item.');
+        $subtotal=0;
+        foreach($items as $item){
+            if(!$item instanceof MarketplaceOrderItem||!$item->orderId->equals($order->orderId)){
+                throw new InvalidArgumentException('Marketplace order item does not belong to the order.');
+            }
+            if($item->currency!==$order->currency){
+                throw new InvalidArgumentException('Marketplace order item currency does not match the order.');
+            }
+            $lineTotal=$item->lineTotalMinor();
+            if($subtotal>PHP_INT_MAX-$lineTotal)throw new InvalidArgumentException('Marketplace order subtotal is too large.');
+            $subtotal+=$lineTotal;
+        }
+        if($subtotal!==$order->subtotalMinor){
+            throw new InvalidArgumentException('Marketplace order item subtotal does not match the order.');
+        }
+
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_marketplace_orders '
             . '(order_id,order_number,checkout_key,buyer_user_id,seller_user_id,currency,subtotal_minor,total_minor,'
@@ -114,9 +130,6 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
             ]
         ));
         foreach($items as $item){
-            if(!$item instanceof MarketplaceOrderItem||!$item->orderId->equals($order->orderId)){
-                throw new InvalidArgumentException('Marketplace order item does not belong to the order.');
-            }
             $this->database->execute(new CompiledQuery(
                 'INSERT INTO forwext_marketplace_order_items '
                 . '(item_id,order_id,listing_id,title,quantity,unit_minor,currency,line_total_minor) '
