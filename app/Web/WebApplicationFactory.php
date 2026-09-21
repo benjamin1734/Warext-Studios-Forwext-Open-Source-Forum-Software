@@ -382,7 +382,7 @@ final readonly class WebApplicationFactory
             $advertisingRepository,
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
-            $this->masterKey($config),
+            $this->advertisingFrequencyKey($config),
         );
         $nodes = new DatabaseForumNodeRepository($database);
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
@@ -1771,6 +1771,17 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('security.master_key_file')),
             $config->requireString('security.master_key_environment'),
         ))->load();
+    }
+
+    private function advertisingFrequencyKey(ConfigRepository $config): SecretKey
+    {
+        $derived=hash_hmac(
+            'sha256',
+            'forwext.advertising.frequency.v1',
+            $this->masterKey($config)->bytesForCrypto(),
+            true,
+        );
+        return SecretKey::fromBase64(base64_encode($derived));
     }
 
     private function sessionStore(ConfigRepository $config, DatabaseConnection $database): SessionStore
