@@ -235,6 +235,18 @@ final readonly class DatabaseSubscriptionRepository implements SubscriptionRepos
         return $row===null?null:$this->hydratePurchase($row);
     }
 
+    public function activePurchase(EntityId $userId,EntityId $planId,bool $forUpdate=false):?SubscriptionPurchase
+    {
+        UserId::assert($userId);
+        $row=$this->database->fetchOne(new CompiledQuery(
+            "SELECT * FROM forwext_subscription_purchases WHERE user_id=:user AND plan_id=:plan "
+            . "AND state IN ('pending','requires_action','authorized') ORDER BY created_at_utc DESC,purchase_id DESC LIMIT 1"
+            .($forUpdate?' FOR UPDATE':''),
+            ['user'=>$userId->value(),'plan'=>$planId->value()]
+        ));
+        return $row===null?null:$this->hydratePurchase($row);
+    }
+
     public function insertPurchase(SubscriptionPurchase $purchase):void
     {
         $this->database->execute(new CompiledQuery(
