@@ -135,7 +135,7 @@ final class SubscriptionHtml
             foreach($plans as $plan)if($plan->planId->equals($subscription->planId)){$planName=$plan->name;break;}
             $body.='<article class="search-hit"><strong>'.self::e($username).' · '.self::e($planName).'</strong>'
                 .'<p class="muted">'.self::e($subscription->state->value).' · '
-                .self::e($subscription->endsAt?->format('Y-m-d H:i').' UTC'??'Süresiz').'</p>';
+                .self::e($subscription->endsAt===null?'Süresiz':$subscription->endsAt->format('Y-m-d H:i').' UTC').'</p>';
             if($subscription->state->value!=='revoked'){
                 $body.='<form method="post" action="'.$action.'" class="market-actions">'.self::csrf($csrf)
                     .'<input type="hidden" name="action" value="revoke"><input type="hidden" name="subscription_id" value="'.$subscription->subscriptionId->value().'">'
