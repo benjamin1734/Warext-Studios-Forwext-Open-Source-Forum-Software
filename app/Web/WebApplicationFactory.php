@@ -42,6 +42,8 @@ use Forwext\App\Web\Marketplace\MarketplaceCartItemHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCheckoutHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceDetailHandler;
+use Forwext\App\Web\Marketplace\MarketplaceDeliveryManageHandler;
+use Forwext\App\Web\Marketplace\MarketplaceOrderDeliveryHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleRedirectHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleWarningHandler;
@@ -938,7 +940,7 @@ final readonly class WebApplicationFactory
             'marketplace.order.detail',
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/marketplace/orders/{orderId}',['orderId'=>'[0-9a-f]{32}']),
-            new MarketplaceOrderDetailHandler($marketplacePurchases,$payments,$users,$viewerResolver,$basePath),
+            new MarketplaceOrderDetailHandler($marketplacePurchases,$marketplaceDelivery,$payments,$users,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
@@ -959,6 +961,30 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/marketplace/manage/internal/{listingId}',['listingId'=>'[0-9a-f]{32}']),
             new MarketplaceInternalSaleManageHandler($marketplacePurchases,$marketplace,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.delivery.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/manage/delivery/{listingId}',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceDeliveryManageHandler(
+                $marketplaceDelivery,$marketplace,$viewerResolver,new VerifiedUploadedAttachmentReader(),
+                $attachmentQuota,$basePath
+            ),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.order.delivery',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate(
+                '/marketplace/orders/{orderId}/delivery/{itemId}/{action}',
+                [
+                    'orderId'=>'[0-9a-f]{32}',
+                    'itemId'=>'[0-9a-f]{32}',
+                    'action'=>'(?:fulfill|reveal|download)',
+                ],
+            ),
+            new MarketplaceOrderDeliveryHandler($marketplaceDelivery,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(

@@ -220,6 +220,13 @@ final readonly class MarketplacePurchaseService
         return ['order'=>$order,'items'=>$this->purchases->orderItems($orderId)];
     }
 
+    /** @return list<MarketplaceOrderHistoryEntry> */
+    public function orderHistory(EntityId $actor,EntityId $orderId,int $limit=200):array
+    {
+        $this->order($actor,$orderId);
+        return $this->purchases->orderHistory($orderId,$limit);
+    }
+
     public function cancelPending(
         EntityId $actor,
         EntityId $orderId,

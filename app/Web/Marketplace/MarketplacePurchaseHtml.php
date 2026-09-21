@@ -10,6 +10,9 @@ use Forwext\Core\Marketplace\MarketplaceCartEntry;
 use Forwext\Core\Marketplace\MarketplaceListing;
 use Forwext\Core\Marketplace\MarketplaceOrder;
 use Forwext\Core\Marketplace\MarketplaceOrderItem;
+use Forwext\Core\Marketplace\MarketplaceOrderHistoryEntry;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryRecord;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryType;
 use Forwext\Core\Routing\BasePath;
 
 final class MarketplacePurchaseHtml
@@ -102,9 +105,14 @@ final class MarketplacePurchaseHtml
         return ProfileHtml::page('Marketplace Siparişleri',$body.'</section>',$basePath,authenticated:true);
     }
 
-    /** @param list<MarketplaceOrderItem> $items @param list<string> $paymentProviders */
+    /**
+     * @param list<MarketplaceOrderItem> $items
+     * @param list<MarketplaceDeliveryRecord> $deliveries
+     * @param list<MarketplaceOrderHistoryEntry> $history
+     * @param list<string> $paymentProviders
+     */
     public static function order(
-        MarketplaceOrder $order,array $items,string $buyer,string $seller,bool $canCancel,
+        MarketplaceOrder $order,array $items,array $deliveries,array $history,EntityId $actor,string $buyer,string $seller,bool $canCancel,
         array $paymentProviders,?string $paymentIdempotencyKey,?string $paymentCancelKey,
         BasePath $basePath,string $csrf,bool $cancelled,?string $paymentStatus=null
     ):string{
@@ -122,9 +130,34 @@ final class MarketplacePurchaseHtml
             .'<dt>Fatura e-postası</dt><dd>'.self::e($order->billing->email).'</dd>'
             .'<dt>Ülke</dt><dd>'.self::e($order->billing->countryCode).'</dd></dl>'
             .'<section class="section"><h2>Ürünler</h2>';
+        $deliveryByItem=[];foreach($deliveries as $delivery)$deliveryByItem[$delivery->orderItemId->value()]=$delivery;
+        $isBuyer=$order->buyerUserId->equals($actor);
+        $isSeller=$order->sellerUserId->equals($actor);
         foreach($items as $item){
+            $delivery=$deliveryByItem[$item->itemId->value()]??null;
             $body.='<article class="search-hit"><h3>'.self::e($item->title).'</h3><p>'
-                .self::e((string)$item->quantity).' × '.self::e(self::money($item->unitMinor,$item->currency)).'</p></article>';
+                .self::e((string)$item->quantity).' × '.self::e(self::money($item->unitMinor,$item->currency)).'</p>';
+            if($delivery!==null){
+                $body.='<p class="muted">Teslimat: '.self::e($delivery->type->value).' · '.self::e($delivery->state->value).'</p>';
+                $base='/marketplace/orders/'.$order->orderId->value().'/delivery/'.$item->itemId->value().'/';
+                if($isBuyer&&in_array($delivery->state->value,['ready','delivered'],true)){
+                    if($delivery->type===MarketplaceDeliveryType::Download){
+                        $body.='<p><a class="market-manage-link" href="'.self::e($basePath->prepend($base.'download')).'">Dosyayı indir</a></p>';
+                    }else{
+                        $body.='<form method="post" action="'.self::e($basePath->prepend($base.'reveal')).'" class="market-actions">'
+                            .self::csrf($csrf).'<button type="submit">Teslimat bilgisini göster</button></form>';
+                    }
+                }
+                if($isSeller&&$delivery->type===MarketplaceDeliveryType::Manual&&$delivery->state->value==='pending'
+                    &&$order->paymentState->value==='paid'
+                ){
+                    $body.='<form method="post" action="'.self::e($basePath->prepend($base.'fulfill')).'" class="search-form">'
+                        .self::csrf($csrf).'<label class="search-wide"><span>Manuel teslimat</span>'
+                        .'<textarea name="value" maxlength="16384" rows="5" required></textarea></label>'
+                        .'<div class="search-actions"><button type="submit">Teslimatı hazırla</button></div></form>';
+                }
+            }
+            $body.='</article>';
         }
         $body.='</section>';
         if($paymentProviders!==[]&&$paymentIdempotencyKey!==null){
@@ -145,6 +178,21 @@ final class MarketplacePurchaseHtml
                 .'<input type="hidden" name="payment_cancel_key" value="'.self::e($paymentCancelKey).'">'
                 .'<button type="submit">Ödenmemiş siparişi iptal et</button></form>';
         }
+        $support=$basePath->prepend('/support/new').'?'.http_build_query([
+            'context_type'=>'marketplace_order','context_id'=>$order->orderId->value(),
+            'q'=>'Sipariş '.$order->orderNumber,
+        ],'','&',PHP_QUERY_RFC3986);
+        $body.='<section class="section"><h2>Destek / uyuşmazlık</h2><p><a class="market-manage-link" href="'.self::e($support).'">Bu sipariş için destek talebi aç</a></p></section>';
+        $body.='<section class="section"><h2>Sipariş geçmişi</h2>';
+        if($history===[])$body.='<p class="muted">Geçmiş kaydı yok.</p>';
+        foreach($history as $entry){
+            $body.='<article class="search-hit"><strong>'.self::e($entry->action).'</strong>'
+                .'<p class="muted">'.self::e($entry->createdAt->format('Y-m-d H:i:s')).' UTC · '
+                .'sipariş '.self::e($entry->fromOrderState->value).' → '.self::e($entry->toOrderState->value).' · '
+                .'ödeme '.self::e($entry->fromPaymentState->value).' → '.self::e($entry->toPaymentState->value).' · '
+                .'teslimat '.self::e($entry->fromDeliveryState->value).' → '.self::e($entry->toDeliveryState->value).'</p></article>';
+        }
+        $body.='</section>';
         return ProfileHtml::page($order->orderNumber,$body.'</section>',$basePath,authenticated:true);
     }
 

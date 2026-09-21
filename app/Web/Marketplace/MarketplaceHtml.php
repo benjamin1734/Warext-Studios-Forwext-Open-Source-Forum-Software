@@ -188,6 +188,9 @@ final class MarketplaceHtml
             if($canInternalSale){
                 $body.='<section class="section"><h2>Dahili satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/internal/'.$selected->listingId->value())).'">Dahili satın alımı yönet</a></p></section>';
             }
+            $body.='<section class="section"><h2>Dijital teslimat</h2><p><a href="'
+                .self::e($basePath->prepend('/marketplace/manage/delivery/'.$selected->listingId->value()))
+                .'">Teslimat türünü, dosyayı ve anahtar havuzunu yönet</a></p></section>';
             $body.='<section class="section"><h2>İlan görselleri</h2><div class="market-media">';
             foreach($selected->media as $media){
                 $body.='<figure><img src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value())).'" alt="'.self::e($media->altText).'">'

@@ -17,6 +17,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Marketplace\MarketplaceOrderState;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryService;
 use Forwext\Core\Marketplace\MarketplacePaymentState;
 use Forwext\Core\Marketplace\MarketplacePurchaseService;
 use Forwext\Core\Payment\PaymentAttemptState;
@@ -29,6 +30,7 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
 {
     public function __construct(
         private MarketplacePurchaseService $purchases,
+        private MarketplaceDeliveryService $delivery,
         private PaymentService $payments,
         private UserRepository $users,
         private ProfileViewerResolver $viewers,
@@ -107,8 +109,10 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
             $paymentStatus=null;
             $rawPayment=$request->query()['payment']??null;
             if(is_string($rawPayment)&&PaymentAttemptState::tryFrom($rawPayment)!==null)$paymentStatus=$rawPayment;
+            $deliverySnapshot=$this->delivery->orderSnapshot($actor,$orderId);
+            $history=$this->purchases->orderHistory($actor,$orderId);
             return Response::html(MarketplacePurchaseHtml::order(
-                $order,$snapshot['items'],$buyerName,$sellerName,$canCancel,
+                $order,$snapshot['items'],$deliverySnapshot['deliveries'],$history,$actor,$buyerName,$sellerName,$canCancel,
                 $canPay?$this->payments->providerKeys():[],
                 $canPay?bin2hex(random_bytes(16)):null,
                 $canCancel?bin2hex(random_bytes(16)):null,
