@@ -32,6 +32,9 @@ interface MarketplacePurchaseRepository
     /** @return list<MarketplaceOrder> */
     public function ordersForUser(EntityId $userId,int $limit=100):array;
 
+    /** @return list<MarketplaceOrder> */
+    public function orders(int $limit=100):array;
+
     public function saveOrderStates(MarketplaceOrder $order):void;
     public function recordOrderHistory(
         EntityId $orderId,
