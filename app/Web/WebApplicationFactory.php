@@ -8,6 +8,7 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -114,6 +115,10 @@ use Forwext\App\Web\Subscription\SubscriptionWebhookHandler;
 use Forwext\App\Web\Trophy\TrophyManageHandler;
 use Forwext\Core\Advertising\AdvertisingService;
 use Forwext\Core\Advertising\DatabaseAdvertisingRepository;
+use Forwext\Core\Analytics\AnalyticsEventRecorder;
+use Forwext\Core\Analytics\AnalyticsEventRegistry;
+use Forwext\Core\Analytics\AnalyticsPrivacyHasher;
+use Forwext\Core\Analytics\DatabaseAnalyticsRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -376,6 +381,11 @@ final readonly class WebApplicationFactory
         $mentionSuggestions = new DatabaseMentionSuggestionProvider($database);
         $posts = new DatabasePostRepository($database);
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
+        $analytics = new AnalyticsEventRecorder(
+            AnalyticsEventRegistry::withCoreDefaults(),
+            new DatabaseAnalyticsRepository($database),
+            new AnalyticsPrivacyHasher($this->analyticsPrivacyKey($config)),
+        );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
             $database,
@@ -735,12 +745,20 @@ final readonly class WebApplicationFactory
             $bugNotificationRegistry,
             new DatabaseNotificationRepository($database),
         ));
-        $bugDiagnosticCollector = new BugDiagnosticContextCollector(new BugBrowserDeviceClassifier(
+        $browserDeviceClassifier = new BugBrowserDeviceClassifier(
             new AuthenticationFingerprint(
                 $secretStore,
                 $config->requireString('authentication.fingerprint_secret_name'),
             ),
-        ));
+        );
+        $bugDiagnosticCollector = new BugDiagnosticContextCollector($browserDeviceClassifier);
+        $analyticsMiddleware = new AnalyticsRequestMiddleware(
+            $analytics,
+            $viewerResolver,
+            $threads,
+            $browserDeviceClassifier,
+            $config->requireString('authentication.session.cookie_name'),
+        );
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
             $posts,
@@ -1531,7 +1549,7 @@ final readonly class WebApplicationFactory
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath), [$this->profileUrlCsrfMiddleware($config)],
         ));
 
-        return new Router($routes, $basePath, [$easterEggMiddleware, $advertisingMiddleware]);
+        return new Router($routes, $basePath, [$easterEggMiddleware, $advertisingMiddleware, $analyticsMiddleware]);
     }
 
     public function decorateLegacyEasterEgg(Request $request, Response $response): Response
@@ -1778,6 +1796,17 @@ final readonly class WebApplicationFactory
         $derived=hash_hmac(
             'sha256',
             'forwext.advertising.frequency.v1',
+            $this->masterKey($config)->bytesForCrypto(),
+            true,
+        );
+        return SecretKey::fromBase64(base64_encode($derived));
+    }
+
+    private function analyticsPrivacyKey(ConfigRepository $config): SecretKey
+    {
+        $derived=hash_hmac(
+            'sha256',
+            'forwext.analytics.privacy.v1',
             $this->masterKey($config)->bytesForCrypto(),
             true,
         );
