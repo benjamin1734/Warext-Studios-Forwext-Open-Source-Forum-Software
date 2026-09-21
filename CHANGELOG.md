@@ -6,6 +6,22 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.08 — Advertising / Notice / Placement System
+
+- Added first-party advertisement, notice and announcement campaigns with stable semantic placement keys.
+- Added combined route wildcard, forum, user-group, desktop/mobile and UTC schedule targeting.
+- Added HMAC-derived authenticated/anonymous frequency identities, rolling impression caps and an HttpOnly first-party anonymous token.
+- Added fail-open native PHP HTML placement decoration so an advertising subsystem failure does not turn healthy forum pages into 500 responses.
+- Added tracked click redirects with site-relative/HTTPS destination validation, no embedded credentials and rapid-repeat click analytics deduplication.
+- Added privacy-bounded impression/click persistence plus 30-day CTR and estimated value/revenue aggregation.
+- Added native `/admin/advertising` management with real forum/group selection, route patterns, device/time targeting, cap/window controls and analytics.
+- Added backend `ads.manage` / `notice.manage` authorization, dedicated CSRF and centralized administration audit mutation.
+- Added migration `20260921223000_advertising_notice_system` for campaigns, route/forum/group/device targets and indexed event/frequency analytics.
+- Added domain, runtime selection, click-dedupe, web-wiring and migration-registry regression coverage.
+- Added architecture documentation at `docs/architecture/advertising-notice-placement.md` and milestone notes at `docs/changelog/14.08-advertising-notice-placement.md`.
+- Final implementation/fix commit: `d70effd8240f0badb8adb1c0badd805354e4b0ed`; final regression-test commit: `e32f0f1b7b0b56e2487194dce75be13b4f463552`.
+- GitHub Actions build run `35631552545`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35631552587`: success on MySQL 8.4 and MariaDB 10.11.
 ### 14.07 — Subscription / User Upgrades
 
 - Added timed and lifetime first-party upgrade plans with durable user entitlement state and immutable purchase snapshots.
