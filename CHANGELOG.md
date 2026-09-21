@@ -6,6 +6,22 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.07 — Subscription / User Upgrades
+
+- Added timed and lifetime first-party upgrade plans with durable user entitlement state and immutable purchase snapshots.
+- Added runtime role and flag-permission overlays so expiry/revocation affects authorization without rewriting normal user assignments.
+- Excluded protected/staff/system roles and sensitive administration permission classes from direct upgrade entitlement binding.
+- Added provider-backed subscription purchase initiation with idempotency, amount/currency/duration snapshots and one-active-payment-attempt protection.
+- Added verified/deduplicated server-to-server subscription payment webhooks with provider reference, amount and currency validation plus SHA-256-only payload persistence.
+- Added paid activation and renewal semantics that extend timed upgrades from their existing future end date and retain lifetime upgrades without an end time.
+- Added runtime expiry enforcement plus bounded read-repair/admin normalization, manual grant/renew and explicit revocation.
+- Added native `/account/upgrades`, purchase action and `/admin/subscriptions` surfaces with dedicated CSRF for human mutations and a separate verified webhook route.
+- Added migration `20260921220000_subscription_upgrade_system` for plans, role/permission bindings, user subscriptions, purchases, webhook dedupe and entitlement history.
+- Added member navigation/post-install smoke coverage plus regression tests for domain invariants, entitlement overlays, sensitive permission boundaries and webhook/CSRF wiring.
+- Added architecture documentation at `docs/architecture/subscription-user-upgrades.md` and milestone notes at `docs/changelog/14.07-subscription-user-upgrades.md`.
+- Final implementation/fix commit: `b343eec151a98e1d37316db6d34fd6def5dd8193`; final regression-test correction: `aa08744311a29537df306af049c763a57807f0b8`.
+- GitHub Actions build run `35627236876`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35627236887`: success on MySQL 8.4 and MariaDB 10.11.
 ### 14.06 — Digital Delivery and Order Management
 
 - Added download, license, key and manual Marketplace delivery modes with immutable checkout-time delivery snapshots.
