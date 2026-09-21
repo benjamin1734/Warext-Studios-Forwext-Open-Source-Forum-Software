@@ -41,6 +41,7 @@ use Forwext\Database\Migrations\Core\CreateMarketplaceDiscoveryUx;
 use Forwext\Database\Migrations\Core\CreateMarketplaceExternalSale;
 use Forwext\Database\Migrations\Core\CreateMarketplaceNativePurchase;
 use Forwext\Database\Migrations\Core\CreatePaymentAbstraction;
+use Forwext\Database\Migrations\Core\ScopePaymentRefundReference;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -158,6 +159,7 @@ final class CoreMigrationRegistry
             new CreateMarketplaceExternalSale(),
             new CreateMarketplaceNativePurchase(),
             new CreatePaymentAbstraction(),
+            new ScopePaymentRefundReference(),
         ];
     }
 }
