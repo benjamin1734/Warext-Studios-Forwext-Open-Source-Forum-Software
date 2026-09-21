@@ -17,6 +17,8 @@ interface MarketplaceDeliveryRepository
     public function saveAsset(MarketplaceDeliveryAsset $asset):void;
 
     public function insertKey(MarketplaceDeliveryKey $key):void;
+    public function key(EntityId $keyId):?MarketplaceDeliveryKey;
+    public function keyFingerprintExists(EntityId $listingId,string $fingerprint):bool;
     public function availableKeyCount(EntityId $listingId):int;
     public function reserveAvailableKey(
         EntityId $listingId,
