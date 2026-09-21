@@ -210,6 +210,7 @@ final readonly class MarketplaceService
     public function canPurchase(EntityId $actor):bool{return $this->allows($actor,'marketplace.purchase');}
     public function requirePurchase(EntityId $actor):void{$this->require($actor,'marketplace.purchase');}
     public function canManageOrders(EntityId $actor):bool{return $this->allows($actor,'marketplace.order.manage');}
+    public function requireOrderManage(EntityId $actor):void{$this->require($actor,'marketplace.order.manage');}
 
     /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
     public function managementSnapshot(EntityId $actor):array
