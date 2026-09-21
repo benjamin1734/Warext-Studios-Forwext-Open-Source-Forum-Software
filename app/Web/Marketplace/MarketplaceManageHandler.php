@@ -68,7 +68,8 @@ final readonly class MarketplaceManageHandler implements RequestHandlerInterface
                 $selected,$newCategory,$fields,$promotion,$reviews,$authors,
                 $this->marketplace->canCreate($actor),$this->marketplace->canManageAll($actor),
                 $this->marketplace->canFeature($actor),$this->marketplace->canModerateReviews($actor),
-                $this->marketplace->canUseExternalLink($actor),$this->basePath,$csrf,($request->query()['updated']??null)==='1'
+                $this->marketplace->canUseExternalLink($actor),$this->marketplace->canUseInternalPurchase($actor),
+                $this->basePath,$csrf,($request->query()['updated']??null)==='1'
             ))->withHeader('Cache-Control','private, no-store');
         }catch(PermissionDeniedException){return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');}
         catch(InvalidArgumentException){return Response::text('Bad Request',400)->withHeader('Cache-Control','no-store');}
