@@ -158,9 +158,18 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
         UserId::assert($userId);
         if($limit<1||$limit>200)throw new InvalidArgumentException('Marketplace order list limit is invalid.');
         $rows=$this->database->fetchAll(new CompiledQuery(
-            'SELECT * FROM forwext_marketplace_orders WHERE buyer_user_id=:user OR seller_user_id=:user '
+            'SELECT * FROM forwext_marketplace_orders WHERE buyer_user_id=:buyer_user OR seller_user_id=:seller_user '
             . 'ORDER BY created_at_utc DESC,order_id DESC LIMIT '.$limit,
-            ['user'=>$userId->value()]
+            ['buyer_user'=>$userId->value(),'seller_user'=>$userId->value()]
+        ));
+        return array_map($this->hydrateOrder(...),$rows);
+    }
+
+    public function orders(int $limit=100):array
+    {
+        if($limit<1||$limit>200)throw new InvalidArgumentException('Marketplace order list limit is invalid.');
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_orders ORDER BY created_at_utc DESC,order_id DESC LIMIT '.$limit
         ));
         return array_map($this->hydrateOrder(...),$rows);
     }
