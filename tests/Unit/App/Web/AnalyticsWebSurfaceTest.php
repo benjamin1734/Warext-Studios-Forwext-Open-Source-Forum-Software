@@ -31,7 +31,7 @@ final class AnalyticsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("request->method()->value!=='GET'",$middleware);
         self::assertStringContainsString("response->status()!==200",$middleware);
-        self::assertStringContainsString("str_starts_with($type,'text/html')",$middleware);
+        self::assertStringContainsString("str_starts_with(\$type,'text/html')", $middleware);
         self::assertStringContainsString("recordBestEffort(new AnalyticsEvent(",$middleware);
         self::assertStringContainsString("'user.active'",$middleware);
         self::assertStringContainsString("'forum.view'",$middleware);
