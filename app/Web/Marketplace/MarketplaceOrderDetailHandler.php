@@ -44,12 +44,26 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
 
         try{
             if($request->method()===HttpMethod::Post){
-                $action=$request->parsedBody()['action']??null;
+                $body=$request->parsedBody();
+                $action=$body['action']??null;
                 if($action!=='cancel')throw new InvalidArgumentException('Marketplace order action is invalid.');
-                $this->purchases->cancelPending(
-                    $actor,$orderId,new DateTimeImmutable('now',new DateTimeZone('UTC')),
-                    HttpAuditRequestId::fromRequest($request)
-                );
+
+                $snapshot=$this->purchases->order($actor,$orderId);
+                $order=$snapshot['order'];
+                $now=new DateTimeImmutable('now',new DateTimeZone('UTC'));
+                $auditRequestId=HttpAuditRequestId::fromRequest($request);
+
+                if($order->buyerUserId->equals($actor)){
+                    $cancelKey=$body['payment_cancel_key']??null;
+                    if(!is_string($cancelKey)||preg_match('/^[a-f0-9]{32}$/D',$cancelKey)!==1){
+                        throw new InvalidArgumentException('Payment cancellation idempotency key is invalid.');
+                    }
+                    $this->payments->cancelForOrderBuyer(
+                        $actor,$orderId,$cancelKey,$now,$auditRequestId
+                    );
+                }
+
+                $this->purchases->cancelPending($actor,$orderId,$now,$auditRequestId);
                 return Response::redirect(
                     $this->basePath->prepend('/marketplace/orders/'.$orderId->value().'?cancelled=1'),303
                 )->withHeader('Cache-Control','no-store');
@@ -61,9 +75,32 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
             $seller=$this->users->find($order->sellerUserId);
             $buyerName=$buyer?->username()->display()??'Silinmiş kullanıcı';
             $sellerName=$seller?->username()->display()??'Silinmiş kullanıcı';
-            $canCancel=($order->buyerUserId->equals($actor)||$this->purchases->canManageOrders($actor))
-                &&$order->state===MarketplaceOrderState::Pending
-                &&$order->paymentState===MarketplacePaymentState::Pending;
+            $isBuyer=$order->buyerUserId->equals($actor);
+            $isManager=$this->purchases->canManageOrders($actor);
+            $canCancel=$order->state===MarketplaceOrderState::Pending&&(
+                ($isBuyer&&in_array(
+                    $order->paymentState,
+                    [
+                        MarketplacePaymentState::Pending,
+                        MarketplacePaymentState::Authorized,
+                        MarketplacePaymentState::Failed,
+                        MarketplacePaymentState::Cancelled,
+                    ],
+                    true
+                ))
+                ||(!$isBuyer&&$isManager
+                    &&in_array(
+                        $order->paymentState,
+                        [
+                            MarketplacePaymentState::Pending,
+                            MarketplacePaymentState::Failed,
+                            MarketplacePaymentState::Cancelled,
+                        ],
+                        true
+                    )
+                    &&!$this->payments->hasActiveAttempt($order)
+                )
+            );
             $csrf=$request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if(!is_string($csrf)||$csrf==='')return Response::text('Internal Server Error',500)->withHeader('Cache-Control','no-store');
             $canPay=$this->payments->canInitiate($actor,$order);
@@ -74,6 +111,7 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
                 $order,$snapshot['items'],$buyerName,$sellerName,$canCancel,
                 $canPay?$this->payments->providerKeys():[],
                 $canPay?bin2hex(random_bytes(16)):null,
+                $canCancel?bin2hex(random_bytes(16)):null,
                 $this->basePath,$csrf,
                 ($request->query()['cancelled']??null)==='1',$paymentStatus
             ))->withHeader('Cache-Control','private, no-store')->withHeader('X-Robots-Tag','noindex,nofollow');
