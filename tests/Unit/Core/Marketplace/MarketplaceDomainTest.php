@@ -730,7 +730,7 @@ final class MemoryMarketplacePurchaseRepository implements MarketplacePurchaseRe
     public function orders(int $limit=100):array{return array_slice(array_values($this->ordersById),0,$limit);}
     public function saveOrderStates(MarketplaceOrder $order):void{$this->ordersById[$order->orderId->value()]=$order;}
     public function recordOrderHistory(
-        EntityId $orderId,EntityId $actor,string $action,
+        EntityId $orderId,?EntityId $actor,string $action,
         MarketplaceOrderState $fromOrderState,MarketplaceOrderState $toOrderState,
         MarketplacePaymentState $fromPaymentState,MarketplacePaymentState $toPaymentState,
         MarketplaceDeliveryState $fromDeliveryState,MarketplaceDeliveryState $toDeliveryState,
