@@ -83,6 +83,26 @@ final readonly class DatabaseMarketplaceDeliveryRepository implements Marketplac
         ));
     }
 
+    public function key(EntityId $keyId):?MarketplaceDeliveryKey
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT * FROM forwext_marketplace_delivery_keys WHERE key_id=:key_id LIMIT 1',
+            ['key_id'=>$keyId->value()]
+        ));
+        return $row===null?null:$this->hydrateKey($row);
+    }
+
+    public function keyFingerprintExists(EntityId $listingId,string $fingerprint):bool
+    {
+        if(preg_match('/^[a-f0-9]{64}$/D',$fingerprint)!==1){
+            throw new InvalidArgumentException('Marketplace delivery key fingerprint is invalid.');
+        }
+        return (int)$this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_marketplace_delivery_keys WHERE listing_id=:listing AND fingerprint=:fingerprint',
+            ['listing'=>$listingId->value(),'fingerprint'=>$fingerprint]
+        ))>0;
+    }
+
     public function availableKeyCount(EntityId $listingId):int
     {
         return (int)$this->database->fetchValue(new CompiledQuery(
