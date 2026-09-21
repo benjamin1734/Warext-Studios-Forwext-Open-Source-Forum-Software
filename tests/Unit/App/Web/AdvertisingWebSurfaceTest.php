@@ -18,7 +18,10 @@ final class AdvertisingWebSurfaceTest extends TestCase
         self::assertStringContainsString("'advertising.manage'",$factory);
         self::assertStringContainsString("'/admin/advertising'",$factory);
         self::assertStringContainsString('new AdvertisingMiddleware(',$factory);
-        self::assertStringContainsString('[$easterEggMiddleware, $advertisingMiddleware]',$factory);
+        self::assertStringContainsString(
+            '[$easterEggMiddleware, $advertisingMiddleware, $analyticsMiddleware]',
+            $factory
+        );
 
         $manage=$this->routeBlock($factory,"'advertising.manage'");
         $click=$this->routeBlock($factory,"'advertising.click'");
