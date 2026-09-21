@@ -23,7 +23,6 @@ final readonly class MarketplacePurchaseService
 
     public function __construct(
         private TransactionalQueryExecutor $database,
-        private MarketplaceRepository $listings,
         private MarketplacePurchaseRepository $purchases,
         private MarketplaceService $marketplace,
         private AuditRecorder $audit,
