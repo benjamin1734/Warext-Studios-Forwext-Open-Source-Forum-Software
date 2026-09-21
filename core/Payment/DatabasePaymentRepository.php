@@ -88,10 +88,11 @@ final readonly class DatabasePaymentRepository implements PaymentRepository
         ));
     }
 
-    public function refund(EntityId $refundId):?PaymentRefund
+    public function refund(EntityId $refundId,bool $forUpdate=false):?PaymentRefund
     {
         $row=$this->database->fetchOne(new CompiledQuery(
-            'SELECT * FROM forwext_payment_refunds WHERE refund_id=:id LIMIT 1',['id'=>$refundId->value()]
+            'SELECT * FROM forwext_payment_refunds WHERE refund_id=:id LIMIT 1'.($forUpdate?' FOR UPDATE':''),
+            ['id'=>$refundId->value()]
         ));
         return $row===null?null:$this->hydrateRefund($row);
     }
