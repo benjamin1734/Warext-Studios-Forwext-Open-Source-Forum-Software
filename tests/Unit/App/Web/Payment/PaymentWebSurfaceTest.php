@@ -46,7 +46,7 @@ final class PaymentWebSurfaceTest extends TestCase
         self::assertStringContainsString('$request->rawBody()',$handler);
         self::assertStringContainsString('$request->headers()->all()',$handler);
         self::assertStringContainsString('$provider->verifyWebhook($request)',$service);
-        self::assertStringContainsString("hash('sha256',$request->rawBody)",$service);
+        self::assertStringContainsString("hash('sha256',\$request->rawBody)",$service);
         self::assertStringNotContainsString('rawBody', (string)file_get_contents($root.'/app/Web/Payment/PaymentHtml.php'));
     }
 
