@@ -103,6 +103,10 @@ use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportStaffDashboardHandler;
 use Forwext\App\Web\Support\SupportTicketDetailHandler;
 use Forwext\App\Web\Support\SupportTicketFormHandler;
+use Forwext\App\Web\Subscription\SubscriptionAccountHandler;
+use Forwext\App\Web\Subscription\SubscriptionManageHandler;
+use Forwext\App\Web\Subscription\SubscriptionPurchaseHandler;
+use Forwext\App\Web\Subscription\SubscriptionWebhookHandler;
 use Forwext\App\Web\Trophy\TrophyManageHandler;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
@@ -285,6 +289,8 @@ use Forwext\Core\Support\Intake\SupportContextRegistry;
 use Forwext\Core\Support\Intake\ThreadSupportContextResolver;
 use Forwext\Core\Support\Reporting\DatabaseSupportReportingRepository;
 use Forwext\Core\Support\Ticket\DatabaseSupportTicketRepository;
+use Forwext\Core\Subscription\DatabaseSubscriptionRepository;
+use Forwext\Core\Subscription\SubscriptionService;
 use Forwext\Core\Trophy\DatabaseTrophyMetricProvider;
 use Forwext\Core\Trophy\DatabaseTrophyRepository;
 use Forwext\Core\Trophy\TrophyService;
@@ -483,6 +489,14 @@ final readonly class WebApplicationFactory
             $marketplaceDelivery,
         );
         $paymentProviderRegistry=$this->paymentProviders??new PaymentProviderRegistry();
+        $subscriptionRepository=new DatabaseSubscriptionRepository($database);
+        $subscriptionService=new SubscriptionService(
+            $database,
+            $subscriptionRepository,
+            $paymentProviderRegistry,
+            $authorizer,
+            new CoreAuditRecorder($database,new DatabaseAuditEventStore($database)),
+        );
         $payments=new PaymentService(
             $database,
             new DatabasePaymentRepository($database),
@@ -746,6 +760,7 @@ final readonly class WebApplicationFactory
         $marketplaceCategoryCsrf = $this->marketplaceCategoryCsrfMiddleware($config);
         $marketplaceCsrf = $this->marketplaceCsrfMiddleware($config);
         $paymentCsrf = $this->paymentCsrfMiddleware($config);
+        $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -949,6 +964,35 @@ final readonly class WebApplicationFactory
             new PathTemplate('/marketplace/orders/{orderId}/payment',['orderId'=>'[0-9a-f]{32}']),
             new MarketplaceOrderPaymentHandler($payments,$viewerResolver,$basePath),
             [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'account.upgrades',
+            [HttpMethod::Get],
+            new PathTemplate('/account/upgrades'),
+            new SubscriptionAccountHandler($subscriptionService,$viewerResolver,$basePath),
+            [$subscriptionCsrf],
+        ));
+        $routes->add(new Route(
+            'account.upgrades.purchase',
+            [HttpMethod::Post],
+            new PathTemplate('/account/upgrades/{planId}/purchase',['planId'=>'[0-9a-f]{32}']),
+            new SubscriptionPurchaseHandler($subscriptionService,$viewerResolver,$basePath),
+            [$subscriptionCsrf],
+        ));
+        $routes->add(new Route(
+            'subscription.webhook',
+            [HttpMethod::Post],
+            new PathTemplate('/subscriptions/payments/webhooks/{providerKey}',['providerKey'=>'[a-z][a-z0-9._-]{1,63}']),
+            new SubscriptionWebhookHandler($subscriptionService),
+        ));
+        $routes->add(new Route(
+            'subscription.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/admin/subscriptions'),
+            new SubscriptionManageHandler(
+                $subscriptionService,$subscriptionRepository,$users,$viewerResolver,$basePath
+            ),
+            [$subscriptionCsrf],
         ));
         $routes->add(new Route(
             'payment.webhook',
@@ -1638,6 +1682,11 @@ final readonly class WebApplicationFactory
     private function paymentCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'payment', 'forwext.csrf.payment.v1');
+    }
+
+    private function subscriptionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'subscription', 'forwext.csrf.subscription.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
