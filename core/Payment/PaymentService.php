@@ -263,6 +263,9 @@ final readonly class PaymentService
         $refund=$this->database->transaction(function()use($actor,$attemptId,$idempotencyKey,$at):PaymentRefund{
             $attempt=$this->payments->attempt($attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
+            $existing=$this->payments->refundByIdempotency($attempt->attemptId,$idempotencyKey);
+            if($existing!==null)return $existing;
+
             if($attempt->state!==PaymentAttemptState::Paid||$attempt->providerReference===null){
                 throw new InvalidArgumentException('Only a paid provider attempt can be refunded.');
             }
@@ -270,9 +273,6 @@ final readonly class PaymentService
             if(!$provider->capabilities()->refunds){
                 throw new InvalidArgumentException('Payment provider does not support refunds.');
             }
-
-            $existing=$this->payments->refundByIdempotency($attempt->attemptId,$idempotencyKey);
-            if($existing!==null)return $existing;
             foreach($this->payments->refundsForAttempt($attempt->attemptId) as $prior){
                 if(in_array($prior->state,[PaymentRefundState::Pending,PaymentRefundState::Succeeded],true)){
                     throw new InvalidArgumentException('Payment attempt already has an active or completed refund.');
