@@ -41,6 +41,18 @@ final readonly class PaymentService
     public function canManage(EntityId $actor):bool{return $this->allows($actor,'payment.manage');}
     public function canRefund(EntityId $actor):bool{return $this->allows($actor,'payment.refund');}
 
+    public function hasActiveAttempt(MarketplaceOrder $order):bool
+    {
+        $activeId=$order->receiptMetadata['payment_attempt_id']??null;
+        if(!is_string($activeId)||preg_match('/^[a-f0-9]{32}$/D',$activeId)!==1)return false;
+        $active=$this->payments->attempt(EntityId::fromString($activeId));
+        return $active!==null&&in_array(
+            $active->state,
+            [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
+            true
+        );
+    }
+
     public function canInitiate(EntityId $buyer,MarketplaceOrder $order):bool
     {
         if($this->providers->keys()===[]||!$this->allows($buyer,'marketplace.purchase')
@@ -52,14 +64,7 @@ final readonly class PaymentService
             )
         )return false;
 
-        $activeId=$order->receiptMetadata['payment_attempt_id']??null;
-        if(!is_string($activeId)||preg_match('/^[a-f0-9]{32}$/D',$activeId)!==1)return true;
-        $active=$this->payments->attempt(EntityId::fromString($activeId));
-        return $active===null||!in_array(
-            $active->state,
-            [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
-            true
-        );
+        return !$this->hasActiveAttempt($order);
     }
 
     /**
@@ -358,6 +363,45 @@ final readonly class PaymentService
         });
     }
 
+    public function cancelForOrderBuyer(
+        EntityId $buyer,
+        EntityId $orderId,
+        string $idempotencyKey,
+        DateTimeImmutable $now,
+        ?AuditRequestId $requestId=null,
+    ):?PaymentAttempt{
+        self::assertIdempotencyKey($idempotencyKey);
+        $at=self::utc($now);
+
+        $attempt=$this->database->transaction(function()use($buyer,$orderId,$at):?PaymentAttempt{
+            $order=$this->orders->order($orderId,true)
+                ??throw new InvalidArgumentException('Marketplace order was not found.');
+            if(!$order->buyerUserId->equals($buyer))throw new InvalidArgumentException('Marketplace order was not found.');
+
+            $activeId=$order->receiptMetadata['payment_attempt_id']??null;
+            if(!is_string($activeId)||preg_match('/^[a-f0-9]{32}$/D',$activeId)!==1)return null;
+
+            $attempt=$this->payments->attempt(EntityId::fromString($activeId),true);
+            if($attempt===null||!$attempt->orderId->equals($orderId)||!$attempt->buyerUserId->equals($buyer)){
+                throw new InvalidArgumentException('Marketplace order payment linkage is invalid.');
+            }
+
+            if(in_array($attempt->state,[PaymentAttemptState::Failed,PaymentAttemptState::Cancelled],true)){
+                $this->syncOrderFromAttempt($attempt,$buyer,$at,'payment.order_cancel.reconcile');
+                return $attempt;
+            }
+            if(in_array($attempt->state,[PaymentAttemptState::Paid,PaymentAttemptState::Refunded],true)){
+                throw new InvalidArgumentException('Paid or refunded orders cannot be cancelled as unpaid.');
+            }
+            return $attempt;
+        });
+
+        if($attempt===null||in_array($attempt->state,[PaymentAttemptState::Failed,PaymentAttemptState::Cancelled],true)){
+            return $attempt;
+        }
+        return $this->cancelAttempt($buyer,$attempt->attemptId,$idempotencyKey,$at,$requestId);
+    }
+
     public function cancel(
         EntityId $actor,
         EntityId $attemptId,
@@ -367,8 +411,16 @@ final readonly class PaymentService
     ):PaymentAttempt{
         $this->require($actor,'payment.refund');
         self::assertIdempotencyKey($idempotencyKey);
-        $at=self::utc($now);
+        return $this->cancelAttempt($actor,$attemptId,$idempotencyKey,self::utc($now),$requestId);
+    }
 
+    private function cancelAttempt(
+        EntityId $actor,
+        EntityId $attemptId,
+        string $idempotencyKey,
+        DateTimeImmutable $at,
+        ?AuditRequestId $requestId,
+    ):PaymentAttempt{
         $attempt=$this->database->transaction(function()use($attemptId):PaymentAttempt{
             $current=$this->payments->attempt($attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
@@ -503,6 +555,8 @@ final readonly class PaymentService
         if($attempt->state===PaymentAttemptState::Paid){
             $metadata['payment_provider']=$attempt->providerKey;
             $metadata['payment_attempt_id']=$attempt->attemptId->value();
+        }elseif($isActive&&in_array($attempt->state,[PaymentAttemptState::Failed,PaymentAttemptState::Cancelled],true)){
+            unset($metadata['payment_attempt_id']);
         }
         $updated=new MarketplaceOrder(
             $order->orderId,$order->orderNumber,$order->checkoutKey,$order->buyerUserId,$order->sellerUserId,
