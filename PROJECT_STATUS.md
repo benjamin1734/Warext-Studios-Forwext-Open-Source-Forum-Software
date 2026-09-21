@@ -7,11 +7,11 @@ PROJECT = Forwext
 PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.24-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.01
-CURRENT_STEP = 14.02
-LAST_COMMIT = 2025833cf8040174935dfc273ff7b026ace6bc49
+LAST_COMPLETED_SUBSTEP = 14.02
+CURRENT_STEP = 14.03
+LAST_COMMIT = e7147c7a8ad6af4ac960f76abe1d219772796295
 BLOCKERS = none
-NEXT_STEP = 14.02 - Marketplace listing UX ve arama
+NEXT_STEP = 14.03 - Haricî link yönlendirme modu
 ```
 
 ## Current position
@@ -21,13 +21,27 @@ NEXT_STEP = 14.02 - Marketplace listing UX ve arama
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01`.
-- Current sub-step: `14.02 — Marketplace listing UX ve arama`.
-- Remaining roadmap work after 14.01: **47 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.02`.
+- Current sub-step: `14.03 — Haricî link yönlendirme modu`.
+- Remaining roadmap work after 14.02: **46 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.02
+
+- Added native PHP marketplace browse/detail/management flows with grid/list presentation, bounded pagination and text/category/tag/currency/price/featured filtering and sorting.
+- Added public seller storefronts, marketplace profile-tab integration, core navigation and permission-aware global search indexing for active/sold listings.
+- Added one-review-per-user ratings, common content-pipeline moderation, separate review moderation authority and visible-only rating aggregates.
+- Added audited featured/pinned placement with expiry-aware ordering and dedicated `marketplace.feature.manage` capability.
+- Added secure listing media upload/download through the shared attachment inspector and private storage; public access uses controlled media-id routes with listing visibility checks and digest verification.
+- Added backend-authoritative own/all listing management and lifecycle actions while retaining the 14.01 transition rules and ownership checks.
+- Added migration `20260919211000_marketplace_discovery_ux` for reviews, promotions, query indexes, permission-template defaults, profile tabs and upgrade reindexing.
+- Added architecture documentation at `docs/architecture/marketplace-listing-ux.md` and regression coverage for discovery, permissions, profile/search integration, reviews, promotions and media isolation.
+- Final implementation/fix commit: `e7147c7a8ad6af4ac960f76abe1d219772796295`.
+- The final code keeps external-sale redirects in 14.03 and native checkout/order/payment in later marketplace substeps.
+- Next: `14.03 — Haricî link yönlendirme modu`.
 
 ## Completed in 14.01
 
