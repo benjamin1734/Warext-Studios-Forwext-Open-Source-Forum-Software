@@ -158,12 +158,18 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
             'SELECT * FROM forwext_marketplace_order_items WHERE order_id=:order_id ORDER BY item_id',
             ['order_id'=>$orderId->value()]
         ));
-        return array_map(static fn(array $row):MarketplaceOrderItem=>new MarketplaceOrderItem(
-            EntityId::fromString((string)$row['item_id']),
-            EntityId::fromString((string)$row['order_id']),
-            EntityId::fromString((string)$row['listing_id']),
-            (string)$row['title'],(int)$row['quantity'],(int)$row['unit_minor'],(string)$row['currency']
-        ),$rows);
+        return array_map(static function(array $row):MarketplaceOrderItem{
+            $item=new MarketplaceOrderItem(
+                EntityId::fromString((string)$row['item_id']),
+                EntityId::fromString((string)$row['order_id']),
+                EntityId::fromString((string)$row['listing_id']),
+                (string)$row['title'],(int)$row['quantity'],(int)$row['unit_minor'],(string)$row['currency']
+            );
+            if($item->lineTotalMinor()!==(int)$row['line_total_minor']){
+                throw new InvalidArgumentException('Marketplace stored order item total is inconsistent.');
+            }
+            return $item;
+        },$rows);
     }
 
     public function ordersForUser(EntityId $userId,int $limit=100):array
