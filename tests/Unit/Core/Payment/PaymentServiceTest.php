@@ -110,7 +110,7 @@ final class PaymentServiceTest extends TestCase
         }catch(InvalidArgumentException){}
 
         $provider->webhookEvent=new PaymentWebhookEvent(
-            'evt_paid_1',PaymentAttemptState::Paid,$attempt->attemptId,'pay_001',12500,'TRY',
+            'evt_paid_1',PaymentAttemptState::Paid,$attempt->attemptId,'pay_001',null,12500,'TRY',
             $this->at('2026-09-21 12:03:00')
         );
         $paid=$service->handleWebhook('fake',$this->webhook('paid-body',$this->at('2026-09-21 12:03:01')));
@@ -124,7 +124,7 @@ final class PaymentServiceTest extends TestCase
         self::assertCount(1,$payments->events);
 
         $provider->webhookEvent=new PaymentWebhookEvent(
-            'evt_stale_failed',PaymentAttemptState::Failed,$attempt->attemptId,'pay_001',12500,'TRY',
+            'evt_stale_failed',PaymentAttemptState::Failed,$attempt->attemptId,'pay_001',null,12500,'TRY',
             $this->at('2026-09-21 12:02:30')
         );
         $stale=$service->handleWebhook('fake',$this->webhook('failed-body',$this->at('2026-09-21 12:04:00')));
@@ -132,7 +132,7 @@ final class PaymentServiceTest extends TestCase
         self::assertSame(MarketplacePaymentState::Paid,$orders->order($order->orderId)?->paymentState);
 
         $provider->webhookEvent=new PaymentWebhookEvent(
-            'evt_bad_amount',PaymentAttemptState::Paid,$attempt->attemptId,'pay_001',12499,'TRY',
+            'evt_bad_amount',PaymentAttemptState::Paid,$attempt->attemptId,'pay_001',null,12499,'TRY',
             $this->at('2026-09-21 12:05:00')
         );
         try{
