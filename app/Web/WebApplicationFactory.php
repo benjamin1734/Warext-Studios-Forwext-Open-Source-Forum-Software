@@ -53,6 +53,9 @@ use Forwext\App\Web\Marketplace\MarketplaceReviewHandler;
 use Forwext\App\Web\Marketplace\MarketplaceOrderDetailHandler;
 use Forwext\App\Web\Marketplace\MarketplaceOrdersHandler;
 use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
+use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
+use Forwext\App\Web\Payment\PaymentManageHandler;
+use Forwext\App\Web\Payment\PaymentWebhookHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -203,6 +206,9 @@ use Forwext\Core\Notification\Sound\NotificationSoundCatalog;
 use Forwext\Core\Notification\Sound\NotificationSoundService;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
+use Forwext\Core\Payment\DatabasePaymentRepository;
+use Forwext\Core\Payment\PaymentProviderRegistry;
+use Forwext\Core\Payment\PaymentService;
 use Forwext\Core\Portfolio\DatabasePortfolioRepository;
 use Forwext\Core\Portfolio\PortfolioMediaService;
 use Forwext\Core\Portfolio\PortfolioService;
@@ -281,8 +287,10 @@ use RuntimeException;
 
 final readonly class WebApplicationFactory
 {
-    public function __construct(private string $projectRoot)
-    {
+    public function __construct(
+        private string $projectRoot,
+        private ?PaymentProviderRegistry $paymentProviders=null,
+    ){
         if ($projectRoot === '') throw new RuntimeException('Project root cannot be empty.');
     }
 
@@ -441,15 +449,25 @@ final readonly class WebApplicationFactory
         );
         $marketplacePurchaseNotifications = new NotificationRegistry();
         MarketplacePurchaseNotifier::registerDefinitions($marketplacePurchaseNotifications);
+        $marketplacePurchaseRepository = new DatabaseMarketplacePurchaseRepository($database);
         $marketplacePurchases = new MarketplacePurchaseService(
             $database,
-            new DatabaseMarketplacePurchaseRepository($database),
+            $marketplacePurchaseRepository,
             $marketplace,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
             new MarketplacePurchaseNotifier(new NotificationDispatcher(
                 $marketplacePurchaseNotifications,
                 new DatabaseNotificationRepository($database),
             )),
+        );
+        $paymentProviderRegistry=$this->paymentProviders??new PaymentProviderRegistry();
+        $payments=new PaymentService(
+            $database,
+            new DatabasePaymentRepository($database),
+            $paymentProviderRegistry,
+            $marketplacePurchaseRepository,
+            $authorizer,
+            new CoreAuditRecorder($database,new DatabaseAuditEventStore($database)),
         );
 
         $rewardRepository = new DatabaseRewardRepository($database);
@@ -705,6 +723,7 @@ final readonly class WebApplicationFactory
         $promotionCsrf = $this->promotionCsrfMiddleware($config);
         $marketplaceCategoryCsrf = $this->marketplaceCategoryCsrfMiddleware($config);
         $marketplaceCsrf = $this->marketplaceCsrfMiddleware($config);
+        $paymentCsrf = $this->paymentCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -899,8 +918,21 @@ final readonly class WebApplicationFactory
             'marketplace.order.detail',
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/marketplace/orders/{orderId}',['orderId'=>'[0-9a-f]{32}']),
-            new MarketplaceOrderDetailHandler($marketplacePurchases,$users,$viewerResolver,$basePath),
+            new MarketplaceOrderDetailHandler($marketplacePurchases,$payments,$users,$viewerResolver,$basePath),
             [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.order.payment',
+            [HttpMethod::Post],
+            new PathTemplate('/marketplace/orders/{orderId}/payment',['orderId'=>'[0-9a-f]{32}']),
+            new MarketplaceOrderPaymentHandler($payments,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'payment.webhook',
+            [HttpMethod::Post],
+            new PathTemplate('/payments/webhooks/{providerKey}',['providerKey'=>'[a-z][a-z0-9._-]{1,63}']),
+            new PaymentWebhookHandler($payments),
         ));
         $routes->add(new Route(
             'marketplace.internal.manage',
@@ -936,6 +968,13 @@ final readonly class WebApplicationFactory
             new PathTemplate('/admin/marketplace/categories'),
             new MarketplaceCategoryManageHandler($marketplace, $viewerResolver, $basePath),
             [$marketplaceCategoryCsrf],
+        ));
+        $routes->add(new Route(
+            'payment.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/admin/payments'),
+            new PaymentManageHandler($payments,$viewerResolver,$basePath),
+            [$paymentCsrf],
         ));
         $routes->add(new Route(
             'reward.manage',
@@ -1548,6 +1587,11 @@ final readonly class WebApplicationFactory
     private function marketplaceCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'marketplace', 'forwext.csrf.marketplace.v1');
+    }
+
+    private function paymentCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'payment', 'forwext.csrf.payment.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
