@@ -61,7 +61,8 @@ final class MarketplaceHtml
     public static function detail(
         MarketplaceListing $listing,MarketplaceCategory $category,string $sellerUsername,array $fields,
         ?MarketplaceListingPromotion $promotion,array $reviews,array $reviewAuthors,MarketplaceReviewSummary $summary,
-        bool $canReview,?MarketplaceReview $ownReview,?string $csrf,bool $canManage,BasePath $basePath,bool $reviewed,bool $authenticated
+        bool $canReview,?MarketplaceReview $ownReview,?string $csrf,bool $canManage,bool $hasExternalSale,
+        BasePath $basePath,bool $reviewed,bool $authenticated
     ):string{
         $now=new \DateTimeImmutable('now',new \DateTimeZone('UTC'));
         $badges='';
@@ -111,6 +112,7 @@ final class MarketplaceHtml
             .($tags===''?'':'<div class="market-tags">'.$tags.'</div>')
             .$gallery.'<section class="section"><h2>Açıklama</h2><div class="about">'.nl2br(self::e($listing->description),false).'</div></section>'
             .($custom===''?'':'<section class="section"><h2>Özellikler</h2><dl class="market-specs">'.$custom.'</dl></section>')
+            .($hasExternalSale?'<p class="market-actions"><a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/external')).'">Haricî siteden satın al</a></p>':'')
             .($canManage?'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">Bu ilanı yönet</a></p>':'')
             .'<section class="section"><h2>Değerlendirmeler</h2>'.$reviewHtml.$reviewForm.'</section></article>';
         return ProfileHtml::page($listing->title,$body,$basePath,authenticated:$authenticated);
@@ -137,7 +139,7 @@ final class MarketplaceHtml
     public static function manage(
         array $listings,array $categories,?MarketplaceListing $selected,?EntityId $newCategoryId,array $fields,
         ?MarketplaceListingPromotion $promotion,array $reviews,array $reviewAuthors,
-        bool $canCreate,bool $canManageAll,bool $canFeature,bool $canModerateReviews,
+        bool $canCreate,bool $canManageAll,bool $canFeature,bool $canModerateReviews,bool $canExternalSale,
         BasePath $basePath,string $csrf,bool $updated
     ):string{
         $action=self::e($basePath->prepend('/marketplace/manage'));
@@ -176,6 +178,9 @@ final class MarketplaceHtml
         }
 
         if($selected!==null){
+            if($canExternalSale){
+                $body.='<section class="section"><h2>Haricî satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/external/'.$selected->listingId->value())).'">Haricî satış bağlantısını yönet</a></p></section>';
+            }
             $body.='<section class="section"><h2>İlan görselleri</h2><div class="market-media">';
             foreach($selected->media as $media){
                 $body.='<figure><img src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value())).'" alt="'.self::e($media->altText).'">'
