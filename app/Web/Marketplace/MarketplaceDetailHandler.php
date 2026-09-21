@@ -13,6 +13,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Marketplace\MarketplaceExternalSaleService;
+use Forwext\Core\Marketplace\MarketplacePurchaseService;
 use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
@@ -22,7 +23,8 @@ final readonly class MarketplaceDetailHandler implements RequestHandlerInterface
 {
     public function __construct(
         private MarketplaceService $marketplace,private MarketplaceExternalSaleService $externalSales,
-        private UserRepository $users,private ProfileViewerResolver $viewers,private BasePath $basePath
+        private MarketplacePurchaseService $purchases,private UserRepository $users,
+        private ProfileViewerResolver $viewers,private BasePath $basePath
     ){}
     public function handle(Request $request):Response
     {
@@ -50,6 +52,7 @@ final readonly class MarketplaceDetailHandler implements RequestHandlerInterface
                 $actor===null?null:$this->marketplace->ownReview($actor,$id),
                 $csrf,$actor!==null&&$this->marketplace->canManageListing($actor,$listing),
                 $this->externalSales->publicLink($id,$actor)!==null,
+                $actor!==null&&$this->purchases->canPurchaseListing($actor,$listing),
                 $this->basePath,($request->query()['reviewed']??null)==='1',$actor!==null
             ))->withHeader('Cache-Control',$actor===null?'public, max-age=30':'private, no-store');
         }catch(PermissionDeniedException){
