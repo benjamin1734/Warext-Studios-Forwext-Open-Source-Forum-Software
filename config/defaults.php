@@ -209,6 +209,14 @@ return [
             'attestation' => 'none',
         ],
     ],
+    'marketplace' => [
+        'external_sale' => [
+            'allowed_hosts' => [],
+            'allow_subdomains' => false,
+            'utm_source' => 'forwext',
+            'utm_medium' => 'marketplace',
+        ],
+    ],
     'http_security' => [
         'trusted_hosts' => [],
         'cors' => [
