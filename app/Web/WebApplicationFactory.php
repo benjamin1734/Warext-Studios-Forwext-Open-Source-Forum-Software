@@ -39,6 +39,9 @@ use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
 use Forwext\App\Web\Marketplace\MarketplaceBrowseHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceDetailHandler;
+use Forwext\App\Web\Marketplace\MarketplaceExternalSaleManageHandler;
+use Forwext\App\Web\Marketplace\MarketplaceExternalSaleRedirectHandler;
+use Forwext\App\Web\Marketplace\MarketplaceExternalSaleWarningHandler;
 use Forwext\App\Web\Marketplace\MarketplaceManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceMediaDownloadHandler;
 use Forwext\App\Web\Marketplace\MarketplaceMediaUploadHandler;
@@ -174,6 +177,9 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
+use Forwext\Core\Marketplace\DatabaseMarketplaceExternalSaleRepository;
+use Forwext\Core\Marketplace\MarketplaceExternalSaleService;
+use Forwext\Core\Marketplace\MarketplaceExternalSaleUrlPolicy;
 use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Marketplace\MarketplaceMediaService;
 use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
@@ -417,6 +423,12 @@ final readonly class WebApplicationFactory
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
             $searchChanges,
             $contentManagerPipeline,
+        );
+        $marketplaceExternalSales = new MarketplaceExternalSaleService(
+            new DatabaseMarketplaceExternalSaleRepository($database),
+            $marketplace,
+            $this->marketplaceExternalSaleUrlPolicy($config),
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
 
         $rewardRepository = new DatabaseRewardRepository($database);
@@ -796,7 +808,7 @@ final readonly class WebApplicationFactory
             'marketplace.detail',
             [HttpMethod::Get],
             new PathTemplate('/marketplace/listings/{listingId}',['listingId'=>'[0-9a-f]{32}']),
-            new MarketplaceDetailHandler($marketplace,$users,$viewerResolver,$basePath),
+            new MarketplaceDetailHandler($marketplace,$marketplaceExternalSales,$users,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
@@ -832,6 +844,27 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/marketplace/manage'),
             new MarketplaceManageHandler($marketplace,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.external.warning',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/listings/{listingId}/external',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceExternalSaleWarningHandler($marketplaceExternalSales,$marketplace,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.external.go',
+            [HttpMethod::Post],
+            new PathTemplate('/marketplace/listings/{listingId}/external/go',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceExternalSaleRedirectHandler($marketplaceExternalSales,$viewerResolver),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.external.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/manage/external/{listingId}',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceExternalSaleManageHandler($marketplaceExternalSales,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
@@ -1507,6 +1540,19 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('storage.local.private_root')),
             $this->projectPath($config->requireString('storage.local.public_root')),
             $baseUrl,
+        );
+    }
+
+    private function marketplaceExternalSaleUrlPolicy(ConfigRepository $config): MarketplaceExternalSaleUrlPolicy
+    {
+        $hosts=$config->get('marketplace.external_sale.allowed_hosts',[]);
+        if(!is_array($hosts)||!array_is_list($hosts))throw new RuntimeException('Marketplace external-sale host allowlist must be a list.');
+        foreach($hosts as $host)if(!is_string($host))throw new RuntimeException('Marketplace external-sale host allowlist contains an invalid entry.');
+        return new MarketplaceExternalSaleUrlPolicy(
+            $hosts,
+            $config->requireBool('marketplace.external_sale.allow_subdomains'),
+            $config->requireString('marketplace.external_sale.utm_source'),
+            $config->requireString('marketplace.external_sale.utm_medium'),
         );
     }
 
