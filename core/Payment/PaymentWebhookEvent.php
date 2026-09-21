@@ -18,6 +18,7 @@ final readonly class PaymentWebhookEvent
         public PaymentAttemptState $state,
         public ?EntityId $attemptId,
         public ?string $providerReference,
+        public ?string $refundReference,
         public ?int $amountMinor,
         public ?string $currency,
         DateTimeImmutable $occurredAt,
@@ -32,6 +33,11 @@ final readonly class PaymentWebhookEvent
             &&preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]{0,190}$/D',$this->providerReference)!==1
         ){
             throw new InvalidArgumentException('Payment webhook provider reference is invalid.');
+        }
+        if($this->refundReference!==null
+            &&preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]{0,190}$/D',$this->refundReference)!==1
+        ){
+            throw new InvalidArgumentException('Payment webhook refund reference is invalid.');
         }
         if($this->attemptId===null&&$this->providerReference===null){
             throw new InvalidArgumentException('Payment webhook event must identify an attempt.');
