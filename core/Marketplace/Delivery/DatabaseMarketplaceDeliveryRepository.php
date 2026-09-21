@@ -105,7 +105,7 @@ final readonly class DatabaseMarketplaceDeliveryRepository implements Marketplac
         $key=$this->hydrateKey($row);
         $changed=$this->database->execute(new CompiledQuery(
             "UPDATE forwext_marketplace_delivery_keys SET key_state='assigned',assigned_order_item_id=:item,"
-            . 'assigned_at_utc=:assigned WHERE key_id=:key_id AND key_state='available'',
+            . "assigned_at_utc=:assigned WHERE key_id=:key_id AND key_state='available'",
             ['item'=>$orderItemId->value(),'assigned'=>self::format($at),'key_id'=>$key->keyId->value()]
         ));
         if($changed!==1)throw new InvalidArgumentException('Marketplace delivery key assignment race detected.');
