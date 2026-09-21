@@ -36,6 +36,13 @@ final class NavigationRegistry
             NavigationAudience::Member,
         ));
         $registry->register(new NavigationItem(
+            'subscriptions.own',
+            'Upgrades',
+            '/account/upgrades',
+            265,
+            NavigationAudience::Member,
+        ));
+        $registry->register(new NavigationItem(
             'bugs.mine',
             'Hata Bildirimlerim',
             '/bugs',
