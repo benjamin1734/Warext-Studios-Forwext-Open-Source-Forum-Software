@@ -34,6 +34,7 @@ use Forwext\Database\Migrations\Core\CreateMarketplaceDiscoveryUx;
 use Forwext\Database\Migrations\Core\CreateMarketplaceExternalSale;
 use Forwext\Database\Migrations\Core\CreateMarketplaceNativePurchase;
 use Forwext\Database\Migrations\Core\CreatePaymentAbstraction;
+use Forwext\Database\Migrations\Core\ScopePaymentRefundReference;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -135,5 +136,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateMarketplaceExternalSale::class, $classes);
         self::assertContains(CreateMarketplaceNativePurchase::class, $classes);
         self::assertContains(CreatePaymentAbstraction::class, $classes);
+        self::assertContains(ScopePaymentRefundReference::class, $classes);
     }
 }
