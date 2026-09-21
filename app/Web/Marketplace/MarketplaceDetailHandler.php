@@ -20,8 +20,8 @@ use InvalidArgumentException;
 final readonly class MarketplaceDetailHandler implements RequestHandlerInterface
 {
     public function __construct(
-        private MarketplaceService $marketplace,private UserRepository $users,
-        private ProfileViewerResolver $viewers,private BasePath $basePath
+        private MarketplaceService $marketplace,private MarketplaceExternalSaleService $externalSales,
+        private UserRepository $users,private ProfileViewerResolver $viewers,private BasePath $basePath
     ){}
     public function handle(Request $request):Response
     {
@@ -48,6 +48,7 @@ final readonly class MarketplaceDetailHandler implements RequestHandlerInterface
                 $this->marketplace->reviewSummary($id,$actor),$canReview,
                 $actor===null?null:$this->marketplace->ownReview($actor,$id),
                 $csrf,$actor!==null&&$this->marketplace->canManageListing($actor,$listing),
+                $this->externalSales->publicLink($id,$actor)!==null,
                 $this->basePath,($request->query()['reviewed']??null)==='1',$actor!==null
             ))->withHeader('Cache-Control',$actor===null?'public, max-age=30':'private, no-store');
         }catch(PermissionDeniedException){
