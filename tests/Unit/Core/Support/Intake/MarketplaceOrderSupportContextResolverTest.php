@@ -46,7 +46,7 @@ final class MarketplaceOrderSupportContextResolverTest extends TestCase
 
         self::assertSame(SupportContextType::MarketplaceOrder, $context->type);
         self::assertTrue($context->targetId->equals($order->orderId));
-        self::assertStringContainsString($order->orderNumber, $context->label);
+        self::assertStringContainsString($order->orderNumber, $context->labelSnapshot);
     }
 
     public function testUnrelatedUserCannotProbeOrderExistence(): void
