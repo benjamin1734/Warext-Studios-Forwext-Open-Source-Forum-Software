@@ -32,17 +32,18 @@ final readonly class MarketplaceDeliveryKey
         ){
             throw new InvalidArgumentException('Marketplace delivery key payload is invalid.');
         }
-        if($this->state===MarketplaceDeliveryKeyState::Assigned&&$this->assignedOrderItemId===null){
-            throw new InvalidArgumentException('Assigned delivery key requires an order item.');
+        $held=in_array($this->state,[MarketplaceDeliveryKeyState::Reserved,MarketplaceDeliveryKeyState::Assigned],true);
+        if($held&&$this->assignedOrderItemId===null){
+            throw new InvalidArgumentException('Reserved or assigned delivery key requires an order item.');
         }
-        if($this->state!==MarketplaceDeliveryKeyState::Assigned&&$this->assignedOrderItemId!==null){
-            throw new InvalidArgumentException('Unassigned delivery key cannot reference an order item.');
+        if(!$held&&$this->assignedOrderItemId!==null){
+            throw new InvalidArgumentException('Available/revoked delivery key cannot reference an order item.');
         }
         $utc=new DateTimeZone('UTC');
         $this->createdAt=$createdAt->setTimezone($utc);
         $this->assignedAt=$assignedAt?->setTimezone($utc);
-        if($this->state===MarketplaceDeliveryKeyState::Assigned&&$this->assignedAt===null){
-            throw new InvalidArgumentException('Assigned delivery key requires an assignment timestamp.');
+        if($held&&$this->assignedAt===null){
+            throw new InvalidArgumentException('Reserved or assigned delivery key requires a hold timestamp.');
         }
     }
 
