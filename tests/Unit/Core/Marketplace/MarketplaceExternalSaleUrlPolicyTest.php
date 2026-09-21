@@ -17,6 +17,7 @@ final class MarketplaceExternalSaleUrlPolicyTest extends TestCase
     public function testAllowlistIsFailClosedAndRejectsUnsafeRedirectShapes():void
     {
         $policy=new MarketplaceExternalSaleUrlPolicy([]);
+        $rejected=0;
         foreach([
             'https://store.example.com/product',
             'http://store.example.com/product',
@@ -27,8 +28,11 @@ final class MarketplaceExternalSaleUrlPolicyTest extends TestCase
             try{
                 $policy->validate($url);
                 self::fail('Unsafe or non-allowlisted marketplace URL must be rejected: '.$url);
-            }catch(InvalidArgumentException){}
+            }catch(InvalidArgumentException){
+                ++$rejected;
+            }
         }
+        self::assertSame(5,$rejected);
     }
 
     public function testExactHostAndOptionalSubdomainsUseLabelBoundary():void
