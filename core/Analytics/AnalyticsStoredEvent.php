@@ -36,6 +36,26 @@ final readonly class AnalyticsStoredEvent
         if(($this->subjectType===null)!==($this->subjectHash===null)){
             throw new InvalidArgumentException('Analytics stored subject is incomplete.');
         }
+        if($this->subjectType!==null&&preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D',$this->subjectType)!==1){
+            throw new InvalidArgumentException('Analytics stored subject type is invalid.');
+        }
+        if(!$this->definition->collectActor&&$this->actorHash!==null){
+            throw new InvalidArgumentException('Analytics stored event may not collect actor identity.');
+        }
+        if(!$this->definition->collectSession&&$this->sessionHash!==null){
+            throw new InvalidArgumentException('Analytics stored event may not collect session identity.');
+        }
+        if(!$this->definition->collectSubject&&$this->subjectHash!==null){
+            throw new InvalidArgumentException('Analytics stored event may not collect subject identity.');
+        }
+        if(!$this->definition->collectForum&&$this->forumId!==null){
+            throw new InvalidArgumentException('Analytics stored event may not collect forum identity.');
+        }
+        foreach($this->dimensions as $key=>$_value){
+            if(!is_string($key)||!$this->definition->allowsDimension($key)){
+                throw new InvalidArgumentException('Analytics stored dimension is not allowlisted.');
+            }
+        }
         $this->occurredAt=$occurredAt->setTimezone(new DateTimeZone('UTC'));
     }
 
