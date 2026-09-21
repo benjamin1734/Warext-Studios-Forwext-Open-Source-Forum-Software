@@ -218,41 +218,54 @@ final readonly class MarketplacePurchaseService
         DateTimeImmutable $now,
         ?AuditRequestId $requestId=null,
     ):MarketplaceOrder{
-        $before=$this->purchases->order($orderId)
-            ?? throw new InvalidArgumentException('Marketplace order was not found.');
         $staff=$this->marketplace->canManageOrders($actor);
-        if(!$before->buyerUserId->equals($actor)&&!$staff){
-            throw new InvalidArgumentException('Marketplace order was not found.');
-        }
-        if($before->state!==MarketplaceOrderState::Pending||$before->paymentState!==MarketplacePaymentState::Pending){
-            throw new InvalidArgumentException('Only unpaid pending orders can be cancelled.');
-        }
         $at=self::utc($now);
-        $after=new MarketplaceOrder(
-            $before->orderId,$before->orderNumber,$before->checkoutKey,$before->buyerUserId,$before->sellerUserId,
-            $before->currency,$before->subtotalMinor,$before->totalMinor,MarketplaceOrderState::Cancelled,
-            MarketplacePaymentState::Cancelled,MarketplaceDeliveryState::Cancelled,$before->billing,
-            $before->receiptMetadata,$before->createdAt,$at
-        );
 
-        $event=new AuditEvent(
-            AuditEvent::generateId(),AuditScope::Administration,$actor,
-            AuditAction::fromString('marketplace.order.cancel'),
-            'marketplace.order',$orderId->value(),null,'marketplace.order.cancel',
-            $requestId??AuditRequestId::generate(),
-            ['order_state'=>$before->state->value,'payment_state'=>$before->paymentState->value,'delivery_state'=>$before->deliveryState->value],
-            ['order_state'=>$after->state->value,'payment_state'=>$after->paymentState->value,'delivery_state'=>$after->deliveryState->value],
-            $at
-        );
-        $this->audit->mutate($event,function()use($after,$before,$actor,$at):void{
+        return $this->database->transaction(function()use($actor,$orderId,$staff,$at,$requestId):MarketplaceOrder{
+            $before=$this->purchases->order($orderId,true)
+                ??throw new InvalidArgumentException('Marketplace order was not found.');
+            if(!$before->buyerUserId->equals($actor)&&!$staff){
+                throw new InvalidArgumentException('Marketplace order was not found.');
+            }
+            if($before->state!==MarketplaceOrderState::Pending
+                ||!in_array(
+                    $before->paymentState,
+                    [MarketplacePaymentState::Pending,MarketplacePaymentState::Failed,MarketplacePaymentState::Cancelled],
+                    true
+                )
+            ){
+                throw new InvalidArgumentException('Only unpaid pending orders can be cancelled.');
+            }
+
+            $activePaymentAttempt=$before->receiptMetadata['payment_attempt_id']??null;
+            if(is_string($activePaymentAttempt)&&preg_match('/^[a-f0-9]{32}$/D',$activePaymentAttempt)===1){
+                throw new InvalidArgumentException('Active payment attempt must be cancelled before the order.');
+            }
+
+            $after=new MarketplaceOrder(
+                $before->orderId,$before->orderNumber,$before->checkoutKey,$before->buyerUserId,$before->sellerUserId,
+                $before->currency,$before->subtotalMinor,$before->totalMinor,MarketplaceOrderState::Cancelled,
+                MarketplacePaymentState::Cancelled,MarketplaceDeliveryState::Cancelled,$before->billing,
+                $before->receiptMetadata,$before->createdAt,$at
+            );
+
             $this->purchases->saveOrderStates($after);
             $this->purchases->recordOrderHistory(
                 $after->orderId,$actor,'order.cancel',
                 $before->state,$after->state,$before->paymentState,$after->paymentState,
                 $before->deliveryState,$after->deliveryState,$at
             );
+            $this->audit->append(new AuditEvent(
+                AuditEvent::generateId(),AuditScope::Administration,$actor,
+                AuditAction::fromString('marketplace.order.cancel'),
+                'marketplace.order',$orderId->value(),null,'marketplace.order.cancel',
+                $requestId??AuditRequestId::generate(),
+                ['order_state'=>$before->state->value,'payment_state'=>$before->paymentState->value,'delivery_state'=>$before->deliveryState->value],
+                ['order_state'=>$after->state->value,'payment_state'=>$after->paymentState->value,'delivery_state'=>$after->deliveryState->value],
+                $at
+            ));
+            return $after;
         });
-        return $after;
     }
 
     private function requirePurchasable(EntityId $buyer,EntityId $listingId):MarketplaceListing
