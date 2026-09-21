@@ -512,6 +512,7 @@ final class PaymentMemoryOrderRepository implements MarketplacePurchaseRepositor
     public function orderItems(EntityId $orderId):array{return [];}
     public function ordersForUser(EntityId $userId,int $limit=100):array{return [];}
     public function orders(int $limit=100):array{return array_slice(array_values($this->orders),0,$limit);}
+    public function orderHistory(EntityId $orderId,int $limit=200):array{return [];}
     public function saveOrderStates(MarketplaceOrder $order):void{$this->store($order);}
     public function recordOrderHistory(
         EntityId $orderId,?EntityId $actor,string $action,
