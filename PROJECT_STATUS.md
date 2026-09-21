@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.25-dev
+CURRENT_VERSION = 0.0.7.26-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.03
-CURRENT_STEP = 14.04
-LAST_COMMIT = 8bcc64a59e2b0246ff4deb73339c185e6fe493d1
+LAST_COMPLETED_SUBSTEP = 14.04
+CURRENT_STEP = 14.05
+LAST_COMMIT = 2171307f49f1c262c700bf9e24ad639891003d2e
 BLOCKERS = none
-NEXT_STEP = 14.04 - Dahili satın alım modu
+NEXT_STEP = 14.05 - Ödeme sağlayıcı abstraction
 ```
 
 ## Current position
@@ -21,13 +21,35 @@ NEXT_STEP = 14.04 - Dahili satın alım modu
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.03`.
-- Current sub-step: `14.04 — Dahili satın alım modu`.
-- Remaining roadmap work after 14.03: **45 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.04`.
+- Current sub-step: `14.05 — Ödeme sağlayıcı abstraction`.
+- Remaining roadmap work after 14.04: **44 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.04
+
+- Added first-party internal-sale capability per listing, persistent carts, transactional checkout and durable orders without prematurely coupling the domain to any payment provider.
+- Added separate typed order, payment and delivery state models so 14.05 payment providers and 14.06 fulfillment can advance the same order record independently.
+- Added server-generated 128-bit checkout idempotency keys, pre/post-lock idempotency checks and `FOR UPDATE` cart locking.
+- Checkout revalidates every listing and is all-or-nothing; multi-seller/multi-currency carts are split into deterministic seller/currency order groups.
+- Added immutable item title/unit-price snapshots, billing snapshots and bounded receipt metadata so historical orders are unaffected by later listing edits.
+- Added backend-authoritative buyer/seller/order-manager access, unrelated-user IDOR protection and historical own-order access after later permission changes.
+- Added stale-cart privacy hardening: inaccessible/non-public listings do not expose historical title or price from the live listing record.
+- Added pending unpaid cancellation with synchronized order/payment/delivery cancellation, append-only order history and central administration audit.
+- Added deduplicated buyer/seller order-created notifications that cannot roll back already committed checkout state.
+- Added native PHP internal-sale settings, cart, checkout, order list and order detail flows using existing Marketplace CSRF infrastructure.
+- Added migration `20260919213000_marketplace_native_purchase` for five native-purchase tables and shared permission defaults.
+- Added database invariants for order-item ownership, currency agreement, subtotal equality and stored line-total verification.
+- Added regression coverage for idempotent checkout, seller/currency splitting, snapshots, self-purchase prevention, stale-cart privacy, order IDOR, staff access, cancellation and historical order access.
+- Added architecture documentation at `docs/architecture/marketplace-native-purchase.md`.
+- Final implementation/fix commit: `2171307f49f1c262c700bf9e24ad639891003d2e`.
+- GitHub Actions build run `35582912598`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel full/update packaging passed.
+- Database migration smoke run `35582912425`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.26-dev`.
+- Next: `14.05 — Ödeme sağlayıcı abstraction`.
 
 ## Completed in 14.03
 
