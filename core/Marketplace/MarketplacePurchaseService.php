@@ -183,6 +183,11 @@ final readonly class MarketplacePurchaseService
         return $orders;
     }
 
+    public function canManageOrders(EntityId $actor):bool
+    {
+        return $this->marketplace->canManageOrders($actor);
+    }
+
     /** @return list<MarketplaceOrder> */
     public function orders(EntityId $actor,int $limit=100):array
     {
