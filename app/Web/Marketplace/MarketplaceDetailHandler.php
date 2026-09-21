@@ -12,6 +12,7 @@ use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
+use Forwext\Core\Marketplace\MarketplaceExternalSaleService;
 use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
