@@ -99,9 +99,10 @@ final readonly class MarketplacePurchaseService
         $this->marketplace->requirePurchase($buyer);
         $result=[];
         foreach($this->purchases->cartListingIds($buyer) as $listingId){
-            $listing=$this->listings->listing($listingId);
-            if($listing===null){
-                $result[]=new MarketplaceCartEntry($listingId,null,false,'İlan artık mevcut değil.');
+            try{
+                $listing=$this->marketplace->listing($listingId,$buyer);
+            }catch(PermissionDeniedException|InvalidArgumentException){
+                $result[]=new MarketplaceCartEntry($listingId,null,false,'İlan artık satın alınabilir değil.');
                 continue;
             }
             $reason=$this->purchaseUnavailableReason($buyer,$listing);
@@ -202,7 +203,9 @@ final readonly class MarketplacePurchaseService
         ){
             $this->marketplace->requirePurchase($actor);
         }
-        return $this->purchases->ordersForUser($actor,$limit);
+        return $this->marketplace->canManageOrders($actor)
+            ?$this->purchases->orders($limit)
+            :$this->purchases->ordersForUser($actor,$limit);
     }
 
     /** @return array{order:MarketplaceOrder,items:list<MarketplaceOrderItem>} */
@@ -261,8 +264,11 @@ final readonly class MarketplacePurchaseService
 
     private function requirePurchasable(EntityId $buyer,EntityId $listingId):MarketplaceListing
     {
-        $listing=$this->listings->listing($listingId)
-            ?? throw new InvalidArgumentException('Marketplace listing is unavailable.');
+        try{
+            $listing=$this->marketplace->listing($listingId,$buyer);
+        }catch(PermissionDeniedException|InvalidArgumentException){
+            throw new InvalidArgumentException('Marketplace listing is unavailable.');
+        }
         $reason=$this->purchaseUnavailableReason($buyer,$listing);
         if($reason!==null)throw new InvalidArgumentException($reason);
         return $listing;
