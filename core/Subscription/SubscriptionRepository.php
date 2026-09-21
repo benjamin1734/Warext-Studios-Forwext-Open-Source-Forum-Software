@@ -46,6 +46,7 @@ interface SubscriptionRepository
         EntityId $userId,EntityId $planId,string $providerKey,string $idempotencyKey
     ):?SubscriptionPurchase;
     public function purchaseByProviderReference(string $providerKey,string $providerReference):?SubscriptionPurchase;
+    public function activePurchase(EntityId $userId,EntityId $planId,bool $forUpdate=false):?SubscriptionPurchase;
     public function insertPurchase(SubscriptionPurchase $purchase):void;
     public function savePurchase(SubscriptionPurchase $purchase):void;
     /** @return list<SubscriptionPurchase> */
