@@ -188,6 +188,9 @@ use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
 use Forwext\Core\Marketplace\DatabaseMarketplaceExternalSaleRepository;
 use Forwext\Core\Marketplace\DatabaseMarketplacePurchaseRepository;
+use Forwext\Core\Marketplace\Delivery\DatabaseMarketplaceDeliveryRepository;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliverySecretProtector;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryService;
 use Forwext\Core\Marketplace\MarketplaceExternalSaleService;
 use Forwext\Core\Marketplace\MarketplaceExternalSaleUrlPolicy;
 use Forwext\Core\Marketplace\MarketplacePurchaseNotifier;
@@ -424,6 +427,9 @@ final readonly class WebApplicationFactory
             new DatabaseFaqSupportBridgeRepository($database),
             $authorizer,
         );
+        $attachmentQuota = new AttachmentQuotaPolicy();
+        $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
+
         $portfolioRepository = new DatabasePortfolioRepository($database);
         $portfolio = new PortfolioService(
             $database,
@@ -450,6 +456,18 @@ final readonly class WebApplicationFactory
         $marketplacePurchaseNotifications = new NotificationRegistry();
         MarketplacePurchaseNotifier::registerDefinitions($marketplacePurchaseNotifications);
         $marketplacePurchaseRepository = new DatabaseMarketplacePurchaseRepository($database);
+        $marketplaceDeliveryRepository = new DatabaseMarketplaceDeliveryRepository($database);
+        $marketplaceDelivery = new MarketplaceDeliveryService(
+            $database,
+            $marketplaceDeliveryRepository,
+            $marketplacePurchaseRepository,
+            $marketplace,
+            $authorizer,
+            $storage,
+            $attachmentInspector,
+            $this->marketplaceDeliverySecretProtector($config),
+            new CoreAuditRecorder($database,new DatabaseAuditEventStore($database)),
+        );
         $marketplacePurchases = new MarketplacePurchaseService(
             $database,
             $marketplacePurchaseRepository,
@@ -459,6 +477,7 @@ final readonly class WebApplicationFactory
                 $marketplacePurchaseNotifications,
                 new DatabaseNotificationRepository($database),
             )),
+            $marketplaceDelivery,
         );
         $paymentProviderRegistry=$this->paymentProviders??new PaymentProviderRegistry();
         $payments=new PaymentService(
@@ -468,6 +487,7 @@ final readonly class WebApplicationFactory
             $marketplacePurchaseRepository,
             $authorizer,
             new CoreAuditRecorder($database,new DatabaseAuditEventStore($database)),
+            $marketplaceDelivery,
         );
 
         $rewardRepository = new DatabaseRewardRepository($database);
@@ -647,8 +667,6 @@ final readonly class WebApplicationFactory
         $realtimeMode = $this->realtimeMode($config);
         $websocketPath = $this->realtimeWebsocketPath($config);
 
-        $attachmentQuota = new AttachmentQuotaPolicy();
-        $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
         $portfolioMedia = new PortfolioMediaService(
             $database,
             $portfolio,
@@ -1647,6 +1665,17 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('storage.local.private_root')),
             $this->projectPath($config->requireString('storage.local.public_root')),
             $baseUrl,
+        );
+    }
+
+    private function marketplaceDeliverySecretProtector(ConfigRepository $config): MarketplaceDeliverySecretProtector
+    {
+        $master=$this->masterKey($config)->bytesForCrypto();
+        $encrypt=hash_hmac('sha256','forwext.marketplace.delivery.encrypt.v1',$master,true);
+        $fingerprint=hash_hmac('sha256','forwext.marketplace.delivery.fingerprint.v1',$master,true);
+        return new MarketplaceDeliverySecretProtector(
+            new SecretCipher(SecretKey::fromBase64(base64_encode($encrypt))),
+            SecretKey::fromBase64(base64_encode($fingerprint)),
         );
     }
 
