@@ -300,6 +300,7 @@ final class MarketplaceDomainTest extends TestCase
             $seller->value()=>[
                 'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
                 'marketplace.listing.view'=>true,'marketplace.internal_purchase.use'=>true,
+                'marketplace.purchase'=>true,
             ],
             $buyer->value()=>['marketplace.listing.view'=>true,'marketplace.purchase'=>true],
             $staff->value()=>[
