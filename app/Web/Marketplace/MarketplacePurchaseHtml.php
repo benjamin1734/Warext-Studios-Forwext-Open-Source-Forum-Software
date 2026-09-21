@@ -108,9 +108,11 @@ final class MarketplacePurchaseHtml
         array $paymentProviders,?string $paymentIdempotencyKey,?string $paymentCancelKey,
         BasePath $basePath,string $csrf,bool $cancelled,?string $paymentStatus=null
     ):string{
+        $reconciliation=($order->receiptMetadata['payment_reconciliation_required']??false)===true;
         $body='<section class="card"><h1>'.self::e($order->orderNumber).'</h1>'
             .($cancelled?'<div class="search-alert market-success">Sipariş iptal edildi.</div>':'')
             .($paymentStatus===null?'':'<div class="search-alert market-success">Ödeme durumu: '.self::e($paymentStatus).'</div>')
+            .($reconciliation?'<div class="search-alert">Ödeme sağlayıcısı ile sipariş durumu arasında uzlaştırma gerekiyor. Yetkili incelemesi/refund gerekebilir.</div>':'')
             .'<p class="muted">Alıcı: '.self::e($buyer).' · Satıcı: '.self::e($seller).'</p>'
             .'<dl class="market-specs"><dt>Sipariş durumu</dt><dd>'.self::e($order->state->value).'</dd>'
             .'<dt>Ödeme durumu</dt><dd>'.self::e($order->paymentState->value).'</dd>'
