@@ -58,7 +58,7 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
             $seller=$this->users->find($order->sellerUserId);
             $buyerName=$buyer?->username()->display()??'Silinmiş kullanıcı';
             $sellerName=$seller?->username()->display()??'Silinmiş kullanıcı';
-            $canCancel=($order->buyerUserId->equals($actor)||$this->marketplaceOrderManager($actor))
+            $canCancel=($order->buyerUserId->equals($actor)||$this->purchases->canManageOrders($actor))
                 &&$order->state===MarketplaceOrderState::Pending
                 &&$order->paymentState===MarketplacePaymentState::Pending;
             $csrf=$request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
@@ -71,16 +71,6 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');
         }catch(InvalidArgumentException){
             return Response::text('Not Found',404)->withHeader('Cache-Control','no-store');
-        }
-    }
-
-    private function marketplaceOrderManager(EntityId $actor):bool
-    {
-        try{
-            $this->purchases->orders($actor,1);
-            return false;
-        }catch(PermissionDeniedException){
-            return false;
         }
     }
 
