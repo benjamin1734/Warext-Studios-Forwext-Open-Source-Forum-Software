@@ -278,6 +278,7 @@ use Forwext\Core\Support\Intake\AccountSupportContextResolver;
 use Forwext\Core\Support\Intake\DatabaseSupportSubmissionRateLimiter;
 use Forwext\Core\Support\Intake\DatabaseSupportTicketIntakeRepository;
 use Forwext\Core\Support\Intake\MarketplaceSupportContextResolver;
+use Forwext\Core\Support\Intake\MarketplaceOrderSupportContextResolver;
 use Forwext\Core\Support\Intake\SupportContextRegistry;
 use Forwext\Core\Support\Intake\ThreadSupportContextResolver;
 use Forwext\Core\Support\Reporting\DatabaseSupportReportingRepository;
@@ -726,6 +727,7 @@ final readonly class WebApplicationFactory
             new ThreadSupportContextResolver($threads, $authorizer),
             new AccountSupportContextResolver($users, $authorizer),
             new MarketplaceSupportContextResolver(),
+            new MarketplaceOrderSupportContextResolver($marketplacePurchaseRepository, $authorizer),
         ]);
 
         $attachmentCsrf = $this->attachmentCsrfMiddleware($config);
