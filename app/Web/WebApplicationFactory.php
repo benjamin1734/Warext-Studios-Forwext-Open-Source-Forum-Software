@@ -443,7 +443,6 @@ final readonly class WebApplicationFactory
         MarketplacePurchaseNotifier::registerDefinitions($marketplacePurchaseNotifications);
         $marketplacePurchases = new MarketplacePurchaseService(
             $database,
-            $marketplaceRepository,
             new DatabaseMarketplacePurchaseRepository($database),
             $marketplace,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
