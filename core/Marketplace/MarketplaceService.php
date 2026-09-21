@@ -203,6 +203,8 @@ final readonly class MarketplaceService
     }
     public function canFeature(EntityId $actor):bool{return $this->allows($actor,'marketplace.feature.manage');}
     public function canModerateReviews(EntityId $actor):bool{return $this->allows($actor,'marketplace.review.manage');}
+    public function canUseExternalLink(EntityId $actor):bool{return $this->allows($actor,'marketplace.external_link.use');}
+    public function requireExternalLinkUse(EntityId $actor):void{$this->require($actor,'marketplace.external_link.use');}
 
     /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
     public function managementSnapshot(EntityId $actor):array
