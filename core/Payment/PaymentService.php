@@ -236,6 +236,22 @@ final readonly class PaymentService
                 hash('sha256',$request->rawBody),$event->occurredAt,$request->receivedAt
             );
 
+            if($event->state===PaymentAttemptState::Refunded&&$event->refundReference!==null){
+                $refund=$this->payments->refundByProviderReference($current->attemptId,$event->refundReference);
+                if($refund!==null){
+                    if($refund->amountMinor!==$current->amountMinor){
+                        throw new InvalidArgumentException('Payment webhook refund amount does not match the attempt.');
+                    }
+                    if($refund->state===PaymentRefundState::Pending){
+                        $this->payments->saveRefund(new PaymentRefund(
+                            $refund->refundId,$refund->attemptId,$refund->actorUserId,$refund->idempotencyKey,
+                            $refund->amountMinor,PaymentRefundState::Succeeded,$refund->providerRefundReference,
+                            null,$refund->createdAt,$request->receivedAt
+                        ));
+                    }
+                }
+            }
+
             if(!self::shouldApplyState($current->state,$event->state))return $current;
             $reference=$current->providerReference??$event->providerReference;
             $updated=$this->withAttemptState(
@@ -286,7 +302,7 @@ final readonly class PaymentService
             $this->payments->insertRefund($created);
             return $created;
         });
-        if($refund->state!==PaymentRefundState::Pending&&$refund->providerRefundReference!==null)return $refund;
+        if($refund->state!==PaymentRefundState::Pending||$refund->providerRefundReference!==null)return $refund;
 
         $attempt=$this->payments->attempt($refund->attemptId)
             ??throw new InvalidArgumentException('Payment attempt was not found.');
