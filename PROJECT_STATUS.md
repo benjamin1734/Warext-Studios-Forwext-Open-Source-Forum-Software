@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.26-dev
+CURRENT_VERSION = 0.0.7.27-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.04
-CURRENT_STEP = 14.05
-LAST_COMMIT = 2171307f49f1c262c700bf9e24ad639891003d2e
+LAST_COMPLETED_SUBSTEP = 14.05
+CURRENT_STEP = 14.06
+LAST_COMMIT = 6f80b195eeac7f8355b585b5d3b3e3f0b3491e26
 BLOCKERS = none
-NEXT_STEP = 14.05 - Ödeme sağlayıcı abstraction
+NEXT_STEP = 14.06 - Dijital teslimat ve sipariş yönetimi
 ```
 
 ## Current position
@@ -21,13 +21,35 @@ NEXT_STEP = 14.05 - Ödeme sağlayıcı abstraction
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.04`.
-- Current sub-step: `14.05 — Ödeme sağlayıcı abstraction`.
-- Remaining roadmap work after 14.04: **44 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.05`.
+- Current sub-step: `14.06 — Dijital teslimat ve sipariş yönetimi`.
+- Remaining roadmap work after 14.05: **43 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.05
+
+- Added a provider-agnostic `PaymentProvider` contract and injectable `PaymentProviderRegistry`; the default cPanel runtime remains valid with zero configured providers.
+- Added typed durable payment attempts, provider results, verified webhook events, full-refund records and provider cancellation/refund capability metadata.
+- Added transactional/idempotent initiation with locked Marketplace orders, persistence-level idempotency and a single active nonterminal attempt per order.
+- Added strict amount/currency/buyer/provider-reference matching, monotonic state progression and row-locked webhook application.
+- Added HTTPS-only provider checkout URLs, same-origin return/cancel paths, no-credential redirects and no-referrer external handoff.
+- Added public server-to-server webhook routing with provider cryptographic-verification boundary; raw webhook payloads are not stored, only SHA-256 plus normalized event metadata.
+- Added synchronous and asynchronous full-refund support with attempt-scoped provider refund-reference correlation and duplicate-refund prevention.
+- Added payment/provider cancellation and buyer order-cancellation coordination so an active provider attempt cannot be orphaned by an unpaid-order cancellation.
+- Added late-paid reconciliation for cancelled orders: order cancellation is preserved, paid state is recorded, staff/user warning is surfaced and successful refund clears the reconciliation flag.
+- Added shared `payment.manage` / `payment.refund` permissions with conservative administrator defaults.
+- Added native PHP payment initiation and `/admin/payments` operations surfaces, with CSRF on human mutations while provider webhooks deliberately remain session/CSRF-independent.
+- Added migrations `20260919214000_payment_abstraction` and `20260919214500_payment_refund_reference_scope`.
+- Added regression coverage for registry behavior, idempotency, active-attempt exclusion, webhook fail-closed verification/deduplication, asynchronous refund completion, cancellation coordination, late-paid reconciliation and web-surface security wiring.
+- Added architecture documentation at `docs/architecture/payment-provider-abstraction.md`.
+- Final implementation/fix commit: `6f80b195eeac7f8355b585b5d3b3e3f0b3491e26`.
+- GitHub Actions build run `35588197013`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel full/update packaging passed.
+- Database migration smoke run `35588196971`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.27-dev`.
+- Next: `14.06 — Dijital teslimat ve sipariş yönetimi`.
 
 ## Completed in 14.04
 
