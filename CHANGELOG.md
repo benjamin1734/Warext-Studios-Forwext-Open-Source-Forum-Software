@@ -6,6 +6,24 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.04 — Native Purchase Mode
+
+- Added first-party internal-sale settings, buyer carts, transactional checkout, seller/currency-split orders and separate order/payment/delivery lifecycle states.
+- Added server-generated checkout idempotency keys, cart row locking, repeated idempotency checks and all-or-nothing validation before order creation.
+- Added immutable order-item title/price snapshots, billing snapshots and bounded receipt metadata so later listing edits do not rewrite historical transactions.
+- Added buyer/seller/staff order access with backend IDOR protection, global `marketplace.order.manage` access and historical ownership access that survives later permission changes.
+- Added unpaid pending-order cancellation with atomic order/payment/delivery cancellation, order history and central audit.
+- Added buyer/seller order-created notifications with dedupe and fail-open notification delivery after durable checkout.
+- Added native PHP cart, checkout, orders, order detail and per-listing internal-sale management flows with Marketplace CSRF protection.
+- Added stale-cart privacy hardening so listings that become inaccessible no longer leak title or price through the cart.
+- Added migration `20260919213000_marketplace_native_purchase` for internal-sale settings, carts, orders, order items and order history plus permission-template defaults.
+- Added persistence invariants for item/order currency, subtotal equality and stored line-total verification.
+- Added regression coverage for idempotent checkout, multi-seller order splitting, price/title snapshots, self-purchase prevention, IDOR, cancellation and historical order access.
+- Added architecture documentation at `docs/architecture/marketplace-native-purchase.md`.
+- Final implementation/fix commit: `2171307f49f1c262c700bf9e24ad639891003d2e`.
+- GitHub Actions build run `35582912598`: success.
+- Database migration smoke run `35582912425`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 14.03 — External Redirect Purchasing Mode
 
 - Added one-to-one external-sale link configuration for marketplace listings with durable privacy-safe click tracking.
