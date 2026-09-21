@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.03 — External Redirect Purchasing Mode
+
+- Added one-to-one external-sale link configuration for marketplace listings with durable privacy-safe click tracking.
+- Added a fail-closed HTTPS destination policy backed by explicit host allowlists, optional DNS-boundary subdomain support, IP/userinfo/custom-port/fragment rejection and persisted host binding.
+- Added backend-authoritative `marketplace.external_link.use` enforcement for configuration and runtime suppression when a seller later loses the permission.
+- Added seller management UI plus an internal warning screen and CSRF-protected POST handoff; redirect targets are loaded only from server-side persisted configuration.
+- Added missing UTM source/medium/campaign enrichment without overwriting seller-supplied UTM values and applied `Referrer-Policy: no-referrer` on warning/redirect responses.
+- Added central audit snapshots that exclude full destination query strings, and analytics fail-open behavior so click-write failures do not block an otherwise valid handoff.
+- Added migration `20260919212000_marketplace_external_sale`, fail-closed runtime config, permission defaults, URL-policy/permission/registry regression coverage and `docs/architecture/marketplace-external-sale.md`.
+- Security follow-up commits include runtime seller-permission enforcement `6a0a96275527097003185732346b852cceac568c` and safe UTM separator handling `8bcc64a59e2b0246ff4deb73339c185e6fe493d1`.
+
 ### 14.02 — Marketplace Listing UX and Search
 
 - Added native marketplace browse/detail/management UX with grid/list views, bounded pagination, filters, sorting and seller storefronts.
