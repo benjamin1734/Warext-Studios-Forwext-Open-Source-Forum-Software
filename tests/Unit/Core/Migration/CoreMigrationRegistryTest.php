@@ -38,6 +38,7 @@ use Forwext\Database\Migrations\Core\CreatePaymentAbstraction;
 use Forwext\Database\Migrations\Core\ScopePaymentRefundReference;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateSubscriptionUpgradeSystem;
+use Forwext\Database\Migrations\Core\CreateAdvertisingNoticeSystem;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -141,5 +142,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(ScopePaymentRefundReference::class, $classes);
         self::assertContains(CreateMarketplaceDigitalDelivery::class, $classes);
         self::assertContains(CreateSubscriptionUpgradeSystem::class, $classes);
+        self::assertContains(CreateAdvertisingNoticeSystem::class, $classes);
     }
 }
