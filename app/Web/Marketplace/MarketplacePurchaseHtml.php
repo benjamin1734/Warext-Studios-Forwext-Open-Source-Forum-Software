@@ -102,13 +102,15 @@ final class MarketplacePurchaseHtml
         return ProfileHtml::page('Marketplace Siparişleri',$body.'</section>',$basePath,authenticated:true);
     }
 
-    /** @param list<MarketplaceOrderItem> $items */
+    /** @param list<MarketplaceOrderItem> $items @param list<string> $paymentProviders */
     public static function order(
         MarketplaceOrder $order,array $items,string $buyer,string $seller,bool $canCancel,
-        BasePath $basePath,string $csrf,bool $cancelled
+        array $paymentProviders,?string $paymentIdempotencyKey,
+        BasePath $basePath,string $csrf,bool $cancelled,?string $paymentStatus=null
     ):string{
         $body='<section class="card"><h1>'.self::e($order->orderNumber).'</h1>'
             .($cancelled?'<div class="search-alert market-success">Sipariş iptal edildi.</div>':'')
+            .($paymentStatus===null?'':'<div class="search-alert market-success">Ödeme durumu: '.self::e($paymentStatus).'</div>')
             .'<p class="muted">Alıcı: '.self::e($buyer).' · Satıcı: '.self::e($seller).'</p>'
             .'<dl class="market-specs"><dt>Sipariş durumu</dt><dd>'.self::e($order->state->value).'</dd>'
             .'<dt>Ödeme durumu</dt><dd>'.self::e($order->paymentState->value).'</dd>'
@@ -123,6 +125,18 @@ final class MarketplacePurchaseHtml
                 .self::e((string)$item->quantity).' × '.self::e(self::money($item->unitMinor,$item->currency)).'</p></article>';
         }
         $body.='</section>';
+        if($paymentProviders!==[]&&$paymentIdempotencyKey!==null){
+            $options='';
+            foreach($paymentProviders as $provider){
+                $options.='<option value="'.self::e($provider).'">'.self::e($provider).'</option>';
+            }
+            $body.='<section class="section"><h2>Ödeme</h2>'
+                .'<form method="post" action="'.self::e($basePath->prepend('/marketplace/orders/'.$order->orderId->value().'/payment')).'" class="search-form">'
+                .self::csrf($csrf)
+                .'<input type="hidden" name="idempotency_key" value="'.self::e($paymentIdempotencyKey).'">'
+                .'<label><span>Ödeme sağlayıcısı</span><select name="provider_key" required>'.$options.'</select></label>'
+                .'<div class="search-actions"><button type="submit">Ödemeyi başlat</button></div></form></section>';
+        }
         if($canCancel){
             $body.='<form method="post" action="'.self::e($basePath->prepend('/marketplace/orders/'.$order->orderId->value())).'" class="market-actions">'
                 .self::csrf($csrf).'<input type="hidden" name="action" value="cancel"><button type="submit">Ödenmemiş siparişi iptal et</button></form>';
