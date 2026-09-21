@@ -718,7 +718,7 @@ final class MemoryMarketplacePurchaseRepository implements MarketplacePurchaseRe
         $this->ordersById[$order->orderId->value()]=$order;
         $this->items[$order->orderId->value()]=$items;
     }
-    public function order(EntityId $orderId):?MarketplaceOrder{return $this->ordersById[$orderId->value()]??null;}
+    public function order(EntityId $orderId,bool $forUpdate=false):?MarketplaceOrder{return $this->ordersById[$orderId->value()]??null;}
     public function orderItems(EntityId $orderId):array{return $this->items[$orderId->value()]??[];}
     public function ordersForUser(EntityId $userId,int $limit=100):array
     {
