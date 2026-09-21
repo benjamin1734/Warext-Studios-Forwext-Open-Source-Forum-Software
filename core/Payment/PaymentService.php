@@ -38,6 +38,47 @@ final readonly class PaymentService
     /** @return list<string> */
     public function providerKeys():array{return $this->providers->keys();}
 
+    public function canManage(EntityId $actor):bool{return $this->allows($actor,'payment.manage');}
+    public function canRefund(EntityId $actor):bool{return $this->allows($actor,'payment.refund');}
+
+    public function canInitiate(EntityId $buyer,MarketplaceOrder $order):bool
+    {
+        if($this->providers->keys()===[]||!$this->allows($buyer,'marketplace.purchase')
+            ||!$order->buyerUserId->equals($buyer)||$order->state!==MarketplaceOrderState::Pending
+            ||!in_array(
+                $order->paymentState,
+                [MarketplacePaymentState::Pending,MarketplacePaymentState::Failed,MarketplacePaymentState::Cancelled],
+                true
+            )
+        )return false;
+
+        $activeId=$order->receiptMetadata['payment_attempt_id']??null;
+        if(!is_string($activeId)||preg_match('/^[a-f0-9]{32}$/D',$activeId)!==1)return true;
+        $active=$this->payments->attempt(EntityId::fromString($activeId));
+        return $active===null||!in_array(
+            $active->state,
+            [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
+            true
+        );
+    }
+
+    /**
+     * @return array{attempts:list<PaymentAttempt>,refunds:array<string,list<PaymentRefund>>,providers:list<string>,can_refund:bool}
+     */
+    public function managementSnapshot(EntityId $actor,int $limit=100):array
+    {
+        $this->require($actor,'payment.manage');
+        $attempts=$this->payments->attempts($limit);
+        $refunds=[];
+        foreach($attempts as $attempt)$refunds[$attempt->attemptId->value()]=$this->payments->refundsForAttempt($attempt->attemptId);
+        return [
+            'attempts'=>$attempts,
+            'refunds'=>$refunds,
+            'providers'=>$this->providers->keys(),
+            'can_refund'=>$this->allows($actor,'payment.refund'),
+        ];
+    }
+
     public function initiate(
         EntityId $buyer,
         EntityId $orderId,
