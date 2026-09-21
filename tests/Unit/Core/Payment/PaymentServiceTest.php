@@ -198,6 +198,7 @@ final class PaymentServiceTest extends TestCase
     {
         $buyer=UserId::generate();
         $seller=UserId::generate();
+        $admin=UserId::generate();
         $order=$this->order($buyer,$seller,$this->at('2026-09-21 14:10:00'));
         $orders=new PaymentMemoryOrderRepository($order);
         $payments=new PaymentMemoryRepository();
@@ -207,6 +208,7 @@ final class PaymentServiceTest extends TestCase
         );
         $service=$this->service($payments,$orders,$provider,[
             $buyer->value()=>['marketplace.purchase'=>true],
+            $admin->value()=>['payment.manage'=>true,'payment.refund'=>true],
         ]);
 
         $attempt=$service->initiate(
@@ -256,6 +258,16 @@ final class PaymentServiceTest extends TestCase
         self::assertSame(MarketplaceOrderState::Cancelled,$reconciledOrder->state);
         self::assertSame(MarketplacePaymentState::Paid,$reconciledOrder->paymentState);
         self::assertTrue($reconciledOrder->receiptMetadata['payment_reconciliation_required']??false);
+
+        $provider->refundResult=new PaymentRefundResult(PaymentRefundState::Succeeded,'refund_late_paid');
+        $service->refund(
+            $admin,$attempt->attemptId,str_repeat('7',32),$this->at('2026-09-21 14:16:00')
+        );
+        $refundedOrder=$orders->order($order->orderId);
+        self::assertNotNull($refundedOrder);
+        self::assertSame(MarketplaceOrderState::Cancelled,$refundedOrder->state);
+        self::assertSame(MarketplacePaymentState::Refunded,$refundedOrder->paymentState);
+        self::assertFalse($refundedOrder->receiptMetadata['payment_reconciliation_required']??false);
     }
 
     public function testPendingRefundCompletesFromVerifiedWebhook():void
