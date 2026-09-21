@@ -21,7 +21,7 @@ interface PaymentRepository
         string $payloadHash,DateTimeImmutable $occurredAt,DateTimeImmutable $receivedAt
     ):void;
 
-    public function refund(EntityId $refundId):?PaymentRefund;
+    public function refund(EntityId $refundId,bool $forUpdate=false):?PaymentRefund;
     public function refundByIdempotency(EntityId $attemptId,string $idempotencyKey):?PaymentRefund;
     public function insertRefund(PaymentRefund $refund):void;
     public function saveRefund(PaymentRefund $refund):void;
