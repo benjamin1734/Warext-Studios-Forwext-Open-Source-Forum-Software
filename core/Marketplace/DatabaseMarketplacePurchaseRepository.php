@@ -143,10 +143,10 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
         }
     }
 
-    public function order(EntityId $orderId):?MarketplaceOrder
+    public function order(EntityId $orderId,bool $forUpdate=false):?MarketplaceOrder
     {
         $row=$this->database->fetchOne(new CompiledQuery(
-            'SELECT * FROM forwext_marketplace_orders WHERE order_id=:id LIMIT 1',
+            'SELECT * FROM forwext_marketplace_orders WHERE order_id=:id LIMIT 1'.($forUpdate?' FOR UPDATE':''),
             ['id'=>$orderId->value()]
         ));
         return $row===null?null:$this->hydrateOrder($row);
