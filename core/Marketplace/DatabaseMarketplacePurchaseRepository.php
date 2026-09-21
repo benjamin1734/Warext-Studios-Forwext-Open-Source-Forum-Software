@@ -207,13 +207,13 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
     }
 
     public function recordOrderHistory(
-        EntityId $orderId,EntityId $actor,string $action,
+        EntityId $orderId,?EntityId $actor,string $action,
         MarketplaceOrderState $fromOrderState,MarketplaceOrderState $toOrderState,
         MarketplacePaymentState $fromPaymentState,MarketplacePaymentState $toPaymentState,
         MarketplaceDeliveryState $fromDeliveryState,MarketplaceDeliveryState $toDeliveryState,
         DateTimeImmutable $at,
     ):void{
-        UserId::assert($actor);
+        if($actor!==null)UserId::assert($actor);
         if(preg_match('/^[a-z][a-z0-9._-]{1,63}$/D',$action)!==1)throw new InvalidArgumentException('Marketplace order history action is invalid.');
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_marketplace_order_history '
@@ -221,7 +221,7 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
             . 'from_delivery_state,to_delivery_state,created_at_utc) '
             . 'VALUES (:id,:order_id,:actor,:action,:from_order,:to_order,:from_payment,:to_payment,:from_delivery,:to_delivery,:created)',
             [
-                'id'=>bin2hex(random_bytes(16)),'order_id'=>$orderId->value(),'actor'=>$actor->value(),'action'=>$action,
+                'id'=>bin2hex(random_bytes(16)),'order_id'=>$orderId->value(),'actor'=>$actor?->value(),'action'=>$action,
                 'from_order'=>$fromOrderState->value,'to_order'=>$toOrderState->value,
                 'from_payment'=>$fromPaymentState->value,'to_payment'=>$toPaymentState->value,
                 'from_delivery'=>$fromDeliveryState->value,'to_delivery'=>$toDeliveryState->value,
