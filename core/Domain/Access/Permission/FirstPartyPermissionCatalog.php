@@ -119,6 +119,8 @@ final class FirstPartyPermissionCatalog
             self::flag('marketplace.internal_purchase.use', 'Use native marketplace checkout and purchase flows.'),
             self::flag('marketplace.purchase', 'Purchase marketplace listings.'),
             self::flag('marketplace.order.manage', 'Manage marketplace orders and delivery workflows.'),
+            self::flag('marketplace.delivery.manage_own', 'Configure and fulfill delivery for owned marketplace listings and sales.'),
+            self::flag('marketplace.delivery.manage_all', 'Manage marketplace delivery configuration and fulfillment for all sellers.'),
             self::flag('payment.manage', 'Manage payment-provider configuration and payment operations.'),
             self::flag('payment.refund', 'Issue authorized refunds or cancellations.'),
             self::flag('subscription.view', 'View available subscription and user-upgrade plans.'),
