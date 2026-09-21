@@ -8,6 +8,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Domain\Access\UserAccessAssignment;
 use Forwext\Core\Domain\Entity\EntityId;
+use Throwable;
 use UnexpectedValueException;
 
 final readonly class DatabasePermissionRuleRepository implements PermissionRuleRepository
@@ -83,7 +84,36 @@ final readonly class DatabasePermissionRuleRepository implements PermissionRuleR
             ];
         }
 
+        foreach ($this->subscriptionPermissionRows($key, $assignment->userId()) as $subscriptionRow) {
+            $rows[] = $subscriptionRow;
+        }
+
         return array_map($this->hydrateRule(...), $rows);
+    }
+
+    /** @return list<array{subject_type:string,subject_id:string,effect:string,numeric_limit:null,node_id:null}> */
+    private function subscriptionPermissionRows(PermissionKey $key, EntityId $userId): array
+    {
+        try {
+            $rows = $this->database->fetchAll(new CompiledQuery(
+                'SELECT DISTINCT sp.permission_key FROM forwext_user_subscriptions s '
+                . 'INNER JOIN forwext_subscription_plan_permissions sp ON sp.plan_id=s.plan_id '
+                . "WHERE s.user_id=:user_id AND s.state='active' "
+                . 'AND (s.ends_at_utc IS NULL OR s.ends_at_utc>UTC_TIMESTAMP(6)) '
+                . 'AND sp.permission_key=:permission_key',
+                ['user_id'=>$userId->value(),'permission_key'=>$key->value()],
+            ));
+        } catch (Throwable) {
+            return [];
+        }
+        if ($rows === []) return [];
+        return [[
+            'subject_type'=>PermissionSubjectType::User->value,
+            'subject_id'=>$userId->value(),
+            'effect'=>PermissionEffect::Allow->value,
+            'numeric_limit'=>null,
+            'node_id'=>null,
+        ]];
     }
 
     /** @param list<string> $restrictions */
