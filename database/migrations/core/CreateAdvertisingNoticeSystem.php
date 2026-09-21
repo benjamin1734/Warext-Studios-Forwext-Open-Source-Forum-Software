@@ -32,8 +32,8 @@ final readonly class CreateAdvertisingNoticeSystem implements Migration
             . 'impression_value_minor BIGINT UNSIGNED NOT NULL DEFAULT 0,click_value_minor BIGINT UNSIGNED NOT NULL DEFAULT 0,'
             . "currency CHAR(3) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'TRY',"
             . 'starts_at_utc DATETIME(6) NULL,ends_at_utc DATETIME(6) NULL,'
-            . 'created_by_user_id VARCHAR(191) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
-            . 'updated_by_user_id VARCHAR(191) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
+            . 'created_by_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
+            . 'updated_by_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
             . 'created_at_utc DATETIME(6) NOT NULL,updated_at_utc DATETIME(6) NOT NULL,'
             . 'PRIMARY KEY(campaign_id),UNIQUE KEY uq_forwext_ad_campaign_key(campaign_key),'
             . 'KEY idx_forwext_ad_active(placement_key,enabled,starts_at_utc,ends_at_utc,priority,campaign_id),'
