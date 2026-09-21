@@ -81,6 +81,17 @@ final readonly class CreatePaymentAbstraction implements Migration
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         ));
 
+        $historyActorNullable=(int)$context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() "
+            . "AND TABLE_NAME='forwext_marketplace_order_history' AND COLUMN_NAME='actor_user_id' AND IS_NULLABLE='YES'"
+        ));
+        if($historyActorNullable===0){
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE forwext_marketplace_order_history MODIFY actor_user_id '
+                . 'CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL'
+            ));
+        }
+
         $permissions=[
             'payment.manage'=>'Manage payment-provider configuration and payment operations.',
             'payment.refund'=>'Issue authorized refunds or payment cancellations.',
@@ -118,11 +129,15 @@ final readonly class CreatePaymentAbstraction implements Migration
             "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN "
             . "('forwext_payment_attempts','forwext_payment_webhook_events','forwext_payment_refunds')"
         ));
+        $historyActorNullable=(int)$context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() "
+            . "AND TABLE_NAME='forwext_marketplace_order_history' AND COLUMN_NAME='actor_user_id' AND IS_NULLABLE='YES'"
+        ));
         $rules=(int)$context->fetchValue(new CompiledQuery(
             "SELECT COUNT(*) FROM forwext_permission_template_rules WHERE template_key IN "
             . "('new_user','member','verified','moderator','administrator') AND permission_key IN ('payment.manage','payment.refund')"
         ));
-        return $tables===3&&$rules===10
+        return $tables===3&&$historyActorNullable===1&&$rules===10
             ? MigrationVerification::passed()
             : MigrationVerification::failed('Payment abstraction schema or permission defaults are incomplete.');
     }
