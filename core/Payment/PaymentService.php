@@ -21,7 +21,6 @@ use Forwext\Core\Marketplace\MarketplaceOrder;
 use Forwext\Core\Marketplace\MarketplaceOrderState;
 use Forwext\Core\Marketplace\MarketplacePaymentState;
 use Forwext\Core\Marketplace\MarketplacePurchaseRepository;
-use Forwext\Core\Marketplace\MarketplaceService;
 use InvalidArgumentException;
 use Throwable;
 
@@ -32,7 +31,6 @@ final readonly class PaymentService
         private PaymentRepository $payments,
         private PaymentProviderRegistry $providers,
         private MarketplacePurchaseRepository $orders,
-        private MarketplaceService $marketplace,
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
     ){}
@@ -49,7 +47,7 @@ final readonly class PaymentService
         string $cancelPath,
         DateTimeImmutable $now,
     ):PaymentAttempt{
-        $this->marketplace->requirePurchase($buyer);
+        $this->require($buyer,'marketplace.purchase');
         self::assertIdempotencyKey($idempotencyKey);
         $provider=$this->providers->require($providerKey);
         $at=self::utc($now);
