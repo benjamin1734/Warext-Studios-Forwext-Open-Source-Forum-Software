@@ -8,6 +8,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Throwable;
 
 final readonly class DatabaseUserAccessAssignmentProvider implements UserAccessAssignmentProvider
 {
@@ -49,11 +50,39 @@ final readonly class DatabaseUserAccessAssignmentProvider implements UserAccessA
             ['user_id' => $userId->value()],
         ));
 
+        foreach ($this->subscriptionRoleRows($userId) as $row) {
+            $roles[] = $row;
+        }
+        $roleIds = [];
+        foreach ($roles as $row) {
+            $role = EntityId::fromString((string) $row['role_id']);
+            $roleIds[$role->value()] = $role;
+        }
+
         return new UserAccessAssignment(
             $userId,
             EntityId::fromString((string) $primary['group_id']),
             array_map(static fn (array $row): EntityId => EntityId::fromString((string) $row['group_id']), $secondary),
-            array_map(static fn (array $row): EntityId => EntityId::fromString((string) $row['role_id']), $roles),
+            array_values($roleIds),
         );
     }
+
+    /** @return list<array{role_id:string}> */
+    private function subscriptionRoleRows(EntityId $userId): array
+    {
+        try {
+            return $this->database->fetchAll(new CompiledQuery(
+                'SELECT DISTINCT pr.role_id FROM forwext_user_subscriptions s '
+                . 'INNER JOIN forwext_subscription_plan_roles pr ON pr.plan_id=s.plan_id '
+                . 'INNER JOIN forwext_roles r ON r.role_id=pr.role_id '
+                . "WHERE s.user_id=:user_id AND s.state='active' "
+                . 'AND (s.ends_at_utc IS NULL OR s.ends_at_utc>UTC_TIMESTAMP(6)) '
+                . "AND r.kind='custom' AND r.is_protected=0 ORDER BY pr.role_id",
+                ['user_id'=>$userId->value()],
+            ));
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
 }
