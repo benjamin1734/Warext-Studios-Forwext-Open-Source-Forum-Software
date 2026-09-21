@@ -38,7 +38,7 @@ interface MarketplacePurchaseRepository
     public function saveOrderStates(MarketplaceOrder $order):void;
     public function recordOrderHistory(
         EntityId $orderId,
-        EntityId $actor,
+        ?EntityId $actor,
         string $action,
         MarketplaceOrderState $fromOrderState,
         MarketplaceOrderState $toOrderState,
