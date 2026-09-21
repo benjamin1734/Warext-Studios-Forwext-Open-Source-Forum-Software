@@ -41,14 +41,13 @@ final readonly class MarketplaceDeliveryRecord
         if($this->type!==MarketplaceDeliveryType::Download&&$this->assetId!==null){
             throw new InvalidArgumentException('Only download delivery records may reference an asset.');
         }
+        $requiresPayload=in_array($this->state,[MarketplaceDeliveryState::Ready,MarketplaceDeliveryState::Delivered],true);
         if(in_array($this->type,[MarketplaceDeliveryType::License,MarketplaceDeliveryType::Key],true)
-            &&$this->state!==MarketplaceDeliveryState::Pending&&$this->keyId===null
+            &&$requiresPayload&&$this->keyId===null
         ){
             throw new InvalidArgumentException('Ready key/license delivery requires an assigned key.');
         }
-        if($this->type===MarketplaceDeliveryType::Manual&&$this->state!==MarketplaceDeliveryState::Pending
-            &&$this->encryptedManualValue===null
-        ){
+        if($this->type===MarketplaceDeliveryType::Manual&&$requiresPayload&&$this->encryptedManualValue===null){
             throw new InvalidArgumentException('Ready manual delivery requires a payload.');
         }
         if($this->fulfilledByUserId!==null)UserId::assert($this->fulfilledByUserId);
