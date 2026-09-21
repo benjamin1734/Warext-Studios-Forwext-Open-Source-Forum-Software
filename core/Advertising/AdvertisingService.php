@@ -120,9 +120,14 @@ final readonly class AdvertisingService
             ??throw new InvalidArgumentException('Advertising campaign was not found.');
         if($campaign->destinationUrl===null)throw new InvalidArgumentException('Advertising campaign has no destination.');
         $this->assertDestination($campaign->destinationUrl);
-        $this->repository->recordEvent(
-            $campaignId,AdvertisingEventType::Click,$viewerHash,'advertising.click',null,$device,$at
-        );
+        $at=$at->setTimezone(new DateTimeZone('UTC'));
+        if($this->repository->eventCount(
+            $campaignId,AdvertisingEventType::Click,$viewerHash,$at->modify('-10 seconds'),$at
+        )===0){
+            $this->repository->recordEvent(
+                $campaignId,AdvertisingEventType::Click,$viewerHash,'advertising.click',null,$device,$at
+            );
+        }
         return $campaign->destinationUrl;
     }
 
