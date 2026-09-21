@@ -14,6 +14,11 @@ interface AdvertisingRepository
     public function campaign(EntityId $campaignId,bool $forUpdate=false):?AdvertisingCampaign;
     public function saveCampaign(AdvertisingCampaign $campaign,EntityId $actor):void;
 
+    /** @return list<array{id:EntityId,name:string}> */
+    public function groups():array;
+    /** @return list<array{id:EntityId,title:string}> */
+    public function forums():array;
+
     /** @return list<string> */
     public function routeTargets(EntityId $campaignId):array;
     /** @return list<EntityId> */
