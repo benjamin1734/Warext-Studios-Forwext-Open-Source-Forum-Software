@@ -220,24 +220,41 @@ final readonly class PaymentService
         $this->require($actor,'payment.refund');
         self::assertIdempotencyKey($idempotencyKey);
         $at=self::utc($now);
-        $attempt=$this->payments->attempt($attemptId)??throw new InvalidArgumentException('Payment attempt was not found.');
-        if($attempt->state!==PaymentAttemptState::Paid||$attempt->providerReference===null){
-            throw new InvalidArgumentException('Only a paid provider attempt can be refunded.');
-        }
-        $provider=$this->providers->require($attempt->providerKey);
-        if(!$provider->capabilities()->refunds)throw new InvalidArgumentException('Payment provider does not support refunds.');
 
-        $refund=$this->database->transaction(function()use($actor,$attempt,$idempotencyKey,$at):PaymentRefund{
+        $refund=$this->database->transaction(function()use($actor,$attemptId,$idempotencyKey,$at):PaymentRefund{
+            $attempt=$this->payments->attempt($attemptId,true)
+                ??throw new InvalidArgumentException('Payment attempt was not found.');
+            if($attempt->state!==PaymentAttemptState::Paid||$attempt->providerReference===null){
+                throw new InvalidArgumentException('Only a paid provider attempt can be refunded.');
+            }
+            $provider=$this->providers->require($attempt->providerKey);
+            if(!$provider->capabilities()->refunds){
+                throw new InvalidArgumentException('Payment provider does not support refunds.');
+            }
+
             $existing=$this->payments->refundByIdempotency($attempt->attemptId,$idempotencyKey);
             if($existing!==null)return $existing;
-            $refund=new PaymentRefund(
+            foreach($this->payments->refundsForAttempt($attempt->attemptId) as $prior){
+                if(in_array($prior->state,[PaymentRefundState::Pending,PaymentRefundState::Succeeded],true)){
+                    throw new InvalidArgumentException('Payment attempt already has an active or completed refund.');
+                }
+            }
+
+            $created=new PaymentRefund(
                 PaymentRefund::generateId(),$attempt->attemptId,$actor,$idempotencyKey,$attempt->amountMinor,
                 PaymentRefundState::Pending,null,null,$at,$at
             );
-            $this->payments->insertRefund($refund);
-            return $refund;
+            $this->payments->insertRefund($created);
+            return $created;
         });
         if($refund->state!==PaymentRefundState::Pending&&$refund->providerRefundReference!==null)return $refund;
+
+        $attempt=$this->payments->attempt($refund->attemptId)
+            ??throw new InvalidArgumentException('Payment attempt was not found.');
+        if($attempt->providerReference===null){
+            throw new InvalidArgumentException('Payment attempt has no provider reference.');
+        }
+        $provider=$this->providers->require($attempt->providerKey);
 
         try{
             $result=$provider->refund(new PaymentRefundRequest(
@@ -248,28 +265,35 @@ final readonly class PaymentService
             throw new PaymentProviderException('Payment provider refund failed.',previous:$exception);
         }
 
-        $before=['state'=>$refund->state->value];
-        $after=['state'=>$result->state->value];
         $event=new AuditEvent(
             AuditEvent::generateId(),AuditScope::Administration,$actor,AuditAction::fromString('payment.refund'),
             'payment.refund',$refund->refundId->value(),null,'payment.refund',$requestId??AuditRequestId::generate(),
-            $before,$after,$at
+            ['state'=>$refund->state->value],['state'=>$result->state->value],$at
         );
 
-        return $this->audit->mutate($event,function()use($refund,$result,$attempt,$actor,$at):PaymentRefund{
+        return $this->audit->mutate($event,function()use($refund,$result,$actor,$at):PaymentRefund{
+            $currentRefund=$this->payments->refund($refund->refundId,true)
+                ??throw new InvalidArgumentException('Payment refund was not found.');
+            if($currentRefund->state!==PaymentRefundState::Pending)return $currentRefund;
+
+            $currentAttempt=$this->payments->attempt($refund->attemptId,true)
+                ??throw new InvalidArgumentException('Payment attempt was not found.');
             $updated=new PaymentRefund(
-                $refund->refundId,$refund->attemptId,$refund->actorUserId,$refund->idempotencyKey,$refund->amountMinor,
-                $result->state,$result->providerRefundReference,$result->errorCode,$refund->createdAt,$at
+                $currentRefund->refundId,$currentRefund->attemptId,$currentRefund->actorUserId,
+                $currentRefund->idempotencyKey,$currentRefund->amountMinor,$result->state,
+                $result->providerRefundReference,$result->errorCode,$currentRefund->createdAt,$at
             );
             $this->payments->saveRefund($updated);
+
             if($updated->state===PaymentRefundState::Succeeded){
-                $current=$this->payments->attempt($attempt->attemptId)??$attempt;
-                if($current->state===PaymentAttemptState::Paid){
+                if($currentAttempt->state===PaymentAttemptState::Paid){
                     $refunded=$this->withAttemptState(
-                        $current,PaymentAttemptState::Refunded,$current->providerReference,null,null,$at
+                        $currentAttempt,PaymentAttemptState::Refunded,$currentAttempt->providerReference,null,null,$at
                     );
                     $this->payments->saveAttempt($refunded);
                     $this->syncOrderFromAttempt($refunded,$actor,$at,'payment.refund.succeeded');
+                }elseif($currentAttempt->state!==PaymentAttemptState::Refunded){
+                    throw new PaymentProviderException('Payment state changed while refund was in flight.');
                 }
             }
             return $updated;
@@ -286,16 +310,28 @@ final readonly class PaymentService
         $this->require($actor,'payment.refund');
         self::assertIdempotencyKey($idempotencyKey);
         $at=self::utc($now);
-        $attempt=$this->payments->attempt($attemptId)??throw new InvalidArgumentException('Payment attempt was not found.');
+
+        $attempt=$this->database->transaction(function()use($attemptId):PaymentAttempt{
+            $current=$this->payments->attempt($attemptId,true)
+                ??throw new InvalidArgumentException('Payment attempt was not found.');
+            if($current->state===PaymentAttemptState::Cancelled)return $current;
+            if(!in_array(
+                $current->state,
+                [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
+                true
+            )){
+                throw new InvalidArgumentException('Payment attempt cannot be cancelled in its current state.');
+            }
+            return $current;
+        });
         if($attempt->state===PaymentAttemptState::Cancelled)return $attempt;
-        if(!in_array($attempt->state,[PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],true)){
-            throw new InvalidArgumentException('Payment attempt cannot be cancelled in its current state.');
-        }
 
         $result=null;
         if($attempt->providerReference!==null){
             $provider=$this->providers->require($attempt->providerKey);
-            if(!$provider->capabilities()->cancellation)throw new InvalidArgumentException('Payment provider does not support cancellation.');
+            if(!$provider->capabilities()->cancellation){
+                throw new InvalidArgumentException('Payment provider does not support cancellation.');
+            }
             try{
                 $result=$provider->cancel(new PaymentCancelRequest(
                     $attempt->attemptId,$attempt->providerReference,$idempotencyKey
@@ -314,9 +350,19 @@ final readonly class PaymentService
             ['state'=>$attempt->state->value],['state'=>PaymentAttemptState::Cancelled->value],$at
         );
         return $this->audit->mutate($event,function()use($attempt,$result,$actor,$at):PaymentAttempt{
+            $current=$this->payments->attempt($attempt->attemptId,true)
+                ??throw new InvalidArgumentException('Payment attempt was not found.');
+            if($current->state===PaymentAttemptState::Cancelled)return $current;
+            if(!in_array(
+                $current->state,
+                [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
+                true
+            )){
+                throw new PaymentProviderException('Payment state changed while cancellation was in flight.');
+            }
             $updated=$this->withAttemptState(
-                $attempt,PaymentAttemptState::Cancelled,
-                $result?->providerReference??$attempt->providerReference,null,$result?->errorCode,$at
+                $current,PaymentAttemptState::Cancelled,
+                $result?->providerReference??$current->providerReference,null,$result?->errorCode,$at
             );
             $this->payments->saveAttempt($updated);
             $this->syncOrderFromAttempt($updated,$actor,$at,'payment.cancelled');
