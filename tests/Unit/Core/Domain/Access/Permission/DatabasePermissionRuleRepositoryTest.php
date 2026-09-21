@@ -33,8 +33,8 @@ final class DatabasePermissionRuleRepositoryTest extends TestCase
             EntityId::fromString('forum:10'),
         );
 
-        self::assertCount(2, $database->fetchAllQueries);
-        foreach ($database->fetchAllQueries as $query) {
+        self::assertCount(3, $database->fetchAllQueries);
+        foreach (array_slice($database->fetchAllQueries, 0, 2) as $query) {
             self::assertStringNotContainsString('user:1', $query->sql);
             self::assertStringNotContainsString('group:member', $query->sql);
             self::assertSame('user:1', $query->parameters['user_id']);
@@ -43,6 +43,9 @@ final class DatabasePermissionRuleRepositoryTest extends TestCase
             self::assertSame('role:moderator', $query->parameters['role_0']);
         }
         self::assertSame('forum:10', $database->fetchAllQueries[1]->parameters['node_id']);
+        self::assertStringContainsString('forwext_user_subscriptions', $database->fetchAllQueries[2]->sql);
+        self::assertSame('user:1', $database->fetchAllQueries[2]->parameters['user_id']);
+        self::assertSame('forum.thread.create', $database->fetchAllQueries[2]->parameters['permission_key']);
     }
 
     public function testActiveDisciplineRestrictionAddsUserDenyAtRequestedNodeScope(): void
