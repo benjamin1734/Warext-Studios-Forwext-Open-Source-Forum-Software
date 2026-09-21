@@ -14,6 +14,7 @@ use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryCoordinator;
 use InvalidArgumentException;
 use Throwable;
 
@@ -27,6 +28,7 @@ final readonly class MarketplacePurchaseService
         private MarketplaceService $marketplace,
         private AuditRecorder $audit,
         private ?MarketplacePurchaseNotifier $notifier=null,
+        private ?MarketplaceDeliveryCoordinator $delivery=null,
     ){}
 
     public function internalSaleEnabled(EntityId $listingId,?EntityId $viewer):bool
@@ -166,12 +168,18 @@ final readonly class MarketplacePurchaseService
                 );
                 $items=[];
                 foreach($group['listings'] as $listing){
+                    $snapshot=$this->delivery?->snapshotForListing($listing->listingId);
                     $items[]=new MarketplaceOrderItem(
                         MarketplaceOrderItem::generateId(),$orderId,$listing->listingId,$listing->title,1,
-                        $listing->price->minorUnits,$listing->price->currency
+                        $listing->price->minorUnits,$listing->price->currency,
+                        $snapshot?->type??\Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryType::Manual,
+                        $snapshot?->assetId
                     );
                 }
                 $this->purchases->createOrder($order,$items);
+                if($this->delivery!==null){
+                    foreach($items as $item)$this->delivery->initializeOrderItem($item,$at);
+                }
                 $this->purchases->recordOrderHistory(
                     $orderId,$buyer,'order.created',
                     $order->state,$order->state,$order->paymentState,$order->paymentState,
@@ -249,6 +257,7 @@ final readonly class MarketplacePurchaseService
                 $before->receiptMetadata,$before->createdAt,$at
             );
 
+            $this->delivery?->cancelOrderReservations($orderId,$at);
             $this->purchases->saveOrderStates($after);
             $this->purchases->recordOrderHistory(
                 $after->orderId,$actor,'order.cancel',
