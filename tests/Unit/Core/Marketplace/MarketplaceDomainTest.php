@@ -385,6 +385,50 @@ final class MarketplaceDomainTest extends TestCase
         );
     }
 
+    public function testOrderCancellationRejectsActivePaymentAndAllowsFailedPayment():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $purchases=new MemoryMarketplacePurchaseRepository();
+        $buyer=UserId::generate();
+        $seller=UserId::generate();
+        $marketplace=$this->service($repo,[
+            $buyer->value()=>[],
+            $seller->value()=>[],
+        ]);
+        $service=new MarketplacePurchaseService(
+            new MarketplaceTestDatabase(),$purchases,$marketplace,new MarketplaceAudit()
+        );
+        $at=$this->at('2026-09-21 10:20:00');
+        $order=new MarketplaceOrder(
+            MarketplaceOrder::generateId(),MarketplaceOrder::generateNumber($at),str_repeat('c',32),
+            $buyer,$seller,'TRY',10000,10000,MarketplaceOrderState::Pending,MarketplacePaymentState::Pending,
+            MarketplaceDeliveryState::Pending,new MarketplaceBillingSnapshot('Buyer Test','buyer3@example.com','TR'),
+            ['checkout_mode'=>'internal','item_count'=>1,'payment_attempt_id'=>str_repeat('d',32)],
+            $at,$at
+        );
+        $purchases->createOrder($order,[]);
+
+        try{
+            $service->cancelPending($buyer,$order->orderId,$this->at('2026-09-21 10:21:00'));
+            self::fail('An order with an active payment attempt must not be directly cancelled.');
+        }catch(InvalidArgumentException){}
+
+        $failed=new MarketplaceOrder(
+            $order->orderId,$order->orderNumber,$order->checkoutKey,$order->buyerUserId,$order->sellerUserId,
+            $order->currency,$order->subtotalMinor,$order->totalMinor,MarketplaceOrderState::Pending,
+            MarketplacePaymentState::Failed,MarketplaceDeliveryState::Pending,$order->billing,
+            ['checkout_mode'=>'internal','item_count'=>1],$order->createdAt,$this->at('2026-09-21 10:22:00')
+        );
+        $purchases->saveOrderStates($failed);
+
+        $cancelled=$service->cancelPending(
+            $buyer,$order->orderId,$this->at('2026-09-21 10:23:00')
+        );
+        self::assertSame(MarketplaceOrderState::Cancelled,$cancelled->state);
+        self::assertSame(MarketplacePaymentState::Cancelled,$cancelled->paymentState);
+        self::assertSame(MarketplaceDeliveryState::Cancelled,$cancelled->deliveryState);
+    }
+
     public function testNativeCheckoutSplitsOrdersBySellerAndCurrency():void
     {
         $repo=new MemoryMarketplaceRepository();
