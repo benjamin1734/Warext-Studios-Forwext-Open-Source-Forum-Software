@@ -54,19 +54,37 @@ final readonly class PaymentService
         $provider=$this->providers->require($providerKey);
         $at=self::utc($now);
 
-        $order=$this->orders->order($orderId)??throw new InvalidArgumentException('Marketplace order was not found.');
-        if(!$order->buyerUserId->equals($buyer))throw new InvalidArgumentException('Marketplace order was not found.');
-        if($order->state!==MarketplaceOrderState::Pending
-            ||in_array($order->paymentState,[MarketplacePaymentState::Paid,MarketplacePaymentState::Refunded],true)
-        ){
-            throw new InvalidArgumentException('Marketplace order is not eligible for a new payment attempt.');
-        }
-
         $attempt=$this->database->transaction(function()use(
-            $buyer,$order,$providerKey,$idempotencyKey,$at
+            $buyer,$orderId,$providerKey,$idempotencyKey,$at
         ):PaymentAttempt{
-            $existing=$this->payments->attemptByIdempotency($order->orderId,$providerKey,$idempotencyKey);
+            $order=$this->orders->order($orderId,true)
+                ??throw new InvalidArgumentException('Marketplace order was not found.');
+            if(!$order->buyerUserId->equals($buyer))throw new InvalidArgumentException('Marketplace order was not found.');
+
+            $existing=$this->payments->attemptByIdempotency($orderId,$providerKey,$idempotencyKey);
             if($existing!==null)return $existing;
+
+            if($order->state!==MarketplaceOrderState::Pending
+                ||!in_array(
+                    $order->paymentState,
+                    [MarketplacePaymentState::Pending,MarketplacePaymentState::Failed,MarketplacePaymentState::Cancelled],
+                    true
+                )
+            ){
+                throw new InvalidArgumentException('Marketplace order is not eligible for a new payment attempt.');
+            }
+
+            $activeId=$order->receiptMetadata['payment_attempt_id']??null;
+            if(is_string($activeId)&&preg_match('/^[a-f0-9]{32}$/D',$activeId)===1){
+                $active=$this->payments->attempt(EntityId::fromString($activeId),true);
+                if($active!==null&&in_array(
+                    $active->state,
+                    [PaymentAttemptState::Pending,PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized],
+                    true
+                )){
+                    throw new InvalidArgumentException('Marketplace order already has an active payment attempt.');
+                }
+            }
 
             $attempt=new PaymentAttempt(
                 PaymentAttempt::generateId(),$order->orderId,$buyer,$providerKey,$idempotencyKey,
@@ -93,11 +111,24 @@ final readonly class PaymentService
         }
 
         return $this->database->transaction(function()use($attempt,$result,$buyer,$at):PaymentAttempt{
-            $current=$this->payments->attempt($attempt->attemptId)
+            $current=$this->payments->attempt($attempt->attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
             if($current->providerReference!==null&&!hash_equals($current->providerReference,$result->providerReference)){
                 throw new InvalidArgumentException('Payment provider reference changed for an idempotent attempt.');
             }
+
+            if($current->state!==PaymentAttemptState::Pending){
+                if($current->providerReference===null){
+                    $current=$this->withAttemptState(
+                        $current,$current->state,$result->providerReference,
+                        $current->state===PaymentAttemptState::RequiresAction?$result->checkoutUrl:$current->checkoutUrl,
+                        $current->errorCode,$at
+                    );
+                    $this->payments->saveAttempt($current);
+                }
+                return $current;
+            }
+
             $updated=$this->withAttemptState(
                 $current,$result->state,$result->providerReference,$result->checkoutUrl,$result->errorCode,$at
             );
