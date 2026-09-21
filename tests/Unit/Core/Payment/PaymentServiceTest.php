@@ -258,7 +258,7 @@ final class PaymentFakeProvider implements PaymentProvider
 
     public function __construct(private string $providerKey)
     {
-        $this->createResult=new PaymentProviderResult(PaymentAttemptState::Failed,'default_create','provider_error');
+        $this->createResult=new PaymentProviderResult(PaymentAttemptState::Failed,'default_create',null,'provider_error');
         $this->refundResult=new PaymentRefundResult(PaymentRefundState::Failed,'default_refund','provider_error');
         $this->cancelResult=new PaymentProviderResult(PaymentAttemptState::Cancelled,'default_cancel');
     }
