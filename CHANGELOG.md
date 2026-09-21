@@ -6,6 +6,21 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 15.01 — Analytics Event Model
+
+- Added a privacy-aware event registry spanning forum, user, content, support, bug, Marketplace, referral, giveaway and moderation domains.
+- Added per-event retention policy plus actor/session/subject/forum collection declarations and exact dimension allowlists.
+- Added deterministic HMAC-SHA256 pseudonymization for user, session and subject identities using a domain-separated installation key.
+- Added strict token-only dimension validation with explicit raw-IP rejection and no arbitrary free-form analytics payloads.
+- Added `forwext_analytics_events` persistence with event/category/forum/actor/subject/retention indexes and no raw IP, user-agent, e-mail, request URI/query string or raw user-id fields.
+- Added strict/best-effort analytics recording, runtime `user.active` and `forum.view` producers, thread-to-forum resolution and reuse of the bounded browser/device classifier.
+- Added daily bounded per-event retention pruning through the existing scheduler/maintenance queue model.
+- Added migration `20260921230000_analytics_event_model` and installer registry coverage.
+- Added privacy, registry-domain, runtime-wiring and retention regression tests.
+- Added architecture documentation at `docs/architecture/analytics-event-model.md` and milestone notes at `docs/changelog/15.01-analytics-event-model.md`.
+- Final implementation/fix commit: `8736f3478c306c9d221f7e50b1f13904d8374085`; final regression-test correction: `88444be88da8d6609c3f24c0261b0248b3c3b7ef`.
+- GitHub Actions build run `35633962639`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35633962656`: success on MySQL 8.4 and MariaDB 10.11.
 ### 14.08 — Advertising / Notice / Placement System
 
 - Added first-party advertisement, notice and announcement campaigns with stable semantic placement keys.
