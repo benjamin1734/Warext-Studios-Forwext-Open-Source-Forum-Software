@@ -6,6 +6,26 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.05 — Payment Provider Abstraction
+
+- Added provider-agnostic payment contracts, typed attempt/refund lifecycles and an injectable duplicate-safe `PaymentProviderRegistry` without making a commercial payment SDK mandatory for cPanel deployments.
+- Added durable payment attempts, verified webhook event deduplication and full-refund records with database idempotency boundaries.
+- Added row-locked initiation/state transitions, one-active-attempt protection and immutable order amount/currency/buyer matching to prevent parallel/double-charge races.
+- Added same-origin return/cancel path validation plus HTTPS-only external provider checkout handoff with no embedded credentials.
+- Added server-to-server `/payments/webhooks/{providerKey}` handling that preserves raw request bytes for provider verification while persisting only normalized metadata and SHA-256 payload hashes.
+- Added monotonic webhook state application, provider reference/amount/currency checks and stale-event protection.
+- Added synchronous and asynchronous full-refund handling with provider refund-reference correlation and idempotent retries.
+- Added provider cancellation, buyer order-cancellation coordination and fail-safe late-paid reconciliation that preserves cancelled orders while surfacing `payment_reconciliation_required`.
+- Added automatic cleanup of reconciliation warnings after a successful full refund and cleanup of stale active-attempt metadata after failed/cancelled attempts.
+- Added backend `payment.manage` / `payment.refund` permissions with conservative administrator-only defaults.
+- Added native PHP buyer payment initiation, payment-state feedback, provider redirects and `/admin/payments` operations UI with CSRF on all human mutations.
+- Added migrations `20260919214000_payment_abstraction` and `20260919214500_payment_refund_reference_scope`.
+- Added regression coverage for provider registry rules, initiation idempotency, active-attempt exclusion, webhook verification/deduplication, asynchronous refunds, cancellation coordination, late-paid reconciliation and web CSRF/webhook wiring.
+- Added architecture documentation at `docs/architecture/payment-provider-abstraction.md`.
+- Final implementation/fix commit: `6f80b195eeac7f8355b585b5d3b3e3f0b3491e26`.
+- GitHub Actions build run `35588197013`: success.
+- Database migration smoke run `35588196971`: success on MySQL 8.4 and MariaDB 10.11.
+
 ### 14.04 — Native Purchase Mode
 
 - Added first-party internal-sale settings, buyer carts, transactional checkout, seller/currency-split orders and separate order/payment/delivery lifecycle states.
