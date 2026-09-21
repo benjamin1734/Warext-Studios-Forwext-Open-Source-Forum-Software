@@ -91,7 +91,7 @@ final readonly class DatabaseMarketplaceDeliveryRepository implements Marketplac
         ));
     }
 
-    public function assignAvailableKey(
+    public function reserveAvailableKey(
         EntityId $listingId,
         EntityId $orderItemId,
         DateTimeImmutable $at,
@@ -104,15 +104,46 @@ final readonly class DatabaseMarketplaceDeliveryRepository implements Marketplac
         if($row===null)return null;
         $key=$this->hydrateKey($row);
         $changed=$this->database->execute(new CompiledQuery(
-            "UPDATE forwext_marketplace_delivery_keys SET key_state='assigned',assigned_order_item_id=:item,"
+            "UPDATE forwext_marketplace_delivery_keys SET key_state='reserved',assigned_order_item_id=:item,"
             . "assigned_at_utc=:assigned WHERE key_id=:key_id AND key_state='available'",
             ['item'=>$orderItemId->value(),'assigned'=>self::format($at),'key_id'=>$key->keyId->value()]
         ));
-        if($changed!==1)throw new InvalidArgumentException('Marketplace delivery key assignment race detected.');
+        if($changed!==1)throw new InvalidArgumentException('Marketplace delivery key reservation race detected.');
+        return new MarketplaceDeliveryKey(
+            $key->keyId,$key->listingId,$key->encryptedValue,$key->fingerprint,
+            MarketplaceDeliveryKeyState::Reserved,$orderItemId,$key->createdByUserId,$key->createdAt,$at
+        );
+    }
+
+    public function activateReservedKey(EntityId $orderItemId,DateTimeImmutable $at):?MarketplaceDeliveryKey
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            "SELECT * FROM forwext_marketplace_delivery_keys WHERE assigned_order_item_id=:item "
+            . "AND key_state IN ('reserved','assigned') LIMIT 1 FOR UPDATE",
+            ['item'=>$orderItemId->value()]
+        ));
+        if($row===null)return null;
+        $key=$this->hydrateKey($row);
+        if($key->state===MarketplaceDeliveryKeyState::Assigned)return $key;
+        $changed=$this->database->execute(new CompiledQuery(
+            "UPDATE forwext_marketplace_delivery_keys SET key_state='assigned',assigned_at_utc=:assigned "
+            . "WHERE key_id=:key_id AND key_state='reserved'",
+            ['assigned'=>self::format($at),'key_id'=>$key->keyId->value()]
+        ));
+        if($changed!==1)throw new InvalidArgumentException('Marketplace delivery key activation race detected.');
         return new MarketplaceDeliveryKey(
             $key->keyId,$key->listingId,$key->encryptedValue,$key->fingerprint,
             MarketplaceDeliveryKeyState::Assigned,$orderItemId,$key->createdByUserId,$key->createdAt,$at
         );
+    }
+
+    public function releaseReservedKey(EntityId $orderItemId):void
+    {
+        $this->database->execute(new CompiledQuery(
+            "UPDATE forwext_marketplace_delivery_keys SET key_state='available',assigned_order_item_id=NULL,"
+            . "assigned_at_utc=NULL WHERE assigned_order_item_id=:item AND key_state='reserved'",
+            ['item'=>$orderItemId->value()]
+        ));
     }
 
     public function initializeOrderItem(MarketplaceOrderItem $item,DateTimeImmutable $at):void
