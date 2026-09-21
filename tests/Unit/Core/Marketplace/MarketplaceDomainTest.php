@@ -24,8 +24,10 @@ use Forwext\Core\Domain\Access\UserAccessAssignment;
 use Forwext\Core\Domain\Access\UserAccessAssignmentProvider;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Marketplace\MarketplaceBillingSnapshot;
 use Forwext\Core\Marketplace\MarketplaceCategory;
 use Forwext\Core\Marketplace\MarketplaceCustomFieldDefinition;
+use Forwext\Core\Marketplace\MarketplaceDeliveryState;
 use Forwext\Core\Marketplace\MarketplaceCustomFieldType;
 use Forwext\Core\Marketplace\MarketplaceListing;
 use Forwext\Core\Marketplace\MarketplaceListingCard;
@@ -34,6 +36,12 @@ use Forwext\Core\Marketplace\MarketplaceListingQuery;
 use Forwext\Core\Marketplace\MarketplaceListingSort;
 use Forwext\Core\Marketplace\MarketplaceListingState;
 use Forwext\Core\Marketplace\MarketplaceMedia;
+use Forwext\Core\Marketplace\MarketplaceOrder;
+use Forwext\Core\Marketplace\MarketplaceOrderItem;
+use Forwext\Core\Marketplace\MarketplaceOrderState;
+use Forwext\Core\Marketplace\MarketplacePaymentState;
+use Forwext\Core\Marketplace\MarketplacePurchaseRepository;
+use Forwext\Core\Marketplace\MarketplacePurchaseService;
 use Forwext\Core\Marketplace\MarketplaceMoney;
 use Forwext\Core\Marketplace\MarketplaceRepository;
 use Forwext\Core\Marketplace\MarketplaceReview;
@@ -277,6 +285,125 @@ final class MarketplaceDomainTest extends TestCase
         $service->requireExternalLinkUse($denied);
     }
 
+    public function testNativePurchaseCheckoutIsIdempotentAndSnapshotsListingData():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $purchases=new MemoryMarketplacePurchaseRepository();
+        $seller=UserId::generate();
+        $buyer=UserId::generate();
+        $staff=UserId::generate();
+        $stranger=UserId::generate();
+        $category=$this->category(str_repeat('4',32),null,'native','native');
+        $repo->saveCategory($category);
+
+        $permissions=[
+            $seller->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+                'marketplace.listing.view'=>true,'marketplace.internal_purchase.use'=>true,
+            ],
+            $buyer->value()=>['marketplace.listing.view'=>true,'marketplace.purchase'=>true],
+            $staff->value()=>[
+                'marketplace.listing.view'=>true,'marketplace.listing.manage_all'=>true,
+                'marketplace.order.manage'=>true,
+            ],
+            $stranger->value()=>['marketplace.listing.view'=>true,'marketplace.purchase'=>true],
+        ];
+        $marketplace=$this->service($repo,$permissions);
+        $purchaseService=new MarketplacePurchaseService(
+            new MarketplaceTestDatabase(),$purchases,$marketplace,new MarketplaceAudit()
+        );
+
+        $listingId=MarketplaceListing::generateId();
+        $marketplace->saveListing($seller,$this->listing($listingId,$seller,$category->categoryId,[]));
+        $marketplace->submit($seller,$listingId,$this->at('2026-09-21 10:00:00'));
+        $active=$marketplace->approve($staff,$listingId,$this->at('2026-09-21 10:01:00'));
+
+        $purchaseService->setInternalSale($seller,$listingId,true,$this->at('2026-09-21 10:02:00'));
+        self::assertTrue($purchaseService->canPurchaseListing($buyer,$active));
+
+        try{
+            $purchaseService->addToCart($seller,$listingId,$this->at('2026-09-21 10:03:00'));
+            self::fail('Seller must not purchase own listing.');
+        }catch(InvalidArgumentException){}
+
+        $purchaseService->addToCart($buyer,$listingId,$this->at('2026-09-21 10:04:00'));
+        self::assertCount(1,$purchaseService->cart($buyer));
+
+        $billing=new MarketplaceBillingSnapshot('Batın Test','buyer@example.com','TR',null,'Çanakkale');
+        $checkoutKey=str_repeat('a',32);
+        $orders=$purchaseService->checkout($buyer,$billing,$checkoutKey,$this->at('2026-09-21 10:05:00'));
+        self::assertCount(1,$orders);
+        $order=$orders[0];
+        self::assertSame(250000,$order->totalMinor);
+        self::assertSame(MarketplaceOrderState::Pending,$order->state);
+        self::assertSame(MarketplacePaymentState::Pending,$order->paymentState);
+        self::assertSame(MarketplaceDeliveryState::Pending,$order->deliveryState);
+        self::assertSame($seller->value(),$order->sellerUserId->value());
+        self::assertSame([],$purchaseService->cart($buyer));
+
+        $retry=$purchaseService->checkout($buyer,$billing,$checkoutKey,$this->at('2026-09-21 10:06:00'));
+        self::assertCount(1,$retry);
+        self::assertSame($order->orderId->value(),$retry[0]->orderId->value());
+
+        $items=$purchaseService->order($buyer,$order->orderId)['items'];
+        self::assertCount(1,$items);
+        self::assertSame(250000,$items[0]->unitMinor);
+        self::assertSame('Marketplace item',$items[0]->title);
+
+        $changed=new MarketplaceListing(
+            $active->listingId,$active->sellerUserId,$active->categoryId,$active->slug,'Changed title',
+            $active->description,new MarketplaceMoney(999999,'TRY'),$active->tags,$active->media,$active->customValues,
+            MarketplaceListingState::Active,$active->createdAt,$this->at('2026-09-21 10:07:00')
+        );
+        $marketplace->saveListing($seller,$changed);
+        $snapshot=$purchaseService->order($buyer,$order->orderId);
+        self::assertSame(250000,$snapshot['order']->totalMinor);
+        self::assertSame('Marketplace item',$snapshot['items'][0]->title);
+
+        try{
+            $purchaseService->order($stranger,$order->orderId);
+            self::fail('Unrelated users must not read marketplace orders.');
+        }catch(InvalidArgumentException){}
+
+        self::assertSame($order->orderId->value(),$purchaseService->order($staff,$order->orderId)['order']->orderId->value());
+        self::assertCount(1,$purchaseService->orders($staff));
+    }
+
+    public function testStaleCartDoesNotExposeNonPublicListingDetails():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $purchases=new MemoryMarketplacePurchaseRepository();
+        $seller=UserId::generate();
+        $buyer=UserId::generate();
+        $staff=UserId::generate();
+        $category=$this->category(str_repeat('3',32),null,'stale','stale');
+        $repo->saveCategory($category);
+        $marketplace=$this->service($repo,[
+            $seller->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+                'marketplace.listing.view'=>true,'marketplace.internal_purchase.use'=>true,
+            ],
+            $buyer->value()=>['marketplace.listing.view'=>true,'marketplace.purchase'=>true],
+            $staff->value()=>['marketplace.listing.view'=>true,'marketplace.listing.manage_all'=>true],
+        ]);
+        $purchaseService=new MarketplacePurchaseService(
+            new MarketplaceTestDatabase(),$purchases,$marketplace,new MarketplaceAudit()
+        );
+
+        $listingId=MarketplaceListing::generateId();
+        $marketplace->saveListing($seller,$this->listing($listingId,$seller,$category->categoryId,[]));
+        $marketplace->submit($seller,$listingId,$this->at('2026-09-21 11:00:00'));
+        $marketplace->approve($staff,$listingId,$this->at('2026-09-21 11:01:00'));
+        $purchaseService->setInternalSale($seller,$listingId,true,$this->at('2026-09-21 11:02:00'));
+        $purchaseService->addToCart($buyer,$listingId,$this->at('2026-09-21 11:03:00'));
+
+        $marketplace->pause($seller,$listingId,$this->at('2026-09-21 11:04:00'));
+        $cart=$purchaseService->cart($buyer);
+        self::assertCount(1,$cart);
+        self::assertFalse($cart[0]->purchasable);
+        self::assertNull($cart[0]->listing);
+    }
+
     private function category(string $id,?EntityId $parent,string $key,string $slug):MarketplaceCategory
     {
         $at=$this->at('2026-09-19 18:00:00');
@@ -477,5 +604,72 @@ final class MarketplaceTestDatabase implements TransactionalQueryExecutor
     {
         ++$this->depth;
         try{return $callback($this);}finally{--$this->depth;}
+    }
+}
+
+
+final class MemoryMarketplacePurchaseRepository implements MarketplacePurchaseRepository
+{
+    /** @var array<string,bool> */
+    private array $internal=[];
+    /** @var array<string,array<string,EntityId>> */
+    private array $carts=[];
+    /** @var array<string,MarketplaceOrder> */
+    private array $ordersById=[];
+    /** @var array<string,list<MarketplaceOrderItem>> */
+    private array $items=[];
+    /** @var list<array{order:string,action:string}> */
+    public array $history=[];
+
+    public function internalSaleEnabled(EntityId $listingId):bool{return $this->internal[$listingId->value()]??false;}
+    public function saveInternalSaleSetting(EntityId $listingId,bool $enabled,EntityId $actor,DateTimeImmutable $at):void
+    {
+        $this->internal[$listingId->value()]=$enabled;
+    }
+    public function cartListingIds(EntityId $buyer,bool $forUpdate=false):array
+    {
+        return array_values($this->carts[$buyer->value()]??[]);
+    }
+    public function cartCount(EntityId $buyer):int{return count($this->carts[$buyer->value()]??[]);}
+    public function addCartItem(EntityId $buyer,EntityId $listingId,DateTimeImmutable $at):void
+    {
+        $this->carts[$buyer->value()][$listingId->value()]=$listingId;
+    }
+    public function removeCartItem(EntityId $buyer,EntityId $listingId):void
+    {
+        unset($this->carts[$buyer->value()][$listingId->value()]);
+    }
+    public function clearCart(EntityId $buyer):void{$this->carts[$buyer->value()]=[];}
+    public function ordersForCheckout(EntityId $buyer,string $checkoutKey):array
+    {
+        return array_values(array_filter(
+            $this->ordersById,
+            static fn(MarketplaceOrder $order):bool=>$order->buyerUserId->equals($buyer)&&$order->checkoutKey===$checkoutKey
+        ));
+    }
+    public function createOrder(MarketplaceOrder $order,array $items):void
+    {
+        $this->ordersById[$order->orderId->value()]=$order;
+        $this->items[$order->orderId->value()]=$items;
+    }
+    public function order(EntityId $orderId):?MarketplaceOrder{return $this->ordersById[$orderId->value()]??null;}
+    public function orderItems(EntityId $orderId):array{return $this->items[$orderId->value()]??[];}
+    public function ordersForUser(EntityId $userId,int $limit=100):array
+    {
+        return array_slice(array_values(array_filter(
+            $this->ordersById,
+            static fn(MarketplaceOrder $order):bool=>$order->buyerUserId->equals($userId)||$order->sellerUserId->equals($userId)
+        )),0,$limit);
+    }
+    public function orders(int $limit=100):array{return array_slice(array_values($this->ordersById),0,$limit);}
+    public function saveOrderStates(MarketplaceOrder $order):void{$this->ordersById[$order->orderId->value()]=$order;}
+    public function recordOrderHistory(
+        EntityId $orderId,EntityId $actor,string $action,
+        MarketplaceOrderState $fromOrderState,MarketplaceOrderState $toOrderState,
+        MarketplacePaymentState $fromPaymentState,MarketplacePaymentState $toPaymentState,
+        MarketplaceDeliveryState $fromDeliveryState,MarketplaceDeliveryState $toDeliveryState,
+        DateTimeImmutable $at,
+    ):void{
+        $this->history[]=['order'=>$orderId->value(),'action'=>$action];
     }
 }
