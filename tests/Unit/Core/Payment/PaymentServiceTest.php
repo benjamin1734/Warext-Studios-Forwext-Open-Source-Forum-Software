@@ -194,6 +194,52 @@ final class PaymentServiceTest extends TestCase
         self::assertSame(1,$provider->cancelCalls);
     }
 
+    public function testPendingRefundCompletesFromVerifiedWebhook():void
+    {
+        $buyer=UserId::generate();
+        $seller=UserId::generate();
+        $admin=UserId::generate();
+        $order=$this->order($buyer,$seller,$this->at('2026-09-21 14:30:00'));
+        $orders=new PaymentMemoryOrderRepository($order);
+        $payments=new PaymentMemoryRepository();
+        $provider=new PaymentFakeProvider('fake');
+        $provider->createResult=new PaymentProviderResult(PaymentAttemptState::Paid,'pay_async');
+        $service=$this->service($payments,$orders,$provider,[
+            $buyer->value()=>['marketplace.purchase'=>true],
+            $admin->value()=>['payment.manage'=>true,'payment.refund'=>true],
+        ]);
+
+        $paid=$service->initiate(
+            $buyer,$order->orderId,'fake',str_repeat('1',32),
+            '/return','/cancel',$this->at('2026-09-21 14:31:00')
+        );
+        $provider->refundResult=new PaymentRefundResult(PaymentRefundState::Pending,'refund_async');
+        $pending=$service->refund(
+            $admin,$paid->attemptId,str_repeat('2',32),$this->at('2026-09-21 14:32:00')
+        );
+        self::assertSame(PaymentRefundState::Pending,$pending->state);
+        self::assertSame(1,$provider->refundCalls);
+
+        $same=$service->refund(
+            $admin,$paid->attemptId,str_repeat('2',32),$this->at('2026-09-21 14:33:00')
+        );
+        self::assertSame($pending->refundId->value(),$same->refundId->value());
+        self::assertSame(1,$provider->refundCalls);
+
+        $provider->webhookEvent=new PaymentWebhookEvent(
+            'evt_refund_async',PaymentAttemptState::Refunded,$paid->attemptId,'pay_async','refund_async',
+            12500,'TRY',$this->at('2026-09-21 14:34:00')
+        );
+        $refunded=$service->handleWebhook(
+            'fake',$this->webhook('refund-body',$this->at('2026-09-21 14:34:01'))
+        );
+        self::assertSame(PaymentAttemptState::Refunded,$refunded->state);
+        self::assertSame(MarketplacePaymentState::Refunded,$orders->order($order->orderId)?->paymentState);
+        $refunds=$payments->refundsForAttempt($paid->attemptId);
+        self::assertCount(1,$refunds);
+        self::assertSame(PaymentRefundState::Succeeded,$refunds[0]->state);
+    }
+
     public function testWebhookVerificationFailureIsFailClosed():void
     {
         $buyer=UserId::generate();$seller=UserId::generate();
