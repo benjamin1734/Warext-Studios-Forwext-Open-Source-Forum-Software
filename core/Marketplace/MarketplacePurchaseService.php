@@ -69,6 +69,11 @@ final readonly class MarketplacePurchaseService
         ));
     }
 
+    public function canPurchaseListing(EntityId $buyer,MarketplaceListing $listing):bool
+    {
+        return $this->marketplace->canPurchase($buyer)&&$this->purchaseUnavailableReason($buyer,$listing)===null;
+    }
+
     public function addToCart(EntityId $buyer,EntityId $listingId,DateTimeImmutable $now):void
     {
         $this->marketplace->requirePurchase($buyer);
