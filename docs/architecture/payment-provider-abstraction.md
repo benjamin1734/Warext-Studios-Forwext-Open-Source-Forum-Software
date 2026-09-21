@@ -195,3 +195,18 @@ Migration `20260919214000_payment_abstraction` creates:
 - `forwext_payment_refunds`
 
 It also updates Marketplace order history to permit a `NULL` actor for verified system/provider webhook transitions. Human actions continue to store their real actor user id.
+
+
+## Asynchronous refunds and reconciliation
+
+Refund adapters may return either a terminal result or a durable provider refund reference in the `pending` state.
+
+A normalized refund webhook may carry `refundReference`. Forwext correlates that reference to the existing attempt-scoped refund record, marks a pending full refund as succeeded and then advances the payment attempt/order payment state to `refunded`.
+
+A duplicate full refund is blocked while an earlier refund is pending or already succeeded. The same refund idempotency key returns the existing durable refund without issuing another provider call.
+
+Buyer order cancellation coordinates with the currently active payment attempt before the Marketplace order itself is cancelled. Pending, action-required and authorized provider attempts are cancelled first. Failed/cancelled attempts are reconciled and detached from the order's active payment metadata.
+
+A late verified `paid` webhook cannot silently reopen a Marketplace order that the buyer already cancelled. The order remains cancelled, payment becomes paid and receipt metadata sets `payment_reconciliation_required=true`. The native order view surfaces this condition to the user/staff. A successful full refund clears the reconciliation flag while preserving the cancelled order state.
+
+Provider checkout URLs exist only while an attempt is `requires_action`; they are cleared as soon as the attempt advances to authorized, paid, failed, cancelled or refunded.
