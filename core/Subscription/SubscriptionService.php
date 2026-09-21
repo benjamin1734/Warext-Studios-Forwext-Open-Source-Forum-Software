@@ -225,6 +225,9 @@ final readonly class SubscriptionService
             if(!$plan->active||$plan->priceMinor<1){
                 throw new InvalidArgumentException('Subscription plan is not available for paid purchase.');
             }
+            if($this->subscriptions->activePurchase($actor,$planId,true)!==null){
+                throw new InvalidArgumentException('Subscription plan already has an active payment attempt.');
+            }
 
             $created=new SubscriptionPurchase(
                 SubscriptionPurchase::generateId(),$actor,$plan->planId,$providerKey,$idempotencyKey,
