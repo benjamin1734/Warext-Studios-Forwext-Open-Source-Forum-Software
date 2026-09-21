@@ -175,12 +175,23 @@ final readonly class PaymentService
         }
 
         return $this->database->transaction(function()use($providerKey,$request,$event,$attempt):PaymentAttempt{
-            if($this->payments->webhookEventExists($providerKey,$event->eventId)){
-                return $this->payments->attempt($attempt->attemptId)??$attempt;
-            }
-
-            $current=$this->payments->attempt($attempt->attemptId)
+            $current=$this->payments->attempt($attempt->attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
+            if($this->payments->webhookEventExists($providerKey,$event->eventId))return $current;
+            if(!hash_equals($current->providerKey,$providerKey)){
+                throw new InvalidArgumentException('Payment webhook provider does not match the attempt.');
+            }
+            if($event->providerReference!==null&&$current->providerReference!==null
+                &&!hash_equals($current->providerReference,$event->providerReference)
+            ){
+                throw new InvalidArgumentException('Payment webhook provider reference does not match the attempt.');
+            }
+            if($event->amountMinor!==null&&$event->amountMinor!==$current->amountMinor){
+                throw new InvalidArgumentException('Payment webhook amount does not match the attempt.');
+            }
+            if($event->currency!==null&&!hash_equals($current->currency,$event->currency)){
+                throw new InvalidArgumentException('Payment webhook currency does not match the attempt.');
+            }
             $this->payments->insertWebhookEvent(
                 $providerKey,$event->eventId,$current->attemptId,$event->state,
                 hash('sha256',$request->rawBody),$event->occurredAt,$request->receivedAt
@@ -355,7 +366,7 @@ final readonly class PaymentService
     private function syncOrderFromAttempt(
         PaymentAttempt $attempt,?EntityId $actor,DateTimeImmutable $at,string $action
     ):void{
-        $order=$this->orders->order($attempt->orderId)??throw new InvalidArgumentException('Marketplace order was not found.');
+        $order=$this->orders->order($attempt->orderId,true)??throw new InvalidArgumentException('Marketplace order was not found.');
         if($order->totalMinor!==$attempt->amountMinor||!hash_equals($order->currency,$attempt->currency)
             ||!$order->buyerUserId->equals($attempt->buyerUserId)
         ){
