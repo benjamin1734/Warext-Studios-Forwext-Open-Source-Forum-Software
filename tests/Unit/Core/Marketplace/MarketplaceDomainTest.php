@@ -368,6 +368,21 @@ final class MarketplaceDomainTest extends TestCase
 
         self::assertSame($order->orderId->value(),$purchaseService->order($staff,$order->orderId)['order']->orderId->value());
         self::assertCount(1,$purchaseService->orders($staff));
+
+        $cancelled=$purchaseService->cancelPending($buyer,$order->orderId,$this->at('2026-09-21 10:08:00'));
+        self::assertSame(MarketplaceOrderState::Cancelled,$cancelled->state);
+        self::assertSame(MarketplacePaymentState::Cancelled,$cancelled->paymentState);
+        self::assertSame(MarketplaceDeliveryState::Cancelled,$cancelled->deliveryState);
+
+        $historicalMarketplace=$this->service($repo,[$buyer->value()=>[]]);
+        $historicalPurchases=new MarketplacePurchaseService(
+            new MarketplaceTestDatabase(),$purchases,$historicalMarketplace,new MarketplaceAudit()
+        );
+        self::assertCount(1,$historicalPurchases->orders($buyer));
+        self::assertSame(
+            MarketplaceOrderState::Cancelled,
+            $historicalPurchases->order($buyer,$order->orderId)['order']->state
+        );
     }
 
     public function testNativeCheckoutSplitsOrdersBySellerAndCurrency():void
