@@ -48,6 +48,11 @@ final readonly class AdvertisingMiddleware implements MiddlewareInterface
             if(!is_string($route)||$route===''||in_array($route,['advertising.manage','advertising.click'],true)){
                 return $response;
             }
+            $path=parse_url($request->uri(),PHP_URL_PATH);
+            $relative=is_string($path)?$this->basePath->strip($path):null;
+            if($relative===null||str_starts_with($relative,'/admin/')){
+                return $response;
+            }
 
             $viewer=$this->viewers->resolve($request);
             $anonymousToken=$request->cookie(self::COOKIE);
