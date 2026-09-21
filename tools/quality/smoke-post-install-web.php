@@ -109,6 +109,7 @@ $navigationRoutes = [
     '/marketplace',
     '/faq',
     '/account/referrals',
+    '/account/upgrades',
     '/bugs',
     '/stats',
 ];
