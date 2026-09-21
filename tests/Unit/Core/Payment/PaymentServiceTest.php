@@ -234,6 +234,28 @@ final class PaymentServiceTest extends TestCase
         );
         self::assertNull($again);
         self::assertSame(1,$provider->cancelCalls);
+
+        $cancelledOrder=new MarketplaceOrder(
+            $updatedOrder->orderId,$updatedOrder->orderNumber,$updatedOrder->checkoutKey,
+            $updatedOrder->buyerUserId,$updatedOrder->sellerUserId,$updatedOrder->currency,
+            $updatedOrder->subtotalMinor,$updatedOrder->totalMinor,MarketplaceOrderState::Cancelled,
+            MarketplacePaymentState::Cancelled,MarketplaceDeliveryState::Cancelled,$updatedOrder->billing,
+            $updatedOrder->receiptMetadata,$updatedOrder->createdAt,$this->at('2026-09-21 14:14:00')
+        );
+        $orders->store($cancelledOrder);
+        $provider->webhookEvent=new PaymentWebhookEvent(
+            'evt_late_paid_cancelled_order',PaymentAttemptState::Paid,$attempt->attemptId,
+            'pay_buyer_cancel',null,12500,'TRY',$this->at('2026-09-21 14:15:00')
+        );
+        $latePaid=$service->handleWebhook(
+            'fake',$this->webhook('late-paid-body',$this->at('2026-09-21 14:15:01'))
+        );
+        self::assertSame(PaymentAttemptState::Paid,$latePaid->state);
+        $reconciledOrder=$orders->order($order->orderId);
+        self::assertNotNull($reconciledOrder);
+        self::assertSame(MarketplaceOrderState::Cancelled,$reconciledOrder->state);
+        self::assertSame(MarketplacePaymentState::Paid,$reconciledOrder->paymentState);
+        self::assertTrue($reconciledOrder->receiptMetadata['payment_reconciliation_required']??false);
     }
 
     public function testPendingRefundCompletesFromVerifiedWebhook():void
