@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Community;
 
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
+use Forwext\Core\Analytics\AnalyticsEventRecorder;
+use Forwext\Core\Analytics\AnalyticsEventRegistry;
+use Forwext\Core\Analytics\AnalyticsPrivacyHasher;
+use Forwext\Core\Analytics\DatabaseAnalyticsRepository;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
+use Forwext\Core\Bug\Diagnostic\BugBrowserDeviceClassifier;
 use Forwext\Core\Config\ConfigLoader;
 use Forwext\Core\Config\ConfigRepository;
 use Forwext\Core\Database\DatabaseConfig;
@@ -48,6 +54,9 @@ final class CommunityApplicationFactory
     private ?ProfileViewerResolver $viewers = null;
     private ?PresenceService $presence = null;
     private ?PermissionAuthorizer $authorizer = null;
+    private ?AnalyticsEventRecorder $analytics = null;
+    private ?BugBrowserDeviceClassifier $devices = null;
+    private ?EncryptedFileSecretStore $secretStore = null;
 
     public function __construct(private string $projectRoot)
     {
@@ -86,6 +95,9 @@ final class CommunityApplicationFactory
                 $this->viewerResolver(),
                 $this->presence(),
                 new PresenceRequestGuard($this->canonicalUrl),
+                $this->analytics(),
+                $this->deviceClassifier(),
+                $this->config->requireString('authentication.session.cookie_name'),
             ))->handle($request);
         }
 
@@ -163,6 +175,44 @@ final class CommunityApplicationFactory
         );
     }
 
+    private function analytics(): AnalyticsEventRecorder
+    {
+        return $this->analytics ??= new AnalyticsEventRecorder(
+            AnalyticsEventRegistry::withCoreDefaults(),
+            new DatabaseAnalyticsRepository($this->database()),
+            new AnalyticsPrivacyHasher($this->analyticsPrivacyKey()),
+        );
+    }
+
+    private function deviceClassifier(): BugBrowserDeviceClassifier
+    {
+        return $this->devices ??= new BugBrowserDeviceClassifier(
+            new AuthenticationFingerprint(
+                $this->secretStore(),
+                $this->config->requireString('authentication.fingerprint_secret_name'),
+            ),
+        );
+    }
+
+    private function secretStore(): EncryptedFileSecretStore
+    {
+        return $this->secretStore ??= new EncryptedFileSecretStore(
+            $this->projectPath($this->config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey()),
+        );
+    }
+
+    private function analyticsPrivacyKey(): SecretKey
+    {
+        $derived = hash_hmac(
+            'sha256',
+            'forwext.analytics.privacy.v1',
+            $this->masterKey()->bytesForCrypto(),
+            true,
+        );
+        return SecretKey::fromBase64(base64_encode($derived));
+    }
+
     private function sessionStore(): SessionStore
     {
         return match ($this->config->requireString('session.driver')) {
@@ -179,11 +229,9 @@ final class CommunityApplicationFactory
         if ($this->database !== null) {
             return $this->database;
         }
-        $secrets = new EncryptedFileSecretStore(
-            $this->projectPath($this->config->requireString('security.secret_store_path')),
-            new SecretCipher($this->masterKey()),
+        $password = $this->secretStore()->get(
+            $this->config->requireString('database.password_secret'),
         );
-        $password = $secrets->get($this->config->requireString('database.password_secret'));
         if ($password === null) {
             throw new RuntimeException('Database password secret is unavailable.');
         }
