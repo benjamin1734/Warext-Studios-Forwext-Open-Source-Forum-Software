@@ -261,6 +261,22 @@ final class MarketplaceDomainTest extends TestCase
         $service->saveListing($seller,$directState);
     }
 
+    public function testExternalSalePermissionUsesSharedEngine():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $allowed=UserId::generate();
+        $denied=UserId::generate();
+        $service=$this->service($repo,[
+            $allowed->value()=>['marketplace.external_link.use'=>true],
+            $denied->value()=>['marketplace.external_link.use'=>false],
+        ]);
+
+        self::assertTrue($service->canUseExternalLink($allowed));
+        self::assertFalse($service->canUseExternalLink($denied));
+        $this->expectException(PermissionDeniedException::class);
+        $service->requireExternalLinkUse($denied);
+    }
+
     private function category(string $id,?EntityId $parent,string $key,string $slug):MarketplaceCategory
     {
         $at=$this->at('2026-09-19 18:00:00');
