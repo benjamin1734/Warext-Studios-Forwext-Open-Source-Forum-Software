@@ -32,6 +32,7 @@ use Forwext\Database\Migrations\Core\AddPromotionRevocationPolicy;
 use Forwext\Database\Migrations\Core\CreateMarketplaceDomain;
 use Forwext\Database\Migrations\Core\CreateMarketplaceDiscoveryUx;
 use Forwext\Database\Migrations\Core\CreateMarketplaceExternalSale;
+use Forwext\Database\Migrations\Core\CreateMarketplaceNativePurchase;
 use Forwext\Database\Migrations\Core\CreateSupportReportingAudit;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
@@ -131,5 +132,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateMarketplaceDomain::class, $classes);
         self::assertContains(CreateMarketplaceDiscoveryUx::class, $classes);
         self::assertContains(CreateMarketplaceExternalSale::class, $classes);
+        self::assertContains(CreateMarketplaceNativePurchase::class, $classes);
     }
 }
