@@ -566,6 +566,8 @@ final readonly class PaymentService
             }
             $metadata['payment_provider']=$attempt->providerKey;
             $metadata['payment_attempt_id']=$attempt->attemptId->value();
+        }elseif($attempt->state===PaymentAttemptState::Refunded&&$isActive){
+            unset($metadata['payment_reconciliation_required']);
         }elseif($isActive&&in_array($attempt->state,[PaymentAttemptState::Failed,PaymentAttemptState::Cancelled],true)){
             unset($metadata['payment_attempt_id']);
         }
