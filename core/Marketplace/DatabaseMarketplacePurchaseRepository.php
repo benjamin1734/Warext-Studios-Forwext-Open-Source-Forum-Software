@@ -10,6 +10,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Domain\User\UserId;
+use Forwext\Core\Marketplace\Delivery\MarketplaceDeliveryType;
 use InvalidArgumentException;
 use JsonException;
 
@@ -132,12 +133,13 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
         foreach($items as $item){
             $this->database->execute(new CompiledQuery(
                 'INSERT INTO forwext_marketplace_order_items '
-                . '(item_id,order_id,listing_id,title,quantity,unit_minor,currency,line_total_minor) '
-                . 'VALUES (:id,:order_id,:listing,:title,:quantity,:unit,:currency,:line_total)',
+                . '(item_id,order_id,listing_id,title,quantity,unit_minor,currency,line_total_minor,delivery_type,delivery_asset_id) '
+                . 'VALUES (:id,:order_id,:listing,:title,:quantity,:unit,:currency,:line_total,:delivery_type,:delivery_asset)',
                 [
                     'id'=>$item->itemId->value(),'order_id'=>$order->orderId->value(),'listing'=>$item->listingId->value(),
                     'title'=>$item->title,'quantity'=>$item->quantity,'unit'=>$item->unitMinor,
                     'currency'=>$item->currency,'line_total'=>$item->lineTotalMinor(),
+                    'delivery_type'=>$item->deliveryType->value,'delivery_asset'=>$item->deliveryAssetId?->value(),
                 ]
             ));
         }
@@ -163,7 +165,11 @@ final readonly class DatabaseMarketplacePurchaseRepository implements Marketplac
                 EntityId::fromString((string)$row['item_id']),
                 EntityId::fromString((string)$row['order_id']),
                 EntityId::fromString((string)$row['listing_id']),
-                (string)$row['title'],(int)$row['quantity'],(int)$row['unit_minor'],(string)$row['currency']
+                (string)$row['title'],(int)$row['quantity'],(int)$row['unit_minor'],(string)$row['currency'],
+                MarketplaceDeliveryType::from((string)($row['delivery_type']??'manual')),
+                isset($row['delivery_asset_id'])&&$row['delivery_asset_id']!==null
+                    ?EntityId::fromString((string)$row['delivery_asset_id'])
+                    :null
             );
             if($item->lineTotalMinor()!==(int)$row['line_total_minor']){
                 throw new InvalidArgumentException('Marketplace stored order item total is inconsistent.');
