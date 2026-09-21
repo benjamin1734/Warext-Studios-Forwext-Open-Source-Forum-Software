@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.24-dev
+CURRENT_VERSION = 0.0.7.25-dev
 LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.02
-CURRENT_STEP = 14.03
-LAST_COMMIT = e7147c7a8ad6af4ac960f76abe1d219772796295
+LAST_COMPLETED_SUBSTEP = 14.03
+CURRENT_STEP = 14.04
+LAST_COMMIT = 8bcc64a59e2b0246ff4deb73339c185e6fe493d1
 BLOCKERS = none
-NEXT_STEP = 14.03 - Haricî link yönlendirme modu
+NEXT_STEP = 14.04 - Dahili satın alım modu
 ```
 
 ## Current position
@@ -21,13 +21,28 @@ NEXT_STEP = 14.03 - Haricî link yönlendirme modu
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.02`.
-- Current sub-step: `14.03 — Haricî link yönlendirme modu`.
-- Remaining roadmap work after 14.02: **46 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.03`.
+- Current sub-step: `14.04 — Dahili satın alım modu`.
+- Remaining roadmap work after 14.03: **45 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 14.03
+
+- Added durable one-to-one external-sale links and privacy-aware click tracking without introducing native order/payment semantics early.
+- Added a fail-closed external URL policy: HTTPS only, explicit host allowlist, optional label-boundary subdomains, no IP literals, userinfo, fragments or custom ports, and host binding revalidation at handoff time.
+- Added runtime seller-permission enforcement using the shared `marketplace.external_link.use` permission; revoking the permission immediately hides a previously configured external handoff.
+- Added native seller configuration UX, a Forwext warning/interstitial and CSRF-protected POST confirmation before the external 303 redirect.
+- Added server-side-only redirect target resolution, UTM source/medium/campaign enrichment that preserves seller-supplied values, `Referrer-Policy: no-referrer`, no-store and noindex response policy.
+- Added central audit for configuration changes while excluding full URL query strings from audit snapshots; click records store listing, optional viewer, host and UTC timestamp only.
+- Added migration `20260919212000_marketplace_external_sale` and fail-closed runtime configuration under `marketplace.external_sale`.
+- Added URL-policy, permission and migration-registry regression coverage plus `docs/architecture/marketplace-external-sale.md`.
+- Verified the new 14.03 PHP files with PHP 8.4 syntax lint and exercised the URL policy in a local runtime harness for allowlist, subdomain-boundary, unsafe-scheme/host and UTM cases. Full-repository PHPUnit could not be executed in the isolated local container because repository/dependency network access is unavailable.
+- Final implementation/fix commit: `8bcc64a59e2b0246ff4deb73339c185e6fe493d1`.
+- Version: `0.0.7.25-dev`.
+- Next: `14.04 — Dahili satın alım modu`.
 
 ## Completed in 14.02
 
