@@ -129,5 +129,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(AddPromotionRevocationPolicy::class, $classes);
         self::assertContains(CreateMarketplaceDomain::class, $classes);
         self::assertContains(CreateMarketplaceDiscoveryUx::class, $classes);
+        self::assertContains(CreateMarketplaceExternalSale::class, $classes);
     }
 }
