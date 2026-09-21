@@ -152,7 +152,9 @@ final readonly class PaymentService
         return $this->database->transaction(function()use($attempt,$result,$buyer,$at):PaymentAttempt{
             $current=$this->payments->attempt($attempt->attemptId,true)
                 ??throw new InvalidArgumentException('Payment attempt was not found.');
-            if($current->providerReference!==null&&!hash_equals($current->providerReference,$result->providerReference)){
+            if($current->providerReference!==null&&$result->providerReference!==null
+                &&!hash_equals($current->providerReference,$result->providerReference)
+            ){
                 throw new InvalidArgumentException('Payment provider reference changed for an idempotent attempt.');
             }
 
@@ -169,7 +171,8 @@ final readonly class PaymentService
             }
 
             $updated=$this->withAttemptState(
-                $current,$result->state,$result->providerReference,$result->checkoutUrl,$result->errorCode,$at
+                $current,$result->state,$current->providerReference??$result->providerReference,
+                $result->checkoutUrl,$result->errorCode,$at
             );
             $this->payments->saveAttempt($updated);
             $this->syncOrderFromAttempt($updated,$buyer,$at,'payment.provider.'.$updated->state->value);
