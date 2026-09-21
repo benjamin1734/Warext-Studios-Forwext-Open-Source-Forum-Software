@@ -71,6 +71,7 @@ final readonly class MarketplaceExternalSaleService
     {
         $listing=$this->marketplace->listing($listingId,$viewer);
         if($listing->state!==MarketplaceListingState::Active)return null;
+        if(!$this->marketplace->canUseExternalLink($listing->sellerUserId))return null;
         $link=$this->repository->link($listingId);
         if($link===null||!$link->enabled)return null;
         try{
