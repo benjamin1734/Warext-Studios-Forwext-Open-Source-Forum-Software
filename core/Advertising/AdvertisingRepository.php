@@ -47,6 +47,14 @@ interface AdvertisingRepository
         DateTimeImmutable $until,
     ):int;
 
+    public function eventCount(
+        EntityId $campaignId,
+        AdvertisingEventType $type,
+        string $viewerHash,
+        DateTimeImmutable $since,
+        DateTimeImmutable $until,
+    ):int;
+
     public function recordEvent(
         EntityId $campaignId,
         AdvertisingEventType $type,
