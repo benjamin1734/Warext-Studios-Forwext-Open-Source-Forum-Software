@@ -106,6 +106,16 @@ final readonly class DatabasePaymentRepository implements PaymentRepository
         return $row===null?null:$this->hydrateRefund($row);
     }
 
+    public function refundByProviderReference(EntityId $attemptId,string $providerRefundReference):?PaymentRefund
+    {
+        $row=$this->database->fetchOne(new CompiledQuery(
+            'SELECT * FROM forwext_payment_refunds WHERE attempt_id=:attempt_id '
+            . 'AND provider_refund_reference=:reference LIMIT 1',
+            ['attempt_id'=>$attemptId->value(),'reference'=>$providerRefundReference]
+        ));
+        return $row===null?null:$this->hydrateRefund($row);
+    }
+
     public function insertRefund(PaymentRefund $refund):void
     {
         $this->database->execute(new CompiledQuery(
