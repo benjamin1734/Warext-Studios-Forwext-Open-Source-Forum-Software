@@ -38,6 +38,13 @@ final readonly class MarketplacePurchaseService
         return $this->purchases->internalSaleEnabled($listingId);
     }
 
+    public function managementInternalSaleEnabled(EntityId $actor,EntityId $listingId):bool
+    {
+        $this->marketplace->managementListing($actor,$listingId);
+        $this->marketplace->requireInternalPurchaseUse($actor);
+        return $this->purchases->internalSaleEnabled($listingId);
+    }
+
     public function setInternalSale(
         EntityId $actor,
         EntityId $listingId,
@@ -179,7 +186,10 @@ final readonly class MarketplacePurchaseService
     /** @return list<MarketplaceOrder> */
     public function orders(EntityId $actor,int $limit=100):array
     {
-        if(!$this->marketplace->canPurchase($actor)&&!$this->marketplace->canManageOrders($actor)){
+        if(!$this->marketplace->canPurchase($actor)
+            &&!$this->marketplace->canUseInternalPurchase($actor)
+            &&!$this->marketplace->canManageOrders($actor)
+        ){
             $this->marketplace->requirePurchase($actor);
         }
         return $this->purchases->ordersForUser($actor,$limit);
