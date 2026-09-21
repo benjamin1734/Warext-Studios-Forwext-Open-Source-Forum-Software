@@ -369,6 +369,56 @@ final class MarketplaceDomainTest extends TestCase
         self::assertCount(1,$purchaseService->orders($staff));
     }
 
+    public function testNativeCheckoutSplitsOrdersBySellerAndCurrency():void
+    {
+        $repo=new MemoryMarketplaceRepository();
+        $purchases=new MemoryMarketplacePurchaseRepository();
+        $sellerA=UserId::generate();
+        $sellerB=UserId::generate();
+        $buyer=UserId::generate();
+        $staff=UserId::generate();
+        $category=$this->category(str_repeat('2',32),null,'split','split');
+        $repo->saveCategory($category);
+        $permissions=[
+            $sellerA->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+                'marketplace.listing.view'=>true,'marketplace.internal_purchase.use'=>true,
+            ],
+            $sellerB->value()=>[
+                'marketplace.listing.create'=>true,'marketplace.listing.manage_own'=>true,
+                'marketplace.listing.view'=>true,'marketplace.internal_purchase.use'=>true,
+            ],
+            $buyer->value()=>['marketplace.listing.view'=>true,'marketplace.purchase'=>true],
+            $staff->value()=>['marketplace.listing.view'=>true,'marketplace.listing.manage_all'=>true],
+        ];
+        $marketplace=$this->service($repo,$permissions);
+        $purchaseService=new MarketplacePurchaseService(
+            new MarketplaceTestDatabase(),$purchases,$marketplace,new MarketplaceAudit()
+        );
+
+        $idA=MarketplaceListing::generateId();
+        $idB=MarketplaceListing::generateId();
+        $marketplace->saveListing($sellerA,$this->listing($idA,$sellerA,$category->categoryId,[]));
+        $marketplace->saveListing($sellerB,$this->listing($idB,$sellerB,$category->categoryId,[]));
+        foreach([[$sellerA,$idA],[$sellerB,$idB]] as [$seller,$id]){
+            $marketplace->submit($seller,$id,$this->at('2026-09-21 12:00:00'));
+            $marketplace->approve($staff,$id,$this->at('2026-09-21 12:01:00'));
+            $purchaseService->setInternalSale($seller,$id,true,$this->at('2026-09-21 12:02:00'));
+            $purchaseService->addToCart($buyer,$id,$this->at('2026-09-21 12:03:00'));
+        }
+
+        $orders=$purchaseService->checkout(
+            $buyer,new MarketplaceBillingSnapshot('Buyer Test','buyer2@example.com','TR'),
+            str_repeat('b',32),$this->at('2026-09-21 12:04:00')
+        );
+        self::assertCount(2,$orders);
+        $sellerIds=array_map(static fn(MarketplaceOrder $order):string=>$order->sellerUserId->value(),$orders);
+        sort($sellerIds,SORT_STRING);
+        $expected=[$sellerA->value(),$sellerB->value()];
+        sort($expected,SORT_STRING);
+        self::assertSame($expected,$sellerIds);
+    }
+
     public function testStaleCartDoesNotExposeNonPublicListingDetails():void
     {
         $repo=new MemoryMarketplaceRepository();
