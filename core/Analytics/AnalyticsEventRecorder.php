@@ -47,23 +47,11 @@ final readonly class AnalyticsEventRecorder
             $definition,
             $event->actorUserId===null?null:$this->privacy->actor($event->actorUserId),
             $event->sessionId===null?null:$this->privacy->session($event->sessionId),
-            $event->subjectId===null?null:$this->privacy->subject((string)$event->subjectType,$event->subjectId),
+            $event->subjectType,
             $event->subjectId===null?null:$this->privacy->subject((string)$event->subjectType,$event->subjectId),
             $event->forumId,
             $dimensions,
             $event->occurredAt,
-        );
-
-        $stored=new AnalyticsStoredEvent(
-            $stored->eventId,
-            $stored->definition,
-            $stored->actorHash,
-            $stored->sessionHash,
-            $event->subjectType,
-            $stored->subjectHash,
-            $stored->forumId,
-            $stored->dimensions,
-            $stored->occurredAt,
         );
 
         $this->repository->append($stored);
