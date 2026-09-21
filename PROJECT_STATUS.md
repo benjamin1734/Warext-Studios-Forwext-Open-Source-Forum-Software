@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.23-dev
+CURRENT_VERSION = 0.0.7.24-dev
 LAST_COMPLETED_MAIN_STEP = 13
 LAST_COMPLETED_SUBSTEP = 14.01
 CURRENT_STEP = 14.02
