@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 14.02 — Marketplace Listing UX and Search
+
+- Added native marketplace browse/detail/management UX with grid/list views, bounded pagination, filters, sorting and seller storefronts.
+- Integrated Marketplace into profile tabs, navigation and permission-aware global search for active/sold listings.
+- Added one-review-per-user ratings, review moderation, featured/pinned placement and expiry-aware browse ordering.
+- Added secure marketplace media upload/download through the shared attachment inspector and private storage with controlled media-id routes.
+- Added migration `20260919211000_marketplace_discovery_ux`, permission-template defaults, upgrade reindexing, regression coverage and architecture documentation.
+- Final implementation/fix commit: `e7147c7a8ad6af4ac960f76abe1d219772796295`.
+
 ### 14.01 — Marketplace Domain and Category System
 
 - Added marketplace listings with immutable seller identity, category, unique slug, minor-unit price/currency, description, tags, internal media metadata, typed custom values and explicit lifecycle states.
