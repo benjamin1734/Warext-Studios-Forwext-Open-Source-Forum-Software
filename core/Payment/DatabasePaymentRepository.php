@@ -15,10 +15,11 @@ final readonly class DatabasePaymentRepository implements PaymentRepository
 {
     public function __construct(private TransactionalQueryExecutor $database){}
 
-    public function attempt(EntityId $attemptId):?PaymentAttempt
+    public function attempt(EntityId $attemptId,bool $forUpdate=false):?PaymentAttempt
     {
         $row=$this->database->fetchOne(new CompiledQuery(
-            'SELECT * FROM forwext_payment_attempts WHERE attempt_id=:id LIMIT 1',['id'=>$attemptId->value()]
+            'SELECT * FROM forwext_payment_attempts WHERE attempt_id=:id LIMIT 1'.($forUpdate?' FOR UPDATE':''),
+            ['id'=>$attemptId->value()]
         ));
         return $row===null?null:$this->hydrateAttempt($row);
     }
