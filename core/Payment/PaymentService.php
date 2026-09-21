@@ -263,7 +263,9 @@ final readonly class PaymentService
             if(!self::shouldApplyState($current->state,$event->state))return $current;
             $reference=$current->providerReference??$event->providerReference;
             $updated=$this->withAttemptState(
-                $current,$event->state,$reference,$current->checkoutUrl,null,$request->receivedAt
+                $current,$event->state,$reference,
+                $event->state===PaymentAttemptState::RequiresAction?$current->checkoutUrl:null,
+                null,$request->receivedAt
             );
             $this->payments->saveAttempt($updated);
             $this->syncOrderFromAttempt(
