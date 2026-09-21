@@ -152,6 +152,7 @@ final class CoreMigrationRegistry
             new AddPromotionRevocationPolicy(),
             new CreateMarketplaceDomain(),
             new CreateMarketplaceDiscoveryUx(),
+            new CreateMarketplaceExternalSale(),
         ];
     }
 }
