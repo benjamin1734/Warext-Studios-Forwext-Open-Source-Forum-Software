@@ -19,6 +19,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Marketplace\MarketplaceOrderState;
 use Forwext\Core\Marketplace\MarketplacePaymentState;
 use Forwext\Core\Marketplace\MarketplacePurchaseService;
+use Forwext\Core\Payment\PaymentService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
 use InvalidArgumentException;
@@ -27,6 +28,7 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
 {
     public function __construct(
         private MarketplacePurchaseService $purchases,
+        private PaymentService $payments,
         private UserRepository $users,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
@@ -63,9 +65,14 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
                 &&$order->paymentState===MarketplacePaymentState::Pending;
             $csrf=$request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if(!is_string($csrf)||$csrf==='')return Response::text('Internal Server Error',500)->withHeader('Cache-Control','no-store');
+            $canPay=$this->payments->canInitiate($actor,$order);
             return Response::html(MarketplacePurchaseHtml::order(
-                $order,$snapshot['items'],$buyerName,$sellerName,$canCancel,$this->basePath,$csrf,
-                ($request->query()['cancelled']??null)==='1'
+                $order,$snapshot['items'],$buyerName,$sellerName,$canCancel,
+                $canPay?$this->payments->providerKeys():[],
+                $canPay?bin2hex(random_bytes(16)):null,
+                $this->basePath,$csrf,
+                ($request->query()['cancelled']??null)==='1',
+                is_string($request->query()['payment']??null)?(string)$request->query()['payment']:null
             ))->withHeader('Cache-Control','private, no-store')->withHeader('X-Robots-Tag','noindex,nofollow');
         }catch(PermissionDeniedException){
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');
