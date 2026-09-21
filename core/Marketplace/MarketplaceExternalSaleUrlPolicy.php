@@ -68,7 +68,8 @@ final readonly class MarketplaceExternalSaleUrlPolicy
         if(preg_match('/(?:^|&)utm_medium=/i',$raw)!==1)$append['utm_medium']=$this->utmMedium;
         if(preg_match('/(?:^|&)utm_campaign=/i',$raw)!==1)$append['utm_campaign']='listing-'.$listingId->value();
         if($append===[])return $url;
-        return $url.($raw===''?'?':'&').http_build_query($append,'','&',PHP_QUERY_RFC3986);
+        $separator=!str_contains($url,'?')?'?':((str_ends_with($url,'?')||str_ends_with($url,'&'))?'':'&');
+        return $url.$separator.http_build_query($append,'','&',PHP_QUERY_RFC3986);
     }
 
     private function isAllowedHost(string $host):bool
