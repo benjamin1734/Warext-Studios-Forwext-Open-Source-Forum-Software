@@ -171,14 +171,21 @@ final readonly class DatabaseAdvertisingRepository implements AdvertisingReposit
     public function impressionCount(
         EntityId $campaignId,string $viewerHash,DateTimeImmutable $since,DateTimeImmutable $until
     ):int{
+        return $this->eventCount($campaignId,AdvertisingEventType::Impression,$viewerHash,$since,$until);
+    }
+
+    public function eventCount(
+        EntityId $campaignId,AdvertisingEventType $type,string $viewerHash,
+        DateTimeImmutable $since,DateTimeImmutable $until
+    ):int{
         if(preg_match('/^[a-f0-9]{64}$/D',$viewerHash)!==1){
             throw new InvalidArgumentException('Advertising viewer hash is invalid.');
         }
         return (int)$this->database->fetchValue(new CompiledQuery(
-            "SELECT COUNT(*) FROM forwext_ad_events WHERE campaign_id=:campaign AND event_type='impression' "
+            'SELECT COUNT(*) FROM forwext_ad_events WHERE campaign_id=:campaign AND event_type=:type '
             . 'AND viewer_hash=:viewer AND occurred_at_utc>=:since AND occurred_at_utc<:until',
             [
-                'campaign'=>$campaignId->value(),'viewer'=>$viewerHash,
+                'campaign'=>$campaignId->value(),'type'=>$type->value,'viewer'=>$viewerHash,
                 'since'=>self::format($since),'until'=>self::format($until),
             ]
         ));
