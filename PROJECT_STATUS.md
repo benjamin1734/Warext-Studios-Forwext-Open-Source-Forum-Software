@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.30-dev
+CURRENT_VERSION = 0.0.7.31-dev
 LAST_COMPLETED_MAIN_STEP = 14
-LAST_COMPLETED_SUBSTEP = 14.08
-CURRENT_STEP = 15.01
-LAST_COMMIT = d70effd8240f0badb8adb1c0badd805354e4b0ed
+LAST_COMPLETED_SUBSTEP = 15.01
+CURRENT_STEP = 15.02
+LAST_COMMIT = 8736f3478c306c9d221f7e50b1f13904d8374085
 BLOCKERS = none
-NEXT_STEP = 15.01 - Analytics event modeli
+NEXT_STEP = 15.02 - Forum analiz dashboardu
 ```
 
 ## Current position
@@ -21,14 +21,30 @@ NEXT_STEP = 15.01 - Analytics event modeli
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`.
-- Current sub-step: `15.01 — Analytics event modeli`.
-- Remaining roadmap work after 14.08: **40 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01`.
+- Current sub-step: `15.02 — Forum analiz dashboardu`.
+- Remaining roadmap work after 15.01: **39 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
+## Completed in 15.01
+
+- Added the shared privacy-aware analytics event registry covering forum, user, content, support, bug, Marketplace, referral, giveaway and moderation domains.
+- Each event definition now owns its retention period, identity collection permissions and exact dimension allowlist.
+- Added installation-specific HMAC-SHA256 pseudonymization for actor, session and subject identities with a domain-separated analytics privacy key.
+- Added strict dimension token policy and raw-IP rejection so analytics cannot become a side channel for e-mail, URL, request/body or free-form content storage.
+- Added migration `20260921230000_analytics_event_model` with category/event/forum/actor/subject/retention indexes and no raw personal request identifiers.
+- Added strict and best-effort recorder paths; web runtime records `user.active` and `forum.view` only after successful HTML GET responses and resolves thread-owned forums.
+- Reused the existing bounded browser/device classifier instead of storing raw user-agent strings.
+- Added daily bounded per-event retention maintenance through the existing scheduler/maintenance queue abstraction.
+- Added registry/privacy/runtime/retention regression coverage plus architecture documentation at `docs/architecture/analytics-event-model.md`.
+- Final implementation/fix commit: `8736f3478c306c9d221f7e50b1f13904d8374085`; final regression-test correction: `88444be88da8d6609c3f24c0261b0248b3c3b7ef`.
+- GitHub Actions build run `35633962639`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35633962656`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.31-dev`.
+- Next: `15.02 — Forum analiz dashboardu`.
 ## Completed in 14.08
 
 - Added advertisement, notice and announcement campaign types with registered site/content/thread placements.
