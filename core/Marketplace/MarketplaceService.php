@@ -205,6 +205,11 @@ final readonly class MarketplaceService
     public function canModerateReviews(EntityId $actor):bool{return $this->allows($actor,'marketplace.review.manage');}
     public function canUseExternalLink(EntityId $actor):bool{return $this->allows($actor,'marketplace.external_link.use');}
     public function requireExternalLinkUse(EntityId $actor):void{$this->require($actor,'marketplace.external_link.use');}
+    public function canUseInternalPurchase(EntityId $actor):bool{return $this->allows($actor,'marketplace.internal_purchase.use');}
+    public function requireInternalPurchaseUse(EntityId $actor):void{$this->require($actor,'marketplace.internal_purchase.use');}
+    public function canPurchase(EntityId $actor):bool{return $this->allows($actor,'marketplace.purchase');}
+    public function requirePurchase(EntityId $actor):void{$this->require($actor,'marketplace.purchase');}
+    public function canManageOrders(EntityId $actor):bool{return $this->allows($actor,'marketplace.order.manage');}
 
     /** @return array{categories:list<MarketplaceCategory>,fields:array<string,list<MarketplaceCustomFieldDefinition>>} */
     public function managementSnapshot(EntityId $actor):array
