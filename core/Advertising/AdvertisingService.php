@@ -77,15 +77,11 @@ final readonly class AdvertisingService
         $this->audit->mutate($event,function()use(
             $campaign,$actor,$routes,$forumTargets,$groupTargets,$deviceTargets
         ):void{
-            $this->database->transaction(function()use(
-                $campaign,$actor,$routes,$forumTargets,$groupTargets,$deviceTargets
-            ):void{
-                $this->repository->saveCampaign($campaign,$actor);
-                $this->repository->replaceRouteTargets($campaign->campaignId,array_keys($routes));
-                $this->repository->replaceForumTargets($campaign->campaignId,$forumTargets);
-                $this->repository->replaceGroupTargets($campaign->campaignId,$groupTargets);
-                $this->repository->replaceDeviceTargets($campaign->campaignId,$deviceTargets);
-            });
+            $this->repository->saveCampaign($campaign,$actor);
+            $this->repository->replaceRouteTargets($campaign->campaignId,array_keys($routes));
+            $this->repository->replaceForumTargets($campaign->campaignId,$forumTargets);
+            $this->repository->replaceGroupTargets($campaign->campaignId,$groupTargets);
+            $this->repository->replaceDeviceTargets($campaign->campaignId,$deviceTargets);
         });
     }
 
