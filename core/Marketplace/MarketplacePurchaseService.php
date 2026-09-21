@@ -196,12 +196,6 @@ final readonly class MarketplacePurchaseService
     /** @return list<MarketplaceOrder> */
     public function orders(EntityId $actor,int $limit=100):array
     {
-        if(!$this->marketplace->canPurchase($actor)
-            &&!$this->marketplace->canUseInternalPurchase($actor)
-            &&!$this->marketplace->canManageOrders($actor)
-        ){
-            $this->marketplace->requirePurchase($actor);
-        }
         return $this->marketplace->canManageOrders($actor)
             ?$this->purchases->orders($limit)
             :$this->purchases->ordersForUser($actor,$limit);
