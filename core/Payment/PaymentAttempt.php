@@ -40,9 +40,29 @@ final readonly class PaymentAttempt
         if($this->providerReference!==null&&preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]{0,190}$/D',$this->providerReference)!==1){
             throw new InvalidArgumentException('Payment provider reference is invalid.');
         }
+        if(in_array($this->state,[PaymentAttemptState::RequiresAction,PaymentAttemptState::Authorized,PaymentAttemptState::Paid],true)
+            &&$this->providerReference===null
+        ){
+            throw new InvalidArgumentException('Payment attempt state requires a provider reference.');
+        }
         if($this->checkoutUrl!==null){
-            new PaymentProviderResult($this->state,$this->providerReference??'pending-reference',$this->checkoutUrl,$this->errorCode);
-        }elseif($this->errorCode!==null&&preg_match('/^[a-z][a-z0-9._-]{0,63}$/D',$this->errorCode)!==1){
+            if($this->state!==PaymentAttemptState::RequiresAction
+                ||filter_var($this->checkoutUrl,FILTER_VALIDATE_URL)===false
+                ||strlen($this->checkoutUrl)>2048
+                ||preg_match('/[\x00-\x20\x7F]/',$this->checkoutUrl)===1
+            ){
+                throw new InvalidArgumentException('Payment checkout URL is invalid for the attempt state.');
+            }
+            $parts=parse_url($this->checkoutUrl);
+            if(!is_array($parts)||strtolower((string)($parts['scheme']??''))!=='https'||!isset($parts['host'])
+                ||isset($parts['user'])||isset($parts['pass'])
+            ){
+                throw new InvalidArgumentException('Payment checkout URL must be HTTPS without credentials.');
+            }
+        }elseif($this->state===PaymentAttemptState::RequiresAction){
+            throw new InvalidArgumentException('Payment action state requires a checkout URL.');
+        }
+        if($this->errorCode!==null&&preg_match('/^[a-z][a-z0-9._-]{0,63}$/D',$this->errorCode)!==1){
             throw new InvalidArgumentException('Payment error code is invalid.');
         }
         $utc=new DateTimeZone('UTC');
