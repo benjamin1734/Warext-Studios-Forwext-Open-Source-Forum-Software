@@ -40,7 +40,7 @@ final class SubscriptionWebSurfaceTest extends TestCase
         self::assertStringContainsString('$request->rawBody()',$handler);
         self::assertStringContainsString('$request->headers()->all()',$handler);
         self::assertStringContainsString('$provider->verifyWebhook($request)',$service);
-        self::assertStringContainsString("hash('sha256',$request->rawBody)",$service);
+        self::assertStringContainsString('hash(\'sha256\',$request->rawBody)', $service);
     }
 
     public function testAccountAndAdminPagesAreIncludedInNativeComposition():void
