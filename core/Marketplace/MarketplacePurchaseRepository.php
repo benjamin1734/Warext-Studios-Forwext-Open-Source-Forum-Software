@@ -24,7 +24,7 @@ interface MarketplacePurchaseRepository
 
     /** @param list<MarketplaceOrderItem> $items */
     public function createOrder(MarketplaceOrder $order,array $items):void;
-    public function order(EntityId $orderId):?MarketplaceOrder;
+    public function order(EntityId $orderId,bool $forUpdate=false):?MarketplaceOrder;
 
     /** @return list<MarketplaceOrderItem> */
     public function orderItems(EntityId $orderId):array;
