@@ -37,15 +37,21 @@ use Forwext\App\Web\Moderation\DisciplineAccountHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessPolicyHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
 use Forwext\App\Web\Marketplace\MarketplaceBrowseHandler;
+use Forwext\App\Web\Marketplace\MarketplaceCartHandler;
+use Forwext\App\Web\Marketplace\MarketplaceCartItemHandler;
+use Forwext\App\Web\Marketplace\MarketplaceCheckoutHandler;
 use Forwext\App\Web\Marketplace\MarketplaceCategoryManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceDetailHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleRedirectHandler;
 use Forwext\App\Web\Marketplace\MarketplaceExternalSaleWarningHandler;
+use Forwext\App\Web\Marketplace\MarketplaceInternalSaleManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceManageHandler;
 use Forwext\App\Web\Marketplace\MarketplaceMediaDownloadHandler;
 use Forwext\App\Web\Marketplace\MarketplaceMediaUploadHandler;
 use Forwext\App\Web\Marketplace\MarketplaceReviewHandler;
+use Forwext\App\Web\Marketplace\MarketplaceOrderDetailHandler;
+use Forwext\App\Web\Marketplace\MarketplaceOrdersHandler;
 use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
@@ -178,8 +184,11 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
 use Forwext\Core\Marketplace\DatabaseMarketplaceExternalSaleRepository;
+use Forwext\Core\Marketplace\DatabaseMarketplacePurchaseRepository;
 use Forwext\Core\Marketplace\MarketplaceExternalSaleService;
 use Forwext\Core\Marketplace\MarketplaceExternalSaleUrlPolicy;
+use Forwext\Core\Marketplace\MarketplacePurchaseNotifier;
+use Forwext\Core\Marketplace\MarketplacePurchaseService;
 use Forwext\Core\Marketplace\MarketplaceService;
 use Forwext\Core\Marketplace\MarketplaceMediaService;
 use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
@@ -429,6 +438,19 @@ final readonly class WebApplicationFactory
             $marketplace,
             $this->marketplaceExternalSaleUrlPolicy($config),
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+        $marketplacePurchaseNotifications = new NotificationRegistry();
+        MarketplacePurchaseNotifier::registerDefinitions($marketplacePurchaseNotifications);
+        $marketplacePurchases = new MarketplacePurchaseService(
+            $database,
+            $marketplaceRepository,
+            new DatabaseMarketplacePurchaseRepository($database),
+            $marketplace,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            new MarketplacePurchaseNotifier(new NotificationDispatcher(
+                $marketplacePurchaseNotifications,
+                new DatabaseNotificationRepository($database),
+            )),
         );
 
         $rewardRepository = new DatabaseRewardRepository($database);
@@ -808,7 +830,7 @@ final readonly class WebApplicationFactory
             'marketplace.detail',
             [HttpMethod::Get],
             new PathTemplate('/marketplace/listings/{listingId}',['listingId'=>'[0-9a-f]{32}']),
-            new MarketplaceDetailHandler($marketplace,$marketplaceExternalSales,$users,$viewerResolver,$basePath),
+            new MarketplaceDetailHandler($marketplace,$marketplaceExternalSales,$marketplacePurchases,$users,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
@@ -844,6 +866,48 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/marketplace/manage'),
             new MarketplaceManageHandler($marketplace,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.cart',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/cart'),
+            new MarketplaceCartHandler($marketplacePurchases,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.cart.item',
+            [HttpMethod::Post],
+            new PathTemplate('/marketplace/cart/{listingId}',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceCartItemHandler($marketplacePurchases,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.checkout',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/checkout'),
+            new MarketplaceCheckoutHandler($marketplacePurchases,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.orders',
+            [HttpMethod::Get],
+            new PathTemplate('/marketplace/orders'),
+            new MarketplaceOrdersHandler($marketplacePurchases,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.order.detail',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/orders/{orderId}',['orderId'=>'[0-9a-f]{32}']),
+            new MarketplaceOrderDetailHandler($marketplacePurchases,$users,$viewerResolver,$basePath),
+            [$marketplaceCsrf],
+        ));
+        $routes->add(new Route(
+            'marketplace.internal.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/marketplace/manage/internal/{listingId}',['listingId'=>'[0-9a-f]{32}']),
+            new MarketplaceInternalSaleManageHandler($marketplacePurchases,$marketplace,$viewerResolver,$basePath),
             [$marketplaceCsrf],
         ));
         $routes->add(new Route(
