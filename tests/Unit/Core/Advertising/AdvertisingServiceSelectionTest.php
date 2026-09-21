@@ -79,6 +79,28 @@ final class AdvertisingServiceSelectionTest extends TestCase
         self::assertSame([],$selected);
     }
 
+    public function testRapidRepeatedClickIsRedirectedWithoutDuplicateAnalyticsEvent():void
+    {
+        $now=new DateTimeImmutable('2026-09-21 18:00:00',new DateTimeZone('UTC'));
+        $campaign=$this->campaign($now);
+
+        $repository=$this->createMock(AdvertisingRepository::class);
+        $repository->method('campaign')->willReturn($campaign);
+        $repository->method('eventCount')->willReturn(1);
+        $repository->expects(self::never())->method('recordEvent');
+
+        $service=$this->service($repository);
+        self::assertSame(
+            '/marketplace',
+            $service->trackClick(
+                $campaign->campaignId,
+                str_repeat('c',64),
+                AdvertisingDevice::Desktop,
+                $now
+            )
+        );
+    }
+
     private function service(AdvertisingRepository $repository):AdvertisingService
     {
         $permissionRules=$this->createMock(PermissionRuleRepository::class);
