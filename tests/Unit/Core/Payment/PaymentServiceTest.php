@@ -348,6 +348,14 @@ final class PaymentMemoryRepository implements PaymentRepository
         return null;
     }
 
+    public function refundByProviderReference(EntityId $attemptId,string $providerRefundReference):?PaymentRefund
+    {
+        foreach($this->refunds as $refund){
+            if($refund->attemptId->equals($attemptId)&&$refund->providerRefundReference===$providerRefundReference)return $refund;
+        }
+        return null;
+    }
+
     public function insertRefund(PaymentRefund $refund):void{$this->refunds[$refund->refundId->value()]=$refund;}
     public function saveRefund(PaymentRefund $refund):void{$this->refunds[$refund->refundId->value()]=$refund;}
     public function attempts(int $limit=100):array{return array_slice(array_values($this->attempts),0,$limit);}
