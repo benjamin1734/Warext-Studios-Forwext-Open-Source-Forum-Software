@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.29-dev
-LAST_COMPLETED_MAIN_STEP = 13
-LAST_COMPLETED_SUBSTEP = 14.07
-CURRENT_STEP = 14.08
-LAST_COMMIT = b343eec151a98e1d37316db6d34fd6def5dd8193
+CURRENT_VERSION = 0.0.7.30-dev
+LAST_COMPLETED_MAIN_STEP = 14
+LAST_COMPLETED_SUBSTEP = 14.08
+CURRENT_STEP = 15.01
+LAST_COMMIT = d70effd8240f0badb8adb1c0badd805354e4b0ed
 BLOCKERS = none
-NEXT_STEP = 14.08 - Reklam/notice/placement sistemi
+NEXT_STEP = 15.01 - Analytics event modeli
 ```
 
 ## Current position
@@ -20,15 +20,32 @@ NEXT_STEP = 14.08 - Reklam/notice/placement sistemi
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`; main step `14` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.07`.
-- Current sub-step: `14.08 — Reklam/notice/placement sistemi`.
-- Remaining roadmap work after 14.07: **41 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`.
+- Current sub-step: `15.01 — Analytics event modeli`.
+- Remaining roadmap work after 14.08: **40 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
+## Completed in 14.08
+
+- Added advertisement, notice and announcement campaign types with registered site/content/thread placements.
+- Added runtime route wildcard, forum, primary/secondary group, desktop/mobile and UTC time-window targeting.
+- Added rolling frequency caps using domain-separated HMAC viewer identities; raw account/anonymous identities are not persisted in advertising events.
+- Added native response-pipeline decoration with fail-open behavior so placement failures leave the underlying forum page intact.
+- Added tracked campaign click redirects with server-side destination lookup, relative/HTTPS URL policy and rapid-repeat analytics deduplication.
+- Added impression/click event persistence and 30-day CTR plus estimated revenue/value reporting.
+- Added `/admin/advertising` with real forum/group selectors, route/device/time targeting, frequency controls and performance reporting.
+- Added backend `ads.manage` / `notice.manage` permission enforcement, dedicated advertising CSRF and central administration audit transactions.
+- Added migration `20260921223000_advertising_notice_system` and registered it in the core installer.
+- Added architecture documentation at `docs/architecture/advertising-notice-placement.md` and milestone notes at `docs/changelog/14.08-advertising-notice-placement.md`.
+- Final implementation/fix commit: `d70effd8240f0badb8adb1c0badd805354e4b0ed`; final regression-test commit: `e32f0f1b7b0b56e2487194dce75be13b4f463552`.
+- GitHub Actions build run `35631552545`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35631552587`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.30-dev`.
+- Next: `15.01 — Analytics event modeli`.
 ## Completed in 14.07
 
 - Added timed and lifetime upgrade plans with stable keys, active state, price/currency, duration snapshots and deterministic ordering.
