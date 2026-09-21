@@ -194,6 +194,48 @@ final class PaymentServiceTest extends TestCase
         self::assertSame(1,$provider->cancelCalls);
     }
 
+    public function testBuyerOrderCancellationClosesActiveProviderAttempt():void
+    {
+        $buyer=UserId::generate();
+        $seller=UserId::generate();
+        $order=$this->order($buyer,$seller,$this->at('2026-09-21 14:10:00'));
+        $orders=new PaymentMemoryOrderRepository($order);
+        $payments=new PaymentMemoryRepository();
+        $provider=new PaymentFakeProvider('fake');
+        $provider->createResult=new PaymentProviderResult(
+            PaymentAttemptState::RequiresAction,'pay_buyer_cancel','https://pay.example.test/session/cancel'
+        );
+        $service=$this->service($payments,$orders,$provider,[
+            $buyer->value()=>['marketplace.purchase'=>true],
+        ]);
+
+        $attempt=$service->initiate(
+            $buyer,$order->orderId,'fake',str_repeat('8',32),
+            '/return','/cancel',$this->at('2026-09-21 14:11:00')
+        );
+        self::assertTrue($service->hasActiveAttempt($orders->order($order->orderId)));
+        $provider->cancelResult=new PaymentProviderResult(PaymentAttemptState::Cancelled,'pay_buyer_cancel');
+
+        $cancelled=$service->cancelForOrderBuyer(
+            $buyer,$order->orderId,str_repeat('9',32),$this->at('2026-09-21 14:12:00')
+        );
+        self::assertNotNull($cancelled);
+        self::assertSame(PaymentAttemptState::Cancelled,$cancelled->state);
+        self::assertSame(1,$provider->cancelCalls);
+
+        $updatedOrder=$orders->order($order->orderId);
+        self::assertNotNull($updatedOrder);
+        self::assertSame(MarketplacePaymentState::Cancelled,$updatedOrder->paymentState);
+        self::assertArrayNotHasKey('payment_attempt_id',$updatedOrder->receiptMetadata);
+        self::assertFalse($service->hasActiveAttempt($updatedOrder));
+
+        $again=$service->cancelForOrderBuyer(
+            $buyer,$order->orderId,str_repeat('9',32),$this->at('2026-09-21 14:13:00')
+        );
+        self::assertNull($again);
+        self::assertSame(1,$provider->cancelCalls);
+    }
+
     public function testPendingRefundCompletesFromVerifiedWebhook():void
     {
         $buyer=UserId::generate();
