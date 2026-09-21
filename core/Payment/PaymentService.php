@@ -539,7 +539,9 @@ final readonly class PaymentService
 
         if($attempt->state===PaymentAttemptState::Paid){
             $payment=MarketplacePaymentState::Paid;
-            $orderState=MarketplaceOrderState::Confirmed;
+            $orderState=$order->state===MarketplaceOrderState::Cancelled
+                ?MarketplaceOrderState::Cancelled
+                :MarketplaceOrderState::Confirmed;
         }elseif($attempt->state===PaymentAttemptState::Refunded&&$isActive){
             $payment=MarketplacePaymentState::Refunded;
         }elseif($isActive&&!in_array($order->paymentState,[MarketplacePaymentState::Paid,MarketplacePaymentState::Refunded],true)){
@@ -555,6 +557,13 @@ final readonly class PaymentService
 
         $metadata=$order->receiptMetadata;
         if($attempt->state===PaymentAttemptState::Paid){
+            $previousAttempt=$metadata['payment_attempt_id']??null;
+            if($order->state===MarketplaceOrderState::Cancelled
+                ||(is_string($previousAttempt)&&!hash_equals($previousAttempt,$attempt->attemptId->value()))
+                ||($order->paymentState===MarketplacePaymentState::Paid&&!$isActive)
+            ){
+                $metadata['payment_reconciliation_required']=true;
+            }
             $metadata['payment_provider']=$attempt->providerKey;
             $metadata['payment_attempt_id']=$attempt->attemptId->value();
         }elseif($isActive&&in_array($attempt->state,[PaymentAttemptState::Failed,PaymentAttemptState::Cancelled],true)){
