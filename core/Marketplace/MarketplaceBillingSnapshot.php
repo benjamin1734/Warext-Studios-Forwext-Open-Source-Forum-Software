@@ -18,7 +18,7 @@ final readonly class MarketplaceBillingSnapshot
     {
         $name=trim($name);$email=strtolower(trim($email));$countryCode=strtoupper(trim($countryCode));
         $taxId=self::optional($taxId,64);$addressLine=self::optional($addressLine,1000);
-        if(strlen($name)<2||strlen($name)>160||preg_match('/[\x00-\x1F\x7F]/u',$name)===1){
+        if(strlen($name)<2||strlen($name)>160||preg_match('//u',$name)!==1||preg_match('/[\x00-\x1F\x7F]/u',$name)===1){
             throw new InvalidArgumentException('Marketplace billing name is invalid.');
         }
         if(strlen($email)>254||filter_var($email,FILTER_VALIDATE_EMAIL)===false){
@@ -57,7 +57,7 @@ final readonly class MarketplaceBillingSnapshot
         if($value===null)return null;
         $value=trim($value);
         if($value==='')return null;
-        if(strlen($value)>$max||preg_match('/[\x00-\x1F\x7F]/u',$value)===1){
+        if(strlen($value)>$max||preg_match('//u',$value)!==1||preg_match('/[\x00-\x1F\x7F]/u',$value)===1){
             throw new InvalidArgumentException('Marketplace billing metadata is invalid.');
         }
         return $value;
