@@ -19,6 +19,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Marketplace\MarketplaceOrderState;
 use Forwext\Core\Marketplace\MarketplacePaymentState;
 use Forwext\Core\Marketplace\MarketplacePurchaseService;
+use Forwext\Core\Payment\PaymentAttemptState;
 use Forwext\Core\Payment\PaymentService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
@@ -66,13 +67,15 @@ final readonly class MarketplaceOrderDetailHandler implements RequestHandlerInte
             $csrf=$request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if(!is_string($csrf)||$csrf==='')return Response::text('Internal Server Error',500)->withHeader('Cache-Control','no-store');
             $canPay=$this->payments->canInitiate($actor,$order);
+            $paymentStatus=null;
+            $rawPayment=$request->query()['payment']??null;
+            if(is_string($rawPayment)&&PaymentAttemptState::tryFrom($rawPayment)!==null)$paymentStatus=$rawPayment;
             return Response::html(MarketplacePurchaseHtml::order(
                 $order,$snapshot['items'],$buyerName,$sellerName,$canCancel,
                 $canPay?$this->payments->providerKeys():[],
                 $canPay?bin2hex(random_bytes(16)):null,
                 $this->basePath,$csrf,
-                ($request->query()['cancelled']??null)==='1',
-                is_string($request->query()['payment']??null)?(string)$request->query()['payment']:null
+                ($request->query()['cancelled']??null)==='1',$paymentStatus
             ))->withHeader('Cache-Control','private, no-store')->withHeader('X-Robots-Tag','noindex,nofollow');
         }catch(PermissionDeniedException){
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');
