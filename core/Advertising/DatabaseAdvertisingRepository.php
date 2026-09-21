@@ -66,6 +66,28 @@ final readonly class DatabaseAdvertisingRepository implements AdvertisingReposit
         ));
     }
 
+    public function groups():array
+    {
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT group_id,name FROM forwext_user_groups ORDER BY sort_order,name,group_id'
+        ));
+        return array_map(static fn(array $row):array=>[
+            'id'=>EntityId::fromString((string)$row['group_id']),
+            'name'=>(string)$row['name'],
+        ],$rows);
+    }
+
+    public function forums():array
+    {
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            "SELECT node_id,title FROM forwext_nodes WHERE node_type='forum' ORDER BY sort_order,title,node_id"
+        ));
+        return array_map(static fn(array $row):array=>[
+            'id'=>EntityId::fromString((string)$row['node_id']),
+            'title'=>(string)$row['title'],
+        ],$rows);
+    }
+
     public function routeTargets(EntityId $campaignId):array
     {
         return $this->stringTargets('forwext_ad_route_targets','route_pattern',$campaignId);
