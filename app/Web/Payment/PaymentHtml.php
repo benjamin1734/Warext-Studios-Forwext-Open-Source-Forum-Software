@@ -37,14 +37,18 @@ final class PaymentHtml
                 .self::e($attempt->updatedAt->format('Y-m-d H:i:s')).' UTC</p>'
                 .($attempt->providerReference===null?'':'<p class="muted">Provider ref: <code>'.self::e($attempt->providerReference).'</code></p>');
 
+            $refundBlocksNew=false;
             foreach($snapshot['refunds'][$attempt->attemptId->value()]??[] as $refund){
+                if(in_array($refund->state,[\Forwext\Core\Payment\PaymentRefundState::Pending,\Forwext\Core\Payment\PaymentRefundState::Succeeded],true)){
+                    $refundBlocksNew=true;
+                }
                 $body.='<p class="muted">Refund '.self::e($refund->state->value).' · '
                     .self::e(self::money($refund->amountMinor,$attempt->currency))
                     .($refund->providerRefundReference===null?'':' · <code>'.self::e($refund->providerRefundReference).'</code>').'</p>';
             }
 
             if($snapshot['can_refund']){
-                if($attempt->state===PaymentAttemptState::Paid){
+                if($attempt->state===PaymentAttemptState::Paid&&!$refundBlocksNew){
                     $body.=self::operation($action,$csrf,$attempt,'refund','Tam refund başlat');
                 }elseif(in_array(
                     $attempt->state,
