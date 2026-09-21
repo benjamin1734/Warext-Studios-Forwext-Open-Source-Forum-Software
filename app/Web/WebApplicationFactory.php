@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use Forwext\App\Web\Advertising\AdvertisingClickHandler;
+use Forwext\App\Web\Advertising\AdvertisingManageHandler;
+use Forwext\App\Web\Advertising\AdvertisingMiddleware;
+use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -108,6 +112,8 @@ use Forwext\App\Web\Subscription\SubscriptionManageHandler;
 use Forwext\App\Web\Subscription\SubscriptionPurchaseHandler;
 use Forwext\App\Web\Subscription\SubscriptionWebhookHandler;
 use Forwext\App\Web\Trophy\TrophyManageHandler;
+use Forwext\Core\Advertising\AdvertisingService;
+use Forwext\Core\Advertising\DatabaseAdvertisingRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -370,6 +376,14 @@ final readonly class WebApplicationFactory
         $mentionSuggestions = new DatabaseMentionSuggestionProvider($database);
         $posts = new DatabasePostRepository($database);
         $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
+        $advertisingRepository = new DatabaseAdvertisingRepository($database);
+        $advertising = new AdvertisingService(
+            $database,
+            $advertisingRepository,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $this->masterKey($config),
+        );
         $nodes = new DatabaseForumNodeRepository($database);
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
         $contentGovernanceAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
@@ -583,6 +597,16 @@ final readonly class WebApplicationFactory
             new EasterEggRenderer(),
         );
 
+        $advertisingMiddleware = new AdvertisingMiddleware(
+            $advertising,
+            $viewerResolver,
+            new DatabaseUserAccessAssignmentProvider($database),
+            $threads,
+            new AdvertisingRenderer($basePath),
+            $basePath,
+            strtolower((string) parse_url(RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')), PHP_URL_SCHEME)) === 'https',
+        );
+
         $giveawayFingerprint = new GiveawayFingerprint(
             $secretStore,
             $config->requireString('registration.rate_limit.fingerprint_secret_name'),
@@ -761,6 +785,7 @@ final readonly class WebApplicationFactory
         $marketplaceCsrf = $this->marketplaceCsrfMiddleware($config);
         $paymentCsrf = $this->paymentCsrfMiddleware($config);
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
+        $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -1483,11 +1508,30 @@ final readonly class WebApplicationFactory
             new CustomProfileUrlHandler($profileUrlService, $users, $profileService, $viewerResolver, $profilePage, $basePath),
         ));
         $routes->add(new Route(
+            'advertising.click',
+            [HttpMethod::Get],
+            new PathTemplate('/ads/click/{campaignId}', ['campaignId'=>'[0-9a-f]{32}']),
+            new AdvertisingClickHandler(
+                $advertising,
+                $viewerResolver,
+                $basePath,
+                strtolower((string) parse_url(RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')), PHP_URL_SCHEME)) === 'https',
+            ),
+        ));
+        $routes->add(new Route(
+            'advertising.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/advertising'),
+            new AdvertisingManageHandler($advertising,$viewerResolver,$basePath),
+            [$advertisingCsrf],
+        ));
+
+        $routes->add(new Route(
             'account.profile-url', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/account/profile-url'),
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath), [$this->profileUrlCsrfMiddleware($config)],
         ));
 
-        return new Router($routes, $basePath, [$easterEggMiddleware]);
+        return new Router($routes, $basePath, [$easterEggMiddleware, $advertisingMiddleware]);
     }
 
     public function decorateLegacyEasterEgg(Request $request, Response $response): Response
@@ -1687,6 +1731,11 @@ final readonly class WebApplicationFactory
     private function subscriptionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'subscription', 'forwext.csrf.subscription.v1');
+    }
+
+    private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
