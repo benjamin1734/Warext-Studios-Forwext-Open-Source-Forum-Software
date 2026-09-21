@@ -18,11 +18,13 @@ interface MarketplaceDeliveryRepository
 
     public function insertKey(MarketplaceDeliveryKey $key):void;
     public function availableKeyCount(EntityId $listingId):int;
-    public function assignAvailableKey(
+    public function reserveAvailableKey(
         EntityId $listingId,
         EntityId $orderItemId,
         DateTimeImmutable $at,
     ):?MarketplaceDeliveryKey;
+    public function activateReservedKey(EntityId $orderItemId,DateTimeImmutable $at):?MarketplaceDeliveryKey;
+    public function releaseReservedKey(EntityId $orderItemId):void;
 
     public function initializeOrderItem(MarketplaceOrderItem $item,DateTimeImmutable $at):void;
     public function delivery(EntityId $orderItemId,bool $forUpdate=false):?MarketplaceDeliveryRecord;
