@@ -13,7 +13,7 @@ final class SearchTermPolicy
         if($value===''||strlen($value)>96||preg_match('//u',$value)!==1)return null;
 
         $value=strtr($value,[
-            'İ'=>'i','I'=>'ı','Ğ'=>'ğ','Ü'=>'ü','Ş'=>'ş','Ö'=>'ö','Ç'=>'ç',
+            'İ'=>'i','Ğ'=>'ğ','Ü'=>'ü','Ş'=>'ş','Ö'=>'ö','Ç'=>'ç',
         ]);
         $value=strtolower($value);
 
