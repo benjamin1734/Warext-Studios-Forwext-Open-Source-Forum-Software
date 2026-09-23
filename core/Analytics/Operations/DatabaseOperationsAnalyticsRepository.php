@@ -219,7 +219,7 @@ final readonly class DatabaseOperationsAnalyticsRepository
 
         foreach ($staff as &$row) {
             $row['total'] = $row['active_reports'] + $row['active_support'] + $row['active_bugs']
-                + $row['discipline_actions'] + $row['audit_actions'];
+                + $row['audit_actions'];
         }
         unset($row);
 
@@ -235,6 +235,7 @@ final readonly class DatabaseOperationsAnalyticsRepository
     /**
      * @param array<string,array{id:string,username:string,active_reports:int,active_support:int,active_bugs:int,discipline_actions:int,audit_actions:int,total:int}> $staff
      * @param list<array<string,mixed>> $rows
+     * @param 'active_reports'|'active_support'|'active_bugs'|'discipline_actions'|'audit_actions' $metric
      */
     private function mergeStaffRows(array &$staff, array $rows, string $metric): void
     {
@@ -254,9 +255,14 @@ final readonly class DatabaseOperationsAnalyticsRepository
                 'audit_actions' => 0,
                 'total' => 0,
             ];
-            if (array_key_exists($metric, $staff[$id])) {
-                $staff[$id][$metric] = max(0, (int) ($row['metric'] ?? 0));
-            }
+            $value = max(0, (int) ($row['metric'] ?? 0));
+            match ($metric) {
+                'active_reports' => $staff[$id]['active_reports'] = $value,
+                'active_support' => $staff[$id]['active_support'] = $value,
+                'active_bugs' => $staff[$id]['active_bugs'] = $value,
+                'discipline_actions' => $staff[$id]['discipline_actions'] = $value,
+                'audit_actions' => $staff[$id]['audit_actions'] = $value,
+            };
         }
     }
 
