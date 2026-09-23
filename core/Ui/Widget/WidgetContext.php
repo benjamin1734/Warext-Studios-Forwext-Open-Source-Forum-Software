@@ -13,6 +13,7 @@ final readonly class WidgetContext
         public string $pageTitle,
         public string $locale,
         public bool $authenticated,
+        public ?string $viewerId = null,
     ) {
         if (
             $this->pageTitle === ''
@@ -25,6 +26,22 @@ final readonly class WidgetContext
         if (preg_match('/^[a-z]{2,3}(?:-[A-Z]{2})?$/D', $this->locale) !== 1) {
             throw new InvalidArgumentException('Widget locale context is invalid.');
         }
+
+        if (
+            $this->viewerId !== null
+            && preg_match('/^[a-f0-9]{32}$/D', $this->viewerId) !== 1
+        ) {
+            throw new InvalidArgumentException('Widget viewer id must be an opaque 128-bit identifier.');
+        }
+
+        if (!$this->authenticated && $this->viewerId !== null) {
+            throw new InvalidArgumentException('Guest widget context cannot carry a viewer id.');
+        }
+    }
+
+    public function cacheSafe(): bool
+    {
+        return !$this->authenticated || $this->viewerId !== null;
     }
 
     public function fingerprint(): string
@@ -35,6 +52,7 @@ final readonly class WidgetContext
                     'title' => $this->pageTitle,
                     'locale' => $this->locale,
                     'authenticated' => $this->authenticated,
+                    'viewer' => $this->viewerId ?? 'guest',
                 ],
                 JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
             );

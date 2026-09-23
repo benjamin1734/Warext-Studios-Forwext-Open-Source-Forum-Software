@@ -29,6 +29,7 @@ final class ProfileHtml
         ?BreadcrumbTrail $breadcrumbs = null,
         bool $authenticated = false,
         ?WidgetRenderService $widgetRenderer = null,
+        ?string $viewerId = null,
     ): string {
         $safeTitle = self::escape($title);
         $home = self::escape($basePath->prepend('/'));
@@ -40,7 +41,7 @@ final class ProfileHtml
         }
 
         $widgetRenderer ??= new WidgetRenderService(WidgetRegistry::withCoreDefaults());
-        $widgetContext = new WidgetContext($title, 'tr', $authenticated);
+        $widgetContext = new WidgetContext($title, 'tr', $authenticated, $viewerId);
         $pageBefore = $widgetRenderer->renderSlot('page.before', $widgetContext);
         $headerBefore = $widgetRenderer->renderSlot('header.before', $widgetContext);
         $headerAfter = $widgetRenderer->renderSlot('header.after', $widgetContext);

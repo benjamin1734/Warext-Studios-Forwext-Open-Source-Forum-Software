@@ -34,7 +34,9 @@ Core widget keys use the `core.*` namespace. Module/add-on registrations must st
 
 `WidgetRenderService` renders all widgets for a named slot in deterministic order.
 
-Cache is optional and reuses the existing `CacheStore` abstraction. Standard cPanel installs may use the existing file/database cache profiles; Redis remains optional. Cache keys contain only a SHA-256 fingerprint of bounded widget context, not raw page titles or user data. Widget/slot tags support targeted invalidation.
+Cache is optional and reuses the existing `CacheStore` abstraction. Standard cPanel installs may use the existing file/database cache profiles; Redis remains optional. Cache keys contain only a SHA-256 fingerprint of bounded widget context, not raw page titles or viewer ids. Widget/slot tags support targeted invalidation.
+
+Authenticated widget caching is permitted only when the context contains the opaque viewer id, which is included in the hashed fingerprint. If a caller knows only that a request is authenticated but does not provide the viewer id, widget caching is bypassed to prevent cross-user content reuse. Guest cache entries use an explicit guest variant.
 
 A widget with TTL 0 bypasses cache. Cached widgets are bounded to at most one day by registry validation.
 

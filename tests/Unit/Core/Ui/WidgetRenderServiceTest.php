@@ -18,7 +18,8 @@ final class WidgetRenderServiceTest extends TestCase
         $cache = new MemoryWidgetCacheStore();
         $registry = WidgetRegistry::withCoreDefaults();
         $service = new WidgetRenderService($registry, $cache);
-        $context = new WidgetContext('Sensitive Profile Title', 'tr', true);
+        $viewerId = str_repeat('a', 32);
+        $context = new WidgetContext('Sensitive Profile Title', 'tr', true, $viewerId);
 
         $first = $service->renderSlot('footer.after', $context);
         $second = $service->renderSlot('footer.after', $context);
@@ -29,8 +30,38 @@ final class WidgetRenderServiceTest extends TestCase
         self::assertIsString($key);
         self::assertStringStartsWith('ui-widget:', $key);
         self::assertStringNotContainsString('Sensitive Profile Title', $key);
+        self::assertStringNotContainsString($viewerId, $key);
         self::assertContains('ui.widget.core.brand-footer', $cache->tags[$key]);
         self::assertContains('ui.slot.footer.after', $cache->tags[$key]);
+    }
+
+    public function testAuthenticatedContextWithoutViewerIdBypassesCache(): void
+    {
+        $cache = new MemoryWidgetCacheStore();
+        $service = new WidgetRenderService(WidgetRegistry::withCoreDefaults(), $cache);
+        $context = new WidgetContext('Private Page', 'tr', true);
+
+        $service->renderSlot('footer.after', $context);
+        $service->renderSlot('footer.after', $context);
+
+        self::assertSame([], $cache->values);
+    }
+
+    public function testAuthenticatedViewersUseSeparateCacheEntries(): void
+    {
+        $cache = new MemoryWidgetCacheStore();
+        $service = new WidgetRenderService(WidgetRegistry::withCoreDefaults(), $cache);
+
+        $service->renderSlot(
+            'footer.after',
+            new WidgetContext('Private Page', 'tr', true, str_repeat('a', 32)),
+        );
+        $service->renderSlot(
+            'footer.after',
+            new WidgetContext('Private Page', 'tr', true, str_repeat('b', 32)),
+        );
+
+        self::assertCount(2, $cache->values);
     }
 
     public function testDifferentContextProducesDifferentCacheEntry(): void

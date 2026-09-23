@@ -27,7 +27,7 @@ final readonly class WidgetRenderService
     private function renderWidget(Widget $widget, WidgetContext $context): string
     {
         $ttl = $widget->cacheTtlSeconds();
-        if ($ttl === 0 || $this->cache === null) {
+        if ($ttl === 0 || $this->cache === null || !$context->cacheSafe()) {
             return $widget->render($context);
         }
 
