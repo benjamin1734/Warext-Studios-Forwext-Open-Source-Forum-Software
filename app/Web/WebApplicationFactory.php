@@ -12,6 +12,7 @@ use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
 use Forwext\App\Web\Analytics\ForumAnalyticsHandler;
 use Forwext\App\Web\Analytics\ContentEngagementHandler;
 use Forwext\App\Web\Analytics\OperationsAnalyticsHandler;
+use Forwext\App\Web\Analytics\CommerceAnalyticsHandler;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -131,6 +132,8 @@ use Forwext\Core\Analytics\Engagement\ContentEngagementService;
 use Forwext\Core\Analytics\Engagement\DatabaseContentEngagementRepository;
 use Forwext\Core\Analytics\Operations\DatabaseOperationsAnalyticsRepository;
 use Forwext\Core\Analytics\Operations\OperationsAnalyticsService;
+use Forwext\Core\Analytics\Commerce\CommerceAnalyticsService;
+use Forwext\Core\Analytics\Commerce\DatabaseCommerceAnalyticsRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -414,6 +417,10 @@ final readonly class WebApplicationFactory
         );
         $operationsAnalytics = new OperationsAnalyticsService(
             new DatabaseOperationsAnalyticsRepository($database),
+            $authorizer,
+        );
+        $commerceAnalytics = new CommerceAnalyticsService(
+            new DatabaseCommerceAnalyticsRepository($database),
             $authorizer,
         );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
@@ -1577,6 +1584,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/admin/analytics/operations'),
             new OperationsAnalyticsHandler($operationsAnalytics, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'analytics.commerce',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/analytics/commerce'),
+            new CommerceAnalyticsHandler($commerceAnalytics, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'advertising.click',

@@ -37,6 +37,7 @@ final class AnalyticsEventModelTest extends TestCase
         );
         self::assertTrue($registry->require('forum.view')->collectForum);
         self::assertFalse($registry->require('user.active')->collectForum);
+        self::assertTrue($registry->require('marketplace.listing.view')->collectContent);
     }
 
     public function testRecorderPersistsOnlyPseudonymousIdentitiesAndAllowlistedDimensions():void
