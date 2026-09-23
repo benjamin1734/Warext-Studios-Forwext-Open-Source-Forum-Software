@@ -7,6 +7,7 @@ namespace Forwext\App\Web\Search;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\Core\Analytics\Engagement\SearchAnalyticsService;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
@@ -24,6 +25,7 @@ final readonly class SearchHandler implements RequestHandlerInterface
         private PermissionAwareSearchService $search,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
+        private ?SearchAnalyticsService $analytics = null,
     ) {}
 
     public function handle(Request $request): Response
@@ -98,6 +100,15 @@ final readonly class SearchHandler implements RequestHandlerInterface
                     $limit,
                     $offset,
                     $filters,
+                );
+            }
+
+            if ($this->analytics !== null) {
+                $this->analytics->recordBestEffort(
+                    $actor,
+                    $text,
+                    count($hits),
+                    new DateTimeImmutable('now', new DateTimeZone('UTC')),
                 );
             }
 
