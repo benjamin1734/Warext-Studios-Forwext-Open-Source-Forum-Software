@@ -159,11 +159,11 @@ final readonly class DatabaseForumAnalyticsRepository
         if($cohort===0)return null;
 
         $retained=$this->count(
-            "SELECT COUNT(DISTINCT old.actor_hash) FROM forwext_analytics_events old "
-            ."WHERE old.event_key='user.active' AND old.actor_hash IS NOT NULL "
-            .'AND old.occurred_at_utc>=:cohort_start AND old.occurred_at_utc<:cohort_end '
+            "SELECT COUNT(DISTINCT cohort_event.actor_hash) FROM forwext_analytics_events cohort_event "
+            ."WHERE cohort_event.event_key='user.active' AND cohort_event.actor_hash IS NOT NULL "
+            .'AND cohort_event.occurred_at_utc>=:cohort_start AND cohort_event.occurred_at_utc<:cohort_end '
             ."AND EXISTS (SELECT 1 FROM forwext_analytics_events current_event "
-            ."WHERE current_event.event_key='user.active' AND current_event.actor_hash=old.actor_hash "
+            ."WHERE current_event.event_key='user.active' AND current_event.actor_hash=cohort_event.actor_hash "
             .'AND current_event.occurred_at_utc>=:today_start AND current_event.occurred_at_utc<:today_end)',
             [
                 'cohort_start'=>self::format($cohortDay),
