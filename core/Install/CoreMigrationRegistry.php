@@ -53,6 +53,7 @@ use Forwext\Database\Migrations\Core\CreateOperationsAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateCommerceAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateAnalyticsReportBuilder;
 use Forwext\Database\Migrations\Core\CreateLayoutBuilderSystem;
+use Forwext\Database\Migrations\Core\CreateThemeTemplateLanguageRevisionSystem;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -180,6 +181,7 @@ final class CoreMigrationRegistry
             new CreateCommerceAnalyticsIndexes(),
             new CreateAnalyticsReportBuilder(),
             new CreateLayoutBuilderSystem(),
+            new CreateThemeTemplateLanguageRevisionSystem(),
         ];
     }
 }
