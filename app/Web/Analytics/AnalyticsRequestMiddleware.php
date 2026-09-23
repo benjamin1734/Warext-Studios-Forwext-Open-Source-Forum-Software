@@ -78,6 +78,20 @@ final readonly class AnalyticsRequestMiddleware implements MiddlewareInterface
             ));
         }
 
+        if($route==='marketplace.detail'){
+            $listingId=$this->listingId($request);
+            if($listingId!==null){
+                $this->analytics->recordBestEffort(new AnalyticsEvent(
+                    'marketplace.listing.view',
+                    actorUserId:$viewer,
+                    sessionId:$session,
+                    dimensions:['route'=>$route,'device'=>$device],
+                    contentType:'marketplace_listing',
+                    contentId:$listingId,
+                ));
+            }
+        }
+
         return $response;
     }
 
@@ -94,6 +108,16 @@ final readonly class AnalyticsRequestMiddleware implements MiddlewareInterface
         if(!is_array($params))return null;
         $raw=$params['threadId']??null;
         return is_string($raw)&&$raw!==''?EntityId::fromString($raw):null;
+    }
+
+    private function listingId(Request $request):?EntityId
+    {
+        $params=$request->attribute(Router::ATTRIBUTE_ROUTE_PARAMETERS,[]);
+        if(!is_array($params))return null;
+        $raw=$params['listingId']??null;
+        return is_string($raw)&&preg_match('/^[a-f0-9]{32}$/D',$raw)===1
+            ?EntityId::fromString($raw)
+            :null;
     }
 
     private function forumId(Request $request):?EntityId

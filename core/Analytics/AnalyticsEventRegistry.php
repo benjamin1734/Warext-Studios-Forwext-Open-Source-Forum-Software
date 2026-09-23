@@ -35,6 +35,7 @@ final class AnalyticsEventRegistry
             new AnalyticsEventDefinition('bug.report.created',AnalyticsEventCategory::Bug,365,true,false,true,false,['category','severity']),
             new AnalyticsEventDefinition('bug.report.resolved',AnalyticsEventCategory::Bug,365,true,false,true,false,['category','resolution']),
             new AnalyticsEventDefinition('marketplace.listing.created',AnalyticsEventCategory::Marketplace,365,true,false,true,false,['category','currency']),
+            new AnalyticsEventDefinition('marketplace.listing.view',AnalyticsEventCategory::Marketplace,365,true,true,false,false,['route','device'],true),
             new AnalyticsEventDefinition('marketplace.order.created',AnalyticsEventCategory::Marketplace,365,true,false,true,false,['currency','item_bucket']),
             new AnalyticsEventDefinition('marketplace.purchase.completed',AnalyticsEventCategory::Marketplace,730,true,false,true,false,['currency','payment_provider']),
             new AnalyticsEventDefinition('marketplace.review.created',AnalyticsEventCategory::Marketplace,365,true,false,true,false,['rating_bucket']),
