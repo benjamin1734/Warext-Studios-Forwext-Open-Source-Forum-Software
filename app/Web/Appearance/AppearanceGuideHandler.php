@@ -34,8 +34,12 @@ final readonly class AppearanceGuideHandler implements RequestHandlerInterface
 
         try {
             $query = $request->query();
-            $mode = $this->enumQuery($query, 'mode', 'basic', AppearanceGuideLevel::class);
-            $device = $this->enumQuery($query, 'device', 'desktop', AppearancePreviewDevice::class);
+            $modeRaw = $this->stringQuery($query, 'mode', 'basic', 32);
+            $deviceRaw = $this->stringQuery($query, 'device', 'desktop', 32);
+            $mode = AppearanceGuideLevel::tryFrom($modeRaw)
+                ?? throw new InvalidArgumentException('Appearance guide mode is invalid.');
+            $device = AppearancePreviewDevice::tryFrom($deviceRaw)
+                ?? throw new InvalidArgumentException('Appearance preview device is invalid.');
             $preset = $this->stringQuery($query, 'preset', 'balanced', 32);
             $search = $this->stringQuery($query, 'q', '', 80);
 
