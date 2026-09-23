@@ -61,7 +61,7 @@ final class AppearanceGuideServiceTest extends TestCase
         self::assertSame('compact', $snapshot->selectedPreset->key);
         self::assertSame(AppearancePreviewDevice::Mobile, $snapshot->device);
         self::assertNotEmpty($snapshot->items);
-        self::assertContains(false, array_values($snapshot->itemAccess), true);
+        self::assertTrue(in_array(false, array_values($snapshot->itemAccess), true));
     }
 
     public function testAdvancedPermissionUnlocksAdvancedSearchResult(): void
