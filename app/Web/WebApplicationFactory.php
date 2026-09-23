@@ -8,6 +8,8 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
+use Forwext\App\Web\Appearance\LayoutBuilderHandler;
 use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
 use Forwext\App\Web\Analytics\ForumAnalyticsHandler;
 use Forwext\App\Web\Analytics\ContentEngagementHandler;
@@ -325,6 +327,10 @@ use Forwext\Core\Subscription\SubscriptionService;
 use Forwext\Core\Trophy\DatabaseTrophyMetricProvider;
 use Forwext\Core\Trophy\DatabaseTrophyRepository;
 use Forwext\Core\Trophy\TrophyService;
+use Forwext\Core\Ui\Layout\Builder\DatabaseLayoutBuilderRepository;
+use Forwext\Core\Ui\Layout\Builder\LayoutBuilderService;
+use Forwext\Core\Ui\Layout\UiSlotRegistry;
+use Forwext\Core\Ui\Widget\WidgetRegistry;
 use Forwext\Core\Trophy\TrophyNotifier;
 use RuntimeException;
 
@@ -434,6 +440,15 @@ final readonly class WebApplicationFactory
             new DatabaseAnalyticsReportRepository($database),
             $analyticsAccess,
             $analyticsAudit,
+        );
+        $layoutSlots = UiSlotRegistry::withCoreDefaults();
+        $layoutWidgets = WidgetRegistry::withCoreDefaults($layoutSlots);
+        $layoutBuilder = new LayoutBuilderService(
+            new DatabaseLayoutBuilderRepository($database),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $layoutSlots,
+            $layoutWidgets,
         );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
@@ -854,6 +869,7 @@ final readonly class WebApplicationFactory
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
+        $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -1618,6 +1634,19 @@ final readonly class WebApplicationFactory
             new AnalyticsReportExportHandler($analyticsReports, $viewerResolver),
         ));
         $routes->add(new Route(
+            'appearance.layout.builder',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/appearance/layout'),
+            new LayoutBuilderHandler($layoutBuilder, $viewerResolver, $basePath),
+            [$layoutBuilderCsrf],
+        ));
+        $routes->add(new Route(
+            'appearance.layout.export',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/appearance/layout/export.json'),
+            new LayoutBuilderExportHandler($layoutBuilder, $viewerResolver),
+        ));
+        $routes->add(new Route(
             'advertising.click',
             [HttpMethod::Get],
             new PathTemplate('/ads/click/{campaignId}', ['campaignId'=>'[0-9a-f]{32}']),
@@ -1846,6 +1875,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function layoutBuilderCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'layout-builder', 'forwext.csrf.layout-builder.v1');
     }
 
     private function analyticsReportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

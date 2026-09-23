@@ -46,6 +46,19 @@ final readonly class LayoutBuilderService
         );
     }
 
+    /**
+     * @return array{slots:list<\Forwext\Core\Ui\Layout\UiSlotDefinition>,widgets:list<\Forwext\Core\Ui\Widget\RegisteredWidget>}
+     */
+    public function catalog(EntityId $actor): array
+    {
+        $this->require($actor, self::MANAGE_PERMISSION);
+
+        return [
+            'slots' => $this->slots->all(),
+            'widgets' => $this->widgets->all(),
+        ];
+    }
+
     public function saveDraft(
         EntityId $actor,
         string $layoutKey,

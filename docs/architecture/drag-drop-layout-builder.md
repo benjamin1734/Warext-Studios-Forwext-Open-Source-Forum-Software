@@ -38,4 +38,14 @@ The tables are created by the normal core migration engine and therefore partici
 
 ## Deployment
 
-The model is native PHP/MySQL/MariaDB. It adds no mandatory Redis, worker, WebSocket, Node.js, npm, Docker, SSH or Supervisor dependency.
+## Admin builder surface
+
+The first-party admin surface is available at /admin/appearance/layout. It uses the normal authentication resolver, backend appearance permissions and CSRF middleware.
+
+The browser editor supports drag/drop between registered slots, deterministic reorder on save, duplicate/remove controls, a 50-snapshot undo/redo history, route/audience/device conditions and desktop/tablet/mobile preview widths. Placement ids are generated with Web Crypto rather than Math.random.
+
+Import and publish are separate server mutations, so client-side preview/history cannot bypass backend validation or authorization.
+
+## Deployment
+
+The model and editor are native PHP/JavaScript/MySQL/MariaDB. It adds no mandatory Redis, worker, WebSocket, Node.js, npm, Docker, SSH or Supervisor dependency.
