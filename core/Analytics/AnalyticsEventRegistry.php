@@ -25,6 +25,7 @@ final class AnalyticsEventRegistry
             new AnalyticsEventDefinition('user.registered',AnalyticsEventCategory::User,365,true,false,true,false,['method','verified']),
             new AnalyticsEventDefinition('user.login',AnalyticsEventCategory::User,180,true,true,false,false,['method','result']),
             new AnalyticsEventDefinition('user.active',AnalyticsEventCategory::User,90,true,true,false,false,['device']),
+            new AnalyticsEventDefinition('content.thread.view',AnalyticsEventCategory::Content,365,true,true,false,true,['route','device'],true),
             new AnalyticsEventDefinition('content.thread.created',AnalyticsEventCategory::Content,365,true,true,true,true,['thread_type','moderation_state']),
             new AnalyticsEventDefinition('content.post.created',AnalyticsEventCategory::Content,365,true,true,true,true,['moderation_state']),
             new AnalyticsEventDefinition('content.reaction',AnalyticsEventCategory::Content,180,true,true,true,true,['reaction']),
