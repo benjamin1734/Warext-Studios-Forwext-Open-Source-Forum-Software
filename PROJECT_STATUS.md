@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.41-dev
+CURRENT_VERSION = 0.0.7.42-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.05
-CURRENT_STEP = 16.06
-LAST_COMMIT = 98f814bf7464a27f90c93c8f148aba83999a97de
+LAST_COMPLETED_SUBSTEP = 16.06
+CURRENT_STEP = 16.07
+LAST_COMMIT = f8ede650e579531b0129d05c47ba586f49af1845
 BLOCKERS = none
-NEXT_STEP = 16.06 - Drag-drop page/layout builder
+NEXT_STEP = 16.07 - Theme/template/language/revision sistemi
 ```
 
 ## Current position
@@ -21,13 +21,35 @@ NEXT_STEP = 16.06 - Drag-drop page/layout builder
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.05`.
-- Current sub-step: `16.06 — Drag-drop page/layout builder`.
-- Remaining roadmap work after 16.05: **29 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.06`.
+- Current sub-step: `16.07 — Theme/template/language/revision sistemi`.
+- Remaining roadmap work after 16.06: **28 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.06
+
+- Added a versioned layout document model with opaque 128-bit placement ids, registered widget/slot references, deterministic order, enabled state and validated conditions.
+- Added route-pattern, guest/member/all audience and desktop/tablet/mobile device conditions with fail-closed parsing.
+- Added immutable draft revisions plus independent draft/published pointers in the database.
+- Added optimistic-concurrency safe publish: only the exact current draft revision may be published.
+- Added registered slot/widget revalidation before save and publish, preventing removed/unknown extension keys from being activated.
+- Added versioned, layout-scoped, 1 MiB-bounded JSON import/export that accepts no executable PHP/JS/HTML/CSS/template payloads.
+- Added `appearance.manage` authorization for management/export/save and additional `appearance.advanced` authorization for import/publish.
+- Added central administration audit events for layout save, import and publish mutations.
+- Added `forwext_ui_layouts` and immutable `forwext_ui_layout_revisions` migration with SHA-256 revision checksums.
+- Added checksum verification on revision read and fail-closed handling for concurrent first-layout creation.
+- Added `/admin/appearance/layout` with CSRF, noindex/no-store response policy, drag/drop between slots, explicit up/down reorder, duplicate/remove, enabled toggle and bounded undo/redo.
+- Added route/audience condition editing plus desktop/tablet/mobile preview behavior.
+- Placement creation/duplication uses Web Crypto 128-bit identifiers; `Math.random` is not used.
+- Added authenticated JSON export and advanced-permission import.
+- Persistence commit: `351dae525535ab17e8cbc37369cdec1206e9ad72`; admin surface commit: `d162277187fff3a930678c219923e07eb6b26e9e`; integrity/reorder correction: `f8ede650e579531b0129d05c47ba586f49af1845`.
+- GitHub Actions build run `35905773495`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35905773443`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.42-dev`.
+- Next: `16.07 — Theme/template/language/revision sistemi`.
 
 ## Completed in 16.05
 

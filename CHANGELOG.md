@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.06 — Drag-drop Page / Layout Builder
+
+- Added versioned layout documents, immutable draft revisions and separate draft/published pointers.
+- Added registered widget/slot validation, route/audience/device conditions and optimistic-concurrency safe publishing.
+- Added permission-aware audited save/import/publish operations and versioned 1 MiB-bounded JSON import/export.
+- Added MySQL/MariaDB layout/revision migration with SHA-256 integrity verification and concurrent-creation fail-closed behavior.
+- Added the native admin drag/drop builder with reorder, duplicate/remove, enabled toggle, bounded undo/redo and desktop/tablet/mobile preview.
+- Added CSRF/noindex/no-store handling and Web Crypto placement ids.
+- Implementation commits: `351dae525535ab17e8cbc37369cdec1206e9ad72`, `d162277187fff3a930678c219923e07eb6b26e9e`, `f8ede650e579531b0129d05c47ba586f49af1845`.
+- GitHub Actions build run `35905773495` and DB smoke run `35905773443` both succeeded.
+
 ### 16.05 — Layout Regions / UI Slots / Widgets
 
 - Added typed header/main/sidebar/footer/page regions and deterministic named UI slots.
