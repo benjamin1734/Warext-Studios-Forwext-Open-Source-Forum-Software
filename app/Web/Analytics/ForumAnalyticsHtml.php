@@ -14,10 +14,12 @@ final class ForumAnalyticsHtml
     {
         $base = self::e($basePath->prepend('/admin/analytics'));
         $content = self::e($basePath->prepend('/admin/analytics/content'));
+        $operations = self::e($basePath->prepend('/admin/analytics/operations'));
         $body = '<section class="card"><h1 style="margin-top:0">Forum Analiz Dashboardu</h1>'
             . '<p class="muted">Site geneli büyüme, aktif kullanıcı ve içerik üretim metrikleri. Saatler UTC tabanlıdır.</p>'
             . '<div class="market-actions">';
         $body .= '<a href="'.$content.'">İçerik & engagement</a>';
+        $body .= '<a href="'.$operations.'">Moderasyon & operasyon</a>';
         foreach ([7,30,90] as $days) {
             $label = $days . ' gün';
             $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
