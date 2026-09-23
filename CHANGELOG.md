@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 15.06 — Report Builder / Export / Analytics Access
+
+- Added a native PHP analytics report builder with bounded UTC date ranges, fixed allowlisted filters and owner-scoped saved reports.
+- Added scoped forum/content/operations/commerce analytics permissions while retaining `analytics.view_site` as a compatibility super-permission.
+- Added backend-enforced report-use, export, manage-all and unaggregated permissions.
+- Added privacy aggregation with a minimum effective count of 5 unless explicitly authorized for lower thresholds.
+- Added CSV/JSON export through the same permission/privacy execution path and neutralized spreadsheet-formula cells in CSV.
+- Added centralized audit for saved-report mutations, dedicated CSRF, strict ID/filter validation and private/no-store/noindex/nosniff response policy.
+- Added additive migration `20260923201500_analytics_report_builder` and conservative permission-template defaults.
+- Feature commit: `d95f0f2d2430ad2252ecbae01ed5c06638e94141`; final regression correction: `e7bd41d16aff7af814ff969acf57b09de5c2b6e1`.
+- GitHub Actions build run `35896110292` and DB smoke run `35896110441` both succeeded.
+
 ### 15.05 — Marketplace / Revenue / Referral / Giveaway Analytics
 
 - Added privacy-aware structural `marketplace.listing.view` recording for successful Marketplace detail HTML requests.

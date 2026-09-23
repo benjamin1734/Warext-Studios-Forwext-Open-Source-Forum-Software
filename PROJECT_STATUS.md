@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.35-dev
-LAST_COMPLETED_MAIN_STEP = 14
-LAST_COMPLETED_SUBSTEP = 15.05
-CURRENT_STEP = 15.06
-LAST_COMMIT = 5bb212419cf021b8faf8915f7356761928ffcf19
+CURRENT_VERSION = 0.0.7.36-dev
+LAST_COMPLETED_MAIN_STEP = 15
+LAST_COMPLETED_SUBSTEP = 15.06
+CURRENT_STEP = 16.01
+LAST_COMMIT = e7bd41d16aff7af814ff969acf57b09de5c2b6e1
 BLOCKERS = none
-NEXT_STEP = 15.06 - Rapor builder/export ve erişim yetkileri
+NEXT_STEP = 16.01 - Design token motoru
 ```
 
 ## Current position
@@ -20,14 +20,30 @@ NEXT_STEP = 15.06 - Rapor builder/export ve erişim yetkileri
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.05`.
-- Current sub-step: `15.06 — Rapor builder/export ve erişim yetkileri`.
-- Remaining roadmap work after 15.05: **35 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`.
+- Current sub-step: `16.01 — Design token motoru`.
+- Remaining roadmap work after 15.06: **34 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 15.06
+
+- Added a native PHP analytics report builder with bounded UTC date ranges, fixed allowlisted filters and owner-scoped saved reports.
+- Added scoped analytics permissions for forum, content, operations and commerce while retaining `analytics.view_site` as the compatibility super-permission.
+- Added backend-enforced report-use, CSV/JSON export, manage-all and unaggregated permissions; UI visibility does not replace authorization.
+- Added privacy aggregation with an effective minimum count of 5 unless explicitly authorized, and suppressed-row accounting without revealing suppressed values.
+- Added centralized administration audit for report save/delete, dedicated CSRF protection, strict saved-report ID validation and parameterized report filters.
+- Added CSV spreadsheet-formula neutralization plus private/no-store/noindex/nosniff export response policy.
+- Added additive/idempotent migration `20260923201500_analytics_report_builder` for saved-report persistence and conservative permission defaults.
+- Added report model/export/privacy/web/migration regression coverage and architecture documentation.
+- Feature commit: `d95f0f2d2430ad2252ecbae01ed5c06638e94141`; link syntax correction: `3097d35a891061d35914c1cd6daf3138995ed3ce`; final regression correction: `e7bd41d16aff7af814ff969acf57b09de5c2b6e1`.
+- GitHub Actions build run `35896110292`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35896110441`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.36-dev`.
+- Next: `16.01 — Design token motoru`.
 
 ## Completed in 15.05
 
