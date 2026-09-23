@@ -14,11 +14,13 @@ final class ContentEngagementHtml
     {
         $base=self::e($basePath->prepend('/admin/analytics/content'));
         $overview=self::e($basePath->prepend('/admin/analytics'));
+        $operations=self::e($basePath->prepend('/admin/analytics/operations'));
 
         $body='<section class="card"><h1 style="margin-top:0">İçerik ve Engagement Analizleri</h1>'
             .'<p class="muted">Forum/category/thread performansı ve privacy-aware arama etkileşimleri. '
             .'Tüm zaman aralıkları UTC tabanlıdır.</p>'
             .'<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>';
+        $body.='<a href="'.$operations.'">Moderasyon & operasyon</a>';
         foreach([7,30,90] as $days){
             $style=$snapshot->windowDays===$days?' style="font-weight:700"':'';
             $body.='<a'.$style.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
