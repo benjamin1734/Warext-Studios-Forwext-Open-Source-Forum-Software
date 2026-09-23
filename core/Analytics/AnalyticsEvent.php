@@ -25,6 +25,8 @@ final readonly class AnalyticsEvent
         public ?EntityId $forumId=null,
         public array $dimensions=[],
         ?DateTimeImmutable $occurredAt=null,
+        public ?string $contentType=null,
+        public ?EntityId $contentId=null,
     ){
         if(preg_match('/^[a-z][a-z0-9_.-]{2,95}$/D',$this->key)!==1){
             throw new InvalidArgumentException('Analytics event key is invalid.');
@@ -34,6 +36,12 @@ final readonly class AnalyticsEvent
         }
         if($this->subjectType!==null&&preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D',$this->subjectType)!==1){
             throw new InvalidArgumentException('Analytics subject type is invalid.');
+        }
+        if(($this->contentType===null)!==($this->contentId===null)){
+            throw new InvalidArgumentException('Analytics content type and id must be provided together.');
+        }
+        if($this->contentType!==null&&preg_match('/^[a-z][a-z0-9_.-]{1,31}$/D',$this->contentType)!==1){
+            throw new InvalidArgumentException('Analytics content type is invalid.');
         }
         if($this->sessionId!==null&&($this->sessionId===''||strlen($this->sessionId)>512)){
             throw new InvalidArgumentException('Analytics session id is invalid.');
