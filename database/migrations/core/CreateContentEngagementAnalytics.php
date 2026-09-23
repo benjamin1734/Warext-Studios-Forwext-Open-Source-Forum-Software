@@ -59,6 +59,32 @@ final readonly class CreateContentEngagementAnalytics implements Migration
             ));
         }
 
+        if (!$this->hasIndex($context, 'forwext_post_reactions', 'idx_forwext_post_reactions_created')) {
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE `forwext_post_reactions` ADD INDEX `idx_forwext_post_reactions_created` (`created_at_utc`,`post_id`)',
+            ));
+        }
+        if (!$this->hasIndex($context, 'forwext_post_bookmarks', 'idx_forwext_post_bookmarks_created')) {
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE `forwext_post_bookmarks` ADD INDEX `idx_forwext_post_bookmarks_created` (`created_at_utc`,`post_id`)',
+            ));
+        }
+        if (!$this->hasIndex($context, 'forwext_watched_threads', 'idx_forwext_watched_threads_updated')) {
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE `forwext_watched_threads` ADD INDEX `idx_forwext_watched_threads_updated` (`updated_at_utc`,`thread_id`)',
+            ));
+        }
+        if (!$this->hasIndex($context, 'forwext_watched_forums', 'idx_forwext_watched_forums_updated')) {
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE `forwext_watched_forums` ADD INDEX `idx_forwext_watched_forums_updated` (`updated_at_utc`,`forum_node_id`)',
+            ));
+        }
+        if (!$this->hasIndex($context, 'forwext_user_follows', 'idx_forwext_user_follows_created')) {
+            $context->execute(new CompiledQuery(
+                'ALTER TABLE `forwext_user_follows` ADD INDEX `idx_forwext_user_follows_created` (`created_at_utc`,`followed_user_id`)',
+            ));
+        }
+
         $context->execute(new CompiledQuery(
             'CREATE TABLE IF NOT EXISTS `forwext_search_term_analytics` ('
             . '`term_key` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
@@ -86,6 +112,11 @@ final readonly class CreateContentEngagementAnalytics implements Migration
             && $this->hasColumn($context, 'forwext_analytics_events', 'content_id')
             && $this->hasIndex($context, 'forwext_analytics_events', 'idx_forwext_analytics_content_day')
             && $this->hasIndex($context, 'forwext_post_bookmarks', 'idx_forwext_post_bookmarks_post')
+            && $this->hasIndex($context, 'forwext_post_reactions', 'idx_forwext_post_reactions_created')
+            && $this->hasIndex($context, 'forwext_post_bookmarks', 'idx_forwext_post_bookmarks_created')
+            && $this->hasIndex($context, 'forwext_watched_threads', 'idx_forwext_watched_threads_updated')
+            && $this->hasIndex($context, 'forwext_watched_forums', 'idx_forwext_watched_forums_updated')
+            && $this->hasIndex($context, 'forwext_user_follows', 'idx_forwext_user_follows_created')
             ? MigrationVerification::passed()
             : MigrationVerification::failed('Content engagement analytics schema or indexes are incomplete.');
     }
