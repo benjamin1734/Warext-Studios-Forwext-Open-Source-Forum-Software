@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.01 — ACP Information Architecture
+
+- Added backend-authorized native PHP Administration dashboard at `/admin`.
+- Reused `acp.access` and each subsystem's existing permission instead of creating an administrator bypass.
+- Added permission-aware global search, real action-needed queue counts, per-user favorites/recent navigation and reusable breadcrumbs.
+- Added POST + CSRF navigation/favorite mutations and validated static same-origin management targets.
+- Added additive/idempotent MySQL/MariaDB ACP navigation preference migration.
+- Implementation commits: `ec6d344a4f062a8ecf01aa2e8cc406706bb1c3a7`, `c3c89250926a4370ba3a22b5168f597e9e6d92ee`, `ae0303aebe2ffac9ff573993125571d9714baf3f`, `b686bc1d7bde7aced1dbd16ee98d5358892da5aa`, `023eceda2b718a53007c81ae0b98476bc001240d`, `6388a2d63a56a842bbc8aecd13373e20bfa59b9c`.
+- GitHub Actions build run `35913774719` and database migration smoke run `35913774535` both succeeded.
+
 ### 16.08 — Appearance Studio Guided Configuration
 
 - Added backend-authorized native PHP Appearance Studio at `/admin/appearance`.
