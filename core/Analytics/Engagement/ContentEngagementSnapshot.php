@@ -17,6 +17,7 @@ final readonly class ContentEngagementSnapshot
      * @param list<array{id:string,title:string,forums:int,threads:int,posts:int,reactions:int,views:int,watches:int}> $categories
      * @param list<array{id:string,title:string,forum_title:string,replies:int,views:int,reactions:int,bookmarks:int,watches:int,watch_rate:?float,bookmark_rate:?float,reaction_rate:?float}> $threads
      * @param list<array{term:string,searches:int,zero_results:int,avg_results:float}> $searchTerms
+     * @param list<array{id:string,username:string,follows:int}> $followLeaders
      */
     public function __construct(
         public int $windowDays,
@@ -33,6 +34,7 @@ final readonly class ContentEngagementSnapshot
         public array $threads,
         public array $searchTerms,
         DateTimeImmutable $generatedAt,
+        public array $followLeaders=[],
     ){
         if(!in_array($this->windowDays,[7,30,90],true)){
             throw new InvalidArgumentException('Content engagement range must be 7, 30 or 90 days.');
