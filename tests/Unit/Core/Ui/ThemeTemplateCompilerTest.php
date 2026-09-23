@@ -44,6 +44,8 @@ final class ThemeTemplateCompilerTest extends TestCase
                 '<p>&lt;b&gt;safe&lt;/b&gt;</p>',
                 $cache->render('default', $revision->revisionId, 'page.shell', ['content' => '<b>safe</b>']),
             );
+            self::assertSame('', $cache->asset('default', $revision->revisionId, 'css'));
+            self::assertSame('', $cache->asset('default', $revision->revisionId, 'js'));
         } finally {
             self::removeDirectory($directory);
         }

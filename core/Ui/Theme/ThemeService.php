@@ -268,6 +268,11 @@ final readonly class ThemeService
         return $this->diff->diff($left->payload, $right->payload);
     }
 
+    public function canUseAdvanced(EntityId $actor): bool
+    {
+        return $this->authorizer->allows($actor, PermissionKey::fromString(self::ADVANCED_PERMISSION));
+    }
+
     public function effectivePublishedPayload(EntityId $actor, string $themeKey): ThemePayload
     {
         $this->require($actor, self::MANAGE_PERMISSION);

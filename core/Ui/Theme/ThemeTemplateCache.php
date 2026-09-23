@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Core\Ui\Theme;
 
 use Forwext\Core\Domain\Entity\EntityId;
+use InvalidArgumentException;
 use RuntimeException;
 
 final readonly class ThemeTemplateCache
@@ -20,20 +21,30 @@ final readonly class ThemeTemplateCache
         $themeDir = $this->themeDirectory($themeKey, $revision->revisionId);
         $this->ensureDirectory($themeDir);
 
-        $manifest = [];
+        $templates = [];
         foreach ($revision->payload->templates as $key => $source) {
             $filename = hash('sha256', $key) . '.php';
             $compiled = $this->compiler->compile($key, $source);
             $this->atomicWrite($themeDir . '/' . $filename, $compiled);
-            $manifest[$key] = [
+            $templates[$key] = [
                 'file' => $filename,
                 'checksum' => hash('sha256', $compiled),
             ];
         }
-        ksort($manifest, SORT_STRING);
+        ksort($templates, SORT_STRING);
+
+        $assets = [
+            'css' => $this->writeAsset($themeDir, 'custom.css', $revision->payload->customCss),
+            'js' => $this->writeAsset($themeDir, 'custom.js', $revision->payload->customJs),
+        ];
 
         $json = json_encode(
-            ['version' => 1, 'revision_id' => $revision->revisionId->value(), 'templates' => $manifest],
+            [
+                'version' => 1,
+                'revision_id' => $revision->revisionId->value(),
+                'templates' => $templates,
+                'assets' => $assets,
+            ],
             JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES,
         );
         $this->atomicWrite($themeDir . '/manifest.json', $json);
@@ -47,17 +58,8 @@ final readonly class ThemeTemplateCache
         array $context,
     ): string {
         $themeDir = $this->themeDirectory($themeKey, $revisionId);
-        $manifestPath = $themeDir . '/manifest.json';
-        if (!is_file($manifestPath) || is_link($manifestPath)) {
-            throw new RuntimeException('Compiled theme manifest is unavailable.');
-        }
-
-        $raw = file_get_contents($manifestPath);
-        if ($raw === false) {
-            throw new RuntimeException('Compiled theme manifest cannot be read.');
-        }
-        $manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
-        $entry = is_array($manifest) && is_array($manifest['templates'] ?? null)
+        $manifest = $this->manifest($themeDir, $revisionId);
+        $entry = is_array($manifest['templates'] ?? null)
             ? ($manifest['templates'][$templateKey] ?? null)
             : null;
         if (!is_array($entry) || !is_string($entry['file'] ?? null) || !is_string($entry['checksum'] ?? null)) {
@@ -65,13 +67,7 @@ final readonly class ThemeTemplateCache
         }
 
         $file = $themeDir . '/' . $entry['file'];
-        if (!is_file($file) || is_link($file)) {
-            throw new RuntimeException('Compiled theme template file is unavailable.');
-        }
-        $compiled = file_get_contents($file);
-        if ($compiled === false || !hash_equals($entry['checksum'], hash('sha256', $compiled))) {
-            throw new RuntimeException('Compiled theme template checksum mismatch.');
-        }
+        $compiled = $this->verifiedFile($file, $entry['checksum']);
 
         $renderer = include $file;
         if (!$renderer instanceof \Closure) {
@@ -84,6 +80,77 @@ final readonly class ThemeTemplateCache
         }
 
         return $result;
+    }
+
+    public function asset(string $themeKey, EntityId $revisionId, string $kind): string
+    {
+        if (!in_array($kind, ['css', 'js'], true)) {
+            throw new InvalidArgumentException('Theme asset kind is invalid.');
+        }
+
+        $themeDir = $this->themeDirectory($themeKey, $revisionId);
+        $manifest = $this->manifest($themeDir, $revisionId);
+        $entry = is_array($manifest['assets'] ?? null)
+            ? ($manifest['assets'][$kind] ?? null)
+            : null;
+        if (!is_array($entry) || !is_string($entry['file'] ?? null) || !is_string($entry['checksum'] ?? null)) {
+            throw new RuntimeException('Compiled theme asset is unavailable.');
+        }
+
+        return $this->verifiedFile($themeDir . '/' . $entry['file'], $entry['checksum']);
+    }
+
+    /** @return array{file:string,checksum:string} */
+    private function writeAsset(string $themeDir, string $filename, string $content): array
+    {
+        $this->atomicWrite($themeDir . '/' . $filename, $content);
+
+        return [
+            'file' => $filename,
+            'checksum' => hash('sha256', $content),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function manifest(string $themeDir, EntityId $revisionId): array
+    {
+        $manifestPath = $themeDir . '/manifest.json';
+        if (!is_file($manifestPath) || is_link($manifestPath)) {
+            throw new RuntimeException('Compiled theme manifest is unavailable.');
+        }
+
+        $raw = file_get_contents($manifestPath);
+        if ($raw === false) {
+            throw new RuntimeException('Compiled theme manifest cannot be read.');
+        }
+        $manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
+        if (
+            !is_array($manifest)
+            || ($manifest['version'] ?? null) !== 1
+            || ($manifest['revision_id'] ?? null) !== $revisionId->value()
+        ) {
+            throw new RuntimeException('Compiled theme manifest is invalid.');
+        }
+
+        return $manifest;
+    }
+
+    private function verifiedFile(string $file, string $checksum): string
+    {
+        if (
+            preg_match('/^[a-f0-9]{64}$/D', $checksum) !== 1
+            || !is_file($file)
+            || is_link($file)
+        ) {
+            throw new RuntimeException('Compiled theme artifact is unavailable.');
+        }
+
+        $content = file_get_contents($file);
+        if ($content === false || !hash_equals($checksum, hash('sha256', $content))) {
+            throw new RuntimeException('Compiled theme artifact checksum mismatch.');
+        }
+
+        return $content;
     }
 
     private function themeDirectory(string $themeKey, EntityId $revisionId): string

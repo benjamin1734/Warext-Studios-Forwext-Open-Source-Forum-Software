@@ -10,6 +10,8 @@ use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
+use Forwext\App\Web\Appearance\ThemeAssetHandler;
+use Forwext\App\Web\Appearance\ThemeManageHandler;
 use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
 use Forwext\App\Web\Analytics\ForumAnalyticsHandler;
 use Forwext\App\Web\Analytics\ContentEngagementHandler;
@@ -331,6 +333,10 @@ use Forwext\Core\Ui\Layout\Builder\DatabaseLayoutBuilderRepository;
 use Forwext\Core\Ui\Layout\Builder\LayoutBuilderService;
 use Forwext\Core\Ui\Layout\UiSlotRegistry;
 use Forwext\Core\Ui\Widget\WidgetRegistry;
+use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
+use Forwext\Core\Ui\Theme\PublishedThemeAssetService;
+use Forwext\Core\Ui\Theme\ThemeService;
+use Forwext\Core\Ui\Theme\ThemeTemplateCache;
 use Forwext\Core\Trophy\TrophyNotifier;
 use RuntimeException;
 
@@ -450,6 +456,15 @@ final readonly class WebApplicationFactory
             $layoutSlots,
             $layoutWidgets,
         );
+        $themeRepository = new DatabaseThemeRepository($database);
+        $themeTemplateCache = new ThemeTemplateCache($this->projectRoot . '/storage/cache/themes');
+        $themeService = new ThemeService(
+            $themeRepository,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $themeTemplateCache,
+        );
+        $themeAssets = new PublishedThemeAssetService($themeRepository, $themeTemplateCache);
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
             $database,
@@ -870,6 +885,7 @@ final readonly class WebApplicationFactory
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
+        $themeCsrf = $this->themeCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -1647,6 +1663,31 @@ final readonly class WebApplicationFactory
             new LayoutBuilderExportHandler($layoutBuilder, $viewerResolver),
         ));
         $routes->add(new Route(
+            'appearance.themes.manage',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/appearance/themes'),
+            new ThemeManageHandler($themeService, $viewerResolver, $basePath),
+            [$themeCsrf],
+        ));
+        $routes->add(new Route(
+            'appearance.theme.asset.css',
+            [HttpMethod::Get],
+            new PathTemplate(
+                '/theme-assets/{themeKey}/{revisionId}/custom.css',
+                ['themeKey'=>'[a-z][a-z0-9._-]{1,63}','revisionId'=>'[a-f0-9]{32}'],
+            ),
+            new ThemeAssetHandler($themeAssets, 'css'),
+        ));
+        $routes->add(new Route(
+            'appearance.theme.asset.js',
+            [HttpMethod::Get],
+            new PathTemplate(
+                '/theme-assets/{themeKey}/{revisionId}/custom.js',
+                ['themeKey'=>'[a-z][a-z0-9._-]{1,63}','revisionId'=>'[a-f0-9]{32}'],
+            ),
+            new ThemeAssetHandler($themeAssets, 'js'),
+        ));
+        $routes->add(new Route(
             'advertising.click',
             [HttpMethod::Get],
             new PathTemplate('/ads/click/{campaignId}', ['campaignId'=>'[0-9a-f]{32}']),
@@ -1875,6 +1916,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function themeCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'theme-management', 'forwext.csrf.theme-management.v1');
     }
 
     private function layoutBuilderCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
