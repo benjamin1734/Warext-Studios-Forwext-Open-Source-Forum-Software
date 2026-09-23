@@ -49,6 +49,7 @@ use Forwext\Database\Migrations\Core\CreateAdvertisingNoticeSystem;
 use Forwext\Database\Migrations\Core\CreateAnalyticsEventModel;
 use Forwext\Database\Migrations\Core\CreateForumAnalyticsDashboard;
 use Forwext\Database\Migrations\Core\CreateContentEngagementAnalytics;
+use Forwext\Database\Migrations\Core\CreateOperationsAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -172,6 +173,7 @@ final class CoreMigrationRegistry
             new CreateAnalyticsEventModel(),
             new CreateForumAnalyticsDashboard(),
             new CreateContentEngagementAnalytics(),
+            new CreateOperationsAnalyticsIndexes(),
         ];
     }
 }
