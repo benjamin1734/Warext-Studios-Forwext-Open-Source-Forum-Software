@@ -122,6 +122,9 @@ use Forwext\Core\Analytics\AnalyticsPrivacyHasher;
 use Forwext\Core\Analytics\DatabaseAnalyticsRepository;
 use Forwext\Core\Analytics\Dashboard\DatabaseForumAnalyticsRepository;
 use Forwext\Core\Analytics\Dashboard\ForumAnalyticsService;
+use Forwext\Core\Analytics\Engagement\DatabaseSearchTermAnalyticsRepository;
+use Forwext\Core\Analytics\Engagement\SearchAnalyticsService;
+use Forwext\Core\Analytics\Engagement\SearchTermPolicy;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -392,6 +395,12 @@ final readonly class WebApplicationFactory
         $forumAnalytics = new ForumAnalyticsService(
             new DatabaseForumAnalyticsRepository($database),
             $authorizer,
+        );
+        $searchAnalytics = new SearchAnalyticsService(
+            $analytics,
+            new DatabaseSearchTermAnalyticsRepository($database),
+            new SearchTermPolicy(),
+            $this->searchAnalyticsKey($config),
         );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
@@ -1369,7 +1378,12 @@ final readonly class WebApplicationFactory
             new PortfolioProjectHandler($portfolio, $viewerResolver, $basePath),
             [$portfolioCsrf],
         ));
-        $routes->add(new Route('search.index', [HttpMethod::Get], new PathTemplate('/search'), new SearchHandler($searchService, $viewerResolver, $basePath)));
+        $routes->add(new Route(
+            'search.index',
+            [HttpMethod::Get],
+            new PathTemplate('/search'),
+            new SearchHandler($searchService, $viewerResolver, $basePath, $searchAnalytics),
+        ));
         $routes->add(new Route(
             'content-manager.index', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/content-manager'),
             new ContentManagerHandler($contentManager, $contentManagerProcessor, $users, $viewerResolver, $basePath),
@@ -1820,6 +1834,17 @@ final readonly class WebApplicationFactory
         $derived=hash_hmac(
             'sha256',
             'forwext.analytics.privacy.v1',
+            $this->masterKey($config)->bytesForCrypto(),
+            true,
+        );
+        return SecretKey::fromBase64(base64_encode($derived));
+    }
+
+    private function searchAnalyticsKey(ConfigRepository $config): SecretKey
+    {
+        $derived=hash_hmac(
+            'sha256',
+            'forwext.analytics.search-term.v1',
             $this->masterKey($config)->bytesForCrypto(),
             true,
         );
