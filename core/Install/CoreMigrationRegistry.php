@@ -6,6 +6,7 @@ namespace Forwext\Core\Install;
 
 use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\AddDiscoveryQueryIndexes;
+use Forwext\Database\Migrations\Core\CreateAdminInformationArchitecture;
 use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
 use Forwext\Database\Migrations\Core\CreateAiModerationWorkflow;
 use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
@@ -182,6 +183,7 @@ final class CoreMigrationRegistry
             new CreateAnalyticsReportBuilder(),
             new CreateLayoutBuilderSystem(),
             new CreateThemeTemplateLanguageRevisionSystem(),
+            new CreateAdminInformationArchitecture(),
         ];
     }
 }
