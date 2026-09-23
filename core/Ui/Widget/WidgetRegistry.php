@@ -65,6 +65,12 @@ final class WidgetRegistry
         return $widgets;
     }
 
+    public function get(string $key): RegisteredWidget
+    {
+        return $this->widgets[$key]
+            ?? throw new InvalidArgumentException('Unknown widget: ' . $key);
+    }
+
     /** @return list<RegisteredWidget> */
     public function all(): array
     {

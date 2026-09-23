@@ -52,6 +52,7 @@ use Forwext\Database\Migrations\Core\CreateContentEngagementAnalytics;
 use Forwext\Database\Migrations\Core\CreateOperationsAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateCommerceAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateAnalyticsReportBuilder;
+use Forwext\Database\Migrations\Core\CreateLayoutBuilderSystem;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -178,6 +179,7 @@ final class CoreMigrationRegistry
             new CreateOperationsAnalyticsIndexes(),
             new CreateCommerceAnalyticsIndexes(),
             new CreateAnalyticsReportBuilder(),
+            new CreateLayoutBuilderSystem(),
         ];
     }
 }
