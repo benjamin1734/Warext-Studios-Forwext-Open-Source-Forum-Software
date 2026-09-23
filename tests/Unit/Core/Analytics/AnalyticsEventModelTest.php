@@ -91,4 +91,53 @@ final class AnalyticsEventModelTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         new AnalyticsEvent('user.active',dimensions:['device'=>'192.168.1.1']);
     }
+
+
+    public function testStructuralContentIdIsAllowedOnlyByExplicitEventDefinition():void
+    {
+        $captured=null;
+        $repository=$this->createMock(AnalyticsRepository::class);
+        $repository->expects(self::once())->method('append')
+            ->willReturnCallback(static function(AnalyticsStoredEvent $event)use(&$captured):void{$captured=$event;});
+
+        $recorder=new AnalyticsEventRecorder(
+            AnalyticsEventRegistry::withCoreDefaults(),
+            $repository,
+            new AnalyticsPrivacyHasher(SecretKey::generate())
+        );
+        $thread=EntityId::fromString(str_repeat('c',32));
+        $forum=EntityId::fromString(str_repeat('d',32));
+
+        $stored=$recorder->record(new AnalyticsEvent(
+            'content.thread.view',
+            forumId:$forum,
+            contentType:'thread',
+            contentId:$thread,
+            dimensions:['route'=>'forum.thread.view','device'=>'desktop'],
+        ));
+
+        self::assertSame($stored,$captured);
+        self::assertSame('thread',$stored->contentType);
+        self::assertSame($thread->value(),$stored->contentId?->value());
+        self::assertTrue($stored->definition->collectContent);
+    }
+
+    public function testEventWithoutContentPolicyRejectsStructuralContentId():void
+    {
+        $repository=$this->createMock(AnalyticsRepository::class);
+        $repository->expects(self::never())->method('append');
+        $recorder=new AnalyticsEventRecorder(
+            AnalyticsEventRegistry::withCoreDefaults(),
+            $repository,
+            new AnalyticsPrivacyHasher(SecretKey::generate())
+        );
+
+        $this->expectException(AnalyticsPrivacyException::class);
+        $recorder->record(new AnalyticsEvent(
+            'user.active',
+            contentType:'thread',
+            contentId:EntityId::fromString(str_repeat('e',32)),
+            dimensions:['device'=>'desktop'],
+        ));
+    }
 }
