@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Analytics;
 
 use Forwext\Core\Analytics\Engagement\SearchTermPolicy;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class SearchTermPolicyTest extends TestCase
@@ -21,9 +22,7 @@ final class SearchTermPolicyTest extends TestCase
         self::assertSame('twenty_plus',$policy->resultBucket(21));
     }
 
-    /**
-     * @dataProvider sensitiveQueries
-     */
+    #[DataProvider('sensitiveQueries')]
     public function testSensitiveOrIdentifierLikeQueriesAreRedacted(string $query):void
     {
         $policy=new SearchTermPolicy();
