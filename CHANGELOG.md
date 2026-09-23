@@ -6,6 +6,21 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 15.02 — Forum Analytics Dashboard
+
+- Added a site-wide forum analytics dashboard with fixed 7/30/90-day windows.
+- Added authoritative active-account, registration, visible thread/post and current-presence metrics from their owning domain tables.
+- Added privacy-aware DAU/MAU, daily active-user, 7-day/30-day activity-retention and 24-hour/7-day five-minute peak metrics using only pseudonymous `actor_hash` analytics identities.
+- Added equal-length previous-period growth comparisons for registrations, threads and posts, including zero-base handling.
+- Added one daily trend row per UTC day, including zero-activity dates.
+- Added `user.active` recording to the presence heartbeat path using the same installation-specific analytics HMAC privacy key as the main web runtime.
+- Added backend-authorized GET-only `/admin/analytics` with `analytics.view_site`, strict `days=7|30|90`, private no-store responses and noindex/nofollow.
+- Added migration `20260921231000_forum_analytics_dashboard` with dashboard query indexes and conservative permission-template defaults: administrator allow, all standard non-admin templates deny.
+- Added model, source-of-truth/privacy, heartbeat, migration-registry and web-route regression coverage.
+- Added architecture documentation at `docs/architecture/forum-analytics-dashboard.md` and milestone notes at `docs/changelog/15.02-forum-analytics-dashboard.md`.
+- Final implementation/fix commit: `c79a77735c294c849d52176eed9b5afe648fae9c`; dashboard regression-test commit: `b79e7b3481b717911a21bfe6e81ac768146d57b9`.
+- GitHub Actions build run `35885522027`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35885741563`: success on MySQL 8.4 and MariaDB 10.11 for the final documented head.
 ### 15.01 — Analytics Event Model
 
 - Added a privacy-aware event registry spanning forum, user, content, support, bug, Marketplace, referral, giveaway and moderation domains.
