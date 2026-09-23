@@ -256,13 +256,23 @@ final readonly class DatabaseOperationsAnalyticsRepository
                 'total' => 0,
             ];
             $value = max(0, (int) ($row['metric'] ?? 0));
-            match ($metric) {
-                'active_reports' => $staff[$id]['active_reports'] = $value,
-                'active_support' => $staff[$id]['active_support'] = $value,
-                'active_bugs' => $staff[$id]['active_bugs'] = $value,
-                'discipline_actions' => $staff[$id]['discipline_actions'] = $value,
-                'audit_actions' => $staff[$id]['audit_actions'] = $value,
-            };
+            switch ($metric) {
+                case 'active_reports':
+                    $staff[$id]['active_reports'] = $value;
+                    break;
+                case 'active_support':
+                    $staff[$id]['active_support'] = $value;
+                    break;
+                case 'active_bugs':
+                    $staff[$id]['active_bugs'] = $value;
+                    break;
+                case 'discipline_actions':
+                    $staff[$id]['discipline_actions'] = $value;
+                    break;
+                case 'audit_actions':
+                    $staff[$id]['audit_actions'] = $value;
+                    break;
+            }
         }
     }
 
