@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.08 — Appearance Studio Guided Configuration
+
+- Added backend-authorized native PHP Appearance Studio at `/admin/appearance`.
+- Added Basic/Advanced progressive disclosure, safe typed presets, bounded static-metadata search and guided-state reset.
+- Added isolated desktop/tablet/mobile preset preview with reduced-motion support and no JavaScript dependency.
+- Added task-language setup assistant links into the real Theme and Layout Builder revision workflows.
+- Kept advanced entries permission-aware and non-actionable without `appearance.advanced`; live publish/rollback remains in existing audited services.
+- No migration is required because the guide is request-scoped and carries no durable appearance configuration.
+- Implementation commits: `2e87c786cb03ac2e225d77cd4198e96bbd9e7d33`, `7680e172a9f4fd29db83acf6b436d8dcb98c82e8`, `ec9b8feb80df681299a5130a39879f50b1b66425`.
+- GitHub Actions build run `35911852262` and DB smoke run `35911851992` both succeeded.
+
 ### 16.07 — Theme / Template / Language / Revision System
 
 - Added base/child themes, published-parent inheritance and immutable staging/published revision pointers.

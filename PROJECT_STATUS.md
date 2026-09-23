@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.43-dev
-LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.07
-CURRENT_STEP = 16.08
-LAST_COMMIT = 4a0f5601b257c9be15883d1e8a05d1be36cb3cc8
+CURRENT_VERSION = 0.0.7.44-dev
+LAST_COMPLETED_MAIN_STEP = 16
+LAST_COMPLETED_SUBSTEP = 16.08
+CURRENT_STEP = 17.01
+LAST_COMMIT = ec9b8feb80df681299a5130a39879f50b1b66425
 BLOCKERS = none
-NEXT_STEP = 16.08 - Basitlik katmanı ve guided configuration
+NEXT_STEP = 17.01 - ACP information architecture
 ```
 
 ## Current position
@@ -20,14 +20,33 @@ NEXT_STEP = 16.08 - Basitlik katmanı ve guided configuration
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.07`.
-- Current sub-step: `16.08 — Basitlik katmanı ve guided configuration`.
-- Remaining roadmap work after 16.07: **27 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`.
+- Current sub-step: `17.01 — ACP information architecture`.
+- Remaining roadmap work after 16.08: **26 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.08
+
+- Added a native PHP Appearance Studio entry surface at `/admin/appearance` with backend `appearance.manage` authorization.
+- Added Basic/Advanced progressive disclosure; switching view modes changes presentation only and never mutates configuration.
+- Added typed Dengeli/Kompakt/Vitrin presets with explicit change summaries and strictly allowlisted preview variables.
+- Added bounded static-metadata search that never queries stored theme sources, custom JavaScript, layout payloads, secrets or other protected values.
+- Added a one-click guided-state reset to the safe Basic/Dengeli/desktop/empty-search defaults.
+- Added isolated desktop/tablet/mobile live preview with responsive and reduced-motion behavior and no JavaScript runtime dependency.
+- Added task-language setup assistant links into the real revision-aware Theme and Layout Builder screens.
+- Advanced entries expose their required permission and stay non-actionable when `appearance.advanced` is absent; UI visibility is not used as authorization.
+- Persistent publish/rollback/CSRF/audit behavior remains owned by the existing 16.06/16.07 theme/layout services, avoiding a new bypass path.
+- No database migration was added because guide state is request-scoped and authoritative persistent appearance state remains in existing revision stores.
+- Feature commit: `2e87c786cb03ac2e225d77cd4198e96bbd9e7d33`; typing/test corrections: `7680e172a9f4fd29db83acf6b436d8dcb98c82e8`, `ec9b8feb80df681299a5130a39879f50b1b66425`.
+- GitHub Actions build run `35911852262`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35911851992`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.44-dev`.
+- Main step 16 is complete.
+- Next: `17.01 — ACP information architecture`.
 
 ## Completed in 16.07
 
