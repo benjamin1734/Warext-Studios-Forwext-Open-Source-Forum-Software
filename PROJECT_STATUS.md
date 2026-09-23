@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.31-dev
+CURRENT_VERSION = 0.0.7.32-dev
 LAST_COMPLETED_MAIN_STEP = 14
-LAST_COMPLETED_SUBSTEP = 15.01
-CURRENT_STEP = 15.02
-LAST_COMMIT = 8736f3478c306c9d221f7e50b1f13904d8374085
+LAST_COMPLETED_SUBSTEP = 15.02
+CURRENT_STEP = 15.03
+LAST_COMMIT = c79a77735c294c849d52176eed9b5afe648fae9c
 BLOCKERS = none
-NEXT_STEP = 15.02 - Forum analiz dashboardu
+NEXT_STEP = 15.03 - İçerik ve engagement analizleri
 ```
 
 ## Current position
@@ -21,14 +21,29 @@ NEXT_STEP = 15.02 - Forum analiz dashboardu
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01`.
-- Current sub-step: `15.02 — Forum analiz dashboardu`.
-- Remaining roadmap work after 15.01: **39 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.02`.
+- Current sub-step: `15.03 — İçerik ve engagement analizleri`.
+- Remaining roadmap work after 15.02: **38 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
+## Completed in 15.02
+
+- Added a permission-gated site analytics dashboard at `/admin/analytics` with 7/30/90-day windows.
+- Added DAU, MAU, active-account count, registrations, visible thread/post totals, current online, 24-hour/7-day peak and 7-day/30-day activity-retention metrics.
+- Registration/thread/post/current-presence metrics use authoritative domain tables; distinct-user activity metrics use only the 15.01 HMAC `actor_hash` event identity.
+- Added equal-length previous-window growth comparison and UTC daily trend rows, including zero-activity days.
+- Presence heartbeat now records best-effort `user.active` with the same domain-separated analytics privacy key as the main runtime.
+- Added backend `analytics.view_site` enforcement, strict range validation and private/no-store/noindex response policy.
+- Added migration `20260921231000_forum_analytics_dashboard` for query-support indexes and administrator-only default site-analytics permission.
+- Added dashboard model/privacy/web/migration regression coverage and `docs/architecture/forum-analytics-dashboard.md`.
+- Final implementation/fix commit: `c79a77735c294c849d52176eed9b5afe648fae9c`; regression-test commit: `b79e7b3481b717911a21bfe6e81ac768146d57b9`.
+- GitHub Actions build run `35885522027`: success; strict-types, PHP lint, PHPUnit on PHP 8.4 and PHP 8.5, production dependency baseline and cPanel packaging passed.
+- Database migration smoke run `35885741563`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.32-dev`.
+- Next: `15.03 — İçerik ve engagement analizleri`.
 ## Completed in 15.01
 
 - Added the shared privacy-aware analytics event registry covering forum, user, content, support, bug, Marketplace, referral, giveaway and moderation domains.
