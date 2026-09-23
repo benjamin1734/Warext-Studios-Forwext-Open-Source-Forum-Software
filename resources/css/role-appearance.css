@@ -1,6 +1,6 @@
 .role-appearance {
     --forwext-role-color: currentColor;
-    --forwext-role-banner-color: rgba(127, 127, 127, 0.18);
+    --forwext-role-banner-color: var(--forwext-component-role-banner-background, rgba(127, 127, 127, 0.18));
     --forwext-role-gradient-from: var(--forwext-role-color);
     --forwext-role-gradient-to: var(--forwext-role-color);
     --forwext-role-gradient-angle: 90deg;

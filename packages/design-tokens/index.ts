@@ -1,6 +1,8 @@
+import componentManifest from "../../resources/appearance/forwext-components-default.json";
 import manifest from "../../resources/design-tokens/forwext-default.json";
 
 export const forwextDesignTokenManifest = manifest;
+export const forwextComponentAppearanceManifest = componentManifest;
 
 export type ForwextDesignTokenManifest = typeof forwextDesignTokenManifest;
 export type ForwextDesignTokenEntry = ForwextDesignTokenManifest["tokens"][number];

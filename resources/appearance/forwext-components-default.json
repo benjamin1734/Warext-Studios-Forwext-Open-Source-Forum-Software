@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "target": "header",
+      "tokens": {
+        "background": "semantic.header.background",
+        "text": "semantic.text.primary",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "shadow": "shadow.none"
+      }
+    },
+    {
+      "target": "navigation",
+      "tokens": {
+        "background": "semantic.header.background",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "accent": "semantic.accent.primary",
+        "motion-duration": "motion.duration.fast"
+      }
+    },
+    {
+      "target": "footer",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default"
+      }
+    },
+    {
+      "target": "forum",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.card",
+        "spacing": "spacing.5"
+      }
+    },
+    {
+      "target": "thread",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.card"
+      }
+    },
+    {
+      "target": "post",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.card"
+      }
+    },
+    {
+      "target": "profile",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.panel"
+      }
+    },
+    {
+      "target": "button",
+      "tokens": {
+        "background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "contrast-text": "semantic.accent.contrast",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.control",
+        "accent": "semantic.accent.primary",
+        "motion-duration": "motion.duration.fast"
+      }
+    },
+    {
+      "target": "input",
+      "tokens": {
+        "background": "semantic.page.background",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.control"
+      }
+    },
+    {
+      "target": "modal",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.panel",
+        "shadow": "semantic.shadow.floating"
+      }
+    },
+    {
+      "target": "badge",
+      "tokens": {
+        "background": "semantic.badge.background",
+        "text": "semantic.accent.warm",
+        "border-color": "semantic.badge.border",
+        "border-width": "border.width.default",
+        "radius": "radius.pill"
+      }
+    },
+    {
+      "target": "role-banner",
+      "tokens": {
+        "background": "semantic.role-banner.background",
+        "text": "semantic.text.primary",
+        "radius": "radius.control",
+        "motion-duration": "motion.duration.normal"
+      }
+    },
+    {
+      "target": "editor",
+      "tokens": {
+        "background": "semantic.page.background",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default",
+        "radius": "radius.control"
+      }
+    },
+    {
+      "target": "table",
+      "tokens": {
+        "background": "semantic.surface.primary",
+        "secondary-background": "semantic.surface.secondary",
+        "text": "semantic.text.primary",
+        "muted-text": "semantic.text.muted",
+        "border-color": "semantic.border.default",
+        "border-width": "border.width.default"
+      }
+    },
+    {
+      "target": "alert",
+      "tokens": {
+        "background": "semantic.danger.background",
+        "text": "semantic.text.primary",
+        "border-color": "semantic.danger.border",
+        "border-width": "border.width.default",
+        "radius": "radius.control"
+      }
+    }
+  ]
+}
