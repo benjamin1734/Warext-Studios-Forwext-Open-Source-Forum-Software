@@ -37,7 +37,7 @@ final class BackgroundCssCompilerTest extends TestCase
         $css = (new BackgroundCssCompiler())->compile($registry, $tokens, new BasePath(''));
 
         self::assertStringContainsString('linear-gradient(135deg,', $css);
-        self::assertStringContainsString('opacity:.72', $css);
+        self::assertStringContainsString('opacity:0.72', $css);
         self::assertStringContainsString('scale(1.75) rotate(9deg)', $css);
         self::assertStringContainsString('background-blend-mode:overlay', $css);
         self::assertStringContainsString('@keyframes forwext-bg-', $css);
