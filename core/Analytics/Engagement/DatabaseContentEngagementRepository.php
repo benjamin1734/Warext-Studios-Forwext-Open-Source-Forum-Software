@@ -60,6 +60,7 @@ final readonly class DatabaseContentEngagementRepository
             $this->threads($params),
             $this->searchTerms($params),
             $now,
+            $this->followLeaders($params),
         );
     }
 
@@ -243,6 +244,23 @@ final readonly class DatabaseContentEngagementRepository
                 'reaction_rate'=>ContentEngagementSnapshot::rate($reactions,$views),
             ];
         },$rows);
+    }
+
+    /** @param array<string,string> $params @return list<array{id:string,username:string,follows:int}> */
+    private function followLeaders(array $params):array
+    {
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT u.user_id,u.username,COUNT(*) AS follows FROM forwext_user_follows f '
+            .'INNER JOIN forwext_users u ON u.user_id=f.followed_user_id '
+            .'WHERE f.created_at_utc>=:start AND f.created_at_utc<:end '
+            .'GROUP BY u.user_id,u.username ORDER BY follows DESC,u.username,u.user_id LIMIT 25',
+            $params,
+        ));
+        return array_map(static fn(array $row):array=>[
+            'id'=>(string)$row['user_id'],
+            'username'=>(string)$row['username'],
+            'follows'=>(int)$row['follows'],
+        ],$rows);
     }
 
     /** @param array<string,string> $params @return list<array{term:string,searches:int,zero_results:int,avg_results:float}> */
