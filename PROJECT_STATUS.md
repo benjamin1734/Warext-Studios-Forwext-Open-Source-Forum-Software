@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.42-dev
+CURRENT_VERSION = 0.0.7.43-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.06
-CURRENT_STEP = 16.07
-LAST_COMMIT = f8ede650e579531b0129d05c47ba586f49af1845
+LAST_COMPLETED_SUBSTEP = 16.07
+CURRENT_STEP = 16.08
+LAST_COMMIT = 4a0f5601b257c9be15883d1e8a05d1be36cb3cc8
 BLOCKERS = none
-NEXT_STEP = 16.07 - Theme/template/language/revision sistemi
+NEXT_STEP = 16.08 - Basitlik katmanı ve guided configuration
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 16.07 - Theme/template/language/revision sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.06`.
-- Current sub-step: `16.07 — Theme/template/language/revision sistemi`.
-- Remaining roadmap work after 16.06: **28 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.07`.
+- Current sub-step: `16.08 — Basitlik katmanı ve guided configuration`.
+- Remaining roadmap work after 16.07: **27 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.07
+
+- Added base/child theme definitions with bounded inheritance, cycle detection and published-parent resolution.
+- Added versioned template, locale phrase, custom CSS and custom JavaScript payloads with immutable staging/published revisions.
+- Added safe compile-to-PHP templates using escaped placeholders, no eval, revision-addressed protected cache files and SHA-256 manifest verification.
+- Added Turkish phrase fallback, revision diff, rollback and optimistic staging-to-publish flow.
+- Added `appearance.manage` authorization for management and `appearance.advanced` authorization for publish/rollback and non-empty custom CSS/JavaScript.
+- Added Administration audit events for theme stage, publish and rollback mutations.
+- Added same-origin revision-addressed published CSS/JavaScript assets with nosniff and immutable cache behavior.
+- Added `/admin/appearance/themes` with CSRF, noindex/no-store management, parent selection, staging history, diff, rollback and publish controls.
+- Added additive/idempotent MySQL/MariaDB theme/revision migration plus payload/compiler/cache/diff/admin/asset regression coverage.
+- Theme domain/compiler commit: `5e48de8ff6074f338941e5371a5284d15aa7325f`; admin/published-assets commit: `4a0f5601b257c9be15883d1e8a05d1be36cb3cc8`.
+- GitHub Actions build run `35907617317`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35907617153`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.43-dev`.
+- Next: `16.08 — Basitlik katmanı ve guided configuration`.
 
 ## Completed in 16.06
 

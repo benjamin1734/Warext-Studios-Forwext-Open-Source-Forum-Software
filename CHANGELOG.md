@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.07 — Theme / Template / Language / Revision System
+
+- Added base/child themes, published-parent inheritance and immutable staging/published revision pointers.
+- Added bounded template/phrase/custom CSS/custom JavaScript payloads with Turkish phrase fallback.
+- Added escaped compile-to-PHP templates with no eval, protected revision cache files and SHA-256 manifest verification.
+- Added revision diff/rollback plus `appearance.manage` / `appearance.advanced` backend authorization and Administration audit events.
+- Added `/admin/appearance/themes` with CSRF/noindex/no-store management, parent selection, staging history, diff, rollback and publish controls.
+- Added revision-addressed same-origin published CSS/JavaScript assets and MySQL/MariaDB migration coverage.
+- Implementation commits: `5e48de8ff6074f338941e5371a5284d15aa7325f`, `4a0f5601b257c9be15883d1e8a05d1be36cb3cc8`.
+- GitHub Actions build run `35907617317` and DB smoke run `35907617153` both succeeded.
+
 ### 16.06 — Drag-drop Page / Layout Builder
 
 - Added versioned layout documents, immutable draft revisions and separate draft/published pointers.
