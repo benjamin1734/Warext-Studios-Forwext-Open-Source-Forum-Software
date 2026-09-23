@@ -31,15 +31,15 @@ final class AdminNavigationRegistryTest extends TestCase
         $visible = $registry->visible($actor);
         $keys = array_map(static fn ($item): string => $item->key, $visible);
 
-        self::assertContains('admin.appearance', $keys, true);
-        self::assertContains('admin.themes', $keys, true);
-        self::assertContains('admin.layout', $keys, true);
-        self::assertNotContains('admin.payments', $keys, true);
+        self::assertTrue(in_array('admin.appearance', $keys, true));
+        self::assertTrue(in_array('admin.themes', $keys, true));
+        self::assertTrue(in_array('admin.layout', $keys, true));
+        self::assertFalse(in_array('admin.payments', $keys, true));
 
         $results = $registry->search($actor, 'tema');
         self::assertNotEmpty($results);
         foreach ($results as $result) {
-            self::assertContains($result->key, $keys, true);
+            self::assertTrue(in_array($result->key, $keys, true));
         }
     }
 
