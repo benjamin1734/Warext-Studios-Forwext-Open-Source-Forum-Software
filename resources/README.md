@@ -9,3 +9,5 @@ The canonical cross-frontend design-token manifest lives at `resources/design-to
 The default component appearance binding manifest lives at `resources/appearance/forwext-components-default.json`; it maps fixed component properties to validated design-token keys rather than accepting arbitrary CSS.
 
 The background composition manifest at `resources/appearance/forwext-backgrounds-default.json` defines safe solid/gradient/image/pattern behavior and fixed site/header/category/profile scopes; image assets are restricted to same-origin raster paths under `assets/appearance/`.
+
+The responsive contract at `resources/appearance/forwext-responsive-default.json` defines validated mobile/tablet/desktop breakpoints and fixed-target visibility/font/spacing/layout overrides for both official frontends.

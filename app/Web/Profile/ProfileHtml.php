@@ -12,6 +12,8 @@ use Forwext\Core\Ui\Appearance\ComponentAppearanceCssCompiler;
 use Forwext\Core\Ui\Appearance\Background\BackgroundCssCompiler;
 use Forwext\Core\Ui\Appearance\Background\BackgroundRegistry;
 use Forwext\Core\Ui\Appearance\ComponentAppearanceRegistry;
+use Forwext\Core\Ui\Responsive\ResponsiveCssCompiler;
+use Forwext\Core\Ui\Responsive\ResponsiveRegistry;
 use Forwext\Core\Ui\Navigation\NavigationRegistry;
 
 final class ProfileHtml
@@ -44,6 +46,7 @@ final class ProfileHtml
         $presenceEndpoint = self::escape($basePath->prepend('/account/presence/heartbeat'));
         $presenceSettingsScript = self::escape($basePath->prepend('/assets/presence-settings.js'));
         $bugReportScript = self::escape($basePath->prepend('/assets/bug-report-link.js'));
+        $mobileNavScript = self::escape($basePath->prepend('/assets/mobile-nav.js'));
         $bugReportLink = $authenticated
             ? '<a class="bug-report-fab" data-bug-report-link href="' . self::escape($basePath->prepend('/bugs/report'))
                 . '" aria-label="Hata bildir" title="Hata bildir">'
@@ -52,7 +55,7 @@ final class ProfileHtml
                 . '</svg></a>'
             : '';
 
-        return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
+        return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="forwext-presence-endpoint" content="' . $presenceEndpoint . '">'
             . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::appearanceCss($basePath)
@@ -97,15 +100,19 @@ final class ProfileHtml
             . '.bug-report-fab{position:fixed;right:20px;bottom:20px;z-index:50;width:46px;height:46px;display:grid;place-items:center;border:var(--forwext-component-button-border-width) solid var(--forwext-component-button-border-color);border-radius:50%;background:var(--forwext-component-button-background);color:var(--muted);text-decoration:none;box-shadow:var(--forwext-semantic-shadow-floating)}.bug-report-fab:hover,.bug-report-fab:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-fab svg{width:22px;height:22px;fill:currentColor}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.portfolio-media{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-            . '</style></head><body data-forwext-background-scope="site"><header class="top" data-forwext-background-scope="header"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
-            . '<nav class="nav" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
-            . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
+            . '</style></head><body data-forwext-background-scope="site">'
+            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>'
+            . '<header class="top" data-forwext-background-scope="header"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
+            . '<button class="nav-toggle" type="button" data-forwext-nav-toggle aria-expanded="false" aria-controls="forwext-primary-navigation"><span aria-hidden="true">☰</span><span>Menü</span></button>'
+            . '<nav id="forwext-primary-navigation" class="nav" data-forwext-primary-navigation data-mobile-open="0" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
+            . '<main id="main-content" class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
             . '<script src="' . $notificationRealtimeScript . '" defer></script>'
             . '<script src="' . $presenceScript . '" defer></script>'
             . '<script src="' . $presenceSettingsScript . '" defer></script>'
-            . '<script src="' . $bugReportScript . '" defer></script></body></html>';
+            . '<script src="' . $bugReportScript . '" defer></script>'
+            . '<script src="' . $mobileNavScript . '" defer></script></body></html>';
     }
 
     private static function appearanceCss(BasePath $basePath): string
@@ -124,7 +131,8 @@ final class ProfileHtml
                     BackgroundRegistry::coreDefaults($catalog),
                     $catalog,
                     $basePath,
-                );
+                )
+                . (new ResponsiveCssCompiler())->compile(ResponsiveRegistry::coreDefaults());
         }
 
         return $cache[$cacheKey];
