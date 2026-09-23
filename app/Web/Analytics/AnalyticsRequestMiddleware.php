@@ -65,6 +65,19 @@ final readonly class AnalyticsRequestMiddleware implements MiddlewareInterface
             ));
         }
 
+        $threadId=$this->threadId($request);
+        if($threadId!==null&&$forumId!==null){
+            $this->analytics->recordBestEffort(new AnalyticsEvent(
+                'content.thread.view',
+                actorUserId:$viewer,
+                sessionId:$session,
+                forumId:$forumId,
+                dimensions:['route'=>$route,'device'=>$device],
+                contentType:'thread',
+                contentId:$threadId,
+            ));
+        }
+
         return $response;
     }
 
@@ -73,6 +86,14 @@ final readonly class AnalyticsRequestMiddleware implements MiddlewareInterface
         if($request->method()->value!=='GET'||$response->status()!==200)return false;
         $type=strtolower($response->headers()->first('content-type')??'');
         return str_starts_with($type,'text/html');
+    }
+
+    private function threadId(Request $request):?EntityId
+    {
+        $params=$request->attribute(Router::ATTRIBUTE_ROUTE_PARAMETERS,[]);
+        if(!is_array($params))return null;
+        $raw=$params['threadId']??null;
+        return is_string($raw)&&$raw!==''?EntityId::fromString($raw):null;
     }
 
     private function forumId(Request $request):?EntityId
