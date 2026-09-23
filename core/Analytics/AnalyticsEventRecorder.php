@@ -32,6 +32,9 @@ final readonly class AnalyticsEventRecorder
         if(!$definition->collectForum&&$event->forumId!==null){
             throw new AnalyticsPrivacyException('This analytics event does not permit forum identity collection.');
         }
+        if(!$definition->collectContent&&$event->contentId!==null){
+            throw new AnalyticsPrivacyException('This analytics event does not permit structural content collection.');
+        }
 
         $dimensions=[];
         foreach($event->dimensions as $key=>$value){
@@ -52,6 +55,8 @@ final readonly class AnalyticsEventRecorder
             $event->forumId,
             $dimensions,
             $event->occurredAt,
+            $event->contentType,
+            $event->contentId,
         );
 
         $this->repository->append($stored);
