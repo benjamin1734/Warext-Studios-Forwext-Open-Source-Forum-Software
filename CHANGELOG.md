@@ -6,7 +6,7 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
-### 15.04 — Moderation / Support / Bug Analytics (validation pending)
+### 15.04 — Moderation / Support / Bug Analytics
 
 - Added backend-authorized `/admin/analytics/operations` with fixed 7/30/90-day UTC windows.
 - Added moderation report volume, grouped case terminal counts/duration and warning/restriction/suspension/ban metrics.
@@ -16,16 +16,19 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Kept the dashboard metadata-only: report/ticket/bug free text, discipline reason text and audit/history JSON payloads are not queried.
 - Added additive migration `20260923190000_operations_analytics_indexes`, migration-registry coverage, dashboard wiring/privacy tests and architecture documentation.
 - Reused `analytics.view_site`, private/no-store/noindex response policy and the native PHP/cPanel-first runtime.
-- GitHub Actions validation is still pending/queued; this entry does not mark 15.04 completed yet.
+- Final implementation/fix head: `2dfab4ed875a9a3b4f04432615490a9a379ac1f8`.
+- GitHub Actions build run `35889912569` succeeded across strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel full-package build.
+- Database migration smoke run `35889912544` succeeded on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
 
-### 15.03 — Content and Engagement Analytics (validation pending)
+### 15.03 — Content and Engagement Analytics
 
 - Added forum/category/thread performance aggregation, reactions, bookmarks, watches, follows and privacy-aware search analytics.
 - Added structural `content.thread.view` analytics references, recursive category aggregation and safe search-term daily aggregation.
 - Added `/admin/analytics/content` with backend `analytics.view_site` authorization and private/no-store/noindex responses.
 - Added migration `20260921232000_content_engagement_analytics`, structural/privacy regression coverage and architecture documentation.
 - Follow performance aggregation and related PHPUnit compatibility fixes are present on current `main`.
-- GitHub Actions validation is still pending/queued; 15.03 remains the last unclosed roadmap gate.
+- Final 15.03-labeled correction commit: `70ee749345c444bf996c9ad16256261a20b21679`.
+- Cumulative GitHub Actions build run `35889912569` and DB smoke run `35889912544` both succeeded with all 15.03 changes present.
 
 ### 15.02 — Forum Analytics Dashboard
 
