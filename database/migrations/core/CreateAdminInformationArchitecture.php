@@ -15,7 +15,7 @@ final readonly class CreateAdminInformationArchitecture implements Migration
 {
     public function id(): MigrationId
     {
-        return MigrationId::fromString('20260923195500_admin_information_architecture');
+        return MigrationId::fromString('20260923220000_admin_information_architecture');
     }
 
     public function owner(): MigrationOwner
