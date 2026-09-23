@@ -16,6 +16,7 @@ final class CommerceAnalyticsHtml
         $overview = self::e($basePath->prepend('/admin/analytics'));
         $content = self::e($basePath->prepend('/admin/analytics/content'));
         $operations = self::e($basePath->prepend('/admin/analytics/operations'));
+        $reports = self::e($basePath->prepend('/admin/analytics/reports'));
 
         $body = '<section class="card"><h1 style="margin-top:0">Marketplace, Gelir, Referral ve Giveaway Analizleri</h1>'
             . '<p class="muted">Marketplace funnel, para akışı, external yönlendirme, referral conversion ve giveaway participation. '
@@ -23,6 +24,7 @@ final class CommerceAnalyticsHtml
             . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
             . '<a href="'.$content.'">İçerik & engagement</a>'
             . '<a href="'.$operations.'">Moderasyon & operasyon</a>';
+            . '<a href="'.$reports.'">Rapor builder</a>';
         foreach ([7, 30, 90] as $days) {
             $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
             $body .= '<a'.$style.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';

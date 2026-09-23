@@ -16,6 +16,7 @@ final class OperationsAnalyticsHtml
         $overview = self::e($basePath->prepend('/admin/analytics'));
         $content = self::e($basePath->prepend('/admin/analytics/content'));
         $commerce = self::e($basePath->prepend('/admin/analytics/commerce'));
+        $reports = self::e($basePath->prepend('/admin/analytics/reports'));
 
         $body = '<section class="card"><h1 style="margin-top:0">Moderasyon, Destek ve Hata Analizleri</h1>'
             . '<p class="muted">Operasyon hacmi, çözüm süreleri, SLA, disiplin, hata kategorileri ve personel iş yükü. '
@@ -23,6 +24,7 @@ final class OperationsAnalyticsHtml
             . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
             . '<a href="'.$content.'">İçerik & engagement</a>';
         $body .= '<a href="'.$commerce.'">Marketplace & gelir</a>';
+        $body .= '<a href="'.$reports.'">Rapor builder</a>';
         foreach ([7, 30, 90] as $days) {
             $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
             $body .= '<a'.$style.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';

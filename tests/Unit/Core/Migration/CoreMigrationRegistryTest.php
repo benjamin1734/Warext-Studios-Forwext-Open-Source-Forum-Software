@@ -44,6 +44,7 @@ use Forwext\Database\Migrations\Core\CreateForumAnalyticsDashboard;
 use Forwext\Database\Migrations\Core\CreateContentEngagementAnalytics;
 use Forwext\Database\Migrations\Core\CreateOperationsAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateCommerceAnalyticsIndexes;
+use Forwext\Database\Migrations\Core\CreateAnalyticsReportBuilder;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -153,5 +154,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateContentEngagementAnalytics::class, $classes);
         self::assertContains(CreateOperationsAnalyticsIndexes::class, $classes);
         self::assertContains(CreateCommerceAnalyticsIndexes::class, $classes);
+        self::assertContains(CreateAnalyticsReportBuilder::class, $classes);
     }
 }

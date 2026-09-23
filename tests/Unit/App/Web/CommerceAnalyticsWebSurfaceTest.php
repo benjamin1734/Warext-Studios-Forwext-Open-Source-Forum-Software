@@ -17,7 +17,7 @@ final class CommerceAnalyticsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'analytics.commerce'", $factory);
         self::assertStringContainsString("'/admin/analytics/commerce'", $factory);
-        self::assertStringContainsString("PermissionKey::fromString('analytics.view_site')", $service);
+        self::assertStringContainsString("$this->access->require($actor, 'analytics.view_commerce')", $service);
         self::assertStringContainsString("['7', '30', '90']", $handler);
         self::assertStringContainsString("'private, no-store'", $handler);
         self::assertStringContainsString("'noindex,nofollow'", $handler);

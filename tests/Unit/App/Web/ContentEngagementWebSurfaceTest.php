@@ -20,7 +20,7 @@ final class ContentEngagementWebSurfaceTest extends TestCase
         self::assertStringContainsString("'/admin/analytics/content'",$factory);
         self::assertStringContainsString('new SearchAnalyticsService(',$factory);
         self::assertStringContainsString("'forwext.analytics.search-term.v1'",$factory);
-        self::assertStringContainsString("PermissionKey::fromString('analytics.view_site')",$service);
+        self::assertStringContainsString("$this->access->require($actor, 'analytics.view_content')",$service);
         self::assertStringContainsString("['7','30','90']",$handler);
         self::assertStringContainsString("'private, no-store'",$handler);
         self::assertStringContainsString('recordBestEffort(',$search);

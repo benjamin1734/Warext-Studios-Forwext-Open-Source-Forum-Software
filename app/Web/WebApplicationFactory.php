@@ -13,6 +13,8 @@ use Forwext\App\Web\Analytics\ForumAnalyticsHandler;
 use Forwext\App\Web\Analytics\ContentEngagementHandler;
 use Forwext\App\Web\Analytics\OperationsAnalyticsHandler;
 use Forwext\App\Web\Analytics\CommerceAnalyticsHandler;
+use Forwext\App\Web\Analytics\AnalyticsReportBuilderHandler;
+use Forwext\App\Web\Analytics\AnalyticsReportExportHandler;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -134,6 +136,9 @@ use Forwext\Core\Analytics\Operations\DatabaseOperationsAnalyticsRepository;
 use Forwext\Core\Analytics\Operations\OperationsAnalyticsService;
 use Forwext\Core\Analytics\Commerce\CommerceAnalyticsService;
 use Forwext\Core\Analytics\Commerce\DatabaseCommerceAnalyticsRepository;
+use Forwext\Core\Analytics\Access\AnalyticsAccessService;
+use Forwext\Core\Analytics\Report\AnalyticsReportService;
+use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -401,9 +406,11 @@ final readonly class WebApplicationFactory
             new DatabaseAnalyticsRepository($database),
             new AnalyticsPrivacyHasher($this->analyticsPrivacyKey($config)),
         );
+        $analyticsAccess = new AnalyticsAccessService($authorizer);
+        $analyticsAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $forumAnalytics = new ForumAnalyticsService(
             new DatabaseForumAnalyticsRepository($database),
-            $authorizer,
+            $analyticsAccess,
         );
         $searchAnalytics = new SearchAnalyticsService(
             $analytics,
@@ -413,15 +420,20 @@ final readonly class WebApplicationFactory
         );
         $contentEngagement = new ContentEngagementService(
             new DatabaseContentEngagementRepository($database),
-            $authorizer,
+            $analyticsAccess,
         );
         $operationsAnalytics = new OperationsAnalyticsService(
             new DatabaseOperationsAnalyticsRepository($database),
-            $authorizer,
+            $analyticsAccess,
         );
         $commerceAnalytics = new CommerceAnalyticsService(
             new DatabaseCommerceAnalyticsRepository($database),
-            $authorizer,
+            $analyticsAccess,
+        );
+        $analyticsReports = new AnalyticsReportService(
+            new DatabaseAnalyticsReportRepository($database),
+            $analyticsAccess,
+            $analyticsAudit,
         );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
@@ -841,6 +853,7 @@ final readonly class WebApplicationFactory
         $paymentCsrf = $this->paymentCsrfMiddleware($config);
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
+        $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
@@ -1592,6 +1605,19 @@ final readonly class WebApplicationFactory
             new CommerceAnalyticsHandler($commerceAnalytics, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
+            'analytics.reports',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/analytics/reports'),
+            new AnalyticsReportBuilderHandler($analyticsReports, $viewerResolver, $basePath),
+            [$analyticsReportCsrf],
+        ));
+        $routes->add(new Route(
+            'analytics.reports.export',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/analytics/reports/export'),
+            new AnalyticsReportExportHandler($analyticsReports, $viewerResolver),
+        ));
+        $routes->add(new Route(
             'advertising.click',
             [HttpMethod::Get],
             new PathTemplate('/ads/click/{campaignId}', ['campaignId'=>'[0-9a-f]{32}']),
@@ -1820,6 +1846,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function analyticsReportCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'analytics-report', 'forwext.csrf.analytics-report.v1');
     }
 
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
