@@ -6,6 +6,27 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 15.04 — Moderation / Support / Bug Analytics (validation pending)
+
+- Added backend-authorized `/admin/analytics/operations` with fixed 7/30/90-day UTC windows.
+- Added moderation report volume, grouped case terminal counts/duration and warning/restriction/suspension/ban metrics.
+- Added support ticket volume, first-response/resolution timing and cohort-based SLA breach metrics.
+- Added bug lifecycle/finalization metrics and category breakdowns.
+- Added staff workload aggregation from current report/support/bug assignments plus selected-window discipline and central audit action metadata.
+- Kept the dashboard metadata-only: report/ticket/bug free text, discipline reason text and audit/history JSON payloads are not queried.
+- Added additive migration `20260923190000_operations_analytics_indexes`, migration-registry coverage, dashboard wiring/privacy tests and architecture documentation.
+- Reused `analytics.view_site`, private/no-store/noindex response policy and the native PHP/cPanel-first runtime.
+- GitHub Actions validation is still pending/queued; this entry does not mark 15.04 completed yet.
+
+### 15.03 — Content and Engagement Analytics (validation pending)
+
+- Added forum/category/thread performance aggregation, reactions, bookmarks, watches, follows and privacy-aware search analytics.
+- Added structural `content.thread.view` analytics references, recursive category aggregation and safe search-term daily aggregation.
+- Added `/admin/analytics/content` with backend `analytics.view_site` authorization and private/no-store/noindex responses.
+- Added migration `20260921232000_content_engagement_analytics`, structural/privacy regression coverage and architecture documentation.
+- Follow performance aggregation and related PHPUnit compatibility fixes are present on current `main`.
+- GitHub Actions validation is still pending/queued; 15.03 remains the last unclosed roadmap gate.
+
 ### 15.02 — Forum Analytics Dashboard
 
 - Added a site-wide forum analytics dashboard with fixed 7/30/90-day windows.
