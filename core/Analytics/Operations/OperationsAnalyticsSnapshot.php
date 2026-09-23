@@ -83,15 +83,28 @@ final readonly class OperationsAnalyticsSnapshot
         }
 
         foreach ($this->bugCategories as $row) {
-            foreach (['total', 'active', 'resolved', 'rejected', 'duplicate'] as $key) {
-                if (($row[$key] ?? -1) < 0) {
+            foreach ([
+                $row['total'],
+                $row['active'],
+                $row['resolved'],
+                $row['rejected'],
+                $row['duplicate'],
+            ] as $value) {
+                if ($value < 0) {
                     throw new InvalidArgumentException('Bug category analytics count cannot be negative.');
                 }
             }
         }
         foreach ($this->staffWorkload as $row) {
-            foreach (['active_reports', 'active_support', 'active_bugs', 'discipline_actions', 'audit_actions', 'total'] as $key) {
-                if (($row[$key] ?? -1) < 0) {
+            foreach ([
+                $row['active_reports'],
+                $row['active_support'],
+                $row['active_bugs'],
+                $row['discipline_actions'],
+                $row['audit_actions'],
+                $row['total'],
+            ] as $value) {
+                if ($value < 0) {
                     throw new InvalidArgumentException('Staff workload analytics count cannot be negative.');
                 }
             }
