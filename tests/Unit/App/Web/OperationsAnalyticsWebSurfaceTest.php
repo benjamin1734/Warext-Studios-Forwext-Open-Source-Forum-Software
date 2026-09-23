@@ -17,7 +17,7 @@ final class OperationsAnalyticsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'analytics.operations'", $factory);
         self::assertStringContainsString("'/admin/analytics/operations'", $factory);
-        self::assertStringContainsString("$this->access->require($actor, 'analytics.view_operations')", $service);
+        self::assertStringContainsString('$this->access->require($actor, \'analytics.view_operations\')', $service);
         self::assertStringContainsString("['7', '30', '90']", $handler);
         self::assertStringContainsString("'private, no-store'", $handler);
         self::assertStringContainsString("'noindex,nofollow'", $handler);

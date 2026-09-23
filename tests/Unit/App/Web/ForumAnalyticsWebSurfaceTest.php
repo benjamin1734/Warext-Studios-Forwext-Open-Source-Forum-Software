@@ -17,7 +17,7 @@ final class ForumAnalyticsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'analytics.dashboard'", $factory);
         self::assertStringContainsString("'/admin/analytics'", $factory);
-        self::assertStringContainsString("$this->access->require($actor, 'analytics.view_forum')", $service);
+        self::assertStringContainsString('$this->access->require($actor, \'analytics.view_forum\')', $service);
         self::assertStringContainsString("['7','30','90']", $handler);
         self::assertStringContainsString("'private, no-store'", $handler);
         self::assertStringContainsString("'noindex,nofollow'", $handler);
