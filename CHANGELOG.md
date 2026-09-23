@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.04 — Responsive Mobile / Desktop Control
+
+- Added validated non-overlapping mobile/tablet/desktop breakpoint definitions.
+- Added typed visibility/font/spacing/layout overrides on fixed first-party responsive targets.
+- Added deterministic responsive CSS compilation without raw selector or media-query injection.
+- Added progressively enhanced mobile navigation with accessible state, Escape close and focus restoration.
+- Added skip-link, visible focus treatment, reduced-motion behavior and RTL preparation.
+- Shared the responsive manifest with the optional TypeScript/React frontend and kept the native PHP frontend first-class.
+- Added registry/compiler/native-shell/mobile-nav regression coverage.
+- Implementation commit: `4a258a546c8ad8b00de1d0cd3eb6ccbbe6bb6869`.
+- GitHub Actions build run `35901991674` and DB smoke run `35901991880` both succeeded.
+
 ### 16.03 — Background / Pattern / Gradient / Asset System
 
 - Added typed solid, gradient, safe raster image and built-in pattern backgrounds.

@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.39-dev
+CURRENT_VERSION = 0.0.7.40-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.03
-CURRENT_STEP = 16.04
-LAST_COMMIT = 5850fc03c1e412a0ad119dde96be6aacb2ee72e6
+LAST_COMPLETED_SUBSTEP = 16.04
+CURRENT_STEP = 16.05
+LAST_COMMIT = 4a258a546c8ad8b00de1d0cd3eb6ccbbe6bb6869
 BLOCKERS = none
-NEXT_STEP = 16.04 - Responsive mobile/desktop kontrol
+NEXT_STEP = 16.05 - Layout region/UI slot/widget sistemi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 16.04 - Responsive mobile/desktop kontrol
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.03`.
-- Current sub-step: `16.04 — Responsive mobile/desktop kontrol`.
-- Remaining roadmap work after 16.03: **31 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.04`.
+- Current sub-step: `16.05 — Layout region/UI slot/widget sistemi`.
+- Remaining roadmap work after 16.04: **30 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.04
+
+- Added validated, non-overlapping mobile/tablet/desktop breakpoint definitions.
+- Added typed responsive targets with backend-validated visibility, font-scale, spacing-scale and auto/stack/row/grid layout overrides.
+- Added deterministic fixed-selector responsive CSS compilation; configuration cannot inject arbitrary selectors, media queries or raw CSS.
+- Added progressive mobile navigation: without JavaScript navigation remains usable; after enhancement it collapses on mobile, synchronizes `aria-expanded`, closes on Escape/link activation and restores focus.
+- Added keyboard skip navigation, a stable main-content landmark and visible `:focus-visible` treatment.
+- Added global reduced-motion behavior while retaining the feature-specific motion protections already present in appearance/background systems.
+- Added explicit LTR document direction plus logical positioning and RTL navigation preparation.
+- Shared the responsive manifest with the optional TypeScript/React frontend without adding Node/npm to the normal cPanel runtime.
+- Added registry/compiler/native-shell/mobile-nav regression coverage.
+- No database migration or new permission/audit event is required because the step still ships immutable presentation configuration only.
+- Implementation commit: `4a258a546c8ad8b00de1d0cd3eb6ccbbe6bb6869`.
+- GitHub Actions build run `35901991674`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35901991880`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.40-dev`.
+- Next: `16.05 — Layout region/UI slot/widget sistemi`.
 
 ## Completed in 16.03
 
