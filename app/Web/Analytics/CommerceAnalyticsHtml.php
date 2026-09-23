@@ -23,7 +23,7 @@ final class CommerceAnalyticsHtml
             . 'Tüm dönemler UTC tabanlıdır.</p>'
             . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
             . '<a href="'.$content.'">İçerik & engagement</a>'
-            . '<a href="'.$operations.'">Moderasyon & operasyon</a>';
+            . '<a href="'.$operations.'">Moderasyon & operasyon</a>'
             . '<a href="'.$reports.'">Rapor builder</a>';
         foreach ([7, 30, 90] as $days) {
             $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
