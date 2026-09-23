@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
 use Forwext\App\Web\Analytics\ForumAnalyticsHandler;
+use Forwext\App\Web\Analytics\ContentEngagementHandler;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -125,6 +126,8 @@ use Forwext\Core\Analytics\Dashboard\ForumAnalyticsService;
 use Forwext\Core\Analytics\Engagement\DatabaseSearchTermAnalyticsRepository;
 use Forwext\Core\Analytics\Engagement\SearchAnalyticsService;
 use Forwext\Core\Analytics\Engagement\SearchTermPolicy;
+use Forwext\Core\Analytics\Engagement\ContentEngagementService;
+use Forwext\Core\Analytics\Engagement\DatabaseContentEngagementRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Auth\AuthenticationFingerprint;
@@ -401,6 +404,10 @@ final readonly class WebApplicationFactory
             new DatabaseSearchTermAnalyticsRepository($database),
             new SearchTermPolicy(),
             $this->searchAnalyticsKey($config),
+        );
+        $contentEngagement = new ContentEngagementService(
+            new DatabaseContentEngagementRepository($database),
+            $authorizer,
         );
         $advertisingRepository = new DatabaseAdvertisingRepository($database);
         $advertising = new AdvertisingService(
@@ -1551,6 +1558,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/admin/analytics'),
             new ForumAnalyticsHandler($forumAnalytics, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'analytics.content',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/analytics/content'),
+            new ContentEngagementHandler($contentEngagement, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'advertising.click',
