@@ -24,6 +24,8 @@ final readonly class AnalyticsStoredEvent
         public ?EntityId $forumId,
         public array $dimensions,
         DateTimeImmutable $occurredAt,
+        public ?string $contentType=null,
+        public ?EntityId $contentId=null,
     ){
         if(preg_match('/^[a-f0-9]{32}$/D',$this->eventId->value())!==1){
             throw new InvalidArgumentException('Analytics stored event id is invalid.');
@@ -35,6 +37,12 @@ final readonly class AnalyticsStoredEvent
         }
         if(($this->subjectType===null)!==($this->subjectHash===null)){
             throw new InvalidArgumentException('Analytics stored subject is incomplete.');
+        }
+        if(($this->contentType===null)!==($this->contentId===null)){
+            throw new InvalidArgumentException('Analytics stored content reference is incomplete.');
+        }
+        if($this->contentType!==null&&preg_match('/^[a-z][a-z0-9_.-]{1,31}$/D',$this->contentType)!==1){
+            throw new InvalidArgumentException('Analytics stored content type is invalid.');
         }
         if($this->subjectType!==null&&preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D',$this->subjectType)!==1){
             throw new InvalidArgumentException('Analytics stored subject type is invalid.');
@@ -50,6 +58,9 @@ final readonly class AnalyticsStoredEvent
         }
         if(!$this->definition->collectForum&&$this->forumId!==null){
             throw new InvalidArgumentException('Analytics stored event may not collect forum identity.');
+        }
+        if(!$this->definition->collectContent&&$this->contentId!==null){
+            throw new InvalidArgumentException('Analytics stored event may not collect content identity.');
         }
         foreach($this->dimensions as $key=>$_value){
             if(!is_string($key)||!$this->definition->allowsDimension($key)){
