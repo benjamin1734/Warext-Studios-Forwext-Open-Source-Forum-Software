@@ -63,8 +63,8 @@ final class OperationsAnalyticsHtml
         $body .= '<section class="card" style="margin-top:16px"><h2>Veri sınırları</h2>'
             . '<p class="muted">Bu ekran serbest metin ticket/report/bug içeriğini veya audit snapshotlarını okumaz; '
             . 'yalnız durum, zaman, kategori, assignment ve eylem metadatasını toplulaştırır. Personel tablosundaki aktif assignment '
-            . 'kolonları anlık backlog, action kolonları ise seçili dönem hacmidir. Toplam yalnız iş yükünü sıralamak için bu görünür '
-            . 'ham sayaçların toplamıdır; performans/kalite puanı değildir.</p>'
+            . 'kolonları anlık backlog, action kolonları ise seçili dönem hacmidir. Toplam; aktif assignment kolonları ile audit '
+            . 'action hacmini birleştirir. Disiplin eylemi audit hacminin ayrıca gösterilen alt kırılımıdır; performans/kalite puanı değildir.</p>'
             . '<p class="muted">Report çözüm süresi, report group şemasında ayrı resolved_at alanı bulunmadığı için terminal durumun '
             . 'updated_at zamanını kullanır. Destek ve bug süreleri kendi authoritative response/resolved/finalized zaman alanlarından hesaplanır.</p>'
             . '<p class="muted">Üretildi: '.self::e($snapshot->generatedAt->format('Y-m-d H:i:s')).' UTC</p></section>';
