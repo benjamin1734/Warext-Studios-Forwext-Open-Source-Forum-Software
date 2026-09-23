@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.38-dev
+CURRENT_VERSION = 0.0.7.39-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.02
-CURRENT_STEP = 16.03
-LAST_COMMIT = 4f9d3bd2918a9b66b1c4cabab5b9f27979950d38
+LAST_COMPLETED_SUBSTEP = 16.03
+CURRENT_STEP = 16.04
+LAST_COMMIT = 5850fc03c1e412a0ad119dde96be6aacb2ee72e6
 BLOCKERS = none
-NEXT_STEP = 16.03 - Background/pattern/gradient/asset sistemi
+NEXT_STEP = 16.04 - Responsive mobile/desktop kontrol
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 16.03 - Background/pattern/gradient/asset sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.02`.
-- Current sub-step: `16.03 — Background/pattern/gradient/asset sistemi`.
-- Remaining roadmap work after 16.02: **32 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.03`.
+- Current sub-step: `16.04 — Responsive mobile/desktop kontrol`.
+- Remaining roadmap work after 16.03: **31 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.03
+
+- Added typed solid, gradient, safe raster image and built-in pattern background modes.
+- Added bounded opacity, scale, rotation and blend controls plus animated gradients with deterministic keyframes.
+- Added site, header, category and profile scopes; category/profile scopes require opaque 128-bit entity ids and global scopes reject entity ids.
+- Added same-origin raster appearance asset paths under `assets/appearance/` with traversal, external URL, query/fragment, control-character and SVG rejection.
+- Added base-path-aware pseudo-layer CSS compilation so visual opacity/transform never applies to text or controls.
+- Added reduced-motion fallback for animated gradients and preserved the fixed bug-report control by limiting site foreground stacking to header/main.
+- Added native site/header scope markers and escaped profile scope ids; category selector support is ready for the owning forum renderer without placeholder UI.
+- Exposed the shared background manifest to the optional TypeScript/React package.
+- Added domain, registry, compiler, security and native web-surface regression coverage.
+- No database migration or new permission/audit event is required because 16.03 still exposes immutable shipped appearance definitions only.
+- Implementation commit: `bcb62f9d6f1e8f6f0f4ddf1564ddb4b51975c496`; regression assertion correction: `5850fc03c1e412a0ad119dde96be6aacb2ee72e6`.
+- GitHub Actions build run `35901010331`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35901010425`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.39-dev`.
+- Next: `16.04 — Responsive mobile/desktop kontrol`.
 
 ## Completed in 16.02
 

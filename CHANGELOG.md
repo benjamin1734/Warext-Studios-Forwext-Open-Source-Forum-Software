@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.03 — Background / Pattern / Gradient / Asset System
+
+- Added typed solid, gradient, safe raster image and built-in pattern backgrounds.
+- Added bounded opacity, scale, rotation and blend controls plus animated gradients with reduced-motion fallback.
+- Added site/header/category/profile scopes with opaque entity-id validation for category/profile targeting.
+- Added safe same-origin raster asset references under `assets/appearance/`, rejecting traversal, external origins, SVG and query/fragment injection.
+- Added base-path-aware isolated pseudo-layer compilation and native site/header/profile scope integration.
+- Exposed the same background manifest to the optional TypeScript/React package.
+- Added domain, registry, compiler, asset-policy and web-surface regression coverage.
+- Implementation head: `5850fc03c1e412a0ad119dde96be6aacb2ee72e6`.
+- GitHub Actions build run `35901010331` and DB smoke run `35901010425` both succeeded.
+
 ### 16.02 — Component Appearance Settings
 
 - Added typed appearance targets covering header/navigation/footer/forum/thread/post/profile/buttons/inputs/modals/badges/role banners/editor/tables/alerts.
