@@ -244,7 +244,11 @@ jobs:
             --exclude 'phpstan.neon.dist' \
             --exclude 'psalm.xml' \
             --exclude 'phpcs.xml.dist' \
-            --exclude 'PROJECT_STATUS.md'
+            --exclude 'PROJECT_STATUS.md' \
+            --exclude 'docs/' \
+            --exclude 'CHANGELOG.md' \
+            --exclude 'README.md' \
+            --exclude 'README.*'
 
           GUARD='Options -Indexes
           <IfModule mod_authz_core.c>
