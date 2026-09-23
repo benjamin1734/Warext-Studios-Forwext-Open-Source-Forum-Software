@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.36-dev
+CURRENT_VERSION = 0.0.7.37-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 15.06
-CURRENT_STEP = 16.01
-LAST_COMMIT = e7bd41d16aff7af814ff969acf57b09de5c2b6e1
+LAST_COMPLETED_SUBSTEP = 16.01
+CURRENT_STEP = 16.02
+LAST_COMMIT = 7b970dbcf8356bfdebac5f3d24914f9da6b1127a
 BLOCKERS = none
-NEXT_STEP = 16.01 - Design token motoru
+NEXT_STEP = 16.02 - Component görünüm ayarları
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 16.01 - Design token motoru
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`.
-- Current sub-step: `16.01 — Design token motoru`.
-- Remaining roadmap work after 15.06: **34 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01`.
+- Current sub-step: `16.02 — Component görünüm ayarları`.
+- Remaining roadmap work after 16.01: **33 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.01
+
+- Added a versioned canonical design-token manifest covering color, typography, spacing, radius, border, shadow, motion and semantic categories.
+- Added strict PHP token parsing, category/value validation, duplicate/reference integrity checks and reference-cycle detection.
+- Added fail-closed CSS primitive policy rejecting statement delimiters/control characters plus raw url(), expression(), var() and @import injection paths.
+- Added deterministic `--forwext-*` CSS custom-property compilation and reduced-motion duration overrides.
+- Integrated the native PHP frontend with semantic compatibility aliases so existing visual behavior remains stable while component migration can proceed incrementally.
+- Added the shared TypeScript/React consumption boundary over the same canonical JSON manifest without adding Node/npm to the cPanel runtime.
+- Added regression coverage for required categories, semantic resolution, unsafe values, cycles, compiler output and native/TypeScript manifest sharing.
+- No database migration or new backend permission/audit event is required because 16.01 introduces immutable shipped presentation defaults and no user-controlled mutation surface.
+- Implementation commit: `7b970dbcf8356bfdebac5f3d24914f9da6b1127a`.
+- GitHub Actions build run `35897236806`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35897236805`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.37-dev`.
+- Next: `16.02 — Component görünüm ayarları`.
 
 ## Completed in 15.06
 

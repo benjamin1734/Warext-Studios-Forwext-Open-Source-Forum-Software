@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.01 — Design Token Engine
+
+- Added a versioned canonical design-token manifest for color, typography, spacing, radius, border, shadow, motion and semantic tokens.
+- Added strict PHP parsing, category/value validation, duplicate/reference integrity and cycle detection.
+- Added safe primitive CSS policies and semantic reference-only tokens.
+- Added deterministic `--forwext-*` CSS compilation with reduced-motion overrides.
+- Integrated native PHP styling through semantic compatibility aliases without changing the cPanel runtime profile.
+- Added a TypeScript/React boundary that consumes the same canonical JSON manifest.
+- Added regression tests for security, category completeness, compiler output and cross-frontend sharing.
+- Implementation commit: `7b970dbcf8356bfdebac5f3d24914f9da6b1127a`.
+- GitHub Actions build run `35897236806` and DB smoke run `35897236805` both succeeded.
+
 ### 15.06 — Report Builder / Export / Analytics Access
 
 - Added a native PHP analytics report builder with bounded UTC date ranges, fixed allowlisted filters and owner-scoped saved reports.
