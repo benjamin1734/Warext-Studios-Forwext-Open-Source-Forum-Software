@@ -15,6 +15,9 @@ use Forwext\Core\Ui\Appearance\ComponentAppearanceRegistry;
 use Forwext\Core\Ui\Responsive\ResponsiveCssCompiler;
 use Forwext\Core\Ui\Responsive\ResponsiveRegistry;
 use Forwext\Core\Ui\Navigation\NavigationRegistry;
+use Forwext\Core\Ui\Widget\WidgetContext;
+use Forwext\Core\Ui\Widget\WidgetRegistry;
+use Forwext\Core\Ui\Widget\WidgetRenderService;
 
 final class ProfileHtml
 {
@@ -25,6 +28,7 @@ final class ProfileHtml
         ?NavigationRegistry $navigation = null,
         ?BreadcrumbTrail $breadcrumbs = null,
         bool $authenticated = false,
+        ?WidgetRenderService $widgetRenderer = null,
     ): string {
         $safeTitle = self::escape($title);
         $home = self::escape($basePath->prepend('/'));
@@ -34,6 +38,18 @@ final class ProfileHtml
             $nav .= '<a data-nav-key="' . self::escape($item->key) . '" href="'
                 . self::escape($basePath->prepend($item->path)) . '">' . self::escape($item->label) . '</a>';
         }
+
+        $widgetRenderer ??= new WidgetRenderService(WidgetRegistry::withCoreDefaults());
+        $widgetContext = new WidgetContext($title, 'tr', $authenticated);
+        $pageBefore = $widgetRenderer->renderSlot('page.before', $widgetContext);
+        $headerBefore = $widgetRenderer->renderSlot('header.before', $widgetContext);
+        $headerAfter = $widgetRenderer->renderSlot('header.after', $widgetContext);
+        $mainBefore = $widgetRenderer->renderSlot('main.before', $widgetContext);
+        $mainAfter = $widgetRenderer->renderSlot('main.after', $widgetContext);
+        $sidebar = $widgetRenderer->renderSlot('sidebar.primary', $widgetContext);
+        $footerBefore = $widgetRenderer->renderSlot('footer.before', $widgetContext);
+        $footerAfter = $widgetRenderer->renderSlot('footer.after', $widgetContext);
+        $pageAfter = $widgetRenderer->renderSlot('page.after', $widgetContext);
 
         if ($breadcrumbs === null && $title !== 'Ana Sayfa') {
             $breadcrumbs = BreadcrumbTrail::page($title);
@@ -54,6 +70,24 @@ final class ProfileHtml
                 . '<path d="M9 3h6l1 2h3v2h-2.2c.5.9.8 1.9.9 3H21v2h-3.3c-.1.7-.3 1.4-.6 2H21v2h-5.1c-1 1.2-2.3 2-3.9 2s-2.9-.8-3.9-2H3v-2h3.9c-.3-.6-.5-1.3-.6-2H3v-2h3.3c.1-1.1.4-2.1.9-3H5V5h3l1-2Zm3 4a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0v-3a3 3 0 0 0-3-3Z"/>'
                 . '</svg></a>'
             : '';
+
+        $pageBeforeHtml = $pageBefore === ''
+            ? ''
+            : '<div class="ui-page-slot ui-page-slot--before">' . $pageBefore . '</div>';
+        $pageAfterHtml = $pageAfter === ''
+            ? ''
+            : '<div class="ui-page-slot ui-page-slot--after">' . $pageAfter . '</div>';
+
+        $mainHtml = '<main id="main-content" class="wrap">'
+            . $mainBefore . $breadcrumbHtml . $content . $mainAfter . '</main>';
+        if ($sidebar !== '') {
+            $mainHtml = '<div class="layout-shell">' . $mainHtml
+                . '<aside class="layout-sidebar" data-forwext-responsive-target="sidebar" aria-label="Kenar çubuğu">'
+                . $sidebar . '</aside></div>';
+        }
+
+        $footerHtml = '<footer class="site-footer"><div class="footerin">'
+            . $footerBefore . $footerAfter . '</div></footer>';
 
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -98,14 +132,17 @@ final class ProfileHtml
             . '.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{padding:18px}.stat strong{display:block;font-size:26px}.presence-settings{margin-top:18px;display:flex;gap:12px;align-items:end;flex-wrap:wrap}.presence-settings label{display:grid;gap:6px;min-width:220px}'
             . '.presence-settings input,.presence-settings textarea,.presence-settings select{width:100%;border:var(--forwext-component-input-border-width) solid var(--forwext-component-input-border-color);background:var(--forwext-component-input-background);color:var(--forwext-component-input-text);border-radius:var(--forwext-component-input-radius);padding:10px 11px;font:inherit}.presence-settings textarea{resize:vertical}'
             . '.bug-report-fab{position:fixed;right:20px;bottom:20px;z-index:50;width:46px;height:46px;display:grid;place-items:center;border:var(--forwext-component-button-border-width) solid var(--forwext-component-button-border-color);border-radius:50%;background:var(--forwext-component-button-background);color:var(--muted);text-decoration:none;box-shadow:var(--forwext-semantic-shadow-floating)}.bug-report-fab:hover,.bug-report-fab:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-fab svg{width:22px;height:22px;fill:currentColor}'
+            . '.layout-shell{width:min(1320px,calc(100% - 32px));margin:32px auto 64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:24px}.layout-shell>.wrap{width:100%;margin:0}.layout-sidebar{min-width:0;align-self:start;display:grid;gap:12px}.site-footer{border-top:var(--forwext-component-footer-border-width) solid var(--forwext-component-footer-border-color);background:var(--forwext-component-footer-background);color:var(--forwext-component-footer-text)}.footerin{width:min(1080px,calc(100% - 32px));margin:auto;padding:20px 0 28px}.core-brand-footer{color:var(--forwext-component-footer-muted-text);font-size:13px;text-align:center}.ui-page-slot{width:min(1080px,calc(100% - 32px));margin-inline:auto}'
+            . '@media(max-width:900px){.layout-shell{grid-template-columns:1fr}.layout-sidebar{order:2}}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.portfolio-media{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
             . '</style></head><body data-forwext-background-scope="site">'
-            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>'
-            . '<header class="top" data-forwext-background-scope="header"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
+            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
+            . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
+            . '<div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<button class="nav-toggle" type="button" data-forwext-nav-toggle aria-expanded="false" aria-controls="forwext-primary-navigation"><span aria-hidden="true">☰</span><span>Menü</span></button>'
-            . '<nav id="forwext-primary-navigation" class="nav" data-forwext-primary-navigation data-mobile-open="0" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
-            . '<main id="main-content" class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
+            . '<nav id="forwext-primary-navigation" class="nav" data-forwext-primary-navigation data-mobile-open="0" aria-label="Ana navigasyon">' . $nav . '</nav></div>'
+            . $headerAfter . '</header>' . $mainHtml . $footerHtml . $pageAfterHtml . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
             . '<script src="' . $notificationRealtimeScript . '" defer></script>'

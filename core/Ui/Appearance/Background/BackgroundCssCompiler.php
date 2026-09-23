@@ -70,7 +70,9 @@ final class BackgroundCssCompiler
     private function foregroundRule(BackgroundDefinition $definition, string $selector): string
     {
         if ($definition->scope === BackgroundScope::Site) {
-            return $selector . '>header,' . $selector . '>main{position:relative;z-index:1}';
+            return $selector . '>header,' . $selector . '>main,'
+                . $selector . '>.layout-shell,' . $selector . '>footer,'
+                . $selector . '>.ui-page-slot{position:relative;z-index:1}';
         }
 
         return $selector . '>*{position:relative;z-index:1}';
