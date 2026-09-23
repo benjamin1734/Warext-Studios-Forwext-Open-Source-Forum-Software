@@ -32,7 +32,7 @@ final readonly class DatabaseLayoutBuilderRepository implements LayoutBuilderRep
     public function revision(EntityId $revisionId): ?LayoutRevision
     {
         $row = $this->database->fetchOne(new CompiledQuery(
-            'SELECT revision_id,layout_id,document_json,source,created_by_user_id,created_at_utc '
+            'SELECT revision_id,layout_id,document_json,checksum_sha256,source,created_by_user_id,created_at_utc '
             . 'FROM forwext_ui_layout_revisions WHERE revision_id=:revision_id LIMIT 1',
             ['revision_id' => $revisionId->value()],
         ));
@@ -42,8 +42,12 @@ final readonly class DatabaseLayoutBuilderRepository implements LayoutBuilderRep
         }
 
         $json = $row['document_json'] ?? null;
-        if (!is_string($json)) {
+        $checksum = $row['checksum_sha256'] ?? null;
+        if (!is_string($json) || !is_string($checksum) || preg_match('/^[a-f0-9]{64}$/D', $checksum) !== 1) {
             throw new InvalidArgumentException('Stored layout revision JSON is invalid.');
+        }
+        if (!hash_equals($checksum, hash('sha256', $json))) {
+            throw new InvalidArgumentException('Stored layout revision checksum does not match.');
         }
 
         try {
@@ -93,6 +97,14 @@ final readonly class DatabaseLayoutBuilderRepository implements LayoutBuilderRep
                 'updated_at' => $updated,
             ],
         ));
+
+        $storedLayoutId = $this->database->fetchValue(new CompiledQuery(
+            'SELECT layout_id FROM forwext_ui_layouts WHERE layout_key=:layout_key LIMIT 1',
+            ['layout_key' => $layout->key],
+        ));
+        if (!is_string($storedLayoutId) || !hash_equals($layout->layoutId->value(), $storedLayoutId)) {
+            throw new InvalidArgumentException('Layout was created concurrently; reload before saving.');
+        }
 
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_ui_layout_revisions '

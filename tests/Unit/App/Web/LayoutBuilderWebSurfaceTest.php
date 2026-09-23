@@ -31,6 +31,8 @@ final class LayoutBuilderWebSurfaceTest extends TestCase
         self::assertStringContainsString('draggable = true', $script);
         self::assertStringContainsString('data-layout-dropzone', $script);
         self::assertStringContainsString('duplicate.addEventListener', $script);
+        self::assertStringContainsString('movePlacement(placement, -1)', $script);
+        self::assertStringContainsString('movePlacement(placement, 1)', $script);
         self::assertStringContainsString('data-builder-undo', $script);
         self::assertStringContainsString('data-builder-redo', $script);
         self::assertStringContainsString('data-builder-device', $script);

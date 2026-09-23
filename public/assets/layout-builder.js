@@ -84,6 +84,21 @@
     model.placements.sort((a, b) => a.slot.localeCompare(b.slot) || a.order - b.order || a.id.localeCompare(b.id));
   };
 
+  const movePlacement = (placement, delta) => {
+    const siblings = model.placements
+      .filter((entry) => entry.slot === placement.slot)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+    const index = siblings.findIndex((entry) => entry.id === placement.id);
+    const targetIndex = index + delta;
+    if (index < 0 || targetIndex < 0 || targetIndex >= siblings.length) return;
+    snapshot();
+    const target = siblings[targetIndex];
+    const currentOrder = placement.order;
+    placement.order = target.order;
+    target.order = currentOrder;
+    render();
+  };
+
   const placementElement = (placement) => {
     const element = document.createElement("article");
     element.className = "builder-placement";
@@ -97,6 +112,16 @@
     title.textContent = placement.widget;
     const actions = document.createElement("div");
     actions.className = "builder-placement-actions";
+
+    const up = document.createElement("button");
+    up.type = "button";
+    up.textContent = "Yukarı";
+    up.addEventListener("click", () => movePlacement(placement, -1));
+
+    const down = document.createElement("button");
+    down.type = "button";
+    down.textContent = "Aşağı";
+    down.addEventListener("click", () => movePlacement(placement, 1));
 
     const duplicate = document.createElement("button");
     duplicate.type = "button";
@@ -119,7 +144,7 @@
       render();
     });
 
-    actions.append(duplicate, remove);
+    actions.append(up, down, duplicate, remove);
     head.append(title, actions);
 
     const condition = document.createElement("div");
@@ -157,6 +182,18 @@
 
     const devices = document.createElement("div");
     devices.className = "builder-device-checks";
+
+    const enabledLabel = document.createElement("label");
+    const enabledInput = document.createElement("input");
+    enabledInput.type = "checkbox";
+    enabledInput.checked = placement.enabled !== false;
+    enabledInput.addEventListener("change", () => {
+      snapshot();
+      placement.enabled = enabledInput.checked;
+      render();
+    });
+    enabledLabel.append(enabledInput, document.createTextNode("enabled"));
+    devices.append(enabledLabel);
     for (const value of ["desktop", "tablet", "mobile"]) {
       const label = document.createElement("label");
       const input = document.createElement("input");
