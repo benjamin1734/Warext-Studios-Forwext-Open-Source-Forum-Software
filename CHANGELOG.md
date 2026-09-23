@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.05 — Layout Regions / UI Slots / Widgets
+
+- Added typed header/main/sidebar/footer/page regions and deterministic named UI slots.
+- Added core/module/add-on contributor and ownership boundaries for slots/widgets.
+- Added native PHP widget rendering, conditional sidebar output and a core footer widget proving the end-to-end registry path.
+- Added optional cache integration with bounded TTL and targeted invalidation tags.
+- Added authenticated viewer cache isolation: cached authenticated widgets require an opaque viewer id in the hashed context; otherwise caching is bypassed.
+- Kept widget/layout visibility strictly separate from backend authorization.
+- Added registry/render/cache/native-shell regression coverage.
+- Feature commit: `28847efe8c134efebd8eaec9fc6ff1b69dab1a88`; cache-isolation correction: `98f814bf7464a27f90c93c8f148aba83999a97de`.
+- GitHub Actions build run `35903527419` and DB smoke run `35903527408` both succeeded.
+
 ### 16.04 — Responsive Mobile / Desktop Control
 
 - Added validated non-overlapping mobile/tablet/desktop breakpoint definitions.

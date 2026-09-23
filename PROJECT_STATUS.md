@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.40-dev
+CURRENT_VERSION = 0.0.7.41-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.04
-CURRENT_STEP = 16.05
-LAST_COMMIT = 4a258a546c8ad8b00de1d0cd3eb6ccbbe6bb6869
+LAST_COMPLETED_SUBSTEP = 16.05
+CURRENT_STEP = 16.06
+LAST_COMMIT = 98f814bf7464a27f90c93c8f148aba83999a97de
 BLOCKERS = none
-NEXT_STEP = 16.05 - Layout region/UI slot/widget sistemi
+NEXT_STEP = 16.06 - Drag-drop page/layout builder
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 16.05 - Layout region/UI slot/widget sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.04`.
-- Current sub-step: `16.05 — Layout region/UI slot/widget sistemi`.
-- Remaining roadmap work after 16.04: **30 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.05`.
+- Current sub-step: `16.06 — Drag-drop page/layout builder`.
+- Remaining roadmap work after 16.05: **29 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.05
+
+- Added typed header/main/sidebar/footer/page layout regions and deterministic named UI slots.
+- Added core/module/add-on slot and widget ownership boundaries with namespace validation and deterministic ordering.
+- Added first-party UI slot and widget contributor contracts so modules/add-ons extend documented registries rather than patching core templates.
+- Added widget rendering through the native PHP shell, including conditional sidebar rendering and an end-to-end core footer widget.
+- Added optional widget caching through the existing Forwext cache abstraction with bounded TTL and targeted widget/slot invalidation tags.
+- Closed a cache-isolation risk: authenticated widget caching now requires an opaque viewer id in the hashed cache context; if only an authenticated boolean is known, caching is bypassed. Guest cache entries remain explicitly separated.
+- Widget cache keys do not expose raw page titles or viewer ids; permission-sensitive widgets still must enforce their owning backend authorization and layout visibility is never a permission boundary.
+- No database migration or new permission/audit event is required because 16.05 establishes registry/render/cache extension contracts without a mutable browser/ACP layout state.
+- Feature commit: `28847efe8c134efebd8eaec9fc6ff1b69dab1a88`; cache-isolation correction: `98f814bf7464a27f90c93c8f148aba83999a97de`.
+- GitHub Actions build run `35903527419`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35903527408`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.41-dev`.
+- Next: `16.06 — Drag-drop page/layout builder`.
 
 ## Completed in 16.04
 
