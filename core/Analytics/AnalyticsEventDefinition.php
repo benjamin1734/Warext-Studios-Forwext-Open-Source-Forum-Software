@@ -21,6 +21,7 @@ final readonly class AnalyticsEventDefinition
         public bool $collectSubject,
         public bool $collectForum,
         array $allowedDimensions=[],
+        public bool $collectContent=false,
     ){
         if(preg_match('/^[a-z][a-z0-9_.-]{2,95}$/D',$this->key)!==1){
             throw new InvalidArgumentException('Analytics event key is invalid.');
