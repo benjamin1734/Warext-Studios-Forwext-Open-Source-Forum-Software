@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.37-dev
+CURRENT_VERSION = 0.0.7.38-dev
 LAST_COMPLETED_MAIN_STEP = 15
-LAST_COMPLETED_SUBSTEP = 16.01
-CURRENT_STEP = 16.02
-LAST_COMMIT = 7b970dbcf8356bfdebac5f3d24914f9da6b1127a
+LAST_COMPLETED_SUBSTEP = 16.02
+CURRENT_STEP = 16.03
+LAST_COMMIT = 4f9d3bd2918a9b66b1c4cabab5b9f27979950d38
 BLOCKERS = none
-NEXT_STEP = 16.02 - Component görünüm ayarları
+NEXT_STEP = 16.03 - Background/pattern/gradient/asset sistemi
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 16.02 - Component görünüm ayarları
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`; main step `16` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01`.
-- Current sub-step: `16.02 — Component görünüm ayarları`.
-- Remaining roadmap work after 16.01: **33 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.02`.
+- Current sub-step: `16.03 — Background/pattern/gradient/asset sistemi`.
+- Remaining roadmap work after 16.02: **32 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 16.02
+
+- Added typed component appearance targets for header, navigation, footer, forum, thread, post, profile, button, input, modal, badge, role banner, editor, table and alert.
+- Added a versioned component appearance manifest whose fixed properties bind only to validated design-token keys; arbitrary selectors/raw CSS are not accepted.
+- Added registry validation for required targets, duplicates, property names and design-token references.
+- Added deterministic `--forwext-component-*` CSS-variable compilation and shared native PHP runtime integration.
+- Migrated current header/navigation/cards/profile/buttons/inputs/badges/alerts to component variables while preserving their existing visual defaults.
+- Connected role-banner CSS to the shared component contract with an isolated-embed fallback.
+- Exposed the same component appearance manifest through the optional TypeScript/React package.
+- Added component-specific color/shadow semantic tokens required to preserve existing badge, alert, contrast and role-banner visuals.
+- Added registry/compiler/native-surface tests covering every binding-roadmap component target.
+- No database migration or new permission/audit event is required because 16.02 still exposes immutable shipped presentation bindings only.
+- Implementation commit: `4f9d3bd2918a9b66b1c4cabab5b9f27979950d38`.
+- GitHub Actions build run `35898405999`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35898406003`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.38-dev`.
+- Next: `16.03 — Background/pattern/gradient/asset sistemi`.
 
 ## Completed in 16.01
 

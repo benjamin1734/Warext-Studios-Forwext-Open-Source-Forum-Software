@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 16.02 — Component Appearance Settings
+
+- Added typed appearance targets covering header/navigation/footer/forum/thread/post/profile/buttons/inputs/modals/badges/role banners/editor/tables/alerts.
+- Added a versioned component manifest that binds fixed appearance properties only to validated design tokens.
+- Added required-target, duplicate, property and token-reference validation plus deterministic `--forwext-component-*` compilation.
+- Migrated existing native PHP header/navigation/cards/profile/buttons/inputs/badges/alerts to component variables without changing their default visual intent.
+- Connected role-banner CSS and the optional TypeScript/React package to the same shared appearance contract.
+- Added component-specific semantic tokens for existing contrast, badge, alert and role-banner visuals.
+- Added registry/compiler/native-surface regression coverage.
+- Implementation commit: `4f9d3bd2918a9b66b1c4cabab5b9f27979950d38`.
+- GitHub Actions build run `35898405999` and DB smoke run `35898406003` both succeeded.
+
 ### 16.01 — Design Token Engine
 
 - Added a versioned canonical design-token manifest for color, typography, spacing, radius, border, shadow, motion and semantic tokens.
