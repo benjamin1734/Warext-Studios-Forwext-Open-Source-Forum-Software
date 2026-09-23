@@ -9,6 +9,8 @@ use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use Forwext\Core\Ui\DesignToken\DesignTokenCatalog;
 use Forwext\Core\Ui\DesignToken\DesignTokenCssCompiler;
 use Forwext\Core\Ui\Appearance\ComponentAppearanceCssCompiler;
+use Forwext\Core\Ui\Appearance\Background\BackgroundCssCompiler;
+use Forwext\Core\Ui\Appearance\Background\BackgroundRegistry;
 use Forwext\Core\Ui\Appearance\ComponentAppearanceRegistry;
 use Forwext\Core\Ui\Navigation\NavigationRegistry;
 
@@ -53,7 +55,7 @@ final class ProfileHtml
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="forwext-presence-endpoint" content="' . $presenceEndpoint . '">'
-            . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::designTokenCss()
+            . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::appearanceCss($basePath)
             . ':root{color-scheme:dark;--bg:var(--forwext-semantic-page-background);'
             . '--panel:var(--forwext-semantic-surface-primary);'
             . '--panel2:var(--forwext-semantic-surface-secondary);'
@@ -95,7 +97,7 @@ final class ProfileHtml
             . '.bug-report-fab{position:fixed;right:20px;bottom:20px;z-index:50;width:46px;height:46px;display:grid;place-items:center;border:var(--forwext-component-button-border-width) solid var(--forwext-component-button-border-color);border-radius:50%;background:var(--forwext-component-button-background);color:var(--muted);text-decoration:none;box-shadow:var(--forwext-semantic-shadow-floating)}.bug-report-fab:hover,.bug-report-fab:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}.bug-report-fab svg{width:22px;height:22px;fill:currentColor}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.portfolio-media{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-            . '</style></head><body><header class="top"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
+            . '</style></head><body data-forwext-background-scope="site"><header class="top" data-forwext-background-scope="header"><div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
             . '<nav class="nav" aria-label="Ana navigasyon">' . $nav . '</nav></div></header>'
             . '<main class="wrap">' . $breadcrumbHtml . $content . '</main>' . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
@@ -106,20 +108,26 @@ final class ProfileHtml
             . '<script src="' . $bugReportScript . '" defer></script></body></html>';
     }
 
-    private static function designTokenCss(): string
+    private static function appearanceCss(BasePath $basePath): string
     {
-        static $css = null;
+        static $cache = [];
 
-        if (!is_string($css)) {
+        $cacheKey = $basePath->prepend('/');
+        if (!isset($cache[$cacheKey])) {
             $catalog = DesignTokenCatalog::coreDefaults();
-            $css = (new DesignTokenCssCompiler())->compile($catalog)
+            $cache[$cacheKey] = (new DesignTokenCssCompiler())->compile($catalog)
                 . (new ComponentAppearanceCssCompiler())->compile(
                     ComponentAppearanceRegistry::coreDefaults($catalog),
                     $catalog,
+                )
+                . (new BackgroundCssCompiler())->compile(
+                    BackgroundRegistry::coreDefaults($catalog),
+                    $catalog,
+                    $basePath,
                 );
         }
 
-        return $css;
+        return $cache[$cacheKey];
     }
 
     public static function escape(string $value): string

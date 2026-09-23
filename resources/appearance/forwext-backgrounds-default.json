@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "backgrounds": [
+    {
+      "key": "site.default",
+      "scope": "site",
+      "scope_id": null,
+      "kind": "solid",
+      "colors": ["semantic.page.background"],
+      "asset": null,
+      "pattern": null,
+      "opacity": 100,
+      "scale": 100,
+      "rotation": 0,
+      "blend": "normal",
+      "animated": false,
+      "animation_duration_ms": 12000
+    },
+    {
+      "key": "header.default",
+      "scope": "header",
+      "scope_id": null,
+      "kind": "solid",
+      "colors": ["semantic.header.background"],
+      "asset": null,
+      "pattern": null,
+      "opacity": 100,
+      "scale": 100,
+      "rotation": 0,
+      "blend": "normal",
+      "animated": false,
+      "animation_duration_ms": 12000
+    }
+  ]
+}

@@ -138,7 +138,9 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . '">Özel profil URL’si</a>'
             : '';
         $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
-        $body = '<article class="profile">' . $banner . '<div class="profilebody"><div class="profilehead">'
+        $body = '<article class="profile" data-forwext-background-scope="profile" data-forwext-background-id="'
+            . ProfileHtml::escape($profile->userId->value()) . '">' . $banner
+            . '<div class="profilebody"><div class="profilehead">'
             . $avatar . '<div class="identity"><h1>' . $safeName
             . '</h1><div class="muted">Forwext üyesi</div>' . $profileSettings . '</div></div>'
             . $music . $tabNav . $sections . '</div></article>';
