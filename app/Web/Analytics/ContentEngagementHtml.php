@@ -39,6 +39,7 @@ final class ContentEngagementHtml
         $body.=self::forumTable($snapshot);
         $body.=self::categoryTable($snapshot);
         $body.=self::threadTable($snapshot);
+        $body.=self::followTable($snapshot);
         $body.=self::searchTable($snapshot);
 
         $body.='<section class="card" style="margin-top:16px"><h2>Oranların anlamı</h2>'
@@ -97,6 +98,19 @@ final class ContentEngagementHtml
                 .'<td>'.self::n($row['reactions']).'</td><td>'.self::n($row['bookmarks']).'</td>'
                 .'<td>'.self::n($row['watches']).'</td><td>'.self::rate($row['reaction_rate']).'</td>'
                 .'<td>'.self::rate($row['bookmark_rate']).'</td><td>'.self::rate($row['watch_rate']).'</td></tr>';
+        }
+        return $body.'</tbody></table></section>';
+    }
+
+    private static function followTable(ContentEngagementSnapshot $snapshot):string
+    {
+        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Follow performansı</h2>'
+            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
+            .'<th style="text-align:left">Kullanıcı</th><th>Yeni follow</th>'
+            .'</tr></thead><tbody>';
+        if($snapshot->followLeaders===[])$body.='<tr><td colspan="2" class="muted">Follow verisi yok.</td></tr>';
+        foreach($snapshot->followLeaders as $row){
+            $body.='<tr><td>'.self::e($row['username']).'</td><td>'.self::n($row['follows']).'</td></tr>';
         }
         return $body.'</tbody></table></section>';
     }
