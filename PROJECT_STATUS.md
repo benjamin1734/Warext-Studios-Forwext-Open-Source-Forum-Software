@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 0.0.7.32-dev
 LAST_COMPLETED_MAIN_STEP = 14
 LAST_COMPLETED_SUBSTEP = 15.02
-CURRENT_STEP = 15.03
+CURRENT_STEP = 15.03 - CI validation; 15.04 implementation staged
 LAST_COMMIT = c79a77735c294c849d52176eed9b5afe648fae9c
-BLOCKERS = none
-NEXT_STEP = 15.03 - İçerik ve engagement analizleri
+BLOCKERS = 15.03/15.04 GitHub Actions validation is queued or not yet final
+NEXT_STEP = Finalize 15.03 validation, validate/close 15.04, then continue with 15.05
 ```
 
 ## Current position
@@ -22,12 +22,23 @@ NEXT_STEP = 15.03 - İçerik ve engagement analizleri
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
 - Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.02`.
-- Current sub-step: `15.03 — İçerik ve engagement analizleri`.
-- Remaining roadmap work after 15.02: **38 real sub-steps**.
+- Current validation gate: `15.03 — İçerik ve engagement analizleri`; its implementation is on `main`, but completion remains withheld until queued GitHub Actions finish successfully.
+- `15.04 — Moderasyon/destek/bug analizleri` implementation is also staged on `main` for validation; it is not counted as completed yet.
+- Remaining roadmap work after the last confirmed completed sub-step 15.02: **38 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Validation pending — 15.03 / 15.04
+
+- 15.03 current source includes forum/category/thread performance, reactions/bookmarks/watch/follow, privacy-aware search terms, structural thread-view analytics, dashboard wiring, migration and regression coverage.
+- The user-provided GitHub Actions view shows queued/in-progress validation; therefore 15.03 is not promoted into `LAST_COMPLETED_SUBSTEP` yet.
+- 15.04 source now includes `/admin/analytics/operations`, report volume and moderation terminal timing, warning/restriction/suspension/ban counts, support response/resolution/SLA metrics, bug category/finalization metrics and staff workload aggregation.
+- 15.04 reuses authoritative operational tables and the central audit stream; it does not create a duplicate analytics fact store or read free-form ticket/report/bug/audit payload content.
+- Migration `20260923190000_operations_analytics_indexes` is additive/idempotent and is registered after the 15.03 analytics migration.
+- New 15.04 PHP files were syntax-linted before commit. Full PHPUnit, PHP 8.4/8.5 matrix and MySQL/MariaDB migration smoke remain GitHub Actions validation gates.
+- Current 15.04 implementation head before this status sync: `a4afb4d8012e775bfa0fa08c475d52214f7c1022`; changelog sync: `a99f049ee5b9abb9e659e8d9f94cc79053297e61`.
 
 ## Completed in 15.02
 
