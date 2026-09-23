@@ -6,6 +6,8 @@ namespace Forwext\App\Web\Profile;
 
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
+use Forwext\Core\Ui\DesignToken\DesignTokenCatalog;
+use Forwext\Core\Ui\DesignToken\DesignTokenCssCompiler;
 use Forwext\Core\Ui\Navigation\NavigationRegistry;
 
 final class ProfileHtml
@@ -49,11 +51,19 @@ final class ProfileHtml
         return '<!doctype html><html lang="tr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="forwext-presence-endpoint" content="' . $presenceEndpoint . '">'
-            . '<title>' . $safeTitle . ' · Forwext</title><style>'
-            . ':root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#1c2128;--line:#30363d;'
-            . '--text:#e6edf3;--muted:#8b949e;--accent:#ff7a1a}*{box-sizing:border-box}body{margin:0;'
-            . 'background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}'
-            . 'a{color:inherit}.top{border-bottom:1px solid var(--line);background:#10151c}.topin{width:min(1080px,calc(100% - 32px));'
+            . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::designTokenCss()
+            . ':root{color-scheme:dark;--bg:var(--forwext-semantic-page-background);'
+            . '--panel:var(--forwext-semantic-surface-primary);'
+            . '--panel2:var(--forwext-semantic-surface-secondary);'
+            . '--line:var(--forwext-semantic-border-default);'
+            . '--text:var(--forwext-semantic-text-primary);'
+            . '--muted:var(--forwext-semantic-text-muted);'
+            . '--accent:var(--forwext-semantic-accent-primary)}*{box-sizing:border-box}body{margin:0;'
+            . 'background:var(--bg);color:var(--text);'
+            . 'font:var(--forwext-typography-font-size-base)/var(--forwext-typography-line-height-body) '
+            . 'var(--forwext-typography-font-family-sans)}'
+            . 'a{color:inherit}.top{border-bottom:var(--forwext-border-width-default) solid var(--line);'
+            . 'background:var(--forwext-semantic-header-background)}.topin{width:min(1080px,calc(100% - 32px));'
             . 'margin:auto;min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{text-decoration:none;font-size:22px;'
             . 'font-weight:850}.brand b{color:var(--accent)}.nav{display:flex;gap:16px;flex-wrap:wrap;justify-content:flex-end}.nav a{color:var(--muted);text-decoration:none}.nav a:hover{color:var(--text)}'
             . '.wrap{width:min(1080px,calc(100% - 32px));margin:32px auto 64px}.breadcrumbs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px;font-size:13px;color:var(--muted)}'
@@ -92,6 +102,17 @@ final class ProfileHtml
             . '<script src="' . $presenceScript . '" defer></script>'
             . '<script src="' . $presenceSettingsScript . '" defer></script>'
             . '<script src="' . $bugReportScript . '" defer></script></body></html>';
+    }
+
+    private static function designTokenCss(): string
+    {
+        static $css = null;
+
+        if (!is_string($css)) {
+            $css = (new DesignTokenCssCompiler())->compile(DesignTokenCatalog::coreDefaults());
+        }
+
+        return $css;
     }
 
     public static function escape(string $value): string
