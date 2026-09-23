@@ -8,6 +8,7 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
@@ -141,6 +142,10 @@ use Forwext\Core\Analytics\Operations\DatabaseOperationsAnalyticsRepository;
 use Forwext\Core\Analytics\Operations\OperationsAnalyticsService;
 use Forwext\Core\Analytics\Commerce\CommerceAnalyticsService;
 use Forwext\Core\Analytics\Commerce\DatabaseCommerceAnalyticsRepository;
+use Forwext\Core\Admin\AdminInformationArchitectureService;
+use Forwext\Core\Admin\Dashboard\AdminActionQueueService;
+use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
+use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
 use Forwext\Core\Analytics\Report\AnalyticsReportService;
 use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
@@ -448,6 +453,12 @@ final readonly class WebApplicationFactory
             new DatabaseAnalyticsReportRepository($database),
             $analyticsAccess,
             $analyticsAudit,
+        );
+        $adminInformation = new AdminInformationArchitectureService(
+            AdminNavigationRegistry::withCoreDefaults($authorizer),
+            new DatabaseAdminNavigationPreferenceRepository($database),
+            new AdminActionQueueService($database, $authorizer),
+            $authorizer,
         );
         $appearanceGuide = new AppearanceGuideService($authorizer);
         $layoutSlots = UiSlotRegistry::withCoreDefaults();
@@ -886,6 +897,7 @@ final readonly class WebApplicationFactory
         $paymentCsrf = $this->paymentCsrfMiddleware($config);
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
+        $adminNavigationCsrf = $this->adminNavigationCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
@@ -1653,6 +1665,13 @@ final readonly class WebApplicationFactory
             new AnalyticsReportExportHandler($analyticsReports, $viewerResolver),
         ));
         $routes->add(new Route(
+            'admin.dashboard',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin'),
+            new AdminDashboardHandler($adminInformation, $viewerResolver, $basePath),
+            [$adminNavigationCsrf],
+        ));
+        $routes->add(new Route(
             'appearance.guide',
             [HttpMethod::Get],
             new PathTemplate('/admin/appearance'),
@@ -1925,6 +1944,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function adminNavigationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'admin-navigation', 'forwext.csrf.admin-navigation.v1');
     }
 
     private function themeCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
