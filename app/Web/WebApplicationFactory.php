@@ -8,6 +8,7 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
 use Forwext\App\Web\Appearance\ThemeAssetHandler;
@@ -329,6 +330,7 @@ use Forwext\Core\Subscription\SubscriptionService;
 use Forwext\Core\Trophy\DatabaseTrophyMetricProvider;
 use Forwext\Core\Trophy\DatabaseTrophyRepository;
 use Forwext\Core\Trophy\TrophyService;
+use Forwext\Core\Ui\Appearance\Guide\AppearanceGuideService;
 use Forwext\Core\Ui\Layout\Builder\DatabaseLayoutBuilderRepository;
 use Forwext\Core\Ui\Layout\Builder\LayoutBuilderService;
 use Forwext\Core\Ui\Layout\UiSlotRegistry;
@@ -447,6 +449,7 @@ final readonly class WebApplicationFactory
             $analyticsAccess,
             $analyticsAudit,
         );
+        $appearanceGuide = new AppearanceGuideService($authorizer);
         $layoutSlots = UiSlotRegistry::withCoreDefaults();
         $layoutWidgets = WidgetRegistry::withCoreDefaults($layoutSlots);
         $layoutBuilder = new LayoutBuilderService(
@@ -1648,6 +1651,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/admin/analytics/reports/export'),
             new AnalyticsReportExportHandler($analyticsReports, $viewerResolver),
+        ));
+        $routes->add(new Route(
+            'appearance.guide',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/appearance'),
+            new AppearanceGuideHandler($appearanceGuide, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'appearance.layout.builder',
