@@ -21,7 +21,7 @@ final class AdminNavigationPreferencesTest extends TestCase
         self::assertSame('admin.tool-19', $preferences->favorites()[0]);
 
         $preferences = $preferences->toggledFavorite('admin.tool-19');
-        self::assertNotContains('admin.tool-19', $preferences->favorites(), true);
+        self::assertFalse(in_array('admin.tool-19', $preferences->favorites(), true));
     }
 
     public function testRecentItemsAreUniqueNewestFirstAndBounded(): void
