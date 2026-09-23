@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ format('forwext-db-smoke-{0}', github.ref) }}
+  cancel-in-progress: true
+
 jobs:
   mysql-migrations:
     name: MySQL 8.4 migrations
