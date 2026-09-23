@@ -6,6 +6,20 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 15.05 — Marketplace / Revenue / Referral / Giveaway Analytics
+
+- Added privacy-aware structural `marketplace.listing.view` recording for successful Marketplace detail HTML requests.
+- Added backend-authorized `/admin/analytics/commerce` with fixed 7/30/90-day UTC windows.
+- Added listing/current inventory, listing-view, external-click, external CTR and order funnel metrics.
+- Added currency-separated first-paid-transition GMV, succeeded refunds and net payment-flow rows.
+- Added currency-separated advertising CTR and configured estimated-revenue rows.
+- Added referral attribution cohort and per-campaign conversion metrics plus granted reward units.
+- Added giveaway unique participant, weighted-entry and draw/redraw analytics.
+- Sensitive payment/referral/giveaway payloads and anti-abuse fingerprints are not queried.
+- Added migration `20260923195000_commerce_analytics_indexes`, tests and architecture documentation.
+- Final implementation commit: `5bb212419cf021b8faf8915f7356761928ffcf19`; producer commit: `15445be9087611d674ea9d8527b264b2984c0564`.
+- GitHub Actions build run `35892034814` and DB smoke run `35892035230` both succeeded.
+
 ### 15.04 — Moderation / Support / Bug Analytics
 
 - Added backend-authorized `/admin/analytics/operations` with fixed 7/30/90-day UTC windows.

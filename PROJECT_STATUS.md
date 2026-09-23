@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.34-dev
+CURRENT_VERSION = 0.0.7.35-dev
 LAST_COMPLETED_MAIN_STEP = 14
-LAST_COMPLETED_SUBSTEP = 15.04
-CURRENT_STEP = 15.05
-LAST_COMMIT = 2dfab4ed875a9a3b4f04432615490a9a379ac1f8
+LAST_COMPLETED_SUBSTEP = 15.05
+CURRENT_STEP = 15.06
+LAST_COMMIT = 5bb212419cf021b8faf8915f7356761928ffcf19
 BLOCKERS = none
-NEXT_STEP = 15.05 - Marketplace/revenue/referral/giveaway analizleri
+NEXT_STEP = 15.06 - Rapor builder/export ve erişim yetkileri
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 15.05 - Marketplace/revenue/referral/giveaway analizleri
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`; main step `15` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.04`.
-- Current sub-step: `15.05 — Marketplace/revenue/referral/giveaway analizleri`.
-- Remaining roadmap work after 15.04: **36 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.05`.
+- Current sub-step: `15.06 — Rapor builder/export ve erişim yetkileri`.
+- Remaining roadmap work after 15.05: **35 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 15.05
+
+- Added privacy-aware structural `marketplace.listing.view` recording for successful Marketplace detail HTML requests.
+- Added backend-authorized `/admin/analytics/commerce` with fixed 7/30/90-day UTC windows and cross-links from all analytics dashboards.
+- Added listing creation/current inventory, recorded listing views, external outbound clicks, external CTR and order lifecycle metrics.
+- Added currency-separated first-paid-transition GMV, succeeded refunds and net payment-flow metrics without mixing currencies.
+- Added currency-separated advertising impression/click CTR and configured estimated-revenue metrics; these are explicitly not settlement revenue.
+- Added referral click/attribution cohort, review/qualified/rejected, reward-unit and per-campaign conversion metrics without querying IP/device fingerprints.
+- Added giveaway creation, unique participant, weighted-entry and draw/redraw analytics without querying anti-abuse fingerprints.
+- Added additive/idempotent migration `20260923195000_commerce_analytics_indexes`, migration-registry coverage, snapshot/web/privacy tests and architecture documentation.
+- Final implementation commit: `5bb212419cf021b8faf8915f7356761928ffcf19`; listing-view producer commit: `15445be9087611d674ea9d8527b264b2984c0564`.
+- GitHub Actions build run `35892034814`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `35892035230`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.35-dev`.
+- Next: `15.06 — Rapor builder/export ve erişim yetkileri`.
 
 ## Completed in 15.04
 
