@@ -28,9 +28,9 @@ final readonly class DatabaseAnalyticsRepository implements AnalyticsRepository
 
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_analytics_events '
-            . '(event_id,event_key,category,actor_hash,session_hash,subject_type,subject_hash,forum_id,dimensions_json,'
+            . '(event_id,event_key,category,actor_hash,session_hash,subject_type,subject_hash,forum_id,content_type,content_id,dimensions_json,'
             . 'occurred_at_utc,event_day_utc,recorded_at_utc) '
-            . 'VALUES (:event,:key,:category,:actor,:session,:subject_type,:subject_hash,:forum,:dimensions,'
+            . 'VALUES (:event,:key,:category,:actor,:session,:subject_type,:subject_hash,:forum,:content_type,:content_id,:dimensions,'
             . ':occurred,:event_day,UTC_TIMESTAMP(6))',
             [
                 'event'=>$event->eventId->value(),
@@ -41,6 +41,8 @@ final readonly class DatabaseAnalyticsRepository implements AnalyticsRepository
                 'subject_type'=>$event->subjectType,
                 'subject_hash'=>$event->subjectHash,
                 'forum'=>$event->forumId?->value(),
+                'content_type'=>$event->contentType,
+                'content_id'=>$event->contentId?->value(),
                 'dimensions'=>$dimensions,
                 'occurred'=>self::format($event->occurredAt),
                 'event_day'=>$event->occurredAt->format('Y-m-d'),
