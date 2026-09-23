@@ -42,6 +42,7 @@ use Forwext\Database\Migrations\Core\CreateAdvertisingNoticeSystem;
 use Forwext\Database\Migrations\Core\CreateAnalyticsEventModel;
 use Forwext\Database\Migrations\Core\CreateForumAnalyticsDashboard;
 use Forwext\Database\Migrations\Core\CreateContentEngagementAnalytics;
+use Forwext\Database\Migrations\Core\CreateOperationsAnalyticsIndexes;
 use Forwext\Database\Migrations\Core\CreateBugReportWorkflow;
 use Forwext\Database\Migrations\Core\CreateBugDiagnosticContext;
 use Forwext\Database\Migrations\Core\CreateBugReportFormIntake;
@@ -149,5 +150,6 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateAnalyticsEventModel::class, $classes);
         self::assertContains(CreateForumAnalyticsDashboard::class, $classes);
         self::assertContains(CreateContentEngagementAnalytics::class, $classes);
+        self::assertContains(CreateOperationsAnalyticsIndexes::class, $classes);
     }
 }
