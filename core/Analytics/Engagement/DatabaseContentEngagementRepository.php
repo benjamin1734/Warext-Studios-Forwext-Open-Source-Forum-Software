@@ -49,10 +49,10 @@ final readonly class DatabaseContentEngagementRepository
                 $params,
             ),
             $this->count(
-                'SELECT COALESCE(SUM(search_count),0) FROM forwext_search_term_analytics '
-                .'WHERE event_day_utc>=DATE(:start) AND event_day_utc<DATE(:end)',
+                "SELECT COUNT(*) FROM forwext_analytics_events WHERE event_key='forum.search' "
+                .'AND occurred_at_utc>=:start AND occurred_at_utc<:end',
                 $params,
-            )+$this->redactedSearchCount($params),
+            ),
             $this->redactedSearchCount($params),
             $this->zeroResultSearchCount($params),
             $this->forums($params),
