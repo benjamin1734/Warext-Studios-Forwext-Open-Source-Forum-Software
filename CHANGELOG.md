@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.02 — Users / Roles / Forums / Moderation ACP
+
+- Added native PHP ACP surfaces for users, groups/roles/banner/permission analysis, forums, content and moderation.
+- Added audited user access assignment, group/role management, role appearance and forum-node mutations under backend `acp.manage`.
+- Kept warning/restriction/suspension/ban/revoke in the existing DisciplineService and content/moderation mutations in their existing first-party services.
+- Added production PermissionEngine-backed analyzer, self-lockout protection, real operational counters and safe forum hierarchy management.
+- No new schema migration was required.
+- Implementation commits: `b360787b975f4aeed69932b41ec486648fc6c71f`, `5373b874f07cde7d0b59bdde80651593a82d0100`, `f1af2bf54c5fbdd7e89470ac8d90bbb1dad33f64`.
+- GitHub Actions build run `36039908005` and DB smoke run `36039908059` both succeeded.
+
 ### 17.01 — ACP Information Architecture
 
 - Added backend-authorized native PHP Administration dashboard at `/admin`.

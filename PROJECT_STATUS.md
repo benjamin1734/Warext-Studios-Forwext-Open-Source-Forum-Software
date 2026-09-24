@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.45-dev
+CURRENT_VERSION = 0.0.7.46-dev
 LAST_COMPLETED_MAIN_STEP = 16
-LAST_COMPLETED_SUBSTEP = 17.01
-CURRENT_STEP = 17.02
-LAST_COMMIT = 6388a2d63a56a842bbc8aecd13373e20bfa59b9c
+LAST_COMPLETED_SUBSTEP = 17.02
+CURRENT_STEP = 17.03
+LAST_COMMIT = f1af2bf54c5fbdd7e89470ac8d90bbb1dad33f64
 BLOCKERS = none
-NEXT_STEP = 17.02 - Users/roles/forums/moderation ACP
+NEXT_STEP = 17.03 - First-party module manager
 ```
 
 ## Current position
@@ -22,12 +22,31 @@ NEXT_STEP = 17.02 - Users/roles/forums/moderation ACP
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
 - Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`.
-- Current sub-step: `17.02 — Users/roles/forums/moderation ACP`.
-- Remaining roadmap work after 17.01: **25 real sub-steps**.
+- Current sub-step: `17.03 — First-party module manager`.
+- Remaining roadmap work after 17.02: **24 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 17.02
+
+- Added native PHP ACP surfaces for users, access policy, forums, content and moderation at `/admin/users`, `/admin/access`, `/admin/forums`, `/admin/content` and `/admin/moderation`.
+- Added user search/detail/history plus transactional primary/secondary group and direct-role assignment management with self-lockout protection.
+- Generic user-state management explicitly refuses suspension/ban transitions and refuses reactivation of moderation-restricted accounts; DisciplineService remains authoritative for warning/restriction/suspension/ban/revoke.
+- Added group create/update and role create/update while preserving system/protected key/kind semantics.
+- Added role banner/appearance management through the existing typed RoleAppearance model and repository.
+- Added permission analyzer UI using the production DatabaseUserAccessAssignmentProvider + DatabasePermissionRuleRepository + PermissionEngine + PermissionAnalyzer trace.
+- Added forum/category/page/link node create/update through the existing ForumNodeRepository hierarchy validation; existing node type conversion and destructive deletion are not exposed.
+- Added real content totals and links into User Content Manager, Approval Queue and Thread Freshness without duplicating their mutation paths.
+- Added permission-gated moderation/report/task/warning/ban counters plus links into existing Moderation Workspace, Discipline and Core Audit surfaces.
+- All new access/group/role/appearance/forum mutations use backend `acp.manage`, dedicated CSRF protection and core Administration audit events.
+- No new schema migration was required; the implementation reuses previously migrated user/access/forum/moderation/audit tables.
+- Core commit: `b360787b975f4aeed69932b41ec486648fc6c71f`; web/ACP commit: `5373b874f07cde7d0b59bdde80651593a82d0100`; tests/security/UX commit: `f1af2bf54c5fbdd7e89470ac8d90bbb1dad33f64`.
+- GitHub Actions build run `36039908005`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36039908059`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.46-dev`.
+- Next: `17.03 — First-party module manager`.
 
 ## Completed in 17.01
 
