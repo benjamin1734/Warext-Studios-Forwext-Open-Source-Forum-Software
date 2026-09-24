@@ -101,6 +101,7 @@ final readonly class AdminCommunityService
      *   permissions:list<array<string,mixed>>,
      *   nodes:list<array<string,mixed>>,
      *   users:list<array<string,mixed>>,
+     *   selected_group:?array<string,mixed>,
      *   selected_role:?array<string,mixed>,
      *   selected_appearance:?RoleAppearance,
      *   analysis:?PermissionAnalysis
@@ -108,6 +109,7 @@ final readonly class AdminCommunityService
      */
     public function accessSnapshot(
         EntityId $actor,
+        ?string $selectedGroupId,
         ?string $selectedRoleId,
         ?EntityId $analyzeUserId,
         string $permissionKey,
@@ -135,6 +137,20 @@ final readonly class AdminCommunityService
         $users = $this->database->fetchAll(new CompiledQuery(
             'SELECT user_id,username,status FROM forwext_users ORDER BY updated_at_utc DESC,user_id DESC LIMIT 200',
         ));
+
+        $selectedGroup = null;
+        if ($selectedGroupId !== null && $selectedGroupId !== '') {
+            self::assertStoredIdentifier($selectedGroupId);
+            foreach ($groups as $group) {
+                if ((string) $group['group_id'] === $selectedGroupId) {
+                    $selectedGroup = $group;
+                    break;
+                }
+            }
+            if ($selectedGroup === null) {
+                throw new InvalidArgumentException('ACP group was not found.');
+            }
+        }
 
         $selectedRole = null;
         $selectedAppearance = null;
@@ -181,6 +197,7 @@ final readonly class AdminCommunityService
             'permissions'=>$permissions,
             'nodes'=>$nodes,
             'users'=>$users,
+            'selected_group'=>$selectedGroup,
             'selected_role'=>$selectedRole,
             'selected_appearance'=>$selectedAppearance,
             'analysis'=>$analysis,
@@ -241,7 +258,7 @@ final readonly class AdminCommunityService
             'discipline'=>$this->allows($actor, 'moderation.discipline.view'),
             'ban'=>$this->allows($actor, 'moderation.ban.manage'),
             'audit'=>$this->allows($actor, 'audit.view'),
-            'content_manager'=>$this->allows($actor, 'content.manage'),
+            'content_manager'=>$this->allows($actor, 'content_manager.access'),
         ];
 
         $moderation = [

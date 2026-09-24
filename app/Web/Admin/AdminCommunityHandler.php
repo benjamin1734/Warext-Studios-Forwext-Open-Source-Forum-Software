@@ -95,11 +95,12 @@ final readonly class AdminCommunityHandler implements RequestHandlerInterface
                     self::queryString($query, 'q', 80),
                     self::optionalHexId($query['user'] ?? null),
                 ),
-                'access'=>$this->community->accessSnapshot($actor, null, null, '', null),
+                'access'=>$this->community->accessSnapshot($actor, null, null, null, '', null),
             ],
             AdminCommunitySection::Access => [
                 'access'=>$this->community->accessSnapshot(
                     $actor,
+                    self::optionalStoredId($query['group'] ?? null),
                     self::optionalStoredId($query['role'] ?? null),
                     self::optionalHexId($query['analyze_user'] ?? null),
                     self::queryString($query, 'permission', 96),

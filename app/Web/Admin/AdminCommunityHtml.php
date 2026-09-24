@@ -168,10 +168,24 @@ final class AdminCommunityHtml
         $action = self::e($basePath->prepend('/admin/access'));
         $groups = '';
         foreach ($snapshot['groups'] as $group) {
-            $groups .= '<tr id="group-' . self::e((string) $group['group_id']) . '"><td>'
-                . self::e((string) $group['name']) . '</td><td>' . self::e((string) $group['group_key'])
+            $groupUrl = $basePath->prepend('/admin/access?group=' . rawurlencode((string) $group['group_id']));
+            $groups .= '<tr id="group-' . self::e((string) $group['group_id']) . '"><td><a href="' . self::e($groupUrl) . '">'
+                . self::e((string) $group['name']) . '</a></td><td>' . self::e((string) $group['group_key'])
                 . '</td><td>' . ((bool) $group['is_system'] ? 'system' : 'custom') . '</td><td>'
                 . ((int) $group['primary_members'] + (int) $group['secondary_members']) . '</td></tr>';
+        }
+
+        $selectedGroup = $snapshot['selected_group'] ?? null;
+        $groupEditor = '';
+        if (is_array($selectedGroup)) {
+            $groupEditor = '<section class="ac-panel"><h2>Seçili grup</h2><form class="ac-form" method="post" action="' . $action . '">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_group">'
+                . '<input type="hidden" name="group_id" value="' . self::e((string) $selectedGroup['group_id']) . '">'
+                . '<div class="ac-row"><label>Key<input name="group_key" maxlength="64" value="' . self::e((string) $selectedGroup['group_key']) . '"></label>'
+                . '<label>Ad<input name="name" maxlength="100" value="' . self::e((string) $selectedGroup['name']) . '"></label>'
+                . '<label>Sort order<input name="sort_order" type="number" min="0" max="65535" value="' . (int) $selectedGroup['sort_order'] . '"></label></div>'
+                . ((bool) $selectedGroup['is_system'] ? '<p class="ac-muted">System grubunun key değeri backend tarafından immutable tutulur.</p>' : '')
+                . '<button class="ac-btn" type="submit">Grubu kaydet</button></form></section>';
         }
 
         $roles = '';
@@ -256,6 +270,7 @@ final class AdminCommunityHtml
             . '<label>Key<input name="role_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label><label>Kind<select name="kind"><option value="custom">custom</option><option value="staff">staff</option></select></label><label>Priority<input name="priority" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Rol oluştur</button></form></section></div>'
             . '<div class="ac-grid"><section class="ac-card"><h3>Gruplar</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Tür</th><th>Üye</th></tr></thead><tbody>' . $groups . '</tbody></table></div></section>'
             . '<section class="ac-card"><h3>Roller</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Kind</th><th>Priority</th><th>Üye</th></tr></thead><tbody>' . $roles . '</tbody></table></div></section></div>'
+            . $groupEditor
             . '<section class="ac-panel"><h2>Seçili rol</h2>' . $roleEditor . '</section>'
             . '<section class="ac-panel"><h2>Permission analyzer</h2><form class="ac-form" method="get" action="' . $action . '"><div class="ac-row">'
             . '<label>Kullanıcı<select name="analyze_user" required><option value="">Seç</option>' . $userOptions . '</select></label>'
