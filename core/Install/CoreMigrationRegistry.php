@@ -27,6 +27,7 @@ use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
 use Forwext\Database\Migrations\Core\CreateFaqSystem;
 use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
+use Forwext\Database\Migrations\Core\CreateFirstPartyModuleManager;
 use Forwext\Database\Migrations\Core\CreateGiveawayDomain;
 use Forwext\Database\Migrations\Core\CreateGiveawayParticipation;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawSystem;
@@ -184,6 +185,7 @@ final class CoreMigrationRegistry
             new CreateLayoutBuilderSystem(),
             new CreateThemeTemplateLanguageRevisionSystem(),
             new CreateAdminInformationArchitecture(),
+            new CreateFirstPartyModuleManager(),
         ];
     }
 }
