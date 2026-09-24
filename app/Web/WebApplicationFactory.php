@@ -8,6 +8,7 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
@@ -143,6 +144,8 @@ use Forwext\Core\Analytics\Operations\OperationsAnalyticsService;
 use Forwext\Core\Analytics\Commerce\CommerceAnalyticsService;
 use Forwext\Core\Analytics\Commerce\DatabaseCommerceAnalyticsRepository;
 use Forwext\Core\Admin\AdminInformationArchitectureService;
+use Forwext\Core\Admin\Community\AdminCommunitySection;
+use Forwext\Core\Admin\Community\AdminCommunityService;
 use Forwext\Core\Admin\Dashboard\AdminActionQueueService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
@@ -177,7 +180,9 @@ use Forwext\Core\Content\Spellcheck\TurkishSpellcheckProvider;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
+use Forwext\Core\Domain\Access\Appearance\DatabaseRoleAppearanceRepository;
 use Forwext\Core\Domain\Access\DatabaseUserAccessAssignmentProvider;
+use Forwext\Core\Domain\Access\Permission\Analyzer\PermissionAnalyzer;
 use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
@@ -488,6 +493,16 @@ final readonly class WebApplicationFactory
             $this->advertisingFrequencyKey($config),
         );
         $nodes = new DatabaseForumNodeRepository($database);
+        $adminCommunity = new AdminCommunityService(
+            $database,
+            $users,
+            new DatabaseUserAccessAssignmentProvider($database),
+            new PermissionAnalyzer(new PermissionEngine(new DatabasePermissionRuleRepository($database))),
+            new DatabaseRoleAppearanceRepository($database),
+            $nodes,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
         $searchChanges = new DatabaseSearchIndexChangeStore($database);
         $contentGovernanceAudit = new CoreAuditRecorder($database, new DatabaseAuditEventStore($database));
         $spellcheck = new SpellcheckService(
@@ -898,6 +913,7 @@ final readonly class WebApplicationFactory
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $adminNavigationCsrf = $this->adminNavigationCsrfMiddleware($config);
+        $adminCommunityCsrf = $this->adminCommunityCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
@@ -1671,6 +1687,15 @@ final readonly class WebApplicationFactory
             new AdminDashboardHandler($adminInformation, $viewerResolver, $basePath),
             [$adminNavigationCsrf],
         ));
+        foreach (AdminCommunitySection::cases() as $adminSection) {
+            $routes->add(new Route(
+                'admin.community.' . $adminSection->value,
+                [HttpMethod::Get, HttpMethod::Post],
+                new PathTemplate($adminSection->path()),
+                new AdminCommunityHandler($adminCommunity, $viewerResolver, $basePath, $adminSection),
+                [$adminCommunityCsrf],
+            ));
+        }
         $routes->add(new Route(
             'appearance.guide',
             [HttpMethod::Get],
@@ -1944,6 +1969,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function adminCommunityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'admin-community', 'forwext.csrf.admin-community.v1');
     }
 
     private function adminNavigationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

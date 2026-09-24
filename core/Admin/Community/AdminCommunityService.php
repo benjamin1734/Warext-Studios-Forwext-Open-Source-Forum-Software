@@ -100,6 +100,7 @@ final readonly class AdminCommunityService
      *   roles:list<array<string,mixed>>,
      *   permissions:list<array<string,mixed>>,
      *   nodes:list<array<string,mixed>>,
+     *   users:list<array<string,mixed>>,
      *   selected_role:?array<string,mixed>,
      *   selected_appearance:?RoleAppearance,
      *   analysis:?PermissionAnalysis
@@ -130,6 +131,9 @@ final readonly class AdminCommunityService
         ));
         $nodes = $this->database->fetchAll(new CompiledQuery(
             'SELECT node_id,title,node_type FROM forwext_nodes ORDER BY sort_order,title,node_id',
+        ));
+        $users = $this->database->fetchAll(new CompiledQuery(
+            'SELECT user_id,username,status FROM forwext_users ORDER BY updated_at_utc DESC,user_id DESC LIMIT 200',
         ));
 
         $selectedRole = null;
@@ -176,6 +180,7 @@ final readonly class AdminCommunityService
             'roles'=>$roles,
             'permissions'=>$permissions,
             'nodes'=>$nodes,
+            'users'=>$users,
             'selected_role'=>$selectedRole,
             'selected_appearance'=>$selectedAppearance,
             'analysis'=>$analysis,
@@ -394,6 +399,9 @@ final readonly class AdminCommunityService
 
         $user = $this->users->find($userId)
             ?? throw new InvalidArgumentException('ACP user was not found.');
+        if ($user->status()->isModerationRestricted()) {
+            throw new InvalidArgumentException('Moderation-restricted account state must be changed through Discipline revoke/ban workflow.');
+        }
         $reason = trim($reason);
         if ($reason === '' || strlen($reason) > 120) {
             throw new InvalidArgumentException('ACP account-state reason must contain 1-120 bytes.');
@@ -628,8 +636,8 @@ final readonly class AdminCommunityService
         return [
             'threads'=>$this->count('SELECT COUNT(*) FROM forwext_threads'),
             'posts'=>$this->count('SELECT COUNT(*) FROM forwext_posts'),
-            'thread_pending'=>$this->count("SELECT COUNT(*) FROM forwext_threads WHERE moderation_state='moderated'"),
-            'post_pending'=>$this->count("SELECT COUNT(*) FROM forwext_posts WHERE moderation_state='moderated'"),
+            'thread_pending'=>$this->count("SELECT COUNT(*) FROM forwext_threads WHERE moderation_state='pending'"),
+            'post_pending'=>$this->count("SELECT COUNT(*) FROM forwext_posts WHERE moderation_state='pending'"),
             'deleted_threads'=>$this->count('SELECT COUNT(*) FROM forwext_threads WHERE deleted=1'),
             'deleted_posts'=>$this->count('SELECT COUNT(*) FROM forwext_posts WHERE deleted=1'),
         ];
