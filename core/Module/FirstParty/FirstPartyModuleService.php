@@ -1,0 +1,510 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Forwext\Core\Module\FirstParty;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Forwext\Core\Audit\AuditAction;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Audit\AuditRequestId;
+use Forwext\Core\Audit\AuditScope;
+use Forwext\Core\Database\CompiledQuery;
+use Forwext\Core\Database\DatabaseConnection;
+use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
+use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
+use Forwext\Core\Domain\Access\Permission\PermissionKey;
+use Forwext\Core\Domain\Entity\EntityId;
+use InvalidArgumentException;
+
+final readonly class FirstPartyModuleService
+{
+    private const ACP_PERMISSION = 'acp.manage';
+    private const MODULE_PERMISSION = 'module.manage';
+
+    public function __construct(
+        private DatabaseConnection $database,
+        private FirstPartyModuleRegistry $registry,
+        private FirstPartyModuleRepository $repository,
+        private FirstPartyModuleDataPurger $purger,
+        private PermissionAuthorizer $authorizer,
+        private AuditRecorder $audit,
+    ) {
+    }
+
+    public function managementSnapshot(EntityId $actor, ?string $selectedModuleKey = null): array
+    {
+        $this->requireManage($actor);
+        $records = $this->records();
+        $selected = $selectedModuleKey === null ? null : $this->registry->require($selectedModuleKey);
+        $settings = [];
+        if ($selected !== null) {
+            $settings['global'] = $this->repository->settings(
+                $selected->key,
+                FirstPartyModuleScope::Global,
+                'global',
+            );
+        }
+
+        return [
+            'definitions'=>$this->registry->all(),
+            'records'=>$records,
+            'selected'=>$selected,
+            'selected_record'=>$selected === null ? null : $records[$selected->key],
+            'settings'=>$settings,
+            'dependents'=>$selected === null ? [] : $this->registry->dependentsOf($selected->key),
+            'conflicts'=>$selected === null ? [] : $this->registry->conflictsOf($selected->key),
+        ];
+    }
+
+    public function isEnabled(string $moduleKey): bool
+    {
+        $this->registry->require($moduleKey);
+
+        return $this->repository->state($moduleKey)->state === FirstPartyModuleState::Enabled;
+    }
+
+    public function enable(
+        EntityId $actor,
+        string $moduleKey,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        $record = $this->repository->state($moduleKey);
+        if ($record->state !== FirstPartyModuleState::Disabled) {
+            throw new InvalidArgumentException('Only disabled modules can be enabled.');
+        }
+
+        foreach ($definition->dependencies as $dependency) {
+            if ($this->repository->state($dependency)->state !== FirstPartyModuleState::Enabled) {
+                throw new InvalidArgumentException('Module dependency must be enabled first: ' . $dependency);
+            }
+        }
+        foreach ($this->registry->conflictsOf($moduleKey) as $conflict) {
+            if ($this->repository->state($conflict->key)->state === FirstPartyModuleState::Enabled) {
+                throw new InvalidArgumentException('Conflicting module is enabled: ' . $conflict->key);
+            }
+        }
+
+        $this->saveLifecycleState(
+            $actor,
+            $definition,
+            $record,
+            FirstPartyModuleState::Enabled,
+            $record->dataState,
+            'module.enable',
+            $requestId,
+            $at,
+        );
+    }
+
+    public function disable(
+        EntityId $actor,
+        string $moduleKey,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        $record = $this->repository->state($moduleKey);
+        if ($record->state !== FirstPartyModuleState::Enabled) {
+            throw new InvalidArgumentException('Only enabled modules can be disabled.');
+        }
+
+        foreach ($this->registry->dependentsOf($moduleKey) as $dependent) {
+            if ($this->repository->state($dependent->key)->state === FirstPartyModuleState::Enabled) {
+                throw new InvalidArgumentException('Enabled dependent module must be disabled first: ' . $dependent->key);
+            }
+        }
+
+        $this->saveLifecycleState(
+            $actor,
+            $definition,
+            $record,
+            FirstPartyModuleState::Disabled,
+            $record->dataState,
+            'module.disable',
+            $requestId,
+            $at,
+        );
+    }
+
+    public function install(
+        EntityId $actor,
+        string $moduleKey,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        $record = $this->repository->state($moduleKey);
+        if ($record->state !== FirstPartyModuleState::Uninstalled) {
+            throw new InvalidArgumentException('Only uninstalled modules can be installed.');
+        }
+        if ($record->dataState === FirstPartyModuleDataState::PurgePending) {
+            throw new InvalidArgumentException('Pending storage purge must finish before reinstall.');
+        }
+        foreach ($definition->dependencies as $dependency) {
+            if ($this->repository->state($dependency)->state === FirstPartyModuleState::Uninstalled) {
+                throw new InvalidArgumentException('Module dependency must be installed first: ' . $dependency);
+            }
+        }
+
+        $this->saveLifecycleState(
+            $actor,
+            $definition,
+            $record,
+            FirstPartyModuleState::Disabled,
+            $record->dataState,
+            'module.install',
+            $requestId,
+            $at,
+        );
+    }
+
+    public function uninstall(
+        EntityId $actor,
+        string $moduleKey,
+        bool $deleteData,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        $record = $this->repository->state($moduleKey);
+        if ($record->state !== FirstPartyModuleState::Disabled) {
+            throw new InvalidArgumentException('Module must be disabled before uninstall.');
+        }
+
+        foreach ($this->registry->dependentsOf($moduleKey) as $dependent) {
+            if ($this->repository->state($dependent->key)->state !== FirstPartyModuleState::Uninstalled) {
+                throw new InvalidArgumentException('Dependent module must be uninstalled first: ' . $dependent->key);
+            }
+        }
+
+        if (!$deleteData) {
+            $this->saveLifecycleState(
+                $actor,
+                $definition,
+                $record,
+                FirstPartyModuleState::Uninstalled,
+                FirstPartyModuleDataState::Retained,
+                'module.uninstall.keep_data',
+                $requestId,
+                $at,
+            );
+            return;
+        }
+
+        $pending = 0;
+        $event = $this->event(
+            $actor,
+            'module.uninstall.delete_data',
+            $definition->key,
+            self::snapshot($record),
+            [
+                'state'=>FirstPartyModuleState::Uninstalled->value,
+                'data_state'=>$definition->storagePathQueries === []
+                    ? FirstPartyModuleDataState::Purged->value
+                    : FirstPartyModuleDataState::PurgePending->value,
+            ],
+            $requestId,
+            $at,
+        );
+
+        $this->audit->mutate($event, function () use (
+            $definition,
+            $actor,
+            $at,
+            &$pending,
+        ): void {
+            $pending = $this->purger->purgeDatabaseAndQueueStorage($definition, $at);
+            $this->repository->saveState(
+                $definition->key,
+                FirstPartyModuleState::Uninstalled,
+                $pending === 0
+                    ? FirstPartyModuleDataState::Purged
+                    : FirstPartyModuleDataState::PurgePending,
+                $actor,
+                $at,
+            );
+        });
+
+        if ($pending > 0) {
+            $this->retryPurge($actor, $moduleKey, $requestId, $at);
+        }
+    }
+
+    public function retryPurge(
+        EntityId $actor,
+        string $moduleKey,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): int {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        $before = $this->repository->state($moduleKey);
+        if ($before->state !== FirstPartyModuleState::Uninstalled
+            || $before->dataState !== FirstPartyModuleDataState::PurgePending
+        ) {
+            throw new InvalidArgumentException('Module has no pending purge.');
+        }
+
+        $beforePending = $this->repository->pendingStoragePathCount($moduleKey);
+        $remaining = $this->purger->processStorageQueue($moduleKey, $at);
+        $afterDataState = $remaining === 0
+            ? FirstPartyModuleDataState::Purged
+            : FirstPartyModuleDataState::PurgePending;
+
+        $event = $this->event(
+            $actor,
+            'module.purge.retry',
+            $definition->key,
+            self::snapshot($before) + ['pending_storage'=>$beforePending],
+            [
+                'state'=>FirstPartyModuleState::Uninstalled->value,
+                'data_state'=>$afterDataState->value,
+                'pending_storage'=>$remaining,
+            ],
+            $requestId,
+            $at,
+        );
+        $this->audit->mutate($event, function () use ($moduleKey, $afterDataState, $actor, $at): void {
+            $this->repository->saveState(
+                $moduleKey,
+                FirstPartyModuleState::Uninstalled,
+                $afterDataState,
+                $actor,
+                $at,
+            );
+        });
+
+        return $remaining;
+    }
+
+    public function saveSetting(
+        EntityId $actor,
+        string $moduleKey,
+        string $settingKey,
+        FirstPartyModuleScope $scope,
+        ?string $scopeId,
+        mixed $value,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        if ($this->repository->state($moduleKey)->state === FirstPartyModuleState::Uninstalled) {
+            throw new InvalidArgumentException('Cannot edit settings for an uninstalled module.');
+        }
+        $setting = $definition->setting($settingKey)
+            ?? throw new InvalidArgumentException('Unknown module setting.');
+        if (!$setting->supports($scope)) {
+            throw new InvalidArgumentException('Module setting does not support this scope.');
+        }
+
+        $resolvedScopeId = $this->scopeId($scope, $scopeId);
+        $normalized = $setting->normalize($value);
+        $before = $this->repository->settings($moduleKey, $scope, $resolvedScopeId);
+        $event = $this->event(
+            $actor,
+            'module.setting.save',
+            $moduleKey,
+            [
+                'scope'=>$scope->value,
+                'scope_id'=>$resolvedScopeId,
+                'setting'=>$settingKey,
+                'value'=>$before[$settingKey] ?? $setting->defaultValue,
+            ],
+            [
+                'scope'=>$scope->value,
+                'scope_id'=>$resolvedScopeId,
+                'setting'=>$settingKey,
+                'value'=>$normalized,
+            ],
+            $requestId,
+            $at,
+        );
+        $this->audit->mutate($event, function () use (
+            $moduleKey,
+            $scope,
+            $resolvedScopeId,
+            $settingKey,
+            $normalized,
+            $actor,
+            $at,
+        ): void {
+            $this->repository->saveSetting(
+                $moduleKey,
+                $scope,
+                $resolvedScopeId,
+                $settingKey,
+                $normalized,
+                $actor,
+                $at,
+            );
+        });
+    }
+
+    public function effectiveSetting(
+        string $moduleKey,
+        string $settingKey,
+        ?EntityId $forumId = null,
+        ?EntityId $groupId = null,
+        ?EntityId $threadId = null,
+        ?EntityId $postId = null,
+    ): bool|int|string {
+        $definition = $this->registry->require($moduleKey);
+        $setting = $definition->setting($settingKey)
+            ?? throw new InvalidArgumentException('Unknown module setting.');
+
+        $candidates = [
+            [FirstPartyModuleScope::Post, $postId],
+            [FirstPartyModuleScope::Thread, $threadId],
+            [FirstPartyModuleScope::Forum, $forumId],
+            [FirstPartyModuleScope::Group, $groupId],
+        ];
+        foreach ($candidates as [$scope, $id]) {
+            if (!$id instanceof EntityId || !$setting->supports($scope)) {
+                continue;
+            }
+            $values = $this->repository->settings($moduleKey, $scope, $id->value());
+            if (array_key_exists($settingKey, $values)) {
+                return $values[$settingKey];
+            }
+        }
+
+        if ($setting->supports(FirstPartyModuleScope::Global)) {
+            $global = $this->repository->settings($moduleKey, FirstPartyModuleScope::Global, 'global');
+            if (array_key_exists($settingKey, $global)) {
+                return $global[$settingKey];
+            }
+        }
+
+        return $setting->defaultValue;
+    }
+
+    private function records(): array
+    {
+        $stored = $this->repository->states();
+        $result = [];
+        foreach ($this->registry->all() as $definition) {
+            $result[$definition->key] = $stored[$definition->key]
+                ?? $this->repository->state($definition->key);
+        }
+
+        return $result;
+    }
+
+    private function saveLifecycleState(
+        EntityId $actor,
+        FirstPartyModuleDefinition $definition,
+        FirstPartyModuleRecord $before,
+        FirstPartyModuleState $state,
+        FirstPartyModuleDataState $dataState,
+        string $action,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->audit->mutate(
+            $this->event(
+                $actor,
+                $action,
+                $definition->key,
+                self::snapshot($before),
+                ['state'=>$state->value,'data_state'=>$dataState->value],
+                $requestId,
+                $at,
+            ),
+            fn (): mixed => $this->repository->saveState(
+                $definition->key,
+                $state,
+                $dataState,
+                $actor,
+                $at,
+            ),
+        );
+    }
+
+    private function scopeId(FirstPartyModuleScope $scope, ?string $scopeId): string
+    {
+        if (!$scope->needsTarget()) {
+            return 'global';
+        }
+        if ($scopeId === null || preg_match('/^[A-Za-z0-9][A-Za-z0-9._:-]{0,190}$/D', $scopeId) !== 1) {
+            throw new InvalidArgumentException('Module setting scope target is invalid.');
+        }
+
+        $exists = match ($scope) {
+            FirstPartyModuleScope::Global => 1,
+            FirstPartyModuleScope::Forum => $this->database->fetchValue(new CompiledQuery(
+                "SELECT COUNT(*) FROM forwext_nodes WHERE node_id=:id AND node_type='forum'",
+                ['id'=>$scopeId],
+            )),
+            FirstPartyModuleScope::Group => $this->database->fetchValue(new CompiledQuery(
+                'SELECT COUNT(*) FROM forwext_user_groups WHERE group_id=:id',
+                ['id'=>$scopeId],
+            )),
+            FirstPartyModuleScope::Thread => $this->database->fetchValue(new CompiledQuery(
+                'SELECT COUNT(*) FROM forwext_threads WHERE thread_id=:id',
+                ['id'=>$scopeId],
+            )),
+            FirstPartyModuleScope::Post => $this->database->fetchValue(new CompiledQuery(
+                'SELECT COUNT(*) FROM forwext_posts WHERE post_id=:id',
+                ['id'=>$scopeId],
+            )),
+        };
+        if ((int) $exists !== 1) {
+            throw new InvalidArgumentException('Module setting scope target was not found.');
+        }
+
+        return $scopeId;
+    }
+
+    private function requireManage(EntityId $actor): void
+    {
+        foreach ([self::ACP_PERMISSION, self::MODULE_PERMISSION] as $permission) {
+            $decision = $this->authorizer->resolve($actor, PermissionKey::fromString($permission));
+            if (!$decision->isAllowed()) {
+                throw new PermissionDeniedException($decision);
+            }
+        }
+    }
+
+    private function event(
+        EntityId $actor,
+        string $action,
+        string $moduleKey,
+        array $before,
+        array $after,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): AuditEvent {
+        return new AuditEvent(
+            AuditEvent::generateId(),
+            AuditScope::Administration,
+            $actor,
+            AuditAction::fromString($action),
+            'first_party_module',
+            $moduleKey,
+            null,
+            $action,
+            $requestId,
+            $before,
+            $after,
+            $at->setTimezone(new DateTimeZone('UTC')),
+        );
+    }
+
+    private static function snapshot(FirstPartyModuleRecord $record): array
+    {
+        return [
+            'state'=>$record->state->value,
+            'data_state'=>$record->dataState->value,
+        ];
+    }
+}
