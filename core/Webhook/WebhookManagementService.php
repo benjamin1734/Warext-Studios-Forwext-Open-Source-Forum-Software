@@ -46,6 +46,27 @@ final readonly class WebhookManagementService
         return $this->platform->testSubscription($subscriptionId);
     }
 
+    /** @return list<WebhookDelivery> */
+    public function deliveries(
+        EntityId $actorUserId,
+        WebhookRepository $repository,
+        string $subscriptionId,
+        int $limit=100,
+    ):array{
+        $this->assertAllowed($actorUserId);
+        return $repository->recentDeliveries($subscriptionId,$limit);
+    }
+
+    /** @return list<WebhookDeliveryAttempt> */
+    public function attempts(
+        EntityId $actorUserId,
+        WebhookRepository $repository,
+        string $deliveryId,
+    ):array{
+        $this->assertAllowed($actorUserId);
+        return $repository->attempts($deliveryId);
+    }
+
     private function assertAllowed(EntityId $actorUserId):void
     {
         if(!$this->permissions->allows($actorUserId,$this->managePermission)){

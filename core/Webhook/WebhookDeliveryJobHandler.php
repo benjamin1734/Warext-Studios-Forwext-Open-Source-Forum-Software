@@ -6,6 +6,8 @@ namespace Forwext\Core\Webhook;
 
 use DateInterval;
 use DateTimeImmutable;
+use Forwext\Core\Infrastructure\Clock;
+use Forwext\Core\Infrastructure\SystemClock;
 use Forwext\Core\Queue\QueueDriver;
 use Forwext\Core\Queue\QueueJobHandler;
 use Forwext\Core\Queue\QueueName;
@@ -20,6 +22,7 @@ final readonly class WebhookDeliveryJobHandler implements QueueJobHandler
         private WebhookDestinationPolicy $destinations,
         private WebhookTransport $transport,
         private QueueDriver $queue,
+        private Clock $clock=new SystemClock(),
     ){}
 
     public function jobType():string{return WebhookPlatformService::JOB_TYPE;}
@@ -79,7 +82,7 @@ final readonly class WebhookDeliveryJobHandler implements QueueJobHandler
             $result=WebhookTransportResult::failure('delivery_exception',true);
         }
 
-        $finished=$now;
+        $finished=$this->clock->now();
         $this->repository->recordAttempt(
             $delivery->id,$attempt,$result->successful?'delivered':'failed',$result->httpStatus,
             $result->errorCode,$result->retryable,$started,$finished,

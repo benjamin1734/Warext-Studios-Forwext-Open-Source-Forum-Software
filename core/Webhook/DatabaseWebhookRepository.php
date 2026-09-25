@@ -104,6 +104,40 @@ final readonly class DatabaseWebhookRepository implements WebhookRepository
         return $row===null?null:self::deliveryFromRow($row);
     }
 
+    public function recentDeliveries(string $subscriptionId,int $limit=100):array
+    {
+        self::assertId($subscriptionId);
+        if($limit<1||$limit>500)throw new RuntimeException('Webhook delivery list limit is invalid.');
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT delivery_id,subscription_id,event_name,body_json,is_test,status,attempt_count,max_attempts,'
+            .'next_attempt_at_utc,last_http_status,last_error_code,created_at_utc,updated_at_utc,delivered_at_utc '
+            .'FROM forwext_webhook_deliveries WHERE subscription_id=:subscription_id '
+            .'ORDER BY created_at_utc DESC,delivery_id DESC LIMIT '.$limit,
+            ['subscription_id'=>$subscriptionId],
+        ));
+        return array_map(self::deliveryFromRow(...),$rows);
+    }
+
+    public function attempts(string $deliveryId):array
+    {
+        self::assertId($deliveryId);
+        $rows=$this->database->fetchAll(new CompiledQuery(
+            'SELECT delivery_id,attempt_number,result,http_status,error_code,retryable,'
+            .'started_at_utc,finished_at_utc,duration_ms FROM forwext_webhook_delivery_attempts '
+            .'WHERE delivery_id=:delivery_id ORDER BY attempt_number',
+            ['delivery_id'=>$deliveryId],
+        ));
+        return array_map(static fn(array $row):WebhookDeliveryAttempt=>new WebhookDeliveryAttempt(
+            (string)($row['delivery_id']??''),(int)($row['attempt_number']??0),(string)($row['result']??''),
+            isset($row['http_status'])?(int)$row['http_status']:null,
+            is_string($row['error_code']??null)?$row['error_code']:null,
+            (int)($row['retryable']??0)===1,
+            self::parse((string)($row['started_at_utc']??'')),
+            self::parse((string)($row['finished_at_utc']??'')),
+            (int)($row['duration_ms']??0),
+        ),$rows);
+    }
+
     public function recordAttempt(
         string $deliveryId,
         int $attemptNumber,

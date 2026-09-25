@@ -25,6 +25,12 @@ interface WebhookRepository
     public function createDelivery(WebhookDelivery $delivery): void;
     public function delivery(string $deliveryId): ?WebhookDelivery;
 
+    /** @return list<WebhookDelivery> */
+    public function recentDeliveries(string $subscriptionId, int $limit = 100): array;
+
+    /** @return list<WebhookDeliveryAttempt> */
+    public function attempts(string $deliveryId): array;
+
     public function recordAttempt(
         string $deliveryId,
         int $attemptNumber,

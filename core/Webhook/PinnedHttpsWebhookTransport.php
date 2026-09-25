@@ -31,7 +31,7 @@ final readonly class PinnedHttpsWebhookTransport implements WebhookTransport
         );
 
         try{
-            $response=$this->http->postJson($endpoint,$headers,$body,$timeoutMilliseconds,65536);
+            $response=$this->http->postJson($endpoint,['User-Agent'=>'Forwext-Webhook/1.0']+$headers,$body,$timeoutMilliseconds,65536);
         }catch(AiModerationTimeoutException){
             return WebhookTransportResult::failure('timeout',true);
         }catch(AiModerationProviderException){
