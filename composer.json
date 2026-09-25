@@ -27,7 +27,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Forwext\\Tests\\": "tests/"
+      "Forwext\\Tests\\": "tests/",
+      "Forwext\\Tools\\": "tools/"
     }
   },
   "scripts": {
@@ -36,7 +37,13 @@
     "qa:phpstan": "phpstan analyse --configuration=phpstan.neon.dist --no-progress",
     "qa:psalm": "psalm --config=psalm.xml --no-cache --no-progress",
     "test": "phpunit --configuration=phpunit.xml.dist",
-    "qa:php": ["@qa:strict-types", "@qa:cs", "@qa:phpstan", "@qa:psalm", "@test"]
+    "qa:php": [
+      "@qa:strict-types",
+      "@qa:cs",
+      "@qa:phpstan",
+      "@qa:psalm",
+      "@test"
+    ]
   },
   "config": {
     "sort-packages": true,
