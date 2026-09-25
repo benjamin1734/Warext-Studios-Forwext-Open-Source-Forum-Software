@@ -291,6 +291,23 @@ final readonly class AdminNavigationRegistry
         ]);
     }
 
+    /** @param iterable<AdminNavigationItem> $extensionItems */
+    public static function withExtensions(
+        PermissionAuthorizer $authorizer,
+        iterable $extensionItems,
+    ): self {
+        $core = self::withCoreDefaults($authorizer);
+        $items = $core->items;
+        foreach ($extensionItems as $item) {
+            if (!$item instanceof AdminNavigationItem) {
+                throw new InvalidArgumentException('Admin navigation extension contains an invalid item.');
+            }
+            $items[] = $item;
+        }
+
+        return new self($authorizer, $items);
+    }
+
     /** @return list<AdminNavigationItem> */
     public function visible(EntityId $actor): array
     {

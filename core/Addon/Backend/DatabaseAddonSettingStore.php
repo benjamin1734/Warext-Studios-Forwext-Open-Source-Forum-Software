@@ -71,7 +71,7 @@ final readonly class DatabaseAddonSettingStore implements AddonSettingStore
                 'actor'=>$actor->value(),
                 'updated_at'=>$timestamp,
             ],
-            true,
+            requiresTransaction:true,
         ));
 
         return $normalized;
@@ -82,7 +82,7 @@ final readonly class DatabaseAddonSettingStore implements AddonSettingStore
         $this->database->execute(new CompiledQuery(
             'DELETE FROM forwext_addon_setting_values WHERE addon_id=:addon_id AND setting_key=:setting_key',
             ['addon_id'=>$addonId->value(),'setting_key'=>$definition->key],
-            true,
+            requiresTransaction:true,
         ));
     }
 }
