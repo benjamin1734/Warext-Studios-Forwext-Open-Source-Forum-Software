@@ -6,7 +6,11 @@ namespace Forwext\Tools\Addon;
 
 final readonly class AddonBuildResult
 {
-    public function __construct(public string $path, public string $checksum, public int $fileCount)
-    {
+    public function __construct(
+        public string $path,
+        public string $checksum,
+        public int $fileCount,
+        public string $checksumPath,
+    ) {
     }
 }

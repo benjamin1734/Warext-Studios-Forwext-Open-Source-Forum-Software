@@ -32,7 +32,7 @@ final readonly class AddonBuildCommand implements CliCommand
         }
         $result = $this->builder->build(AddonId::fromString($arguments[0]), $arguments[1] ?? null);
         return CliResult::success(
-            "Built {$result->path}\nSHA-256: {$result->checksum}\nFiles: {$result->fileCount}\n",
+            "Built {$result->path}\nSHA-256: {$result->checksum}\nChecksum: {$result->checksumPath}\nFiles: {$result->fileCount}\n",
         );
     }
 }

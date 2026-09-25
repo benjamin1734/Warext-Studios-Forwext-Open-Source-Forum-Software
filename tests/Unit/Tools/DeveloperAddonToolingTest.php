@@ -34,6 +34,8 @@ final class DeveloperAddonToolingTest extends TestCase
             $builder = new AddonPackageBuilder($root, $checker);
             $first = $builder->build(AddonId::fromString('Acme/Demo'));
             self::assertFileExists($first->path);
+            self::assertFileExists($first->checksumPath);
+            self::assertStringContainsString($first->checksum, (string) file_get_contents($first->checksumPath));
             self::assertSame("PK\x03\x04", (string) file_get_contents($first->path, false, null, 0, 4));
 
             $second = $builder->build(

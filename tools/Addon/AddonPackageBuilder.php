@@ -72,6 +72,7 @@ final readonly class AddonPackageBuilder
                 'id'=>$id->value(),
                 'version'=>$package->manifest->version->value(),
                 'source_checksum'=>$package->checksum,
+                'capabilities'=>array_map(static fn ($capability): string => $capability->value, $package->manifest->capabilities),
                 'files'=>$checksums,
             ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
         } catch (JsonException $exception) {
@@ -95,6 +96,22 @@ final readonly class AddonPackageBuilder
         if (!is_string($checksum)) {
             throw new RuntimeException('Unable to checksum built add-on package.');
         }
-        return new AddonBuildResult($output, $checksum, count($files));
+        $checksumPath = $output . '.sha256';
+        $checksumLine = $checksum . '  ' . basename($output) . "\n";
+        $temporary = $checksumPath . '.' . bin2hex(random_bytes(8)) . '.tmp';
+        try {
+            if (file_put_contents($temporary, $checksumLine, LOCK_EX) !== strlen($checksumLine)) {
+                throw new RuntimeException('Unable to write add-on checksum sidecar.');
+            }
+            if (!chmod($temporary, 0644) || !rename($temporary, $checksumPath)) {
+                throw new RuntimeException('Unable to publish add-on checksum sidecar.');
+            }
+        } finally {
+            if (is_file($temporary)) {
+                @unlink($temporary);
+            }
+        }
+
+        return new AddonBuildResult($output, $checksum, count($files), $checksumPath);
     }
 }
