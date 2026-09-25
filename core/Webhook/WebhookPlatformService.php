@@ -57,9 +57,17 @@ final readonly class WebhookPlatformService
         if(!$subscription->active)throw new WebhookException('Inactive webhook cannot rotate secrets.');
         if($subscription->secretVersion>=65535)throw new WebhookException('Webhook secret version is exhausted.');
 
+        $now=$this->clock->now();
+        if($subscription->previousSecretVersion!==null
+            &&$subscription->previousSecretValidUntil!==null
+            &&$subscription->previousSecretValidUntil>=$now
+        ){
+            throw new WebhookException('Webhook secret rotation grace period is still active.');
+        }
+
+        $stalePrevious=$subscription->previousSecretVersion;
         $next=$subscription->secretVersion+1;
         $secret=$this->secrets->issue($subscriptionId,$next);
-        $now=$this->clock->now();
         $validUntil=$now->add(new DateInterval('PT'.$graceSeconds.'S'));
         try{
             $this->repository->updateSecretRotation(
@@ -68,6 +76,9 @@ final readonly class WebhookPlatformService
         }catch(Throwable $e){
             $this->secrets->delete($subscriptionId,$next);
             throw $e;
+        }
+        if($stalePrevious!==null){
+            $this->secrets->delete($subscriptionId,$stalePrevious);
         }
         return $secret;
     }
