@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.01 — Add-on manifest/package/lifecycle
+
+- Added canonical `Vendor/AddOn` identity, strict `addon.json`, spec-correct SemVer 2.0 versions/constraints and deterministic package checksum inspection.
+- Added requires/conflicts graph validation, cycle detection and audited install/enable/disable/upgrade/uninstall lifecycle under `acp.access` + `addon.manage`.
+- Added fail-closed data-retention/purge semantics, immutable same-version reinstall checksum, monotonic purged-state handling and runtime compatibility revalidation on enable.
+- Added additive MySQL/MariaDB add-on registry/relations migration plus canonical add-on migration-owner support.
+- Added real lifecycle behavior tests and package/manifest/dependency/security/migration coverage.
+- Implementation/test commits: `69c414391d262fe6ebcbf88f6080b25379a04216`, `0991043d070467177b7c7e81fd871f3f45e5c2ab`, `8f8fc3107e8369bd6bf68ba53df8b9d909f91396`, `06134fe03052956c1972eb0d878b29a59d155d4d`, `35b0be5ae1dd3d3734776ca5db0429cd026bbe8e`, `ca7b1be5156a679db057bc03ecd0030867dc52a7`, `aee6b0bd1626572c6733c8947d5449596777313b`, `9bb8060b078ca3cfb0b0783a75321e3704c11fce`, `3a9a9430290deeec3c538d3f07c6a7dd2df8ca40`, `58d2899a39b09165e41a0aefff0861017b87c80a`, `d5ff45d1a31f5c5e6ee50f2d943a969447dd81e5`, `8e330a03e26c0ebd37c7788f22efeed005d0e6d6`.
+- GitHub Actions build run `36118467248` and DB smoke run `36118467211` succeeded.
+
 ### 17.06 — ACP UX quality standard
 
 - Added a shared safe-work guidance contract across the native Administration dashboard, Community ACP, Module Manager, System/Integrations and System Operations.

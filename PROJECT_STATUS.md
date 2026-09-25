@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.50-dev
+CURRENT_VERSION = 0.0.7.51-dev
 LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 17.06
-CURRENT_STEP = 18.01
-LAST_COMMIT = 837af3c93edb8e23dc38779e217b5622bed654e4
+LAST_COMPLETED_SUBSTEP = 18.01
+CURRENT_STEP = 18.02
+LAST_COMMIT = 8e330a03e26c0ebd37c7788f22efeed005d0e6d6
 BLOCKERS = none
-NEXT_STEP = 18.01 - Add-on manifest/package/lifecycle
+NEXT_STEP = 18.02 - Events/decorators/DI extension API
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 18.01 - Add-on manifest/package/lifecycle
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`.
-- Current sub-step: `18.01 — Add-on manifest/package/lifecycle`.
-- Remaining roadmap work after 17.06: **20 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01`.
+- Current sub-step: `18.02 — Events/decorators/DI extension API`.
+- Remaining roadmap work after 18.01: **19 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 18.01
+
+- Added canonical third-party add-on identity with bounded `Vendor/AddOn` IDs and strict package location matching under `addons/Vendor/AddOn/`.
+- Added strict `addon.json` parsing with unknown-key rejection, SemVer 2.0 versions, spec-correct prerelease precedence, minimum Forwext version, requires/conflicts and explicit data-retention policy.
+- Added symlink-safe, size-bounded extracted-package inspection with deterministic SHA-256 tree checksum and manifest/path identity verification.
+- Added dependency/conflict resolver with missing/incompatible requirement detection, symmetric conflicts, dependency-cycle rejection and enable/disable/uninstall safety checks.
+- Added audited lifecycle operations for install, enable, disable, upgrade and uninstall under backend `acp.access` + `addon.manage`.
+- Added fail-closed retention semantics: keep-data preserves the current data state, delete-data requires `purge_supported` plus a registered safe purger, purge state never silently becomes retained, and already-purged data is not purged twice.
+- Hardened reinstall behavior so an uninstalled add-on can only reinstall the recorded version with the same package checksum; purged state remains purged until a later restoration/migration path explicitly restores data.
+- Revalidate current Forwext/dependency compatibility before enable and execute destructive purge inside the common audit mutation boundary before lifecycle persistence.
+- Added additive/idempotent MySQL/MariaDB persistence for add-on registry/relations and the `addon.manage` permission; only the administrator template is allowed by default.
+- Extended shared migration ownership to canonical add-on IDs while keeping existing owner formats readable.
+- Added behavior, package, manifest, dependency, security and migration regression tests plus architecture documentation.
+- Foundation commits: `69c414391d262fe6ebcbf88f6080b25379a04216`, `0991043d070467177b7c7e81fd871f3f45e5c2ab`, `8f8fc3107e8369bd6bf68ba53df8b9d909f91396`, `06134fe03052956c1972eb0d878b29a59d155d4d`, `35b0be5ae1dd3d3734776ca5db0429cd026bbe8e`, `ca7b1be5156a679db057bc03ecd0030867dc52a7`, `aee6b0bd1626572c6733c8947d5449596777313b`.
+- Hardening/test commits: `9bb8060b078ca3cfb0b0783a75321e3704c11fce`, `3a9a9430290deeec3c538d3f07c6a7dd2df8ca40`, `58d2899a39b09165e41a0aefff0861017b87c80a`, `d5ff45d1a31f5c5e6ee50f2d943a969447dd81e5`, `8e330a03e26c0ebd37c7788f22efeed005d0e6d6`; docs: `a277de4b91c6351ccb9ebbfe60da475b7696fcbb`.
+- GitHub Actions build run `36118467248`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36118467211`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.51-dev`.
+- Next: `18.02 — Events/decorators/DI extension API`.
 
 ## Completed in 17.06
 
