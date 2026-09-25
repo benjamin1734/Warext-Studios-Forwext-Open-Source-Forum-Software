@@ -74,6 +74,14 @@ final class NavigationRegistry
         $this->register($item);
     }
 
+    public function registerAddon(string $addonKey, NavigationItem $item): void
+    {
+        if ($item->addonKey !== $addonKey || !str_starts_with($item->key, $addonKey . '.')) {
+            throw new InvalidArgumentException('Add-on navigation item must declare and use its add-on namespace.');
+        }
+        $this->register($item);
+    }
+
     /** @return list<NavigationItem> */
     public function visible(bool $authenticated): array
     {

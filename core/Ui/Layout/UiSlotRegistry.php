@@ -47,13 +47,13 @@ final class UiSlotRegistry
 
     public function registerModule(string $moduleKey, UiSlotDefinition $slot): void
     {
-        self::assertExtensionNamespace($moduleKey, $slot->key);
+        self::assertExtensionNamespace($moduleKey, $slot->key, 64);
         $this->register($slot);
     }
 
     public function registerAddon(string $addonKey, UiSlotDefinition $slot): void
     {
-        self::assertExtensionNamespace($addonKey, $slot->key);
+        self::assertExtensionNamespace($addonKey, $slot->key, 135);
         $this->register($slot);
     }
 
@@ -76,10 +76,11 @@ final class UiSlotRegistry
         return $slots;
     }
 
-    private static function assertExtensionNamespace(string $ownerKey, string $slotKey): void
+    private static function assertExtensionNamespace(string $ownerKey, string $slotKey, int $maximumOwnerLength): void
     {
         if (
-            preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D', $ownerKey) !== 1
+            strlen($ownerKey) > $maximumOwnerLength
+            || preg_match('/^[a-z][a-z0-9_.-]+$/D', $ownerKey) !== 1
             || !str_starts_with($slotKey, $ownerKey . '.')
         ) {
             throw new InvalidArgumentException('Extension UI slot must use its owner namespace.');

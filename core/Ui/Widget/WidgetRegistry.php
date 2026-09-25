@@ -89,7 +89,11 @@ final class WidgetRegistry
         string $ownerKey,
         Widget $widget,
     ): void {
-        if (preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D', $ownerKey) !== 1) {
+        $maximumOwnerLength = $ownerType === WidgetOwnerType::Addon ? 135 : 64;
+        if (
+            strlen($ownerKey) > $maximumOwnerLength
+            || preg_match('/^[a-z][a-z0-9_.-]+$/D', $ownerKey) !== 1
+        ) {
             throw new InvalidArgumentException('Widget owner key is invalid.');
         }
 

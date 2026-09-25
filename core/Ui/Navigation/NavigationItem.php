@@ -15,8 +15,9 @@ final readonly class NavigationItem
         public int $order = 100,
         public NavigationAudience $audience = NavigationAudience::Public,
         public ?string $moduleKey = null,
+        public ?string $addonKey = null,
     ) {
-        if (preg_match('/^[a-z][a-z0-9_.-]{1,95}$/D', $this->key) !== 1) {
+        if (preg_match('/^[a-z][a-z0-9_.-]{1,190}$/D', $this->key) !== 1) {
             throw new InvalidArgumentException('Navigation key is invalid.');
         }
         if ($this->label === '' || strlen($this->label) > 80) {
@@ -37,6 +38,18 @@ final readonly class NavigationItem
         }
         if ($this->moduleKey !== null && preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D', $this->moduleKey) !== 1) {
             throw new InvalidArgumentException('Navigation module key is invalid.');
+        }
+        if (
+            $this->addonKey !== null
+            && (
+                strlen($this->addonKey) > 135
+                || preg_match('/^[a-z][a-z0-9_.-]+$/D', $this->addonKey) !== 1
+            )
+        ) {
+            throw new InvalidArgumentException('Navigation add-on key is invalid.');
+        }
+        if ($this->moduleKey !== null && $this->addonKey !== null) {
+            throw new InvalidArgumentException('Navigation item cannot be owned by both a module and an add-on.');
         }
     }
 }
