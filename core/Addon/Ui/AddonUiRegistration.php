@@ -6,6 +6,8 @@ namespace Forwext\Core\Addon\Ui;
 
 use Forwext\Core\Addon\AddonId;
 use Forwext\Core\Addon\Backend\AddonBackendNamespace;
+use Forwext\Core\Forum\Editor\Extension\EditorExtensionRegistry;
+use Forwext\Core\Forum\Editor\Extension\EditorToolbarExtension;
 use Forwext\Core\Ui\DesignToken\DesignTokenCatalog;
 use Forwext\Core\Ui\DesignToken\DesignTokenDefinition;
 use Forwext\Core\Ui\Layout\UiSlotContributor;
@@ -31,6 +33,10 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
     private array $navigation = [];
     /** @var array<string,DesignTokenDefinition> */
     private array $designTokens = [];
+    /** @var array<string,EditorToolbarExtension> */
+    private array $editorExtensions = [];
+    /** @var array<string,AddonUiTemplateDefinition> */
+    private array $templates = [];
 
     public function __construct(public readonly AddonId $addonId)
     {
@@ -69,6 +75,22 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
         return $this;
     }
 
+    public function editorExtension(EditorToolbarExtension $extension): self
+    {
+        $this->namespace->assertOwned($extension->key, 'Add-on editor extension');
+        $this->put($this->editorExtensions, $extension->key, $extension, 'editor extension');
+
+        return $this;
+    }
+
+    public function template(AddonUiTemplateDefinition $template): self
+    {
+        $this->namespace->assertOwned($template->key, 'Add-on UI template');
+        $this->put($this->templates, $template->key, $template, 'UI template');
+
+        return $this;
+    }
+
     public function designToken(DesignTokenDefinition $definition): self
     {
         $this->namespace->assertOwned($definition->key, 'Add-on design token');
@@ -98,6 +120,20 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
         }
     }
 
+    public function registerEditorExtensions(EditorExtensionRegistry $registry): void
+    {
+        foreach ($this->ordered($this->editorExtensions) as $extension) {
+            $registry->registerAddon($this->addonId, $extension);
+        }
+    }
+
+    public function registerTemplates(AddonUiTemplateRegistry $registry): void
+    {
+        foreach ($this->ordered($this->templates) as $template) {
+            $registry->registerAddon($this->addonId, $template);
+        }
+    }
+
     public function extendDesignTokens(DesignTokenCatalog $base): DesignTokenCatalog
     {
         $definitions = $base->definitions();
@@ -122,6 +158,18 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
     public function navigationItems(): array
     {
         return $this->ordered($this->navigation);
+    }
+
+    /** @return list<EditorToolbarExtension> */
+    public function editorExtensions(): array
+    {
+        return $this->ordered($this->editorExtensions);
+    }
+
+    /** @return list<AddonUiTemplateDefinition> */
+    public function templates(): array
+    {
+        return $this->ordered($this->templates);
     }
 
     /** @return list<DesignTokenDefinition> */

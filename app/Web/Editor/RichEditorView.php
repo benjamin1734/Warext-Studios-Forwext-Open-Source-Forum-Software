@@ -7,6 +7,7 @@ namespace Forwext\App\Web\Editor;
 use Forwext\Core\Forum\Editor\EditorLimits;
 use Forwext\Core\Forum\Editor\EditorSurface;
 use Forwext\Core\Forum\Editor\EditorTextMetrics;
+use Forwext\Core\Forum\Editor\Extension\EditorExtensionRegistry;
 use Forwext\Core\Forum\Editor\EmojiCatalog;
 use Forwext\Core\Routing\BasePath;
 use InvalidArgumentException;
@@ -28,6 +29,7 @@ final class RichEditorView
         EditorLimits $limits,
         BasePath $basePath,
         string $elementId = 'forwext-editor',
+        ?EditorExtensionRegistry $extensions = null,
     ): string {
         if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $fieldName) !== 1) {
             throw new InvalidArgumentException('Editor field name is invalid.');
@@ -72,6 +74,7 @@ final class RichEditorView
             . '<button type="button" data-fx-editor-command="embed">Embed</button>'
             . '<button type="button" data-fx-editor-command="emoji" aria-expanded="false">Emoji</button>'
             . '<button type="button" data-fx-editor-spellcheck-button>Yazımı denetle</button>'
+            . self::extensionButtons($extensions, $surface)
             . '</div>'
             . '<div class="fx-editor__emoji" data-fx-editor-emoji-palette hidden>' . self::emojiButtons() . '</div>'
             . '<textarea id="' . $textareaId . '" name="' . self::escape($fieldName) . '" rows="12" '
@@ -94,6 +97,24 @@ final class RichEditorView
             . '<span class="fx-editor__status" data-fx-editor-status aria-live="polite"></span></div>'
             . '<div class="fx-editor__preview" data-fx-editor-preview hidden></div>'
             . '</section>';
+    }
+
+    private static function extensionButtons(?EditorExtensionRegistry $extensions, EditorSurface $surface): string
+    {
+        if ($extensions === null) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($extensions->forSurface($surface) as $registered) {
+            $extension = $registered->extension;
+            $html .= '<button type="button" data-fx-editor-command="wrap" data-fx-editor-extension-key="'
+                . self::escape($extension->key) . '" data-open="' . self::escape($extension->open)
+                . '" data-close="' . self::escape($extension->close) . '">'
+                . self::escape($extension->label) . '</button>';
+        }
+
+        return $html;
     }
 
     private static function emojiButtons(): string
