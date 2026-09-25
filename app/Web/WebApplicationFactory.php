@@ -12,6 +12,7 @@ use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Admin\AdminModuleManagerHandler;
 use Forwext\App\Web\Admin\SystemIntegrationHandler;
+use Forwext\App\Web\Admin\SystemOperationsHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
@@ -152,6 +153,10 @@ use Forwext\Core\Admin\Dashboard\AdminActionQueueService;
 use Forwext\Core\Admin\Integration\GeneratedConfigStore;
 use Forwext\Core\Admin\Integration\SystemIntegrationCatalog;
 use Forwext\Core\Admin\Integration\SystemIntegrationService;
+use Forwext\Core\Admin\Operations\SystemBackupService;
+use Forwext\Core\Admin\Operations\SystemLogReader;
+use Forwext\Core\Admin\Operations\SystemMaintenanceSchedulerCatalog;
+use Forwext\Core\Admin\Operations\SystemOperationsService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
@@ -159,6 +164,8 @@ use Forwext\Core\Analytics\Report\AnalyticsReportService;
 use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
+use Forwext\Core\Capability\CapabilityResolver;
+use Forwext\Core\Capability\DatabaseServerCapabilityProbe;
 use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Session\AuthSessionManager;
@@ -236,6 +243,10 @@ use Forwext\Core\Giveaway\GiveawayNotifier;
 use Forwext\Core\Giveaway\GiveawayParticipationService;
 use Forwext\Core\Giveaway\GiveawayService;
 use Forwext\Core\Giveaway\Search\GiveawaySearchAccessScopeProvider;
+use Forwext\Core\Health\DatabaseConnectivityHealthCheck;
+use Forwext\Core\Health\HealthService;
+use Forwext\Core\Health\RuntimeEnvironmentHealthCheck;
+use Forwext\Core\Health\WritableDirectoryHealthCheck;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Middleware\CallableRequestHandler;
 use Forwext\Core\Http\Request;
@@ -304,6 +315,7 @@ use Forwext\Core\Promotion\DatabasePromotionMetricProvider;
 use Forwext\Core\Promotion\DatabasePromotionRepository;
 use Forwext\Core\Promotion\PromotionService;
 use Forwext\Core\Queue\DatabaseQueueDriver;
+use Forwext\Core\Scheduler\DatabaseSchedulerClaimStore;
 use Forwext\Core\Referral\DatabaseReferralRepository;
 use Forwext\Core\Referral\ReferralNotifier;
 use Forwext\Core\Referral\ReferralService;
@@ -497,6 +509,30 @@ final readonly class WebApplicationFactory
             $secretStore,
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+        $systemOperations = new SystemOperationsService(
+            $database,
+            $config,
+            new GeneratedConfigStore($this->projectRoot . '/config/generated.php'),
+            new HealthService([
+                new RuntimeEnvironmentHealthCheck(),
+                new DatabaseConnectivityHealthCheck($database),
+                new WritableDirectoryHealthCheck('storage', $this->projectRoot . '/storage'),
+                new WritableDirectoryHealthCheck('config', $this->projectRoot . '/config'),
+            ]),
+            new CapabilityResolver(databaseProbe: new DatabaseServerCapabilityProbe($database)),
+            new SystemLogReader($this->projectPath($config->requireString('logging.path'))),
+            new SystemBackupService(
+                $database,
+                $this->projectPath($config->requireString('operations.backup_path')),
+                $config->requireInt('operations.backup_chunk_rows'),
+            ),
+            SystemMaintenanceSchedulerCatalog::coreDefaults(),
+            new DatabaseQueueDriver($database),
+            new DatabaseSchedulerClaimStore($database),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+            $this->projectPath($config->requireString('cache.path')),
         );
         $appearanceGuide = new AppearanceGuideService($authorizer);
         $layoutSlots = UiSlotRegistry::withCoreDefaults();
@@ -967,6 +1003,7 @@ final readonly class WebApplicationFactory
         $adminCommunityCsrf = $this->adminCommunityCsrfMiddleware($config);
         $moduleManagerCsrf = $this->moduleManagerCsrfMiddleware($config);
         $systemIntegrationCsrf = $this->systemIntegrationCsrfMiddleware($config);
+        $systemOperationsCsrf = $this->systemOperationsCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
@@ -1764,6 +1801,13 @@ final readonly class WebApplicationFactory
             [$systemIntegrationCsrf],
         ));
         $routes->add(new Route(
+            'admin.system.operations',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/system/operations'),
+            new SystemOperationsHandler($systemOperations, $viewerResolver, $basePath),
+            [$systemOperationsCsrf],
+        ));
+        $routes->add(new Route(
             'appearance.guide',
             [HttpMethod::Get],
             new PathTemplate('/admin/appearance'),
@@ -2069,6 +2113,11 @@ final readonly class WebApplicationFactory
     private function systemIntegrationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'system-integration', 'forwext.csrf.system-integration.v1');
+    }
+
+    private function systemOperationsCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'system-operations', 'forwext.csrf.system-operations.v1');
     }
 
     private function themeCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
