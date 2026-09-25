@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.06 — Package signing/security/docs
+
+- Added typed capability disclosures and risk warnings without turning manifest declarations into authorization grants.
+- Added deterministic dependency-first package planning with missing/version/conflict/cycle validation.
+- Added SHA-256 build sidecars plus OpenSSL artifact signing and explicit trusted-key verification with optional/signed/official policies.
+- Added fail-closed signature-path/tamper handling, `addon:sign` / `addon:verify`, an empty trusted-key example and no new production extension requirement.
+- Added the maintained `Warext/HelloWorld` sample add-on and developer documentation for capabilities, dependencies and package signing.
+- Implementation/fix/docs commits: `d34d7fb347486f51774d495855d9d36e0798be25`, `cd4f45351989036b27f6cdc0f19470d64d6ead7a`, `9a10e8e099aa7afc6b93dc337cf0dd9f3bfa22d4`.
+- GitHub Actions build run `36166049504` and database migration smoke run `36166049197` succeeded.
+
 ### 18.05 — SDK/CLI/test harness
 
 - Added the PHP Developer CLI with `addon:create`, `make:class/service/entity`, development-workspace install/upgrade, deterministic build, compatibility checks, developer-mode controls and IDE type generation.

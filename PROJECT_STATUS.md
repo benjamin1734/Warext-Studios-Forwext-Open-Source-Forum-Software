@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.55-dev
-LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 18.05
-CURRENT_STEP = 18.06
-LAST_COMMIT = e2148b28bdb38f6fa6c14e5a34952611ee590efa
+CURRENT_VERSION = 0.0.7.56-dev
+LAST_COMPLETED_MAIN_STEP = 18
+LAST_COMPLETED_SUBSTEP = 18.06
+CURRENT_STEP = 19.01
+LAST_COMMIT = 9a10e8e099aa7afc6b93dc337cf0dd9f3bfa22d4
 BLOCKERS = none
-NEXT_STEP = 18.06 - Package signing/security/docs
+NEXT_STEP = 19.01 - Versioned REST API
 ```
 
 ## Current position
@@ -20,14 +20,34 @@ NEXT_STEP = 18.06 - Package signing/security/docs
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.05`.
-- Current sub-step: `18.06 — Package signing/security/docs`.
-- Remaining roadmap work after 18.05: **15 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`.
+- Current sub-step: `19.01 — Versioned REST API`.
+- Remaining roadmap work after 18.06: **14 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 18.06
+
+- Added typed add-on capability disclosure in `addon.json` for database, filesystem, outbound network, background jobs, scheduled tasks, ACP/UI, content extension, permissions and webhook review surfaces.
+- Added risk-oriented capability warnings to `addon:check`; declarations remain informational and never grant backend permissions or bypass lifecycle/security controls.
+- Extended `AddonDependencyResolver` with deterministic dependency-first planning for closed package sets, including missing dependency, version, conflict and cycle validation.
+- Added mandatory SHA-256 sidecars to deterministic `addon:build` output while retaining the per-file `forwext-build.json` inventory.
+- Added OpenSSL SHA-256 artifact signing with explicit trusted-keyring verification and `optional`, `signed` and `official` trust policies.
+- Official trust is controlled only by the external trusted keyring; add-on package data cannot self-assert official status.
+- Added fail-closed handling for explicit missing/unsafe signature paths and tampered artifact checksums.
+- Added developer CLI `addon:sign` and `addon:verify`; encrypted private-key passphrases are supplied through `FORWEXT_SIGNING_KEY_PASSPHRASE`.
+- Added an intentionally empty trusted-key example rather than inventing a Warext Studios signing key.
+- Added maintained `examples/addons/Warext/HelloWorld` using the real typed `AddonUiRegistration` / `Widget` APIs and typed capability disclosure.
+- Added developer documentation covering creation/build flow, capability disclosure, dependency planning, checksum/signing policy and the maintained sample add-on.
+- No new production extension was introduced: signing reuses the already-required `ext-openssl`; normal cPanel runtime still requires no Node/npm/Redis/Docker/Supervisor/SSH.
+- Implementation/fix/docs commits: `d34d7fb347486f51774d495855d9d36e0798be25`, `cd4f45351989036b27f6cdc0f19470d64d6ead7a`, `9a10e8e099aa7afc6b93dc337cf0dd9f3bfa22d4`.
+- GitHub Actions build run `36166049504`: success; PHP lint, PHPUnit PHP 8.4/8.5, production dependency baseline and cPanel package build passed.
+- Database migration smoke run `36166049197`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.56-dev`.
+- Next: `19.01 — Versioned REST API`.
 
 ## Completed in 18.05
 
