@@ -23,6 +23,7 @@ use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
 use Forwext\Database\Migrations\Core\CreateSupportTicketDomain;
 use Forwext\Database\Migrations\Core\CreateSystemIntegrationAcp;
+use Forwext\Database\Migrations\Core\CreateSystemOperationsAcp;
 use Forwext\Database\Migrations\Core\CreateSpellcheckSystem;
 use Forwext\Database\Migrations\Core\CreateSupportTicketIntake;
 use Forwext\Database\Migrations\Core\CreateSupportConversationTools;
@@ -188,6 +189,7 @@ final class CoreMigrationRegistry
             new CreateAdminInformationArchitecture(),
             new CreateFirstPartyModuleManager(),
             new CreateSystemIntegrationAcp(),
+            new CreateSystemOperationsAcp(),
         ];
     }
 }

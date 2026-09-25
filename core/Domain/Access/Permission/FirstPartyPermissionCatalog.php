@@ -34,6 +34,12 @@ final class FirstPartyPermissionCatalog
             self::flag('audit.export', 'Export authorized independent moderation audit data.'),
             self::flag('acp.access', 'Access the administration control panel.'),
             self::flag('acp.manage', 'Perform administration management actions.'),
+            self::flag('system.health.view', 'View system health, capabilities and integrity diagnostics.'),
+            self::flag('system.logs.view', 'View bounded and redacted structured system logs.'),
+            self::flag('system.jobs.manage', 'Manage failed jobs and registered scheduled tasks.'),
+            self::flag('system.backup.manage', 'Create, verify and delete protected logical backups.'),
+            self::flag('system.maintenance.manage', 'Manage site maintenance mode.'),
+            self::flag('system.repair.manage', 'Run bounded system repair and cleanup tools.'),
 
             self::flag('profile.custom_url.use', 'Choose and use a custom profile URL.'),
             self::flag('profile.music.use', 'Use profile music.'),

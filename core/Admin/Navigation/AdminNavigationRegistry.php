@@ -237,6 +237,22 @@ final readonly class AdminNavigationRegistry
                 ['integration', 'entegrasyon', 'mail', 'smtp', 'oauth', 'turnstile', 'ai', 'storage', 's3', 'cache', 'redis', 'queue', 'search', 'realtime', 'api', 'webhook', 'secret'],
             ),
             new AdminNavigationItem(
+                'admin.system.operations',
+                'Sistem Operasyon Merkezi',
+                'Health/capabilities, logs, failed jobs, cron, integrity, backups, maintenance ve repair araçları.',
+                AdminNavigationSection::System,
+                '/admin/system/operations',
+                [
+                    'system.health.view',
+                    'system.logs.view',
+                    'system.jobs.manage',
+                    'system.backup.manage',
+                    'system.maintenance.manage',
+                    'system.repair.manage',
+                ],
+                ['health', 'capability', 'log', 'job', 'queue', 'cron', 'integrity', 'backup', 'maintenance', 'repair'],
+            ),
+            new AdminNavigationItem(
                 'admin.rewards',
                 'Ödül Provider Sistemi',
                 'Ortak reward tanımları, provider hedefleri, binding ve retry işlemleri.',

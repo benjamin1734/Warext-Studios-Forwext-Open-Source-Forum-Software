@@ -278,6 +278,11 @@ return [
     'logging' => [
         'path' => 'storage/logs/forwext.jsonl',
     ],
+    'operations' => [
+        'backup_path' => 'storage/backups',
+        'backup_chunk_rows' => 500,
+        'log_tail_lines' => 100,
+    ],
     'health' => [
         'public_details' => false,
     ],
