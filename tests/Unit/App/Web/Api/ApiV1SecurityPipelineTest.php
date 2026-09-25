@@ -11,6 +11,7 @@ use Forwext\Core\Api\V1\ApiV1Page;
 use Forwext\Core\Api\V1\ApiV1Scope;
 use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1ReadRepository;
+use Forwext\Core\Api\V1\Security\ApiV1AccountPermissionChecker;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialRecord;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialRepository;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
@@ -82,6 +83,33 @@ final class ApiV1SecurityPipelineTest extends TestCase
         self::assertSame('GET, HEAD', $wrongMethod->headers()->first('allow'));
     }
 
+    public function testAccountPermissionDenialCannotBeBypassedByAValidScopedToken(): void
+    {
+        $credentials = new ApiSecurityCredentialRepositoryFixture();
+        $owner = EntityId::fromString(str_repeat('b', 32));
+        $issued = (new ApiV1CredentialService($credentials))->issue(
+            $owner,
+            ApiV1PrincipalType::PersonalToken,
+            'Denied notifications client',
+            [ApiV1Scope::NotificationsRead],
+        );
+        $router = $this->router(
+            $credentials,
+            new ApiAuditRecorderFixture(),
+            new ApiAccountPermissionCheckerFixture(false),
+        );
+
+        $response = $router->handle(new Request(
+            HttpMethod::Get,
+            '/api/v1/notifications',
+            new HeaderBag(['Authorization'=>'Bearer ' . $issued->secret]),
+            server:['REMOTE_ADDR'=>'127.0.0.1'],
+        ));
+
+        self::assertSame(403, $response->status());
+        self::assertStringContainsString('"code":"account_permission_denied"', $response->body());
+    }
+
     public function testInvalidPresentedCredentialDoesNotFallBackToAnonymousPublicAccess(): void
     {
         $router = $this->router(new ApiSecurityCredentialRepositoryFixture(), new ApiAuditRecorderFixture());
@@ -100,6 +128,7 @@ final class ApiV1SecurityPipelineTest extends TestCase
     private function router(
         ApiSecurityCredentialRepositoryFixture $credentials,
         ApiAuditRecorderFixture $audit,
+        ?ApiV1AccountPermissionChecker $accountPermissions = null,
     ): Router {
         $routes = new RouteCollection();
         ApiV1RouteRegistrar::register(
@@ -107,6 +136,7 @@ final class ApiV1SecurityPipelineTest extends TestCase
             new ApiSecurityPublicReadsFixture(),
             new ApiSecurityPrivateReadsFixture(),
             new ApiV1CredentialResolver($credentials),
+            $accountPermissions ?? new ApiAccountPermissionCheckerFixture(true),
             new InMemoryRateLimitStore(),
             $audit,
         );
@@ -193,5 +223,18 @@ final class ApiAuditRecorderFixture implements AuditRecorder
         $this->append($event);
 
         return $result;
+    }
+}
+
+
+final readonly class ApiAccountPermissionCheckerFixture implements ApiV1AccountPermissionChecker
+{
+    public function __construct(private bool $allowed)
+    {
+    }
+
+    public function allows(EntityId $userId, ApiV1Scope $scope): bool
+    {
+        return $this->allowed;
     }
 }

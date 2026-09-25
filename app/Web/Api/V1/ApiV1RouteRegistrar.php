@@ -8,6 +8,7 @@ use Forwext\Core\Api\V1\ApiV1EndpointRegistry;
 use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1Service;
+use Forwext\Core\Api\V1\Security\ApiV1AccountPermissionChecker;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
 use Forwext\Core\Audit\AuditRecorder;
 use Forwext\Core\Http\Security\RateLimit\RateLimitStore;
@@ -22,6 +23,7 @@ final class ApiV1RouteRegistrar
         PublicApiV1ReadRepository $reads,
         PrivateApiV1ReadRepository $privateReads,
         ApiV1CredentialResolver $credentials,
+        ApiV1AccountPermissionChecker $accountPermissions,
         RateLimitStore $rateLimits,
         AuditRecorder $audit,
     ): void {
@@ -35,7 +37,7 @@ final class ApiV1RouteRegistrar
                 new PathTemplate($endpoint->path, $endpoint->requirements),
                 new ApiV1Handler($service, $privateReads, $endpoint),
                 [
-                    new ApiV1SecurityMiddleware($credentials, $endpoint),
+                    new ApiV1SecurityMiddleware($credentials, $accountPermissions, $endpoint),
                     new ApiV1RateLimitMiddleware($rateLimits),
                     new ApiV1AuditMiddleware($audit, $endpoint),
                 ],

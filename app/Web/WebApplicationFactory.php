@@ -166,6 +166,7 @@ use Forwext\Core\Api\V1\DatabasePrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\DatabasePublicApiV1ReadRepository;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
 use Forwext\Core\Api\V1\Security\DatabaseApiV1CredentialRepository;
+use Forwext\Core\Api\V1\Security\PermissionEngineApiV1AccountPermissionChecker;
 use Forwext\Core\Analytics\Report\AnalyticsReportService;
 use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
@@ -1027,6 +1028,7 @@ final readonly class WebApplicationFactory
             new DatabasePublicApiV1ReadRepository($database),
             new DatabasePrivateApiV1ReadRepository($database),
             new ApiV1CredentialResolver(new DatabaseApiV1CredentialRepository($database)),
+            new PermissionEngineApiV1AccountPermissionChecker($authorizer),
             new FileRateLimitStore($this->projectRoot . '/storage/ratelimit/api-v1'),
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );

@@ -18,6 +18,7 @@ final readonly class ApiV1SecurityMiddleware implements MiddlewareInterface
 
     public function __construct(
         private ApiV1CredentialResolver $credentials,
+        private ApiV1AccountPermissionChecker $accountPermissions,
         private ApiV1EndpointDefinition $endpoint,
     ) {
     }
@@ -55,6 +56,19 @@ final readonly class ApiV1SecurityMiddleware implements MiddlewareInterface
                 'The API credential does not grant the required scope.',
                 403,
                 ['required_scope'=>$this->endpoint->scope->value],
+            );
+        }
+
+        if (
+            !$this->endpoint->public
+            && $this->endpoint->scope !== null
+            && $principal !== null
+            && !$this->accountPermissions->allows($principal->userId, $this->endpoint->scope)
+        ) {
+            return ApiV1ErrorResponder::error(
+                'account_permission_denied',
+                'The API principal account no longer has permission to access this resource.',
+                403,
             );
         }
 

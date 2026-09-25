@@ -7,8 +7,10 @@ namespace Forwext\Tests\Unit\App\Web\Api;
 use Forwext\App\Web\Api\V1\ApiV1RouteRegistrar;
 use DateTimeImmutable;
 use Forwext\Core\Api\V1\ApiV1Page;
+use Forwext\Core\Api\V1\ApiV1Scope;
 use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1ReadRepository;
+use Forwext\Core\Api\V1\Security\ApiV1AccountPermissionChecker;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialRecord;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialRepository;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
@@ -117,6 +119,7 @@ final class ApiV1PublicSurfaceTest extends TestCase
             new ApiV1ReadFixture(),
             new ApiV1PrivateReadFixture(),
             new ApiV1CredentialResolver(new ApiV1CredentialRepositoryFixture()),
+            new ApiV1PublicPermissionCheckerFixture(),
             new InMemoryRateLimitStore(),
             new ApiV1AuditRecorderFixture(),
         );
@@ -232,5 +235,14 @@ final class ApiV1AuditRecorderFixture implements AuditRecorder
     public function mutate(AuditEvent $event, callable $mutation): mixed
     {
         return $mutation();
+    }
+}
+
+
+final class ApiV1PublicPermissionCheckerFixture implements ApiV1AccountPermissionChecker
+{
+    public function allows(EntityId $userId, ApiV1Scope $scope): bool
+    {
+        return true;
     }
 }
