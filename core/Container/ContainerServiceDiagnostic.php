@@ -14,6 +14,7 @@ final readonly class ContainerServiceDiagnostic
         public string $serviceId,
         public ?string $bindingTarget,
         public ?ServiceLifetime $lifetime,
+        public ?string $bindingOwner,
         public array $decorators,
         public array $issues,
     ) {

@@ -23,6 +23,9 @@ final class Container
     /** @var array<string, Binding> */
     private array $bindings = [];
 
+    /** @var array<string,ExtensionOwner> */
+    private array $bindingOwners = [];
+
     /** @var array<string, mixed> */
     private array $instances = [];
 
@@ -48,8 +51,16 @@ final class Container
         Closure|string|null $concrete = null,
         ServiceLifetime $lifetime = ServiceLifetime::Transient,
     ): void {
-        $this->assertCanBind($id);
-        $this->bindings[$id] = new Binding($concrete ?? $id, $lifetime);
+        $this->bindOwned($id, $concrete, $lifetime, ExtensionOwner::core());
+    }
+
+    public function bindExtension(
+        string $id,
+        ExtensionOwner $owner,
+        Closure|string|null $concrete = null,
+        ServiceLifetime $lifetime = ServiceLifetime::Transient,
+    ): void {
+        $this->bindOwned($id, $concrete, $lifetime, $owner);
     }
 
     public function singleton(string $id, Closure|string|null $concrete = null): void
@@ -77,14 +88,15 @@ final class Container
         ServiceLifetime $lifetime = ServiceLifetime::Singleton,
     ): void {
         $this->assertOverridesAllowed($id);
-        unset($this->bindings[$id], $this->instances[$id]);
+        unset($this->bindings[$id], $this->instances[$id], $this->bindingOwners[$id]);
         $this->bindings[$id] = new Binding($concrete, $lifetime);
+        $this->bindingOwners[$id] = ExtensionOwner::core();
     }
 
     public function overrideInstance(string $id, mixed $instance): void
     {
         $this->assertOverridesAllowed($id);
-        unset($this->bindings[$id], $this->instances[$id]);
+        unset($this->bindings[$id], $this->instances[$id], $this->bindingOwners[$id]);
         $this->instances[$id] = $instance;
     }
 
@@ -156,6 +168,7 @@ final class Container
                 $id,
                 $target,
                 $binding?->lifetime,
+                $this->bindingOwners[$id]?->value() ?? null,
                 $decorators,
                 $this->diagnosticIssues($id),
             );
@@ -280,6 +293,17 @@ final class Container
         }
 
         return $issues;
+    }
+
+    private function bindOwned(
+        string $id,
+        Closure|string|null $concrete,
+        ServiceLifetime $lifetime,
+        ExtensionOwner $owner,
+    ): void {
+        $this->assertCanBind($id);
+        $this->bindings[$id] = new Binding($concrete ?? $id, $lifetime);
+        $this->bindingOwners[$id] = $owner;
     }
 
     private function assertCanBind(string $id): void

@@ -132,6 +132,32 @@ final class ContainerTest extends TestCase
         self::assertSame([], $diagnostics[0]->issues);
     }
 
+    public function testExtensionBindingRecordsOwnerAndDuplicateBindingFailsClosed(): void
+    {
+        $container = new Container();
+        $container->bindExtension(
+            'extension.service',
+            ExtensionOwner::addon('Acme/Binding'),
+            static fn (): string => 'extension',
+            ServiceLifetime::Singleton,
+        );
+
+        self::assertSame('extension', $container->get('extension.service'));
+        $diagnostic = array_values(array_filter(
+            $container->extensionDiagnostics(),
+            static fn ($item): bool => $item->serviceId === 'extension.service',
+        ))[0];
+        self::assertSame('addon:Acme/Binding', $diagnostic->bindingOwner);
+        self::assertSame(ServiceLifetime::Singleton, $diagnostic->lifetime);
+
+        $this->expectException(ContainerException::class);
+        $container->bindExtension(
+            'extension.service',
+            ExtensionOwner::addon('Acme/Other'),
+            static fn (): string => 'conflict',
+        );
+    }
+
     public function testSameExtensionOwnerCannotDecorateSameServiceTwice(): void
     {
         $container = new Container();
