@@ -13,7 +13,7 @@ use Forwext\Core\Domain\Entity\EntityId;
 use InvalidArgumentException;
 use JsonException;
 
-final readonly class DatabaseAddonSettingStore
+final readonly class DatabaseAddonSettingStore implements AddonSettingStore
 {
     public function __construct(private TransactionalQueryExecutor $database)
     {
