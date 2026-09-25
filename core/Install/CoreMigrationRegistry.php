@@ -10,6 +10,7 @@ use Forwext\Database\Migrations\Core\CreateAdminInformationArchitecture;
 use Forwext\Database\Migrations\Core\CreateAddonLifecycle;
 use Forwext\Database\Migrations\Core\CreateAddonBackendCapabilities;
 use Forwext\Database\Migrations\Core\CreateApiV1CredentialSecurity;
+use Forwext\Database\Migrations\Core\CreateWebhookPlatform;
 use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
 use Forwext\Database\Migrations\Core\CreateAiModerationWorkflow;
 use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
@@ -196,6 +197,7 @@ final class CoreMigrationRegistry
             new CreateAddonLifecycle(),
             new CreateAddonBackendCapabilities(),
             new CreateApiV1CredentialSecurity(),
+            new CreateWebhookPlatform(),
         ];
     }
 }
