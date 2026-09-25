@@ -18,12 +18,14 @@ final readonly class Router implements RequestHandlerInterface
 
     /** @var list<MiddlewareInterface> */
     private array $globalMiddleware;
+    private RoutingErrorResponder $errors;
 
     /** @param list<MiddlewareInterface> $globalMiddleware */
     public function __construct(
         private RouteCollection $routes,
         private BasePath $basePath = new BasePath(),
         array $globalMiddleware = [],
+        ?RoutingErrorResponder $errors = null,
     ) {
         foreach ($globalMiddleware as $entry) {
             if (!$entry instanceof MiddlewareInterface) {
@@ -31,6 +33,7 @@ final readonly class Router implements RequestHandlerInterface
             }
         }
         $this->globalMiddleware = array_values($globalMiddleware);
+        $this->errors = $errors ?? new DefaultRoutingErrorResponder();
     }
 
     public function handle(Request $request): Response
@@ -39,13 +42,13 @@ final readonly class Router implements RequestHandlerInterface
         $relativePath = $this->basePath->strip($path);
 
         if ($relativePath === null) {
-            return Response::text('Not Found', 404);
+            return $this->errors->notFound($request, null);
         }
 
         $resolution = $this->routes->resolve($request->method(), $relativePath);
         if ($resolution->match === null) {
             if (!$resolution->pathExists()) {
-                return Response::text('Not Found', 404);
+                return $this->errors->notFound($request, $relativePath);
             }
 
             $allow = array_map(
@@ -54,8 +57,7 @@ final readonly class Router implements RequestHandlerInterface
             );
             sort($allow, SORT_STRING);
 
-            return Response::text('Method Not Allowed', 405)
-                ->withHeader('Allow', implode(', ', $allow));
+            return $this->errors->methodNotAllowed($request, $relativePath, $allow);
         }
 
         $match = $resolution->match;

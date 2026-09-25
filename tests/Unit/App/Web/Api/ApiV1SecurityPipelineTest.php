@@ -6,6 +6,7 @@ namespace Forwext\Tests\Unit\App\Web\Api;
 
 use DateTimeImmutable;
 use Forwext\App\Web\Api\V1\ApiV1RouteRegistrar;
+use Forwext\App\Web\Api\V1\ApiV1RoutingErrorResponder;
 use Forwext\Core\Api\V1\ApiV1Page;
 use Forwext\Core\Api\V1\ApiV1Scope;
 use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
@@ -66,6 +67,21 @@ final class ApiV1SecurityPipelineTest extends TestCase
         self::assertStringContainsString('"code":"insufficient_scope"', $support->body());
     }
 
+    public function testUnknownAndWrongMethodApiRoutesUseConsistentJsonErrors(): void
+    {
+        $router = $this->router(new ApiSecurityCredentialRepositoryFixture(), new ApiAuditRecorderFixture());
+
+        $missing = $router->handle(new Request(HttpMethod::Get, '/api/v1/does-not-exist'));
+        self::assertSame(404, $missing->status());
+        self::assertStringContainsString('"code":"not_found"', $missing->body());
+        self::assertSame('application/json; charset=utf-8', $missing->headers()->first('content-type'));
+
+        $wrongMethod = $router->handle(new Request(HttpMethod::Post, '/api/v1/forums'));
+        self::assertSame(405, $wrongMethod->status());
+        self::assertStringContainsString('"code":"method_not_allowed"', $wrongMethod->body());
+        self::assertSame('GET, HEAD', $wrongMethod->headers()->first('allow'));
+    }
+
     public function testInvalidPresentedCredentialDoesNotFallBackToAnonymousPublicAccess(): void
     {
         $router = $this->router(new ApiSecurityCredentialRepositoryFixture(), new ApiAuditRecorderFixture());
@@ -95,7 +111,12 @@ final class ApiV1SecurityPipelineTest extends TestCase
             $audit,
         );
 
-        return new Router($routes);
+        return new Router(
+            $routes,
+            new \Forwext\Core\Routing\BasePath(),
+            [],
+            new ApiV1RoutingErrorResponder(),
+        );
     }
 }
 

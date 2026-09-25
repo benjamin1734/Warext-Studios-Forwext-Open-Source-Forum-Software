@@ -17,6 +17,7 @@ use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
 use Forwext\App\Web\Api\V1\ApiV1RouteRegistrar;
+use Forwext\App\Web\Api\V1\ApiV1RoutingErrorResponder;
 use Forwext\App\Web\Appearance\ThemeAssetHandler;
 use Forwext\App\Web\Appearance\ThemeManageHandler;
 use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
@@ -1889,12 +1890,17 @@ final readonly class WebApplicationFactory
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath), [$this->profileUrlCsrfMiddleware($config)],
         ));
 
-        return new Router($routes, $basePath, [
-            $firstPartyModuleRouteMiddleware,
-            $moduleEasterEggMiddleware,
-            $moduleAdvertisingMiddleware,
-            $moduleAnalyticsMiddleware,
-        ]);
+        return new Router(
+            $routes,
+            $basePath,
+            [
+                $firstPartyModuleRouteMiddleware,
+                $moduleEasterEggMiddleware,
+                $moduleAdvertisingMiddleware,
+                $moduleAnalyticsMiddleware,
+            ],
+            new ApiV1RoutingErrorResponder(),
+        );
     }
 
     public function decorateLegacyEasterEgg(Request $request, Response $response): Response
