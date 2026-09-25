@@ -112,8 +112,15 @@ final class AdminDashboardHtml
             . '.acp-queue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.acp-queue{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}'
             . '.acp-queue-number{display:flex;align-items:center;justify-content:center;min-width:52px;height:52px;border-radius:12px;background:var(--panel);font-size:1.35rem;font-weight:800}.acp-queue h3{margin:0 0 5px}.acp-queue p{margin:0 0 10px;color:var(--muted)}'
             . '@media(max-width:640px){.acp-search{display:grid}.acp-heading{align-items:center}.acp-queue{grid-template-columns:1fr}.acp-actions{display:grid}.acp-actions .acp-button{width:100%}}'
+            . AdminUxQualityHtml::css()
             . '</style>'
             . $breadcrumbs
+            . AdminUxQualityHtml::guidance(
+                'Yönetim alanlarını tek giriş noktasından bul ve yalnız hesabının yetkili olduğu yüzeyleri aç.',
+                'Global arama yalnız erişebildiğin kayıtlı ACP yüzeylerini tarar; favori ve son kullanılanlar kişisel navigasyon tercihidir.',
+                'Aksiyon bekleyen kuyruklar ve arama sonuçları salt-okunur özet verir; gerçek değişiklik ilgili yetkili ekranda yapılır.',
+                'Favoriler tekrar değiştirilebilir; yapılandırma değişiklikleri bu dashboard üzerinden doğrudan uygulanmaz.',
+            )
             . '<header class="acp-hero"><div><h1>Administration</h1><p class="acp-muted">İhtiyacın olan yönetim alanını ara veya erişim yetkine göre sadeleştirilmiş bölümlerden seç.</p></div>'
             . '<form class="acp-search" method="get" action="' . $action . '">'
             . '<label class="sr-only" for="acp-search">Yönetim alanlarında ara</label>'

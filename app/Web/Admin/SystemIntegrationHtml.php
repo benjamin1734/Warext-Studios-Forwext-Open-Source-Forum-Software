@@ -105,9 +105,16 @@ final class SystemIntegrationHtml
             . '.int-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.int-card{display:grid;gap:10px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}.int-card p{margin:0}.int-card form{display:grid;gap:8px;margin:0}.int-card label{font-weight:700}.int-meta{font-size:.82rem;color:var(--muted);word-break:break-word}.int-current{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;background:var(--panel);word-break:break-word;white-space:pre-wrap}'
             . '.int-secret-status{font-weight:700}.int-danger{border-style:dashed}.int-capabilities{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}.int-capability{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}.int-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;background:currentColor}.int-capability[data-ok="0"]{opacity:.7}'
             . '.acp-breadcrumbs ol{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0;margin:0;color:var(--muted)}.acp-breadcrumbs li+li:before{content:"/";margin-right:7px}.acp-breadcrumbs a{color:inherit}'
+            . AdminUxQualityHtml::css()
             . '@media(max-width:720px){.int-search{grid-template-columns:1fr}.int-heading{align-items:center}.int-grid{grid-template-columns:1fr}.int-actions{display:grid}.int-actions .int-button{width:100%}}'
             . '</style>'
             . $breadcrumbs
+            . AdminUxQualityHtml::guidance(
+                'Entegrasyon ayarlarını metin ve bölüm filtresiyle daralt; secret değerlerini ekrana geri taşımadan yönet.',
+                'Defaults → generated → environment precedence kullanılır; environment override en yüksek önceliktedir.',
+                'Görünen effective değer ve runtime capability bilgisi kaydetmeden önce etkiyi doğrulamaya yardım eder.',
+                'Generated override tek tıkla kaldırılabilir; secret silme exact key onayı ister ve audit yalnız configured-state kaydeder.',
+            )
             . '<header class="int-hero"><div><h1>Sistem ve Entegrasyonlar</h1>'
             . '<p class="int-muted">Mail, OAuth, Turnstile, AI, storage, cache, queue, search, realtime ve API/webhook hazırlığını tek yerde yönet. Secret değerleri hiçbir zaman ekrana geri basılmaz.</p></div>'
             . $notice
