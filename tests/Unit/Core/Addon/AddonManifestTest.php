@@ -52,6 +52,37 @@ final class AddonManifestTest extends TestCase
         self::assertFalse(AddonVersionConstraint::parse('~2.4.1')->matches(AddonVersion::parse('2.5.0')));
     }
 
+    public function testSemverPrereleasePrecedenceAndValidationFollowSemverTwoPointZero(): void
+    {
+        $ordered = [
+            '1.0.0-alpha',
+            '1.0.0-alpha.1',
+            '1.0.0-alpha.beta',
+            '1.0.0-beta',
+            '1.0.0-beta.2',
+            '1.0.0-beta.11',
+            '1.0.0-rc.1',
+            '1.0.0',
+        ];
+
+        for ($index = 0, $count = count($ordered) - 1; $index < $count; ++$index) {
+            self::assertLessThan(
+                0,
+                AddonVersion::parse($ordered[$index])->compare(AddonVersion::parse($ordered[$index + 1])),
+                $ordered[$index] . ' must precede ' . $ordered[$index + 1],
+            );
+        }
+
+        self::assertTrue(AddonVersion::parse('1.0.0+build.1')->equals(AddonVersion::parse('1.0.0+build.2')));
+        self::assertTrue(
+            AddonVersionConstraint::parse('>=1.0.0-beta.2 <1.0.0')
+                ->matches(AddonVersion::parse('1.0.0-beta.11')),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        AddonVersion::parse('1.0.0-alpha.01');
+    }
+
     public function testManifestRejectsUnknownKeysAndSelfDependency(): void
     {
         $this->expectException(InvalidArgumentException::class);
