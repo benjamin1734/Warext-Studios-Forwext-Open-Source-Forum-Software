@@ -16,6 +16,7 @@ use Forwext\App\Web\Admin\SystemOperationsHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
+use Forwext\App\Web\Api\V1\ApiV1RouteRegistrar;
 use Forwext\App\Web\Appearance\ThemeAssetHandler;
 use Forwext\App\Web\Appearance\ThemeManageHandler;
 use Forwext\App\Web\Analytics\AnalyticsRequestMiddleware;
@@ -1015,6 +1016,7 @@ final readonly class WebApplicationFactory
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
         $routes = new RouteCollection();
+        ApiV1RouteRegistrar::register($routes, new DatabasePublicApiV1ReadRepository($database));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
         $routes->add(new Route(
             'bug.report.create',
