@@ -28,14 +28,14 @@ final class SystemOperationsAcpMigrationTest extends TestCase
         $source = (string) file_get_contents($root . '/database/migrations/core/CreateSystemOperationsAcp.php');
 
         foreach ([
-            'system.health.view',
-            'system.logs.view',
-            'system.jobs.manage',
-            'system.backup.manage',
-            'system.maintenance.manage',
-            'system.repair.manage',
-        ] as $permission) {
-            self::assertStringContainsString($permission, $source);
+            'SystemOperationsService::HEALTH_PERMISSION',
+            'SystemOperationsService::LOG_PERMISSION',
+            'SystemOperationsService::JOB_PERMISSION',
+            'SystemOperationsService::BACKUP_PERMISSION',
+            'SystemOperationsService::MAINTENANCE_PERMISSION',
+            'SystemOperationsService::REPAIR_PERMISSION',
+        ] as $permissionConstant) {
+            self::assertStringContainsString($permissionConstant, $source);
         }
         self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
     }
