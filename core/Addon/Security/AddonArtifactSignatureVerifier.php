@@ -23,15 +23,15 @@ final class AddonArtifactSignatureVerifier
             throw new RuntimeException('Unable to checksum add-on artifact.');
         }
 
-        if ($signaturePath === null || $signaturePath === '' || !is_file($signaturePath)) {
+        if ($signaturePath === null || $signaturePath === '') {
             if ($policy !== AddonSignaturePolicy::Optional) {
                 throw new InvalidArgumentException('Add-on signature is required by policy.');
             }
 
             return new AddonSignatureVerificationResult(AddonSignatureTrust::Unsigned, $checksum, null);
         }
-        if (is_link($signaturePath)) {
-            throw new InvalidArgumentException('Add-on signature document may not be a symbolic link.');
+        if (!is_file($signaturePath) || is_link($signaturePath)) {
+            throw new InvalidArgumentException('Explicit add-on signature document is unavailable or unsafe.');
         }
 
         $raw = file_get_contents($signaturePath);

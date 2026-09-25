@@ -1,0 +1,17 @@
+{
+  "id": "Warext/HelloWorld",
+  "version": "1.0.0",
+  "title": "Hello World",
+  "description": "Minimal Forwext add-on example using the typed UI registration API.",
+  "requires": {
+    "forwext": "0.0.7.55-dev",
+    "addons": {}
+  },
+  "conflicts": {
+    "addons": {}
+  },
+  "data_retention": "retain_only",
+  "capabilities": [
+    "user_ui"
+  ]
+}

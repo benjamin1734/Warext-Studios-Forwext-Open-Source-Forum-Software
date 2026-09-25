@@ -1,0 +1,12 @@
+{
+  "name": "warext/hello-world",
+  "type": "forwext-addon",
+  "require": {
+    "php": ">=8.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Warext\\HelloWorld\\": "src/"
+    }
+  }
+}
