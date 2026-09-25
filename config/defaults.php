@@ -77,6 +77,22 @@ return [
     ],
     'search' => [
         'driver' => 'native',
+        'external' => [
+            'endpoint' => null,
+            'api_key_secret' => 'search.external.api_key',
+        ],
+    ],
+    'mail' => [
+        'driver' => 'disabled',
+        'from_address' => null,
+        'from_name' => 'Forwext',
+        'smtp' => [
+            'host' => null,
+            'port' => 587,
+            'encryption' => 'starttls',
+            'username' => null,
+            'password_secret' => 'mail.smtp.password',
+        ],
     ],
     'registration' => [
         'mode' => 'closed',
@@ -147,6 +163,27 @@ return [
                 'redirect_uris' => [],
             ],
         ],
+    ],
+    'ai' => [
+        'moderation' => [
+            'provider' => 'disabled',
+            'model' => null,
+            'custom_endpoint' => null,
+            'timeout_ms' => 5000,
+        ],
+    ],
+    'redis' => [
+        'host' => null,
+        'port' => 6379,
+        'database' => null,
+        'timeout_ms' => 2000,
+        'password_secret' => 'redis.password',
+    ],
+    'api' => [
+        'enabled' => false,
+    ],
+    'webhooks' => [
+        'enabled' => false,
     ],
     'profile_music' => [
         'upload_max_bytes' => 20971520,
