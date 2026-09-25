@@ -17,8 +17,11 @@ final class AnalyticsWebSurfaceTest extends TestCase
         self::assertStringContainsString('AnalyticsEventRegistry::withCoreDefaults()',$factory);
         self::assertStringContainsString('new AnalyticsPrivacyHasher($this->analyticsPrivacyKey($config))',$factory);
         self::assertStringContainsString('new AnalyticsRequestMiddleware(',$factory);
+        self::assertStringContainsString('$firstPartyModuleRouteMiddleware', $factory);
+        self::assertStringContainsString('$moduleAnalyticsMiddleware', $factory);
         self::assertStringContainsString(
-            '[$easterEggMiddleware, $advertisingMiddleware, $analyticsMiddleware]',
+            "new FirstPartyModuleConditionalMiddleware(
+            'analytics'",
             $factory
         );
         self::assertStringContainsString("'forwext.analytics.privacy.v1'",$factory);

@@ -52,7 +52,7 @@ Supported scopes are:
 
 The effective lookup order is post → thread → forum → group → global → typed safe default.
 
-The ACP supports global, forum, group, thread and post targeting. Forum/group targets and recent thread/post targets are discoverable through bounded selectors while an exact valid ID may also be entered.
+The ACP supports global, forum, group, thread and post targeting. Forum/group configuration targets are discoverable through bounded selectors. Thread/post scopes require an exact valid ID and do not enumerate content titles, avoiding unnecessary content disclosure to a delegated module administrator.
 
 Reset removes the selected scope override rather than writing the default value. That restores normal fallback behavior.
 

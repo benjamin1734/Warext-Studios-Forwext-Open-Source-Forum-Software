@@ -49,6 +49,16 @@ final readonly class FirstPartyModuleService
         $pendingStorage = 0;
 
         if ($selected !== null) {
+            $supportsScope = false;
+            foreach ($selected->settings as $setting) {
+                if ($setting->supports($selectedScope)) {
+                    $supportsScope = true;
+                    break;
+                }
+            }
+            if (!$supportsScope && $selected->settings !== []) {
+                throw new InvalidArgumentException('Selected module does not support this settings scope.');
+            }
             $scopeTargets = $this->scopeTargets($selectedScope);
             if (!$selectedScope->needsTarget()) {
                 $resolvedScopeId = 'global';
@@ -569,14 +579,8 @@ final readonly class FirstPartyModuleService
                 'SELECT group_id AS id,name AS label FROM forwext_user_groups '
                 . 'ORDER BY sort_order,name,group_id LIMIT 200',
             ),
-            FirstPartyModuleScope::Thread => new CompiledQuery(
-                'SELECT thread_id AS id,title AS label FROM forwext_threads '
-                . 'ORDER BY updated_at_utc DESC,thread_id DESC LIMIT 100',
-            ),
-            FirstPartyModuleScope::Post => new CompiledQuery(
-                "SELECT post_id AS id,CONCAT('Post #',position,' · ',thread_id) AS label FROM forwext_posts "
-                . 'ORDER BY updated_at_utc DESC,post_id DESC LIMIT 100',
-            ),
+            FirstPartyModuleScope::Thread,
+            FirstPartyModuleScope::Post => null,
         };
         if (!$query instanceof CompiledQuery) {
             return [];
