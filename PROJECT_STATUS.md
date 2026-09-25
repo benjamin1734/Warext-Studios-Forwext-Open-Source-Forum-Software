@@ -29,6 +29,16 @@ NEXT_STEP = 18.04 - Add-on UI capabilities
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
+## Work in progress — 18.04
+
+- Started add-on UI capability work without marking the sub-step complete.
+- Commit `b155e1cb05dfd650fd06914e771cd236f1070bb8` adds canonical add-on UI registrations for UI slots, widgets, public navigation and design tokens.
+- Reused the existing `UiSlotRegistry`, `WidgetRegistry`, `NavigationRegistry` and `DesignTokenCatalog` instead of creating parallel UI infrastructure.
+- Added canonical `addon.<vendor>.<addon>.*` ownership boundaries and expanded add-on owner-key length handling to match the valid `Vendor/AddOn` identifier range.
+- Added lifecycle-aware UI activation so disabled, uninstalled and unknown add-ons cannot contribute visible UI merely because their registration code is discoverable.
+- Build/package workflow `36156837671`: success on PHP 8.4 and PHP 8.5; database migration smoke `36156837714`: success on MySQL 8.4 and MariaDB 10.11.
+- Remaining before 18.04 can be closed: editor-extension contract, compiled add-on asset delivery/CSP integration, React-facing extension manifest/consumer contract, and end-to-end native composition coverage.
+
 ## Completed in 18.03
 
 - Added canonical owner-namespaced backend registrations for migrations, entities, routes, permissions, settings, ACP navigation, queue jobs, cron tasks, search sources, notification definitions, webhook metadata and content types.
