@@ -28,7 +28,7 @@ final class AddonBackendProvisioningContractTest extends TestCase
         self::assertStringContainsString('value type cannot change', $catalog);
         self::assertStringContainsString('withExtensions(', $navigation);
         self::assertStringContainsString('/admin/addons/', $registration);
-        self::assertStringContainsString('admin.' . "' . $this->namespace->prefix()", $registration);
+        self::assertStringContainsString("\$expectedKey = 'admin.' . \$this->namespace->prefix()", $registration);
     }
 
     public function testSettingStoreMutationsDeclareTransactionRequirement(): void
