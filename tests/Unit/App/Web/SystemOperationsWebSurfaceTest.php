@@ -42,7 +42,12 @@ final class SystemOperationsWebSurfaceTest extends TestCase
 
         self::assertStringNotContainsString('$job->payload', $html);
         self::assertStringContainsString('failedJobMetadata', $service);
-        self::assertStringNotContainsString("'payload'=>", $service);
+        $metadataStart = strpos($service, 'private function failedJobMetadata');
+        $taskStart = strpos($service, 'private function scheduledTask', is_int($metadataStart) ? $metadataStart : 0);
+        self::assertIsInt($metadataStart);
+        self::assertIsInt($taskStart);
+        $metadataSource = substr($service, $metadataStart, $taskStart - $metadataStart);
+        self::assertStringNotContainsString('payload', $metadataSource);
         self::assertStringNotContainsString('/admin/system/backups/download', $factory);
         self::assertStringContainsString('Job payloadları ACP’ye taşınmaz', $html);
         self::assertStringContainsString('ACP download endpoint’i yoktur', $html);
