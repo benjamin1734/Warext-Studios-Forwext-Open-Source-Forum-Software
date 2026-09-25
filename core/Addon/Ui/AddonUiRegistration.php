@@ -37,6 +37,8 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
     private array $editorExtensions = [];
     /** @var array<string,AddonUiTemplateDefinition> */
     private array $templates = [];
+    /** @var array<string,AddonUiAssetDefinition> */
+    private array $assets = [];
 
     public function __construct(public readonly AddonId $addonId)
     {
@@ -87,6 +89,14 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
     {
         $this->namespace->assertOwned($template->key, 'Add-on UI template');
         $this->put($this->templates, $template->key, $template, 'UI template');
+
+        return $this;
+    }
+
+    public function asset(AddonUiAssetDefinition $asset): self
+    {
+        $this->namespace->assertOwned($asset->key, 'Add-on UI asset');
+        $this->put($this->assets, $asset->key, $asset, 'UI asset');
 
         return $this;
     }
@@ -170,6 +180,12 @@ final class AddonUiRegistration implements UiSlotContributor, WidgetContributor,
     public function templates(): array
     {
         return $this->ordered($this->templates);
+    }
+
+    /** @return list<AddonUiAssetDefinition> */
+    public function assets(): array
+    {
+        return $this->ordered($this->assets);
     }
 
     /** @return list<DesignTokenDefinition> */
