@@ -78,7 +78,7 @@ final class WebhookPlatformTest extends TestCase
             WebhookTransportResult::failure('http_503',true,503),
             WebhookTransportResult::success(204),
         ]);
-        $handler=new WebhookDeliveryJobHandler($repo,$secrets,$policy,$transport,$queue);
+        $handler=new WebhookDeliveryJobHandler($repo,$secrets,$policy,$transport,$queue,$clock);
         $payload=json_encode(['delivery_id'=>$ids[0]],JSON_THROW_ON_ERROR);
         $firstTimestamp=$clock->now()->getTimestamp();
 
@@ -298,6 +298,20 @@ final class WebhookRepositoryFixture implements WebhookRepository
     public function delivery(string $deliveryId):?WebhookDelivery
     {
         return $this->deliveries[$deliveryId]??null;
+    }
+
+    public function recentDeliveries(string $subscriptionId,int $limit=100):array
+    {
+        $items=array_values(array_filter(
+            $this->deliveries,
+            static fn(WebhookDelivery $d):bool=>$d->subscriptionId===$subscriptionId,
+        ));
+        return array_slice($items,0,$limit);
+    }
+
+    public function attempts(string $deliveryId):array
+    {
+        return [];
     }
 
     public function recordAttempt(
