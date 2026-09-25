@@ -84,32 +84,49 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
         $auditRequestId = HttpAuditRequestId::fromRequest($request);
         $updated = $action;
 
-        match ($action) {
-            'set_maintenance' => $this->setMaintenance($actor, $body, $auditRequestId, $now),
-            'run_task' => $this->operations->runScheduledTask(
-                $actor,
-                self::required($body, 'task_name', 191),
-                $auditRequestId,
-                $now,
-            ),
-            'retry_failed_job' => $this->operations->retryFailedJob(
-                $actor,
-                self::jobId($body['job_id'] ?? null),
-                $auditRequestId,
-                $now,
-            ),
-            'delete_failed_job' => $this->deleteFailedJob($actor, $body, $auditRequestId, $now),
-            'prune_scheduler_claims' => $this->operations->pruneSchedulerClaims(
-                $actor,
-                self::integer($body, 'older_than_days', 1, 3650),
-                $auditRequestId,
-                $now,
-            ),
-            'create_backup' => $this->operations->createBackup($actor, $auditRequestId, $now),
-            'delete_backup' => $this->deleteBackup($actor, $body, $auditRequestId, $now),
-            'clear_cache' => $this->clearCache($actor, $body, $auditRequestId, $now),
-            default => throw new InvalidArgumentException('Unknown system operation action.'),
-        };
+        switch ($action) {
+            case 'set_maintenance':
+                $this->setMaintenance($actor, $body, $auditRequestId, $now);
+                break;
+            case 'run_task':
+                $this->operations->runScheduledTask(
+                    $actor,
+                    self::required($body, 'task_name', 191),
+                    $auditRequestId,
+                    $now,
+                );
+                break;
+            case 'retry_failed_job':
+                $this->operations->retryFailedJob(
+                    $actor,
+                    self::jobId($body['job_id'] ?? null),
+                    $auditRequestId,
+                    $now,
+                );
+                break;
+            case 'delete_failed_job':
+                $this->deleteFailedJob($actor, $body, $auditRequestId, $now);
+                break;
+            case 'prune_scheduler_claims':
+                $this->operations->pruneSchedulerClaims(
+                    $actor,
+                    self::integer($body, 'older_than_days', 1, 3650),
+                    $auditRequestId,
+                    $now,
+                );
+                break;
+            case 'create_backup':
+                $this->operations->createBackup($actor, $auditRequestId, $now);
+                break;
+            case 'delete_backup':
+                $this->deleteBackup($actor, $body, $auditRequestId, $now);
+                break;
+            case 'clear_cache':
+                $this->clearCache($actor, $body, $auditRequestId, $now);
+                break;
+            default:
+                throw new InvalidArgumentException('Unknown system operation action.');
+        }
 
         return Response::redirect(
             $this->basePath->prepend('/admin/system/operations?updated=' . rawurlencode($updated)),
