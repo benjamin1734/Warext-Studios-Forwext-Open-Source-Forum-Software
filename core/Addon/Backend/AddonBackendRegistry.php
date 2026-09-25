@@ -7,6 +7,11 @@ namespace Forwext\Core\Addon\Backend;
 use Forwext\Core\Admin\Navigation\AdminNavigationItem;
 use Forwext\Core\Domain\Access\Permission\PermissionCatalogEntry;
 use Forwext\Core\Migration\Migration;
+use Forwext\Core\Notification\NotificationDefinition;
+use Forwext\Core\Queue\QueueJobHandler;
+use Forwext\Core\Routing\Route;
+use Forwext\Core\Scheduler\ScheduledTask;
+use Forwext\Core\Search\Lifecycle\SearchContentSource;
 use InvalidArgumentException;
 
 final class AddonBackendRegistry
@@ -33,6 +38,7 @@ final class AddonBackendRegistry
     {
         $registrations = $this->registrations;
         ksort($registrations, SORT_STRING);
+
         return array_values($registrations);
     }
 
@@ -40,6 +46,12 @@ final class AddonBackendRegistry
     public function migrations(): array
     {
         return $this->merge(static fn (AddonBackendRegistration $r): array => $r->migrations());
+    }
+
+    /** @return list<Route> */
+    public function routes(): array
+    {
+        return $this->merge(static fn (AddonBackendRegistration $r): array => $r->routes());
     }
 
     /** @return list<PermissionCatalogEntry> */
@@ -58,6 +70,30 @@ final class AddonBackendRegistry
     public function adminItems(): array
     {
         return $this->merge(static fn (AddonBackendRegistration $r): array => $r->adminItems());
+    }
+
+    /** @return list<QueueJobHandler> */
+    public function jobs(): array
+    {
+        return $this->merge(static fn (AddonBackendRegistration $r): array => $r->jobs());
+    }
+
+    /** @return list<ScheduledTask> */
+    public function scheduledTasks(): array
+    {
+        return $this->merge(static fn (AddonBackendRegistration $r): array => $r->scheduledTasks());
+    }
+
+    /** @return list<SearchContentSource> */
+    public function searchSources(): array
+    {
+        return $this->merge(static fn (AddonBackendRegistration $r): array => $r->searchSources());
+    }
+
+    /** @return list<NotificationDefinition> */
+    public function notifications(): array
+    {
+        return $this->merge(static fn (AddonBackendRegistration $r): array => $r->notifications());
     }
 
     /** @return list<AddonEntityDefinition> */
@@ -89,6 +125,7 @@ final class AddonBackendRegistry
         foreach ($this->all() as $registration) {
             array_push($result, ...$reader($registration));
         }
+
         return $result;
     }
 }
