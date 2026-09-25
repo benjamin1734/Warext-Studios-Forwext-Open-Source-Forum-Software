@@ -157,7 +157,9 @@ final readonly class AddonLifecycleService
             if (!$this->dataPurger->supports($id)) {
                 throw new InvalidArgumentException('No safe data purger is registered for this add-on.');
             }
-            $beforeSave = fn (): mixed => $this->dataPurger->purge($current);
+            $beforeSave = function () use ($current): void {
+                $this->dataPurger->purge($current);
+            };
             $dataState = AddonDataState::Purged;
         }
 
