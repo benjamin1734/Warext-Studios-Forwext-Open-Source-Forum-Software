@@ -44,7 +44,7 @@ Package signatures are deliberately not part of 18.01; signing and official sign
 }
 ```
 
-Unknown manifest keys fail closed. Add-on versions use SemVer. Add-on constraints support exact versions, `>`, `>=`, `<`, `<=`, caret, tilde and whitespace-separated AND clauses. The `forwext` requirement is the minimum compatible Forwext version.
+Unknown manifest keys fail closed. Add-on versions use strict SemVer 2.0 precedence, including spec-accurate prerelease ordering and rejection of numeric prerelease identifiers with leading zeroes. Build metadata does not affect version precedence. Add-on constraints support exact versions, `>`, `>=`, `<`, `<=`, caret, tilde and whitespace-separated AND clauses. The `forwext` requirement is the minimum compatible Forwext version.
 
 `data_retention` is either:
 
@@ -57,13 +57,14 @@ A manifest declaration never grants purge ability by itself.
 
 Lifecycle states are `enabled`, `disabled` and `uninstalled`.
 
-- install validates Forwext compatibility, requirements, conflicts and cycles, then enters `disabled`;
-- enable requires compatible required add-ons to be enabled and rejects active conflicts;
+- install validates Forwext compatibility, requirements, conflicts and cycles, then enters `disabled`; reinstall of the recorded version requires the same package checksum and preserves the existing data state;
+- enable revalidates the current Forwext version plus dependency/conflict graph, requires compatible required add-ons to be enabled and rejects active conflicts;
 - disable rejects the transition while an enabled dependent still requires the add-on;
 - upgrade requires the add-on to be disabled and the package version to increase;
 - uninstall requires the add-on to be disabled and all dependents to be uninstalled first;
-- keep-data uninstall records `retained`;
-- delete-data uninstall requires both `purge_supported` and a registered `AddonDataPurger`, otherwise it fails closed.
+- keep-data uninstall preserves the current data state; a previously purged installation can never be silently promoted back to `retained`;
+- delete-data uninstall requires both `purge_supported` and a registered `AddonDataPurger`, otherwise it fails closed; already-purged state is not purged twice;
+- the purge callback executes inside the common audit mutation boundary before lifecycle persistence, so database-backed purgers sharing the transaction can roll back together with the lifecycle/audit write.
 
 Backend capability install/upgrade migrations and extension hooks are layered on this lifecycle in later roadmap steps. The state machine, compatibility graph, package validation, retention contract and persistence introduced here are authoritative foundations rather than UI-only checks.
 
