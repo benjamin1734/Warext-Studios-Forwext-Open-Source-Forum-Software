@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.04 — Add-on UI capabilities
+
+- Added lifecycle-aware add-on UI contributions for slots, widgets, navigation, design tokens, templates and editor toolbar extensions using the existing native registries.
+- Added immutable same-origin CSS/JavaScript asset compilation with SHA-256 addressing and SRI, without relaxing the existing CSP or requiring Node/npm in production.
+- Added a shared runtime composer plus a data-only React/Next.js extension manifest contract; backend authorization remains separate and authoritative.
+- Added escaped template reuse through `ThemeTemplateCompiler`, namespace ownership checks and regression coverage for disabled/inactive add-ons.
+- Implementation commits: `b155e1cb05dfd650fd06914e771cd236f1070bb8`, `7fce0beb15b1702c11be08a9009b272b219baf95`, `60213323ec8764e5ee1c6cbb48b54e1fb4366e20`.
+- GitHub Actions build run `36160436403` and database migration smoke run `36160436614` succeeded.
+
 ### 18.03 — Add-on backend capabilities
 
 - Added typed owner-namespaced registrations for migrations, entities, routes, permissions, settings, ACP, queue jobs/cron, search, notifications, webhook metadata and content types.

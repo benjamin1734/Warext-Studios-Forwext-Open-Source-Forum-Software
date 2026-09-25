@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.53-dev
+CURRENT_VERSION = 0.0.7.54-dev
 LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 18.03
-CURRENT_STEP = 18.04
-LAST_COMMIT = 3c88318dfc937da2a16ffd0785fe51d4d1aa34f3
+LAST_COMPLETED_SUBSTEP = 18.04
+CURRENT_STEP = 18.05
+LAST_COMMIT = 60213323ec8764e5ee1c6cbb48b54e1fb4366e20
 BLOCKERS = none
-NEXT_STEP = 18.04 - Add-on UI capabilities
+NEXT_STEP = 18.05 - SDK/CLI/test harness
 ```
 
 ## Current position
@@ -21,23 +21,32 @@ NEXT_STEP = 18.04 - Add-on UI capabilities
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.03`.
-- Current sub-step: `18.04 — Add-on UI capabilities`.
-- Remaining roadmap work after 18.03: **17 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.04`.
+- Current sub-step: `18.05 — SDK/CLI/test harness`.
+- Remaining roadmap work after 18.04: **16 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
 
-## Work in progress — 18.04
+## Completed in 18.04
 
-- Started add-on UI capability work without marking the sub-step complete.
-- Commit `b155e1cb05dfd650fd06914e771cd236f1070bb8` adds canonical add-on UI registrations for UI slots, widgets, public navigation and design tokens.
-- Reused the existing `UiSlotRegistry`, `WidgetRegistry`, `NavigationRegistry` and `DesignTokenCatalog` instead of creating parallel UI infrastructure.
-- Added canonical `addon.<vendor>.<addon>.*` ownership boundaries and expanded add-on owner-key length handling to match the valid `Vendor/AddOn` identifier range.
-- Added lifecycle-aware UI activation so disabled, uninstalled and unknown add-ons cannot contribute visible UI merely because their registration code is discoverable.
-- Build/package workflow `36156837671`: success on PHP 8.4 and PHP 8.5; database migration smoke `36156837714`: success on MySQL 8.4 and MariaDB 10.11.
-- Remaining before 18.04 can be closed: editor-extension contract, compiled add-on asset delivery/CSP integration, React-facing extension manifest/consumer contract, and end-to-end native composition coverage.
+- Added canonical lifecycle-aware add-on UI registrations for UI slots, widgets, public navigation and design tokens using the existing first-party registries.
+- Added safe add-on template contributions backed by the existing escaped `ThemeTemplateCompiler`; add-ons do not inject raw PHP or patch native templates.
+- Added declarative editor toolbar extensions scoped by editor surface and namespace. Toolbar contributions reuse the existing rich-editor behavior instead of requiring inline JavaScript.
+- Added bounded CSS/JavaScript UI asset definitions with CSS external/executable URL rejection, immutable SHA-256 addressing and Subresource Integrity metadata.
+- Added `AddonUiAssetCompiler` to atomically publish same-origin compiled assets under `public/addon-assets/`; the existing `script-src 'self'` / same-origin CSP can remain unchanged.
+- Added `AddonUiRuntimeComposer` to build the shared slot/widget/navigation/design-token/editor/template/asset runtime from an already enabled add-on registry.
+- Added a data-only React/Next.js extension manifest exporter plus `frontend/extension-contract.ts`; the manifest exposes declarative UI metadata and immutable asset references, not PHP classes, template source, settings, secrets or backend permissions.
+- Added enabled-lifecycle filtering so disabled, uninstalled and unknown add-ons do not contribute visible UI.
+- Expanded add-on owner-key support in existing slot/widget/navigation registries to cover the canonical `Vendor/AddOn` namespace range without weakening namespace ownership.
+- Added regression coverage for namespace rejection, editor surface scoping, escaped templates, lifecycle activation, compiled assets, SRI and React manifest output.
+- No database migration and no mandatory Node/npm/Redis/Docker/Supervisor runtime dependency were introduced for standard cPanel deployment.
+- Implementation commits: `b155e1cb05dfd650fd06914e771cd236f1070bb8`, `7fce0beb15b1702c11be08a9009b272b219baf95`, `60213323ec8764e5ee1c6cbb48b54e1fb4366e20`.
+- GitHub Actions build run `36160436403`: success; PHP lint, PHPUnit PHP 8.4/8.5, cPanel package build and production dependency baseline passed.
+- Database migration smoke run `36160436614`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.54-dev`.
+- Next: `18.05 — SDK/CLI/test harness`.
 
 ## Completed in 18.03
 
