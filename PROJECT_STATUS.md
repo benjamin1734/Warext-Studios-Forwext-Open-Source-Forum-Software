@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.52-dev
+CURRENT_VERSION = 0.0.7.53-dev
 LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 18.02
-CURRENT_STEP = 18.03
-LAST_COMMIT = 2f68004b6bdcb81731f508423a4ea2cb297999c7
+LAST_COMPLETED_SUBSTEP = 18.03
+CURRENT_STEP = 18.04
+LAST_COMMIT = 3c88318dfc937da2a16ffd0785fe51d4d1aa34f3
 BLOCKERS = none
-NEXT_STEP = 18.03 - Add-on backend capabilities
+NEXT_STEP = 18.04 - Add-on UI capabilities
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 18.03 - Add-on backend capabilities
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.02`.
-- Current sub-step: `18.03 — Add-on backend capabilities`.
-- Remaining roadmap work after 18.02: **18 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.03`.
+- Current sub-step: `18.04 — Add-on UI capabilities`.
+- Remaining roadmap work after 18.03: **17 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 18.03
+
+- Added canonical owner-namespaced backend registrations for migrations, entities, routes, permissions, settings, ACP navigation, queue jobs, cron tasks, search sources, notification definitions, webhook metadata and content types.
+- Added an owner-aware queue job registry and deterministic runtime integration into the existing RouteCollection, queue, scheduler, search and notification registries rather than creating parallel infrastructure.
+- Added a dedicated add-on backend metadata registry for entity, webhook and content-type capabilities with duplicate/conflict rejection and atomic preflight before real runtime registries are mutated.
+- Added persisted add-on setting definitions/values, typed normalization/constraints, backend `acp.access` + `addon.manage` enforcement for mutations and Administration audit coverage for setting save/reset.
+- Added catalog synchronization for add-on permission definitions and settings while refusing incompatible permission/setting value-type changes.
+- Added migration provisioning through the shared MigrationEngine plus additive/idempotent core migration `20260925122500_addon_backend_capabilities`; no database reset is introduced.
+- Added extension-aware ACP navigation registration with canonical `/admin/addons/{vendor}/{addon}` ownership boundaries; backend route permissions remain authoritative.
+- Added lifecycle-aware runtime activation: only persisted `enabled` add-ons are admitted to runtime capability registries; disabled, uninstalled and unknown registrations are excluded.
+- Added fail-closed cron validation so an add-on scheduled task cannot reference an unregistered add-on queue job.
+- Kept 19.03 webhook delivery/security responsibilities separate: 18.03 registers typed webhook capability metadata but does not invent unsigned delivery or destination handling before the dedicated webhook platform.
+- No mandatory Composer/npm/Node/Redis/Docker/Supervisor dependency was added to the normal cPanel runtime profile.
+- 18.03 implementation/fix commits: `f1d6c744cd235150a0dce93d38f1e9db5b64c9ae`, `8c47df66a4c76f9e61da0b6b07b11572bcd6cecf`, `c419917829f21f7ae0a15977181ed64360fcae42`, `155f79ecd462c34507e5e8374b244eec62d51ea1`, `f3aac34a72501a25558c3a6285f5ba800b5b295c`, `4300a491d41e1650df6966cc1b56d89b22f5ba48`, `6243d4d213e15f9d6526003487ad080d2b96eb7a`, `a4a8be12f8576be69c7f50dd3c60717ba148c248`, `03c24b74983ccfbf673539f2120d6d091bb12f73`, `3c88318dfc937da2a16ffd0785fe51d4d1aa34f3`.
+- GitHub Actions build run `36155742361`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel package build passed.
+- Database migration smoke run `36155742170`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.53-dev`.
+- Next: `18.04 — Add-on UI capabilities`.
 
 ## Completed in 18.02
 

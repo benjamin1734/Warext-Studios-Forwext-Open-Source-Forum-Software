@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.03 — Add-on backend capabilities
+
+- Added typed owner-namespaced registrations for migrations, entities, routes, permissions, settings, ACP, queue jobs/cron, search, notifications, webhook metadata and content types.
+- Reused the existing runtime registries with atomic conflict preflight and added a metadata registry for entity/webhook/content-type ownership.
+- Added lifecycle-aware activation so only persisted enabled add-ons can contribute runtime capabilities; disabled/uninstalled/unknown registrations remain inactive.
+- Added persisted typed settings, backend-authorized + audited setting mutations, permission/setting catalog synchronization and shared migration provisioning.
+- Added fail-closed cron-to-job validation and extension-aware ACP navigation boundaries without treating navigation visibility as authorization.
+- Kept actual signed/retryable webhook delivery in roadmap 19.03 and introduced no mandatory cPanel daemon/runtime dependency.
+- Implementation/fix commits: `f1d6c744cd235150a0dce93d38f1e9db5b64c9ae`, `8c47df66a4c76f9e61da0b6b07b11572bcd6cecf`, `c419917829f21f7ae0a15977181ed64360fcae42`, `155f79ecd462c34507e5e8374b244eec62d51ea1`, `f3aac34a72501a25558c3a6285f5ba800b5b295c`, `4300a491d41e1650df6966cc1b56d89b22f5ba48`, `6243d4d213e15f9d6526003487ad080d2b96eb7a`, `a4a8be12f8576be69c7f50dd3c60717ba148c248`, `03c24b74983ccfbf673539f2120d6d091bb12f73`, `3c88318dfc937da2a16ffd0785fe51d4d1aa34f3`.
+- GitHub Actions build run `36155742361` and database migration smoke run `36155742170` succeeded.
+
 ### 18.02 — Events/decorators/DI extension API
 
 - Added core/module/add-on extension ownership, owner-aware DI bindings and deterministic service decorators.
