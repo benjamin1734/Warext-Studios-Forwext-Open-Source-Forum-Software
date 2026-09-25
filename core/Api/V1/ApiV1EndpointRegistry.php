@@ -33,6 +33,13 @@ final class ApiV1EndpointRegistry
             new ApiV1EndpointDefinition('api.v1.threads.show','/api/v1/threads/{threadId}',[HttpMethod::Get],ApiV1Operation::ThreadShow,ApiV1Resource::Threads,ApiV1Scope::ThreadsRead,true,['threadId'=>$id]),
             new ApiV1EndpointDefinition('api.v1.threads.posts','/api/v1/threads/{threadId}/posts',[HttpMethod::Get],ApiV1Operation::ThreadPosts,ApiV1Resource::Posts,ApiV1Scope::PostsRead,true,['threadId'=>$id]),
             new ApiV1EndpointDefinition('api.v1.posts.show','/api/v1/posts/{postId}',[HttpMethod::Get],ApiV1Operation::PostShow,ApiV1Resource::Posts,ApiV1Scope::PostsRead,true,['postId'=>$id]),
+            new ApiV1EndpointDefinition('api.v1.conversations.index','/api/v1/conversations',[HttpMethod::Get],ApiV1Operation::ConversationIndex,ApiV1Resource::Conversations,ApiV1Scope::ConversationsRead,false),
+            new ApiV1EndpointDefinition('api.v1.notifications.index','/api/v1/notifications',[HttpMethod::Get],ApiV1Operation::NotificationIndex,ApiV1Resource::Notifications,ApiV1Scope::NotificationsRead,false),
+            new ApiV1EndpointDefinition('api.v1.modules.index','/api/v1/modules',[HttpMethod::Get],ApiV1Operation::ModuleIndex,ApiV1Resource::Modules,ApiV1Scope::ModulesRead),
+            new ApiV1EndpointDefinition('api.v1.marketplace.index','/api/v1/marketplace',[HttpMethod::Get],ApiV1Operation::MarketplaceIndex,ApiV1Resource::Marketplace,ApiV1Scope::MarketplaceRead),
+            new ApiV1EndpointDefinition('api.v1.marketplace.show','/api/v1/marketplace/{listingId}',[HttpMethod::Get],ApiV1Operation::MarketplaceShow,ApiV1Resource::Marketplace,ApiV1Scope::MarketplaceRead,true,['listingId'=>$id]),
+            new ApiV1EndpointDefinition('api.v1.support.categories','/api/v1/support/categories',[HttpMethod::Get],ApiV1Operation::SupportCategoryIndex,ApiV1Resource::Support,ApiV1Scope::SupportRead),
+            new ApiV1EndpointDefinition('api.v1.support.tickets','/api/v1/support/tickets',[HttpMethod::Get],ApiV1Operation::SupportTicketIndex,ApiV1Resource::Support,ApiV1Scope::SupportRead,false),
         ]);
     }
 

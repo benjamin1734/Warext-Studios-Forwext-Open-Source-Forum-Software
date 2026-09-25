@@ -14,4 +14,11 @@ enum ApiV1Operation: string
     case ThreadShow = 'thread_show';
     case ThreadPosts = 'thread_posts';
     case PostShow = 'post_show';
+    case ConversationIndex = 'conversation_index';
+    case NotificationIndex = 'notification_index';
+    case ModuleIndex = 'module_index';
+    case MarketplaceIndex = 'marketplace_index';
+    case MarketplaceShow = 'marketplace_show';
+    case SupportCategoryIndex = 'support_category_index';
+    case SupportTicketIndex = 'support_ticket_index';
 }

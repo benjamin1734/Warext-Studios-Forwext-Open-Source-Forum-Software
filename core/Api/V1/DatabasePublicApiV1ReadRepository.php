@@ -144,6 +144,70 @@ final readonly class DatabasePublicApiV1ReadRepository implements PublicApiV1Rea
         return $row === null ? null : self::postRow($row);
     }
 
+    public function modules(int $page, int $perPage): ApiV1Page
+    {
+        [$limit, $offset] = self::page($page, $perPage);
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT `module_key`,`state` FROM `forwext_first_party_modules` '
+            . "WHERE `state`='enabled' ORDER BY `module_key` LIMIT " . ($limit + 1) . ' OFFSET ' . $offset,
+        ));
+
+        return self::pageResult($rows, $page, $perPage, static fn (array $row): array => [
+            'key'=>(string) $row['module_key'],
+            'state'=>(string) $row['state'],
+        ]);
+    }
+
+    public function marketplace(int $page, int $perPage): ApiV1Page
+    {
+        [$limit, $offset] = self::page($page, $perPage);
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT `listing_id`,`seller_user_id`,`category_id`,`slug`,`title`,`description`,'
+            . '`price_minor`,`currency`,`state`,`created_at_utc`,`updated_at_utc` '
+            . 'FROM `forwext_marketplace_listings` '
+            . "WHERE `state` IN ('active','sold') "
+            . 'ORDER BY `updated_at_utc` DESC,`listing_id` DESC LIMIT ' . ($limit + 1) . ' OFFSET ' . $offset,
+        ));
+
+        return self::pageResult($rows, $page, $perPage, self::marketplaceRow(...));
+    }
+
+    public function marketplaceListing(string $listingId): ?array
+    {
+        self::assertId($listingId);
+
+        $row = $this->database->fetchOne(new CompiledQuery(
+            'SELECT `listing_id`,`seller_user_id`,`category_id`,`slug`,`title`,`description`,'
+            . '`price_minor`,`currency`,`state`,`created_at_utc`,`updated_at_utc` '
+            . 'FROM `forwext_marketplace_listings` WHERE `listing_id`=:listing_id '
+            . "AND `state` IN ('active','sold') LIMIT 1",
+            ['listing_id'=>$listingId],
+        ));
+
+        return $row === null ? null : self::marketplaceRow($row);
+    }
+
+    public function supportCategories(int $page, int $perPage): ApiV1Page
+    {
+        [$limit, $offset] = self::page($page, $perPage);
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT `category_key`,`label`,`description`,`default_priority`,`sort_order` '
+            . 'FROM `forwext_support_categories` WHERE `active`=1 '
+            . 'ORDER BY `sort_order`,`category_key` LIMIT ' . ($limit + 1) . ' OFFSET ' . $offset,
+        ));
+
+        return self::pageResult($rows, $page, $perPage, static fn (array $row): array => [
+            'key'=>(string) $row['category_key'],
+            'label'=>(string) $row['label'],
+            'description'=>(string) $row['description'],
+            'default_priority'=>(string) $row['default_priority'],
+            'sort_order'=>(int) $row['sort_order'],
+        ]);
+    }
+
     /** @return array{0:int,1:int} */
     private static function page(int $page, int $perPage): array
     {
@@ -211,6 +275,24 @@ final readonly class DatabasePublicApiV1ReadRepository implements PublicApiV1Rea
             'author_user_id'=>isset($row['author_user_id']) ? (string) $row['author_user_id'] : null,
             'position'=>(int) $row['position'],
             'body_source'=>(string) $row['body_source'],
+            'created_at'=>self::timestamp((string) $row['created_at_utc']),
+            'updated_at'=>self::timestamp((string) $row['updated_at_utc']),
+        ];
+    }
+
+    /** @param array<string,mixed> $row @return array<string,mixed> */
+    private static function marketplaceRow(array $row): array
+    {
+        return [
+            'id'=>(string) $row['listing_id'],
+            'seller_user_id'=>(string) $row['seller_user_id'],
+            'category_id'=>(string) $row['category_id'],
+            'slug'=>(string) $row['slug'],
+            'title'=>(string) $row['title'],
+            'description'=>(string) $row['description'],
+            'price_minor'=>(int) $row['price_minor'],
+            'currency'=>(string) $row['currency'],
+            'state'=>(string) $row['state'],
             'created_at'=>self::timestamp((string) $row['created_at_utc']),
             'updated_at'=>self::timestamp((string) $row['updated_at_utc']),
         ];

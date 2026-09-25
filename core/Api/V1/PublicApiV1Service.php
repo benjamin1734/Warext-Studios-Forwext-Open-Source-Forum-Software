@@ -40,4 +40,8 @@ final readonly class PublicApiV1Service
     public function thread(string $id): ?array { return $this->reads->thread($id); }
     public function posts(string $threadId, int $page, int $perPage): ?ApiV1Page { return $this->reads->posts($threadId, $page, $perPage); }
     public function post(string $id): ?array { return $this->reads->post($id); }
+    public function modules(int $page, int $perPage): ApiV1Page { return $this->reads->modules($page, $perPage); }
+    public function marketplace(int $page, int $perPage): ApiV1Page { return $this->reads->marketplace($page, $perPage); }
+    public function marketplaceListing(string $id): ?array { return $this->reads->marketplaceListing($id); }
+    public function supportCategories(int $page, int $perPage): ApiV1Page { return $this->reads->supportCategories($page, $perPage); }
 }

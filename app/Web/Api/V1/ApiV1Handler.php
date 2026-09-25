@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Api\V1;
 
+use Forwext\Core\Api\V1\ApiV1EndpointDefinition;
 use Forwext\Core\Api\V1\ApiV1Operation;
 use Forwext\Core\Api\V1\ApiV1Page;
 use Forwext\Core\Api\V1\PublicApiV1Service;
@@ -12,19 +13,28 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Routing\Router;
 use InvalidArgumentException;
+use LogicException;
 
 final readonly class ApiV1Handler implements RequestHandlerInterface
 {
     public function __construct(
         private PublicApiV1Service $service,
-        private ApiV1Operation $operation,
+        private ApiV1EndpointDefinition $endpoint,
     ) {
     }
 
     public function handle(Request $request): Response
     {
+        if (!$this->endpoint->public) {
+            return $this->error(
+                'authentication_required',
+                'This API resource requires an authenticated API context.',
+                401,
+            );
+        }
+
         try {
-            $payload = match ($this->operation) {
+            $payload = match ($this->endpoint->operation) {
                 ApiV1Operation::ServiceDocument => $this->service->serviceDocument(),
                 ApiV1Operation::UserShow => $this->service->user($this->parameter($request, 'userId')),
                 ApiV1Operation::ForumIndex => $this->service->forums(...$this->pagination($request)),
@@ -33,6 +43,11 @@ final readonly class ApiV1Handler implements RequestHandlerInterface
                 ApiV1Operation::ThreadShow => $this->service->thread($this->parameter($request, 'threadId')),
                 ApiV1Operation::ThreadPosts => $this->service->posts($this->parameter($request, 'threadId'), ...$this->pagination($request)),
                 ApiV1Operation::PostShow => $this->service->post($this->parameter($request, 'postId')),
+                ApiV1Operation::ModuleIndex => $this->service->modules(...$this->pagination($request)),
+                ApiV1Operation::MarketplaceIndex => $this->service->marketplace(...$this->pagination($request)),
+                ApiV1Operation::MarketplaceShow => $this->service->marketplaceListing($this->parameter($request, 'listingId')),
+                ApiV1Operation::SupportCategoryIndex => $this->service->supportCategories(...$this->pagination($request)),
+                default => throw new LogicException('Protected API operation reached the public dispatcher.'),
             };
         } catch (InvalidArgumentException $exception) {
             return $this->error('invalid_request', $exception->getMessage(), 400);

@@ -23,7 +23,7 @@ final class ApiV1RouteRegistrar
                 $endpoint->routeName,
                 $endpoint->methods,
                 new PathTemplate($endpoint->path, $endpoint->requirements),
-                new ApiV1Handler($service, $endpoint->operation),
+                new ApiV1Handler($service, $endpoint),
             ));
         }
     }
