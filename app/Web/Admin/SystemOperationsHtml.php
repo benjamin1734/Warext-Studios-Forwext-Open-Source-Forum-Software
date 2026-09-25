@@ -18,6 +18,7 @@ final class SystemOperationsHtml
         string $csrf,
         ?string $notice,
         int $logLimit,
+        string $section,
     ): string {
         $action = self::escape($basePath->prepend('/admin/system/operations'));
         $breadcrumbs = AdminBreadcrumbsHtml::render([
@@ -28,6 +29,36 @@ final class SystemOperationsHtml
         $noticeHtml = $notice === null
             ? ''
             : '<div class="ops-notice">İşlem tamamlandı: <strong>' . self::escape(str_replace('_', ' ', $notice)) . '</strong></div>';
+        $sectionOptions = '';
+        foreach (['all'=>'Tüm bölümler','health'=>'Health / integrity','maintenance'=>'Maintenance','jobs'=>'Jobs / cron','backups'=>'Backups','logs'=>'Loglar','repairs'=>'Repair araçları'] as $key=>$label) {
+            $sectionOptions .= '<option value="' . self::escape($key) . '"' . ($section === $key ? ' selected' : '') . '>'
+                . self::escape($label) . '</option>';
+        }
+        $filter = '<form class="ops-filter" method="get" action="' . $action . '">'
+            . '<label>Bölüm<select class="ops-select" name="section">' . $sectionOptions . '</select></label>'
+            . '<label>Log kaydı<select class="ops-select" name="logs">'
+            . self::option(50, $logLimit) . self::option(100, $logLimit) . self::option(250, $logLimit)
+            . '</select></label><button class="ops-button" type="submit">Filtrele</button>'
+            . '<a class="ops-button" href="' . $action . '">Filtreyi sıfırla</a></form>';
+        $sections = '';
+        if ($section === 'all' || $section === 'health') {
+            $sections .= self::health($snapshot);
+        }
+        if ($section === 'all' || $section === 'maintenance') {
+            $sections .= self::maintenance($snapshot, $action, $csrf);
+        }
+        if ($section === 'all' || $section === 'jobs') {
+            $sections .= self::jobs($snapshot, $action, $csrf);
+        }
+        if ($section === 'all' || $section === 'backups') {
+            $sections .= self::backups($snapshot, $verifiedBackup, $action, $csrf);
+        }
+        if ($section === 'all' || $section === 'logs') {
+            $sections .= self::logs($snapshot, $action, $logLimit);
+        }
+        if ($section === 'all' || $section === 'repairs') {
+            $sections .= self::repairs($snapshot, $action, $csrf);
+        }
 
         return '<section class="ops"><style>'
             . '.ops{display:grid;gap:18px}.ops-hero,.ops-panel{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:18px}.ops-hero h1,.ops-panel h2,.ops-card h3{margin:0}'
@@ -35,18 +66,22 @@ final class SystemOperationsHtml
             . '.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.ops-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2);display:grid;gap:8px}.ops-card p{margin:0}'
             . '.ops-table-wrap{overflow:auto}.ops-table{width:100%;border-collapse:collapse}.ops-table th,.ops-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}.ops-table th{white-space:nowrap}'
             . '.ops-badge{display:inline-flex;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-size:.84rem}.ops-actions{display:flex;flex-wrap:wrap;gap:8px}.ops-actions form{margin:0}.ops-button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:8px 11px;cursor:pointer;text-decoration:none}.ops-danger{font-weight:700}.ops-input,.ops-select{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:8px 10px;max-width:100%}'
+            . '.ops-filter{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,220px) auto auto;gap:8px;align-items:end}.ops-filter label{display:grid;gap:5px}'
             . '.ops-form{display:grid;gap:9px;max-width:700px}.ops-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.86rem;overflow-wrap:anywhere}.ops-log{display:grid;gap:7px;padding:10px 0;border-bottom:1px solid var(--line)}.ops-log:last-child{border-bottom:0}.ops-log pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:var(--panel2);padding:9px;border-radius:8px}'
-            . '@media(max-width:700px){.ops-actions{display:grid}.ops-actions form,.ops-button{width:100%}.ops-table{min-width:700px}}'
+            . AdminUxQualityHtml::css()
+            . '@media(max-width:700px){.ops-actions,.ops-filter{display:grid;grid-template-columns:1fr}.ops-actions form,.ops-button{width:100%}.ops-table{min-width:700px}}'
             . '</style>'
             . $breadcrumbs
+            . AdminUxQualityHtml::guidance(
+                'Health, jobs, backup, log ve repair alanını bölüm filtresiyle daralt; yalnız yetkili olduğun bölümler render edilir.',
+                'Tanılama salt-okunur başlar; otomatik repair çalışmaz ve minimum cPanel profili ayrı capability olarak görünür.',
+                'Health/integrity, job metadata, backup verify ve redacted log görünümü işlem öncesi doğrulama sağlar.',
+                'Destructive işlemler typed confirmation ister; backup silme ve cache temizleme audit edilir, maintenance environment override varken ACP yazamaz.',
+            )
             . '<header class="ops-hero"><h1>Sistem Operasyon Merkezi</h1><p class="ops-muted">Health, capabilities, loglar, queue/cron, integrity, backup, maintenance ve güvenli repair araçları. Her bölüm backend permission ile ayrı korunur.</p></header>'
             . $noticeHtml
-            . self::health($snapshot)
-            . self::maintenance($snapshot, $action, $csrf)
-            . self::jobs($snapshot, $action, $csrf)
-            . self::backups($snapshot, $verifiedBackup, $action, $csrf)
-            . self::logs($snapshot, $action, $logLimit)
-            . self::repairs($snapshot, $action, $csrf)
+            . $filter
+            . $sections
             . '</section>';
     }
 
@@ -226,7 +261,7 @@ final class SystemOperationsHtml
         }
 
         return '<section class="ops-panel"><h2>Structured logs</h2><p class="ops-muted">Son en fazla 2 MiB dosya penceresi okunur; secret/token/password benzeri context alanları ikinci kez redakte edilir.</p>'
-            . '<form method="get" action="' . $action . '"><label>Gösterilecek kayıt <select class="ops-select" name="logs">'
+            . '<form method="get" action="' . $action . '"><input type="hidden" name="section" value="logs"><label>Gösterilecek kayıt <select class="ops-select" name="logs">'
             . self::option(50, $logLimit) . self::option(100, $logLimit) . self::option(250, $logLimit)
             . '</select></label> <button class="ops-button" type="submit">Yenile</button></form>' . $items . '</section>';
     }

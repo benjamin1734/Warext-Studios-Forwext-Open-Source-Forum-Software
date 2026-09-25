@@ -49,6 +49,7 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
             }
 
             $logLimit = $this->logLimit($request);
+            $section = $this->section($request);
             $verified = $this->verification($actor, $request);
             $snapshot = $this->operations->snapshot($actor, $logLimit);
             $notice = $request->query()['updated'] ?? null;
@@ -56,7 +57,7 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
 
             return Response::html(ProfileHtml::page(
                 'System Operations',
-                SystemOperationsHtml::page($snapshot, $verified, $this->basePath, $csrf, $notice, $logLimit),
+                SystemOperationsHtml::page($snapshot, $verified, $this->basePath, $csrf, $notice, $logLimit, $section),
                 $this->basePath,
                 authenticated: true,
                 viewerId: $actor->value(),
@@ -214,6 +215,16 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
         $value = (int) $raw;
         if ($value < 1 || $value > 250) {
             throw new InvalidArgumentException('Log limit is outside the allowed range.');
+        }
+
+        return $value;
+    }
+
+    private function section(Request $request): string
+    {
+        $value = $request->query()['section'] ?? 'all';
+        if (!is_string($value) || !in_array($value, ['all','health','maintenance','jobs','backups','logs','repairs'], true)) {
+            throw new InvalidArgumentException('System operations section filter is invalid.');
         }
 
         return $value;
