@@ -12,7 +12,10 @@ final readonly class MigrationOwner
         public MigrationScope $scope,
         public string $name,
     ) {
-        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,190}$/D', $name) !== 1) {
+        $validLegacy = preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,190}$/D', $name) === 1;
+        $validAddonId = $scope === MigrationScope::Addon
+            && preg_match('/^[A-Za-z][A-Za-z0-9]{1,63}\/[A-Za-z][A-Za-z0-9]{1,63}$/D', $name) === 1;
+        if (!$validLegacy && !$validAddonId) {
             throw new InvalidArgumentException('Migration owner contains unsupported characters or length.');
         }
     }
