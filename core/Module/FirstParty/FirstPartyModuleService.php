@@ -21,7 +21,7 @@ use InvalidArgumentException;
 
 final readonly class FirstPartyModuleService
 {
-    private const ACP_PERMISSION = 'acp.manage';
+    private const ACP_PERMISSION = 'acp.access';
     private const MODULE_PERMISSION = 'module.manage';
 
     public function __construct(
@@ -183,7 +183,7 @@ final readonly class FirstPartyModuleService
             $definition,
             $record,
             FirstPartyModuleState::Disabled,
-            $record->dataState,
+            FirstPartyModuleDataState::Retained,
             'module.install',
             $requestId,
             $at,
@@ -205,8 +205,14 @@ final readonly class FirstPartyModuleService
         }
 
         foreach ($this->registry->dependentsOf($moduleKey) as $dependent) {
-            if ($this->repository->state($dependent->key)->state !== FirstPartyModuleState::Uninstalled) {
+            $dependentRecord = $this->repository->state($dependent->key);
+            if ($dependentRecord->state !== FirstPartyModuleState::Uninstalled) {
                 throw new InvalidArgumentException('Dependent module must be uninstalled first: ' . $dependent->key);
+            }
+            if ($deleteData && $dependentRecord->dataState !== FirstPartyModuleDataState::Purged) {
+                throw new InvalidArgumentException(
+                    'Dependent module data must be purged before deleting parent module data: ' . $dependent->key,
+                );
             }
         }
 
@@ -224,38 +230,39 @@ final readonly class FirstPartyModuleService
             return;
         }
 
-        $pending = 0;
-        $event = $this->event(
+        $pending = $this->database->transaction(function () use (
+            $definition,
+            $record,
             $actor,
-            'module.uninstall.delete_data',
-            $definition->key,
-            self::snapshot($record),
-            [
-                'state'=>FirstPartyModuleState::Uninstalled->value,
-                'data_state'=>$definition->storagePathQueries === []
-                    ? FirstPartyModuleDataState::Purged->value
-                    : FirstPartyModuleDataState::PurgePending->value,
-            ],
             $requestId,
             $at,
-        );
-
-        $this->audit->mutate($event, function () use (
-            $definition,
-            $actor,
-            $at,
-            &$pending,
-        ): void {
+        ): int {
             $pending = $this->purger->purgeDatabaseAndQueueStorage($definition, $at);
+            $afterDataState = $pending === 0
+                ? FirstPartyModuleDataState::Purged
+                : FirstPartyModuleDataState::PurgePending;
             $this->repository->saveState(
                 $definition->key,
                 FirstPartyModuleState::Uninstalled,
-                $pending === 0
-                    ? FirstPartyModuleDataState::Purged
-                    : FirstPartyModuleDataState::PurgePending,
+                $afterDataState,
                 $actor,
                 $at,
             );
+            $this->audit->append($this->event(
+                $actor,
+                'module.uninstall.delete_data',
+                $definition->key,
+                self::snapshot($record),
+                [
+                    'state'=>FirstPartyModuleState::Uninstalled->value,
+                    'data_state'=>$afterDataState->value,
+                    'pending_storage'=>$pending,
+                ],
+                $requestId,
+                $at,
+            ));
+
+            return $pending;
         });
 
         if ($pending > 0) {
