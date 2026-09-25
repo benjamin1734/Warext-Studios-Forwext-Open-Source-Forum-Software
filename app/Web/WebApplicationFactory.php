@@ -380,6 +380,13 @@ use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
 use Forwext\Core\Ui\Theme\PublishedThemeAssetService;
 use Forwext\Core\Ui\Theme\ThemeService;
 use Forwext\Core\Ui\Theme\ThemeTemplateCache;
+use Forwext\Core\Webhook\DatabaseWebhookRepository;
+use Forwext\Core\Webhook\PinnedHttpsWebhookTransport;
+use Forwext\Core\Webhook\WebhookDeliveryJobHandler;
+use Forwext\Core\Webhook\WebhookDestinationPolicy;
+use Forwext\Core\Webhook\WebhookPlatformService;
+use Forwext\Core\Webhook\WebhookSecretManager;
+use Forwext\Core\Webhook\WebhookWorker;
 use Forwext\Core\Trophy\TrophyNotifier;
 use RuntimeException;
 
@@ -1902,6 +1909,48 @@ final readonly class WebApplicationFactory
                 $moduleAnalyticsMiddleware,
             ],
             new ApiV1RoutingErrorResponder(),
+        );
+    }
+
+    public function createWebhookPlatform(): WebhookPlatformService
+    {
+        $config=$this->config();
+        $database=$this->database($config);
+        $secretStore=new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
+
+        return new WebhookPlatformService(
+            new DatabaseWebhookRepository($database),
+            new WebhookSecretManager($secretStore),
+            new WebhookDestinationPolicy(new NativeHostAddressResolver()),
+            new DatabaseQueueDriver($database),
+        );
+    }
+
+    public function createWebhookWorker(): WebhookWorker
+    {
+        $config=$this->config();
+        $database=$this->database($config);
+        $secretStore=new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
+        $repository=new DatabaseWebhookRepository($database);
+        $secrets=new WebhookSecretManager($secretStore);
+        $destinations=new WebhookDestinationPolicy(new NativeHostAddressResolver());
+        $queue=new DatabaseQueueDriver($database);
+
+        return new WebhookWorker(
+            $queue,
+            new WebhookDeliveryJobHandler(
+                $repository,
+                $secrets,
+                $destinations,
+                new PinnedHttpsWebhookTransport(),
+                $queue,
+            ),
         );
     }
 
