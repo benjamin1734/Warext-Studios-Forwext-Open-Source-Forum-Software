@@ -12,7 +12,7 @@ final class AddonBackendCapabilitiesMigrationTest extends TestCase
 {
     public function testMigrationIsRegisteredAfterAddonLifecycleAndCreatesTypedSettingTables(): void
     {
-        $migrations = CoreMigrationRegistry::migrations();
+        $migrations = CoreMigrationRegistry::all();
         $classes = array_map(static fn ($migration): string => $migration::class, $migrations);
 
         $lifecycle = array_search(\Forwext\Database\Migrations\Core\CreateAddonLifecycle::class, $classes, true);

@@ -44,7 +44,9 @@ final readonly class AddonSettingDefinition
         if ($this->minimum !== null && $this->maximum !== null && $this->minimum > $this->maximum) {
             throw new InvalidArgumentException('Add-on setting integer bounds are invalid.');
         }
-        $this->normalize($this->defaultValue);
+        if ($this->normalize($this->defaultValue) !== $this->defaultValue) {
+            throw new InvalidArgumentException('Add-on setting default value must already use canonical type and formatting.');
+        }
     }
 
     public function normalize(mixed $value): bool|int|string
