@@ -33,7 +33,7 @@ final class AddonLifecycleMigrationTest extends TestCase
         self::assertStringContainsString('forwext_addons', $source);
         self::assertStringContainsString('forwext_addon_relations', $source);
         self::assertStringContainsString("'addon.manage'", $source);
-        self::assertStringContainsString("$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
+        self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
     }
 
     public function testCanonicalVendorAddonIdCanOwnSharedMigrationEngineEntries(): void
