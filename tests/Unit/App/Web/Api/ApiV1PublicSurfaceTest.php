@@ -5,10 +5,19 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\App\Web\Api;
 
 use Forwext\App\Web\Api\V1\ApiV1RouteRegistrar;
+use DateTimeImmutable;
 use Forwext\Core\Api\V1\ApiV1Page;
+use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1ReadRepository;
+use Forwext\Core\Api\V1\Security\ApiV1CredentialRecord;
+use Forwext\Core\Api\V1\Security\ApiV1CredentialRepository;
+use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
+use Forwext\Core\Audit\AuditEvent;
+use Forwext\Core\Audit\AuditRecorder;
+use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
+use Forwext\Core\Http\Security\RateLimit\InMemoryRateLimitStore;
 use Forwext\Core\Routing\RouteCollection;
 use Forwext\Core\Routing\Router;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +27,7 @@ final class ApiV1PublicSurfaceTest extends TestCase
     public function testVersionedRoutesExposeTypedServiceDocumentAndPublicData(): void
     {
         $routes = new RouteCollection();
-        ApiV1RouteRegistrar::register($routes, new ApiV1ReadFixture());
+        self::registerRoutes($routes);
         $router = new Router($routes);
 
         $root = $router->handle(new Request(HttpMethod::Get, '/api/v1'));
@@ -67,7 +76,7 @@ final class ApiV1PublicSurfaceTest extends TestCase
     public function testProtectedResourceContractsFailClosedUntilApiAuthenticationIsAttached(): void
     {
         $routes = new RouteCollection();
-        ApiV1RouteRegistrar::register($routes, new ApiV1ReadFixture());
+        self::registerRoutes($routes);
         $router = new Router($routes);
 
         foreach (['/api/v1/conversations','/api/v1/notifications','/api/v1/support/tickets'] as $path) {
@@ -81,7 +90,7 @@ final class ApiV1PublicSurfaceTest extends TestCase
     public function testPaginationIsBoundedAndMissingResourceUsesJsonError(): void
     {
         $routes = new RouteCollection();
-        ApiV1RouteRegistrar::register($routes, new ApiV1ReadFixture());
+        self::registerRoutes($routes);
         $router = new Router($routes);
 
         $invalid = $router->handle(new Request(
@@ -99,6 +108,18 @@ final class ApiV1PublicSurfaceTest extends TestCase
         self::assertSame(404, $missing->status());
         self::assertStringContainsString('"code":"not_found"', $missing->body());
         self::assertSame('no-store', $missing->headers()->first('cache-control'));
+    }
+
+    private static function registerRoutes(RouteCollection $routes): void
+    {
+        ApiV1RouteRegistrar::register(
+            $routes,
+            new ApiV1ReadFixture(),
+            new ApiV1PrivateReadFixture(),
+            new ApiV1CredentialResolver(new ApiV1CredentialRepositoryFixture()),
+            new InMemoryRateLimitStore(),
+            new ApiV1AuditRecorderFixture(),
+        );
     }
 }
 
@@ -160,5 +181,56 @@ final class ApiV1ReadFixture implements PublicApiV1ReadRepository
             'default_priority'=>'normal',
             'sort_order'=>10,
         ]], $page, $perPage, false);
+    }
+}
+
+
+final class ApiV1PrivateReadFixture implements PrivateApiV1ReadRepository
+{
+    public function conversations(EntityId $userId, int $page, int $perPage): ApiV1Page
+    {
+        return new ApiV1Page([], $page, $perPage, false);
+    }
+
+    public function notifications(EntityId $userId, int $page, int $perPage): ApiV1Page
+    {
+        return new ApiV1Page([], $page, $perPage, false);
+    }
+
+    public function supportTickets(EntityId $userId, int $page, int $perPage): ApiV1Page
+    {
+        return new ApiV1Page([], $page, $perPage, false);
+    }
+}
+
+final class ApiV1CredentialRepositoryFixture implements ApiV1CredentialRepository
+{
+    public function findBySecretHash(string $secretHash): ?ApiV1CredentialRecord
+    {
+        return null;
+    }
+
+    public function save(ApiV1CredentialRecord $record): void
+    {
+    }
+
+    public function markUsed(EntityId $credentialId, DateTimeImmutable $at): void
+    {
+    }
+
+    public function revoke(EntityId $credentialId, EntityId $ownerUserId, DateTimeImmutable $at): void
+    {
+    }
+}
+
+final class ApiV1AuditRecorderFixture implements AuditRecorder
+{
+    public function append(AuditEvent $event): void
+    {
+    }
+
+    public function mutate(AuditEvent $event, callable $mutation): mixed
+    {
+        return $mutation();
     }
 }
