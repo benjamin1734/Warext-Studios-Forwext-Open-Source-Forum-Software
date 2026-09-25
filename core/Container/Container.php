@@ -275,10 +275,7 @@ final class Container
             $current = $this->bindings[$current]->concrete;
         }
 
-        if ($path !== [] && !isset($this->bindings[$current])
-            && !array_key_exists($current, $this->instances)
-            && !class_exists($current)
-        ) {
+        if ($path !== [] && !isset($this->bindings[$current]) && !$this->has($current)) {
             $issues[] = 'unresolved_binding_target:' . $current;
         }
 

@@ -29,7 +29,8 @@ final class ExtensionGraphDiagnosticsTest extends TestCase
         $events = new DomainEventDispatcher();
         $events->listenTyped(
             ExtensionFixtureEvent::class,
-            static fn (DomainEvent $event): null => null,
+            static function (DomainEvent $event): void {
+            },
             5,
             ExtensionOwner::addon('Acme/Listener'),
         );
