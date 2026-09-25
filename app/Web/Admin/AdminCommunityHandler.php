@@ -87,31 +87,32 @@ final readonly class AdminCommunityHandler implements RequestHandlerInterface
     private function snapshot(EntityId $actor, Request $request): array
     {
         $query = $request->query();
+        $uxQuery = self::queryString($query, 'q', 80);
 
         return match ($this->section) {
             AdminCommunitySection::Users => [
                 'users'=>$this->community->usersSnapshot(
                     $actor,
-                    self::queryString($query, 'q', 80),
+                    $uxQuery,
                     self::optionalHexId($query['user'] ?? null),
                 ),
                 'access'=>$this->community->accessSnapshot($actor, null, null, null, '', null),
             ],
             AdminCommunitySection::Access => [
-                'access'=>$this->community->accessSnapshot(
+                'access'=>array_merge($this->community->accessSnapshot(
                     $actor,
                     self::optionalStoredId($query['group'] ?? null),
                     self::optionalStoredId($query['role'] ?? null),
                     self::optionalHexId($query['analyze_user'] ?? null),
                     self::queryString($query, 'permission', 96),
                     self::optionalHexId($query['node'] ?? null),
-                ),
+                ), ['ux_query'=>$uxQuery]),
             ],
             AdminCommunitySection::Forums => [
-                'forums'=>$this->community->forumsSnapshot(
+                'forums'=>array_merge($this->community->forumsSnapshot(
                     $actor,
                     self::optionalHexId($query['node'] ?? null),
-                ),
+                ), ['ux_query'=>$uxQuery]),
             ],
             AdminCommunitySection::Content,
             AdminCommunitySection::Moderation => [

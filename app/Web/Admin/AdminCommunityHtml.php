@@ -57,9 +57,12 @@ final class AdminCommunityHtml
             . '.ac-form{display:grid;gap:10px}.ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.ac-form label{display:grid;gap:5px;font-size:.92rem}.ac-form input,.ac-form select,.ac-form textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px}.ac-form select[multiple]{min-height:150px}.ac-form textarea{min-height:100px;resize:vertical}.ac-checks{display:flex;gap:12px;flex-wrap:wrap}.ac-checks label{display:flex;align-items:center;gap:6px}.ac-checks input{width:auto}'
             . '.ac-table-wrap{overflow:auto}.ac-table{width:100%;border-collapse:collapse;min-width:700px}.ac-table th,.ac-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}.ac-table th{font-size:.85rem;color:var(--muted)}'
             . '.ac-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.ac-kpi{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:14px}.ac-kpi strong{display:block;font-size:1.45rem}.ac-badge{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:.82rem}.ac-good{font-weight:700}.ac-danger{font-weight:700}.ac-actions{display:flex;gap:7px;flex-wrap:wrap}.ac-stack{display:grid;gap:10px}.ac-analysis-layer{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}'
-            . '@media(max-width:700px){.ac-actions{display:grid}.ac-actions>*{width:100%}.ac-btn{width:100%;box-sizing:border-box}}'
+            . '.ac-filter{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end;margin-bottom:12px}.ac-filter label{display:grid;gap:5px}.ac-filter input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px}.ac-role-preview{display:grid;gap:7px;border:1px dashed var(--line);border-radius:10px;padding:12px;background:var(--panel2)}'
+            . AdminUxQualityHtml::css()
+            . '@media(max-width:700px){.ac-actions{display:grid}.ac-actions>*{width:100%}.ac-btn{width:100%;box-sizing:border-box}.ac-filter{grid-template-columns:1fr}}'
             . '</style>'
             . $breadcrumbs
+            . self::qualityGuidance($section)
             . '<nav class="ac-tabs" aria-label="ACP yönetim bölümleri">' . $tabs . '</nav>'
             . $body
             . '</section>';
@@ -166,9 +169,14 @@ final class AdminCommunityHtml
     private static function access(array $snapshot, BasePath $basePath, string $csrf): string
     {
         $action = self::e($basePath->prepend('/admin/access'));
+        $query = trim((string) ($snapshot['ux_query'] ?? ''));
         $groups = '';
         foreach ($snapshot['groups'] as $group) {
-            $groupUrl = $basePath->prepend('/admin/access?group=' . rawurlencode((string) $group['group_id']));
+            if (!self::matches($query, [(string) $group['name'], (string) $group['group_key'], (bool) $group['is_system'] ? 'system' : 'custom'])) {
+                continue;
+            }
+            $groupUrl = $basePath->prepend('/admin/access?group=' . rawurlencode((string) $group['group_id'])
+                . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
             $groups .= '<tr id="group-' . self::e((string) $group['group_id']) . '"><td><a href="' . self::e($groupUrl) . '">'
                 . self::e((string) $group['name']) . '</a></td><td>' . self::e((string) $group['group_key'])
                 . '</td><td>' . ((bool) $group['is_system'] ? 'system' : 'custom') . '</td><td>'
@@ -190,7 +198,11 @@ final class AdminCommunityHtml
 
         $roles = '';
         foreach ($snapshot['roles'] as $role) {
-            $url = $basePath->prepend('/admin/access?role=' . rawurlencode((string) $role['role_id']));
+            if (!self::matches($query, [(string) $role['name'], (string) $role['role_key'], (string) $role['kind']])) {
+                continue;
+            }
+            $url = $basePath->prepend('/admin/access?role=' . rawurlencode((string) $role['role_id'])
+                . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
             $roles .= '<tr><td><a href="' . self::e($url) . '">' . self::e((string) $role['name'])
                 . '</a></td><td>' . self::e((string) $role['role_key']) . '</td><td>'
                 . self::e((string) $role['kind']) . '</td><td>' . (int) $role['priority']
@@ -227,7 +239,11 @@ final class AdminCommunityHtml
                 . '<div class="ac-checks">' . self::check('show_mobile','Mobil', $appearance->showMobile())
                 . self::check('show_profile','Profil', $appearance->showProfile())
                 . self::check('show_posts','Mesajlar', $appearance->showPosts()) . '</div>'
-                . '<button class="ac-btn" type="submit">Görünümü kaydet</button></form></section></div>';
+                . '<button class="ac-btn" type="submit">Görünümü kaydet</button></form>'
+                . '<div class="ac-role-preview"><strong>Kaydedilmiş görünüm önizlemesi</strong><span style="'
+                . self::e(self::appearancePreviewStyle($appearance)) . '">' . self::e((string) $selectedRole['name'])
+                . ($appearance->bannerText() !== null ? ' · ' . self::e($appearance->bannerText()) : '')
+                . '</span><small class="ac-muted">Bu önizleme yalnız kayıtlı değeri gösterir; permission ve rol önceliğini değiştirmez.</small></div></section></div>';
         }
 
         $analysis = $snapshot['analysis'];
@@ -263,13 +279,17 @@ final class AdminCommunityHtml
                 . self::e((string) $node['title']) . ' · ' . self::e((string) $node['node_type']) . '</option>';
         }
 
-        return '<section class="ac-panel"><h1>Grup, Rol, Banner ve Permission Analyzer</h1><div class="ac-grid">'
+        $filter = '<form class="ac-filter" method="get" action="' . $action . '"><label>Grup veya rol ara<input name="q" maxlength="80" value="'
+            . self::e($query) . '" placeholder="Ad, key veya rol türü"></label><button class="ac-btn" type="submit">Filtrele</button>'
+            . '<a class="ac-btn" href="' . $action . '">Filtreyi sıfırla</a></form>';
+
+        return '<section class="ac-panel"><h1>Grup, Rol, Banner ve Permission Analyzer</h1>' . $filter . '<div class="ac-grid">'
             . '<section class="ac-card"><h3>Yeni grup</h3><form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_group">'
             . '<label>Key<input name="group_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label><label>Sort order<input name="sort_order" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Grup oluştur</button></form></section>'
             . '<section class="ac-card"><h3>Yeni rol</h3><form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_role">'
             . '<label>Key<input name="role_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label><label>Kind<select name="kind"><option value="custom">custom</option><option value="staff">staff</option></select></label><label>Priority<input name="priority" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Rol oluştur</button></form></section></div>'
-            . '<div class="ac-grid"><section class="ac-card"><h3>Gruplar</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Tür</th><th>Üye</th></tr></thead><tbody>' . $groups . '</tbody></table></div></section>'
-            . '<section class="ac-card"><h3>Roller</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Kind</th><th>Priority</th><th>Üye</th></tr></thead><tbody>' . $roles . '</tbody></table></div></section></div>'
+            . '<div class="ac-grid"><section class="ac-card"><h3>Gruplar</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Tür</th><th>Üye</th></tr></thead><tbody>' . ($groups !== '' ? $groups : '<tr><td colspan="4">Filtreyle eşleşen grup yok.</td></tr>') . '</tbody></table></div></section>'
+            . '<section class="ac-card"><h3>Roller</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Kind</th><th>Priority</th><th>Üye</th></tr></thead><tbody>' . ($roles !== '' ? $roles : '<tr><td colspan="5">Filtreyle eşleşen rol yok.</td></tr>') . '</tbody></table></div></section></div>'
             . $groupEditor
             . '<section class="ac-panel"><h2>Seçili rol</h2>' . $roleEditor . '</section>'
             . '<section class="ac-panel"><h2>Permission analyzer</h2><form class="ac-form" method="get" action="' . $action . '"><div class="ac-row">'
@@ -283,13 +303,18 @@ final class AdminCommunityHtml
     private static function forums(array $snapshot, BasePath $basePath, string $csrf): string
     {
         $action = self::e($basePath->prepend('/admin/forums'));
+        $query = trim((string) ($snapshot['ux_query'] ?? ''));
         $rows = '';
         foreach ($snapshot['nodes'] as $node) {
             if (!$node instanceof ForumNode) {
                 continue;
             }
+            if (!self::matches($query, [$node->title(), $node->slug()->value(), $node->type()->value, $node->visibility()->value])) {
+                continue;
+            }
             $stat = $snapshot['stats'][$node->id()->value()] ?? ['threads'=>0,'posts'=>0];
-            $url = $basePath->prepend('/admin/forums?node=' . rawurlencode($node->id()->value()));
+            $url = $basePath->prepend('/admin/forums?node=' . rawurlencode($node->id()->value())
+                . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
             $rows .= '<tr><td><a href="' . self::e($url) . '">' . self::e($node->title()) . '</a></td><td>'
                 . self::e($node->type()->value) . '</td><td>' . self::e($node->visibility()->value)
                 . '</td><td>' . (int) $stat['threads'] . '</td><td>' . (int) $stat['posts'] . '</td></tr>';
@@ -330,9 +355,14 @@ final class AdminCommunityHtml
             . '<div class="ac-checks">' . self::check('link_new_window','Yeni pencere', $selected instanceof ForumNode && $selected->linkNewWindow()) . '</div></div>'
             . '<button class="ac-btn" type="submit">' . ($selected instanceof ForumNode ? 'Node’u güncelle' : 'Yeni node oluştur') . '</button></form>';
 
+        $filter = '<form class="ac-filter" method="get" action="' . $action . '"><label>Node ara<input name="q" maxlength="80" value="'
+            . self::e($query) . '" placeholder="Başlık, slug, tür veya görünürlük"></label><button class="ac-btn" type="submit">Filtrele</button>'
+            . '<a class="ac-btn" href="' . $action . '">Filtreyi sıfırla</a></form>';
+
         return '<section class="ac-panel"><h1>Forum ve Node Yönetimi</h1><p class="ac-muted">Kategori, forum, page ve link node’ları aynı hiyerarşi doğrulamasını kullanır. Mevcut node tipi bu ekrandan dönüştürülemez.</p>'
+            . $filter
             . '<div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Node</th><th>Tür</th><th>Visibility</th><th>Konu</th><th>Mesaj</th></tr></thead><tbody>'
-            . $rows . '</tbody></table></div></section><section class="ac-panel"><h2>'
+            . ($rows !== '' ? $rows : '<tr><td colspan="5">Filtreyle eşleşen node yok.</td></tr>') . '</tbody></table></div></section><section class="ac-panel"><h2>'
             . ($selected instanceof ForumNode ? 'Node düzenle' : 'Yeni node') . '</h2>' . $editor . '</section>';
     }
 
@@ -428,6 +458,79 @@ final class AdminCommunityHtml
     {
         return '<label><input type="checkbox" name="' . self::e($name) . '" value="1"'
             . ($checked ? ' checked' : '') . '> ' . self::e($label) . '</label>';
+    }
+
+    private static function qualityGuidance(AdminCommunitySection $section): string
+    {
+        return match ($section) {
+            AdminCommunitySection::Users => AdminUxQualityHtml::guidance(
+                'Kullanıcıyı ara, hesap geçmişini incele ve doğrudan grup/rol atamalarını kontrollü biçimde yönet.',
+                'Kendi hesabının erişimi bu yüzeyden değiştirilemez; ban ve suspension Discipline workflow’una bırakılır.',
+                'Kaydetmeden önce seçili kullanıcının geçmişi ve mevcut doğrudan atamaları görünür.',
+                'Her mutasyon Administration audit’e yazılır; disiplin yaptırımları kendi revoke/appeal akışını kullanır.',
+            ),
+            AdminCommunitySection::Access => AdminUxQualityHtml::guidance(
+                'Grup/rol listesini filtrele, permission analyzer ile gerçek efektif yetkinin nedenini gör.',
+                'System/protected anahtarları backend tarafından korunur; yeni rol varsayılan olarak custom/staff kapsamındadır.',
+                'Permission analyzer değişiklik yapmadan Allow/Deny katmanlarını açıklar; rol görünümü için kaydedilmiş değer önizlemesi gösterilir.',
+                'Override ve rol değişiklikleri audit kaydıyla izlenir; kalıcı silme bu yüzeyde sunulmaz.',
+            ),
+            AdminCommunitySection::Forums => AdminUxQualityHtml::guidance(
+                'Node listesini başlık, slug, tür veya görünürlükle filtrele; seçili node’u aynı hiyerarşi kurallarıyla düzenle.',
+                'Yeni node güvenli forum varsayılanlarıyla başlar; mevcut node türü bu ekrandan dönüştürülemez.',
+                'Tablodaki mevcut durum ve sayaçlar kaydetmeden önce doğrulama bağlamı sağlar.',
+                'Değişiklikler audit edilir; yıkıcı node silme bu yüzeyde sunulmaz.',
+            ),
+            AdminCommunitySection::Content => AdminUxQualityHtml::guidance(
+                'İçerik toplamlarını incele ve gerçek yönetim işini ilgili Content Manager / queue yüzeyinde aç.',
+                'Bu özet ekranı veri değiştirmez ve yeni bir permission yolu oluşturmaz.',
+                'KPI değerleri salt-okunur doğrulama görünümüdür.',
+                'Mutasyon olmadığı için rollback gerekmez; hedef yüzeylerin kendi audit/undo kuralları geçerlidir.',
+            ),
+            AdminCommunitySection::Moderation => AdminUxQualityHtml::guidance(
+                'Rapor, discipline ve audit durumunu özetle; işlemi tek yetkili moderasyon workspace’inde sürdür.',
+                'Bu ACP özeti yaptırım üretmez; mevcut moderation permission ve workflow’ları authoritative kalır.',
+                'Sayaçlar ve audit bağlantısı işlem öncesi durumu doğrulamaya yarar.',
+                'Warning/ban/restriction geri alma davranışı Discipline ve audit akışında yönetilir.',
+            ),
+        };
+    }
+
+    /** @param list<string> $values */
+    private static function matches(string $query, array $values): bool
+    {
+        if ($query === '') {
+            return true;
+        }
+
+        $needle = strtolower($query);
+        foreach ($values as $value) {
+            if (str_contains(strtolower($value), $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function appearancePreviewStyle(RoleAppearance $appearance): string
+    {
+        $styles = [];
+        if ($appearance->textColor() !== null) {
+            $styles[] = 'color:' . $appearance->textColor()->value();
+        }
+        if ($appearance->gradientFrom() !== null && $appearance->gradientTo() !== null) {
+            $styles[] = 'background:linear-gradient(' . $appearance->gradientAngle() . 'deg,'
+                . $appearance->gradientFrom()->value() . ',' . $appearance->gradientTo()->value() . ')';
+            $styles[] = 'padding:8px 10px';
+            $styles[] = 'border-radius:8px';
+        } elseif ($appearance->bannerColor() !== null) {
+            $styles[] = 'background:' . $appearance->bannerColor()->value();
+            $styles[] = 'padding:8px 10px';
+            $styles[] = 'border-radius:8px';
+        }
+
+        return implode(';', $styles);
     }
 
     private static function e(string $value): string
