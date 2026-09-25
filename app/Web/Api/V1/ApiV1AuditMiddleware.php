@@ -15,7 +15,7 @@ use Forwext\Core\Audit\AuditScope;
 use Forwext\Core\Http\Middleware\MiddlewareInterface;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
-use Forwext\Core\Http\RequestIdMiddleware;
+use Forwext\Core\Http\Middleware\RequestIdMiddleware;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Infrastructure\Clock;
 use Forwext\Core\Infrastructure\SystemClock;
