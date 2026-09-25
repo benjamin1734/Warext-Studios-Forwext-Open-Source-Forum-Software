@@ -47,13 +47,16 @@ final readonly class AddonLifecycleService
         if ($existing !== null && !$existing->manifest->version->equals($package->manifest->version)) {
             throw new InvalidArgumentException('Reinstall must use the recorded version; use upgrade for version changes.');
         }
+        if ($existing !== null && !hash_equals($existing->packageChecksum, $package->checksum)) {
+            throw new InvalidArgumentException('Reinstall package checksum differs from the recorded package for this version.');
+        }
 
         $all = $this->repository->all();
         $this->resolver->assertPackageCompatible($package->manifest, $all, $this->forwextVersion);
         $after = new AddonInstallation(
             $package->manifest,
             AddonState::Disabled,
-            AddonDataState::Retained,
+            $existing?->dataState ?? AddonDataState::Retained,
             $package->checksum,
         );
         $this->persist($actor, 'addon.install', $existing, $after, $requestId, $at);
@@ -71,6 +74,7 @@ final readonly class AddonLifecycleService
         if (!$current instanceof AddonInstallation) {
             throw new InvalidArgumentException('Add-on is not installed.');
         }
+        $this->resolver->assertPackageCompatible($current->manifest, $all, $this->forwextVersion);
         $this->resolver->assertCanEnable($id, $all);
         $after = new AddonInstallation(
             $current->manifest,
@@ -145,6 +149,7 @@ final readonly class AddonLifecycleService
         $this->resolver->assertCanUninstall($id, $all);
 
         $dataState = AddonDataState::Retained;
+        $beforeSave = null;
         if ($mode === AddonUninstallMode::DeleteData) {
             if ($current->manifest->dataRetention !== AddonDataRetentionPolicy::PurgeSupported) {
                 throw new InvalidArgumentException('This add-on manifest does not support data purge.');
@@ -152,7 +157,7 @@ final readonly class AddonLifecycleService
             if (!$this->dataPurger->supports($id)) {
                 throw new InvalidArgumentException('No safe data purger is registered for this add-on.');
             }
-            $this->dataPurger->purge($current);
+            $beforeSave = fn (): mixed => $this->dataPurger->purge($current);
             $dataState = AddonDataState::Purged;
         }
 
@@ -169,6 +174,7 @@ final readonly class AddonLifecycleService
             $after,
             $requestId,
             $at,
+            $beforeSave,
         );
     }
 
@@ -179,6 +185,7 @@ final readonly class AddonLifecycleService
         AddonInstallation $after,
         AuditRequestId $requestId,
         DateTimeImmutable $at,
+        ?callable $beforeSave = null,
     ): void {
         $event = new AuditEvent(
             AuditEvent::generateId(),
@@ -196,7 +203,13 @@ final readonly class AddonLifecycleService
         );
         $this->audit->mutate(
             $event,
-            fn (): mixed => $this->repository->save($after, $actor, $at),
+            function () use ($beforeSave, $after, $actor, $at): mixed {
+                if ($beforeSave !== null) {
+                    $beforeSave();
+                }
+
+                return $this->repository->save($after, $actor, $at);
+            },
         );
     }
 
