@@ -52,6 +52,8 @@ final readonly class SystemIntegrationService
         }
 
         return new SystemIntegrationSnapshot(
+            $this->catalog->settings(),
+            $this->catalog->secrets(),
             $values,
             $environment,
             $secretConfigured,
@@ -74,9 +76,13 @@ final readonly class SystemIntegrationService
         $event = $this->event(
             $actor,
             'integration.setting.update',
+            'integration.setting',
             $key,
             ['configured_value'=>$before],
-            ['configured_value'=>$value, 'environment_override'=>getenv(self::environmentName($definition->configPath)) !== false],
+            [
+                'configured_value'=>$value,
+                'environment_override'=>getenv(self::environmentName($definition->configPath)) !== false,
+            ],
             $requestId,
             $at,
         );
@@ -95,6 +101,7 @@ final readonly class SystemIntegrationService
         $event = $this->event(
             $actor,
             'integration.setting.reset',
+            'integration.setting',
             $key,
             ['configured_value'=>$before],
             ['generated_override_removed'=>true],
@@ -118,6 +125,7 @@ final readonly class SystemIntegrationService
         $event = $this->event(
             $actor,
             'integration.secret.update',
+            'integration.secret',
             $key,
             ['configured'=>$before],
             ['configured'=>true],
@@ -141,6 +149,7 @@ final readonly class SystemIntegrationService
         $event = $this->event(
             $actor,
             'integration.secret.delete',
+            'integration.secret',
             $key,
             ['configured'=>$before],
             ['configured'=>false],
@@ -164,6 +173,7 @@ final readonly class SystemIntegrationService
     private function event(
         EntityId $actor,
         string $action,
+        string $targetType,
         string $targetId,
         array $before,
         array $after,
@@ -175,7 +185,7 @@ final readonly class SystemIntegrationService
             AuditScope::Administration,
             $actor,
             AuditAction::fromString($action),
-            'integration.setting',
+            $targetType,
             $targetId,
             null,
             $action,

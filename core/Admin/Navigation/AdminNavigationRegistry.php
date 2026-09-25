@@ -228,6 +228,15 @@ final readonly class AdminNavigationRegistry
                 ['module', 'modül', 'lifecycle', 'dependency', 'conflict', 'uninstall', 'scope'],
             ),
             new AdminNavigationItem(
+                'admin.integrations',
+                'Sistem ve Entegrasyonlar',
+                'Mail, OAuth, Turnstile, AI, storage, cache, queue, search, realtime, API/webhook hazırlığı ve secret yönetimi.',
+                AdminNavigationSection::System,
+                '/admin/integrations',
+                ['integration.manage'],
+                ['integration', 'entegrasyon', 'mail', 'smtp', 'oauth', 'turnstile', 'ai', 'storage', 's3', 'cache', 'redis', 'queue', 'search', 'realtime', 'api', 'webhook', 'secret'],
+            ),
+            new AdminNavigationItem(
                 'admin.rewards',
                 'Ödül Provider Sistemi',
                 'Ortak reward tanımları, provider hedefleri, binding ve retry işlemleri.',

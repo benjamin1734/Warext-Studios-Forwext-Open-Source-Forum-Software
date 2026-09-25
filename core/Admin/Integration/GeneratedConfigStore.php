@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Admin\Integration;
 
+use Closure;
 use Forwext\Core\Config\ConfigException;
-use RuntimeException;
 
 final readonly class GeneratedConfigStore
 {
@@ -18,6 +18,42 @@ final readonly class GeneratedConfigStore
 
     /** @return array<string,mixed> */
     public function all(): array
+    {
+        return $this->withLock(LOCK_SH, fn (): array => $this->readUnlocked());
+    }
+
+    public function set(string $path, bool|int|string|array|null $value): void
+    {
+        $segments = self::segments($path);
+        $this->withLock(LOCK_EX, function () use ($segments, $value): void {
+            $data = $this->readUnlocked();
+            $cursor =& $data;
+            foreach ($segments as $index => $segment) {
+                if ($index === array_key_last($segments)) {
+                    $cursor[$segment] = $value;
+                    break;
+                }
+                if (!isset($cursor[$segment]) || !is_array($cursor[$segment]) || array_is_list($cursor[$segment])) {
+                    $cursor[$segment] = [];
+                }
+                $cursor =& $cursor[$segment];
+            }
+            $this->writeUnlocked($data);
+        });
+    }
+
+    public function delete(string $path): void
+    {
+        $segments = self::segments($path);
+        $this->withLock(LOCK_EX, function () use ($segments): void {
+            $data = $this->readUnlocked();
+            self::deleteRecursive($data, $segments, 0);
+            $this->writeUnlocked($data);
+        });
+    }
+
+    /** @return array<string,mixed> */
+    private function readUnlocked(): array
     {
         if (!is_file($this->path)) {
             return [];
@@ -34,46 +70,16 @@ final readonly class GeneratedConfigStore
         return $data;
     }
 
-    public function set(string $path, bool|int|string|array|null $value): void
-    {
-        $segments = self::segments($path);
-        $data = $this->all();
-        $cursor =& $data;
-        foreach ($segments as $index => $segment) {
-            if ($index === array_key_last($segments)) {
-                $cursor[$segment] = $value;
-                break;
-            }
-            if (!isset($cursor[$segment]) || !is_array($cursor[$segment]) || array_is_list($cursor[$segment])) {
-                $cursor[$segment] = [];
-            }
-            $cursor =& $cursor[$segment];
-        }
-        $this->write($data);
-    }
-
-    public function delete(string $path): void
-    {
-        $segments = self::segments($path);
-        $data = $this->all();
-        self::deleteRecursive($data, $segments, 0);
-        $this->write($data);
-    }
-
     /** @param array<string,mixed> $data */
-    private function write(array $data): void
+    private function writeUnlocked(array $data): void
     {
-        $directory = dirname($this->path);
-        if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
-            throw new ConfigException('Unable to create generated configuration directory.');
-        }
-        if (is_link($directory) || (is_file($this->path) && is_link($this->path))) {
-            throw new ConfigException('Generated configuration path may not use symbolic links.');
+        if (is_link($this->path)) {
+            throw new ConfigException('Generated configuration file may not be a symbolic link.');
         }
 
         $payload = "<?php\n\ndeclare(strict_types=1);\n\nreturn "
             . var_export($data, true) . ";\n";
-        $temporary = @tempnam($directory, '.forwext-config-');
+        $temporary = @tempnam(dirname($this->path), '.forwext-config-');
         if (!is_string($temporary) || $temporary === '') {
             throw new ConfigException('Unable to stage generated configuration.');
         }
@@ -91,6 +97,46 @@ final readonly class GeneratedConfigStore
             if (is_file($temporary)) {
                 @unlink($temporary);
             }
+        }
+    }
+
+    private function ensureDirectory(): void
+    {
+        $directory = dirname($this->path);
+        if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
+            throw new ConfigException('Unable to create generated configuration directory.');
+        }
+        if (is_link($directory) || (is_file($this->path) && is_link($this->path))) {
+            throw new ConfigException('Generated configuration path may not use symbolic links.');
+        }
+    }
+
+    private function withLock(int $operation, Closure $callback): mixed
+    {
+        $this->ensureDirectory();
+        $lockPath = $this->path . '.lock';
+        if (is_link($lockPath)) {
+            throw new ConfigException('Generated configuration lock may not be a symbolic link.');
+        }
+
+        $handle = @fopen($lockPath, 'c+b');
+        if ($handle === false) {
+            throw new ConfigException('Unable to open generated configuration lock.');
+        }
+
+        try {
+            @chmod($lockPath, 0640);
+            if (!flock($handle, $operation)) {
+                throw new ConfigException('Unable to lock generated configuration.');
+            }
+
+            try {
+                return $callback();
+            } finally {
+                flock($handle, LOCK_UN);
+            }
+        } finally {
+            fclose($handle);
         }
     }
 
