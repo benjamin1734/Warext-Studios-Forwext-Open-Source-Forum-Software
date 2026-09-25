@@ -34,6 +34,6 @@ final class FirstPartyModuleManagerMigrationTest extends TestCase
         self::assertStringContainsString('forwext_first_party_module_settings', $source);
         self::assertStringContainsString('forwext_first_party_module_purge_objects', $source);
         self::assertStringContainsString("'module.manage'", $source);
-        self::assertStringContainsString("$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
+        self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
     }
 }
