@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.02 — Events/decorators/DI extension API
+
+- Added core/module/add-on extension ownership, owner-aware DI bindings and deterministic service decorators.
+- Added higher-first priority ordering, duplicate binding/owner conflicts, container-cycle protection and class/interface decorator type preservation.
+- Added named + typed domain-event listeners with owner/priority metadata and deterministic merged dispatch.
+- Added non-instantiating extension graph diagnostics for bindings, decorators, unresolved/cyclic aliases and event listeners.
+- Kept backend permissions authoritative; extension registration itself grants no protected capability and introduces no cPanel runtime daemon dependency.
+- Implementation/test commits: `3a15d0c1e42a131584d79a32ac522ef35733c6ba`, `ce14b5a60c9db1a264bd57ffcf9d779b259978e8`, `2a82ba53a9aba4b1c6b8be236c4de22fc11a1b5c`, `b44da57cfa0a121d883a77124bc8a436bfb2bfa1`, `2f68004b6bdcb81731f508423a4ea2cb297999c7`.
+- GitHub Actions build run `36119676816` and DB smoke run `36119676671` succeeded.
+
 ### 18.01 — Add-on manifest/package/lifecycle
 
 - Added canonical `Vendor/AddOn` identity, strict `addon.json`, spec-correct SemVer 2.0 versions/constraints and deterministic package checksum inspection.

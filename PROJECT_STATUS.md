@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.51-dev
+CURRENT_VERSION = 0.0.7.52-dev
 LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 18.01
-CURRENT_STEP = 18.02
-LAST_COMMIT = 8e330a03e26c0ebd37c7788f22efeed005d0e6d6
+LAST_COMPLETED_SUBSTEP = 18.02
+CURRENT_STEP = 18.03
+LAST_COMMIT = 2f68004b6bdcb81731f508423a4ea2cb297999c7
 BLOCKERS = none
-NEXT_STEP = 18.02 - Events/decorators/DI extension API
+NEXT_STEP = 18.03 - Add-on backend capabilities
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 18.02 - Events/decorators/DI extension API
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01`.
-- Current sub-step: `18.02 — Events/decorators/DI extension API`.
-- Remaining roadmap work after 18.01: **19 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.02`.
+- Current sub-step: `18.03 — Add-on backend capabilities`.
+- Remaining roadmap work after 18.02: **18 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 18.02
+
+- Added validated extension ownership metadata for core, first-party modules and canonical `addon:Vendor/AddOn` contributors.
+- Extended the existing DI container with owner-aware extension bindings while keeping ordinary core bindings backward compatible and production rebinding disabled.
+- Added deterministic service decorators: higher priority first, stable registration-order tie break, one decorator per owner/service and class/interface type preservation.
+- Reused the existing container resolution stack for decorator/service cycle detection; duplicate bindings continue to fail closed.
+- Added typed domain-event listeners alongside existing named listeners, with shared owner/priority metadata and deterministic merged dispatch ordering.
+- Added read-only extension graph diagnostics for binding target/lifetime/owner, decorators, missing bases, unresolved aliases, binding cycles and event-listener registrations without instantiating services.
+- Added aggregate `ExtensionGraphDiagnostics` snapshots so later ACP/developer tooling can inspect composition without creating a second registry.
+- Kept extension registration separate from authorization: container resolution/listener registration grants no `PermissionEngine` capability and no add-on package is auto-executed merely because it exists on disk.
+- Added no schema migration and no mandatory Composer/npm/Node/Redis/Docker/Supervisor dependency for standard cPanel runtime.
+- Core commits: `3a15d0c1e42a131584d79a32ac522ef35733c6ba`, `b44da57cfa0a121d883a77124bc8a436bfb2bfa1`; tests/hardening/docs: `ce14b5a60c9db1a264bd57ffcf9d779b259978e8`, `2a82ba53a9aba4b1c6b8be236c4de22fc11a1b5c`, `2f68004b6bdcb81731f508423a4ea2cb297999c7`.
+- GitHub Actions build run `36119676816`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36119676671`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.52-dev`.
+- Next: `18.03 — Add-on backend capabilities`.
 
 ## Completed in 18.01
 
