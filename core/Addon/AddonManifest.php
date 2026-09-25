@@ -63,7 +63,7 @@ final readonly class AddonManifest
         $requires = self::dependencyMap($requiresSection['addons'] ?? [], $id, 'requires');
 
         $conflictsSection = $data['conflicts'] ?? [];
-        if (!is_array($conflictsSection) || array_is_list($conflictsSection)) {
+        if (!is_array($conflictsSection) || ($conflictsSection !== [] && array_is_list($conflictsSection))) {
             throw new InvalidArgumentException('Add-on manifest conflicts section must be an object.');
         }
         self::assertOnlyKeys($conflictsSection, ['addons'], 'conflicts');
@@ -159,7 +159,7 @@ final readonly class AddonManifest
      */
     private static function dependencyMap(mixed $data, AddonId $owner, string $kind): array
     {
-        if (!is_array($data) || array_is_list($data) || count($data) > 128) {
+        if (!is_array($data) || ($data !== [] && array_is_list($data)) || count($data) > 128) {
             throw new InvalidArgumentException('Add-on ' . $kind . ' map is invalid.');
         }
 
