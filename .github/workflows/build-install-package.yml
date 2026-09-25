@@ -259,7 +259,7 @@ jobs:
               Deny from all
           </IfModule>'
 
-          for dir in app core config database modules packages resources storage themes vendor; do
+          for dir in app bin core config database modules packages resources storage themes vendor; do
             if [ -d "dist/${ROOT}/${dir}" ]; then
               printf '%s\n' "$GUARD" > "dist/${ROOT}/${dir}/.htaccess"
             fi
