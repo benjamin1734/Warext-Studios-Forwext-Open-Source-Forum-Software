@@ -10,6 +10,7 @@ use Forwext\Core\Container\Exception\ContainerException;
 use Forwext\Core\Container\Exception\OverrideNotAllowedException;
 use Forwext\Core\Container\Exception\ServiceNotFoundException;
 use Forwext\Core\Container\Exception\UnresolvableDependencyException;
+use Forwext\Core\Extension\ExtensionOwner;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionIntersectionType;
@@ -27,6 +28,11 @@ final class Container
 
     /** @var list<string> */
     private array $resolving = [];
+
+    /** @var array<string,list<ServiceDecorator>> */
+    private array $decorators = [];
+
+    private int $decoratorSequence = 0;
 
     public function __construct(private readonly bool $allowOverrides = false)
     {
@@ -82,6 +88,82 @@ final class Container
         $this->instances[$id] = $instance;
     }
 
+    /**
+     * Register one deterministic decorator for a service and extension owner.
+     *
+     * @param Closure(mixed,self):mixed $decorator
+     */
+    public function decorate(
+        string $id,
+        Closure $decorator,
+        ExtensionOwner $owner,
+        int $priority = 0,
+    ): void {
+        if ($id === '') {
+            throw new ContainerException('Decorated service id cannot be empty.');
+        }
+        if (array_key_exists($id, $this->instances) || in_array($id, $this->resolving, true)) {
+            throw new ContainerException(sprintf(
+                'Service "%s" cannot be decorated after or during singleton resolution.',
+                $id,
+            ));
+        }
+
+        foreach ($this->decorators[$id] ?? [] as $registered) {
+            if ($registered->owner->equals($owner)) {
+                throw new ContainerException(sprintf(
+                    'Extension owner "%s" already decorates service "%s".',
+                    $owner->value(),
+                    $id,
+                ));
+            }
+        }
+
+        $this->decorators[$id] ??= [];
+        $this->decorators[$id][] = new ServiceDecorator(
+            $owner,
+            $decorator,
+            $priority,
+            $this->decoratorSequence++,
+        );
+    }
+
+    /** @return list<ContainerServiceDiagnostic> */
+    public function extensionDiagnostics(): array
+    {
+        $ids = array_values(array_unique([
+            ...array_keys($this->bindings),
+            ...array_keys($this->decorators),
+        ]));
+        sort($ids, SORT_STRING);
+
+        $result = [];
+        foreach ($ids as $id) {
+            $binding = $this->bindings[$id] ?? null;
+            $decorators = array_map(
+                static fn (ServiceDecorator $decorator): ServiceDecoratorDiagnostic => new ServiceDecoratorDiagnostic(
+                    $decorator->owner->value(),
+                    $decorator->priority,
+                ),
+                $this->sortedDecorators($id),
+            );
+            $target = null;
+            if ($binding instanceof Binding) {
+                $target = $binding->concrete instanceof Closure ? 'factory' : $binding->concrete;
+            }
+
+            $result[] = new ContainerServiceDiagnostic(
+                $id,
+                $target,
+                $binding?->lifetime,
+                $decorators,
+                $this->diagnosticIssues($id),
+            );
+        }
+
+        return $result;
+    }
+
     public function has(string $id): bool
     {
         if (array_key_exists($id, $this->instances) || isset($this->bindings[$id])) {
@@ -119,10 +201,13 @@ final class Container
                     throw ServiceNotFoundException::forId($id);
                 }
 
-                return $this->autowire($id);
+                return $this->applyDecorators($id, $this->autowire($id));
             }
 
-            $resolved = $this->resolveConcrete($id, $binding->concrete);
+            $resolved = $this->applyDecorators(
+                $id,
+                $this->resolveConcrete($id, $binding->concrete),
+            );
 
             if ($binding->lifetime === ServiceLifetime::Singleton) {
                 $this->instances[$id] = $resolved;
@@ -137,6 +222,67 @@ final class Container
     public function make(string $class): object
     {
         return $this->autowire($class);
+    }
+
+    private function applyDecorators(string $id, mixed $service): mixed
+    {
+        foreach ($this->sortedDecorators($id) as $decorator) {
+            $service = ($decorator->factory)($service, $this);
+            if ((class_exists($id) || interface_exists($id)) && !$service instanceof $id) {
+                throw new ContainerException(sprintf(
+                    'Decorator owned by "%s" returned an incompatible value for "%s".',
+                    $decorator->owner->value(),
+                    $id,
+                ));
+            }
+        }
+
+        return $service;
+    }
+
+    /** @return list<ServiceDecorator> */
+    private function sortedDecorators(string $id): array
+    {
+        $decorators = $this->decorators[$id] ?? [];
+        usort(
+            $decorators,
+            static fn (ServiceDecorator $left, ServiceDecorator $right): int =>
+                [$right->priority, $left->sequence] <=> [$left->priority, $right->sequence],
+        );
+
+        return $decorators;
+    }
+
+    /** @return list<string> */
+    private function diagnosticIssues(string $id): array
+    {
+        $issues = [];
+        if (($this->decorators[$id] ?? []) !== [] && !isset($this->bindings[$id]) && !$this->has($id)) {
+            $issues[] = 'decorator_without_resolvable_base';
+        }
+
+        $path = [];
+        $seen = [];
+        $current = $id;
+        while (isset($this->bindings[$current]) && is_string($this->bindings[$current]->concrete)) {
+            if (isset($seen[$current])) {
+                $path[] = $current;
+                $issues[] = 'binding_cycle:' . implode('->', $path);
+                break;
+            }
+            $seen[$current] = true;
+            $path[] = $current;
+            $current = $this->bindings[$current]->concrete;
+        }
+
+        if ($path !== [] && !isset($this->bindings[$current])
+            && !array_key_exists($current, $this->instances)
+            && !class_exists($current)
+        ) {
+            $issues[] = 'unresolved_binding_target:' . $current;
+        }
+
+        return $issues;
     }
 
     private function assertCanBind(string $id): void
