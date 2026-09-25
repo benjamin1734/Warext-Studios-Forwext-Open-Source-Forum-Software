@@ -3,10 +3,20 @@
 declare(strict_types=1);
 
 use Forwext\Tools\Addon\AddonCodeGenerator;
+use Forwext\Tools\Addon\AddonCompatibilityChecker;
+use Forwext\Tools\Addon\AddonIdeTypeGenerator;
+use Forwext\Tools\Addon\AddonPackageBuilder;
 use Forwext\Tools\Addon\AddonScaffolder;
+use Forwext\Tools\Addon\DeveloperAddonPackageManager;
 use Forwext\Tools\Cli\CliApplication;
+use Forwext\Tools\Cli\Command\AddonBuildCommand;
+use Forwext\Tools\Cli\Command\AddonCheckCommand;
 use Forwext\Tools\Cli\Command\AddonCreateCommand;
+use Forwext\Tools\Cli\Command\AddonWorkspaceCommand;
+use Forwext\Tools\Cli\Command\DevModeCommand;
+use Forwext\Tools\Cli\Command\IdeTypesCommand;
 use Forwext\Tools\Cli\Command\MakeClassCommand;
+use Forwext\Tools\Dev\DeveloperMode;
 
 $root = dirname(__DIR__);
 $autoload = $root . '/vendor/autoload.php';
@@ -18,11 +28,22 @@ require $autoload;
 
 $scaffolder = new AddonScaffolder($root);
 $generator = new AddonCodeGenerator($root);
+$developerMode = new DeveloperMode($root);
+$compatibility = new AddonCompatibilityChecker($root);
+$workspacePackages = new DeveloperAddonPackageManager($root);
 $app = new CliApplication([
     new AddonCreateCommand($scaffolder),
     new MakeClassCommand($generator, 'class'),
     new MakeClassCommand($generator, 'service'),
     new MakeClassCommand($generator, 'entity'),
+    new DevModeCommand($developerMode, 'enable'),
+    new DevModeCommand($developerMode, 'disable'),
+    new DevModeCommand($developerMode, 'status'),
+    new AddonWorkspaceCommand($developerMode, $workspacePackages, 'install'),
+    new AddonWorkspaceCommand($developerMode, $workspacePackages, 'upgrade'),
+    new AddonCheckCommand($compatibility),
+    new AddonBuildCommand(new AddonPackageBuilder($root, $compatibility)),
+    new IdeTypesCommand(new AddonIdeTypeGenerator($root)),
 ]);
 
 $result = $app->run($argv);

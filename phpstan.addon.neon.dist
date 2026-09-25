@@ -1,0 +1,9 @@
+parameters:
+    level: max
+    paths:
+        - addons
+    excludePaths:
+        analyse:
+            - addons/*/*/vendor/*
+            - addons/*/*/.forwext/*
+    reportUnmatchedIgnoredErrors: true
