@@ -40,7 +40,7 @@ final class SystemIntegrationAcpWebSurfaceTest extends TestCase
         self::assertStringContainsString('hash_equals($key, $confirm)', $handler);
         self::assertStringContainsString('#[SensitiveParameter]', $service);
         self::assertStringContainsString("'integration.secret'", $service);
-        self::assertStringNotContainsString("['configured_value'=>$value]", $service);
+        self::assertStringNotContainsString("'configured_value'=>\$value", $service);
     }
 
     public function testComplexAcpSurfaceIncludesSearchFiltersResetCapabilitiesAndEnvironmentWarning(): void
