@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.48-dev
+CURRENT_VERSION = 0.0.7.49-dev
 LAST_COMPLETED_MAIN_STEP = 16
-LAST_COMPLETED_SUBSTEP = 17.04
-CURRENT_STEP = 17.05
-LAST_COMMIT = c2e9bd45acd61d87a6782f5470e07690ac7f06fd
+LAST_COMPLETED_SUBSTEP = 17.05
+CURRENT_STEP = 17.06
+LAST_COMMIT = af752d8c2c582f5d888af3e07af255b5db8dfb49
 BLOCKERS = none
-NEXT_STEP = 17.05 - Health/logs/jobs/backup/maintenance ACP
+NEXT_STEP = 17.06 - ACP UX kalite standardı
 ```
 
 ## Current position
@@ -21,13 +21,35 @@ NEXT_STEP = 17.05 - Health/logs/jobs/backup/maintenance ACP
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.04`.
-- Current sub-step: `17.05 — Health/logs/jobs/backup/maintenance ACP`.
-- Remaining roadmap work after 17.04: **22 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.05`.
+- Current sub-step: `17.06 — ACP UX kalite standardı`.
+- Remaining roadmap work after 17.05: **21 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 17.05
+
+- Added native PHP `/admin/system/operations` as the central System Operations Center for health, runtime capabilities, logs, queues/jobs, cron, integrity, backups, maintenance and bounded repair tools.
+- Added granular backend permissions: `system.health.view`, `system.logs.view`, `system.jobs.manage`, `system.backup.manage`, `system.maintenance.manage` and `system.repair.manage`; every operation also requires `acp.access`.
+- Added runtime/environment, writable-directory and database-connectivity health checks plus capability matrix visibility.
+- Added read-only integrity diagnostics comparing the current core migration registry with migration history, including missing/failed/running/unknown migrations and non-InnoDB Forwext tables.
+- Added structured-log tailing from the configured fixed path with a 2 MiB/250-record bound, symlink rejection, malformed-line tolerance and a second defensive secret/token/password redaction pass.
+- Added permission-aware queue summaries and failed-job retry/delete. Failed-job payloads remain DB-internal and never enter list HTML or Administration audit snapshots.
+- Added a typed first-party maintenance scheduler catalog and manual task execution through the existing queue driver instead of directly invoking job handlers.
+- Added protected logical database backup creation/list/verify/delete with read-only repeatable-read snapshots, schema records, byte-safe row encoding, manifest counts, SHA-256 verification, restrictive filesystem permissions and no ACP download/restore endpoint.
+- Added maintenance-mode management through the existing atomic generated configuration store, with environment override precedence enforced fail-closed.
+- Added bounded scheduler-claim pruning and symlink-safe cache-content cleanup; destructive actions require explicit typed confirmation.
+- Added dedicated CSRF protection plus Administration audit events for all mutating system operations.
+- Added additive/idempotent MySQL/MariaDB system-operations permission migration; built-in administrator receives allow while new-user/member/verified/moderator templates receive explicit deny.
+- Added log, backup, scheduler, migration-policy, permission-catalog and native ACP security/UX regression coverage plus architecture documentation.
+- Core primitives: `d59772788a053f505eaf6e8e0d9c308b62b2b0f6`; audited service: `6d810509963e802f567039d1974f55b53453084d`; policy/migration: `34f6dfefc4508cd6a88669bea711f2ba8a02012f`; ACP/runtime: `5a752591543030db40562d7e09aabb6a56b49f7f`, `b37ed765d7ffb1b424e1b83beda2dde491cad76f`, `bb1fb09fd0a3fb98fb5b34850eeded331612eb7a`.
+- Tests/docs and corrections: `bc6a87728dcb8b3c4c0c4dfd92462cfa1f3b986c`, `a0a0f7e8add5b3d6ab2e44734fedbe8a5f89efae`, `b06a0af490a3fd5d91ce3d4de0350cb375057c3d`, `757625f36d98115194090b14cb73c5b22e2883e1`, `af752d8c2c582f5d888af3e07af255b5db8dfb49`.
+- GitHub Actions build run `36113226857`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36113226864`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.49-dev`.
+- Next: `17.06 — ACP UX kalite standardı`.
 
 ## Completed in 17.04
 

@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.05 — System Operations ACP
+
+- Added native PHP `/admin/system/operations` with granular backend authorization for health/capabilities, logs, jobs/cron, backups, maintenance and repair.
+- Added runtime/database health, migration/database integrity diagnostics and permission-aware queue/failed-job operations without exposing job payloads.
+- Added bounded/redacted structured-log reading and typed first-party maintenance task execution through the normal queue.
+- Added protected logical database backups with schema, byte-safe row records, manifest verification and SHA-256, with no ACP download/restore endpoint.
+- Added atomic maintenance-mode control, bounded scheduler-claim pruning and symlink-safe cache cleanup with typed confirmations, CSRF and Administration audit.
+- Added additive/idempotent MySQL/MariaDB permission policy plus regression/security/UX coverage.
+- Implementation/fix commits: `d59772788a053f505eaf6e8e0d9c308b62b2b0f6`, `6d810509963e802f567039d1974f55b53453084d`, `34f6dfefc4508cd6a88669bea711f2ba8a02012f`, `5a752591543030db40562d7e09aabb6a56b49f7f`, `b37ed765d7ffb1b424e1b83beda2dde491cad76f`, `bb1fb09fd0a3fb98fb5b34850eeded331612eb7a`, `bc6a87728dcb8b3c4c0c4dfd92462cfa1f3b986c`, `a0a0f7e8add5b3d6ab2e44734fedbe8a5f89efae`, `b06a0af490a3fd5d91ce3d4de0350cb375057c3d`, `757625f36d98115194090b14cb73c5b22e2883e1`, `af752d8c2c582f5d888af3e07af255b5db8dfb49`.
+- GitHub Actions build run `36113226857` and DB smoke run `36113226864` both succeeded.
+
 ### 17.04 — System / Integration ACP
 
 - Added typed configuration and dedicated backend authorization for mail, OAuth, Turnstile, AI, storage, cache, queue, search, realtime and API/webhook readiness.
