@@ -195,6 +195,36 @@ final class ContainerTest extends TestCase
         $container->get('service');
     }
 
+    public function testDecoratorMustPreserveDeclaredServiceType(): void
+    {
+        $container = new Container();
+        $container->bind(DecoratedContract::class, DecoratedImplementation::class);
+        $container->decorate(
+            DecoratedContract::class,
+            static fn (mixed $service, Container $container): stdClass => new stdClass(),
+            ExtensionOwner::addon('Acme/InvalidDecorator'),
+        );
+
+        $this->expectException(ContainerException::class);
+        $container->get(DecoratedContract::class);
+    }
+
+    public function testExtensionDiagnosticsReportDecoratorWithoutResolvableBase(): void
+    {
+        $container = new Container();
+        $container->decorate(
+            'missing.extension.service',
+            static fn (mixed $service, Container $container): mixed => $service,
+            ExtensionOwner::addon('Acme/Missing'),
+        );
+
+        $diagnostics = $container->extensionDiagnostics();
+        self::assertCount(1, $diagnostics);
+        self::assertSame('addon:Acme/Missing', $diagnostics[0]->decorators[0]->owner);
+        self::assertContains('decorator_without_resolvable_base', $diagnostics[0]->issues);
+        self::assertNull($diagnostics[0]->bindingOwner);
+    }
+
     public function testExtensionDiagnosticsReportsBindingAliasCycleWithoutResolvingIt(): void
     {
         $container = new Container();
@@ -243,4 +273,13 @@ final class NeedsScalar
     public function __construct(public readonly string $dsn)
     {
     }
+}
+
+
+interface DecoratedContract
+{
+}
+
+final class DecoratedImplementation implements DecoratedContract
+{
 }

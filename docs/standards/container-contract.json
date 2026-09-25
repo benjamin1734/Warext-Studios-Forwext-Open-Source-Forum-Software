@@ -1,7 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "policy_id": "forwext.container_kernel",
   "roadmap_step": "02.03",
+  "extension_roadmap_step": "18.02",
   "container": {
     "lifetimes": ["transient", "singleton"],
     "factories_are_lazy": true,
@@ -11,6 +12,19 @@
     "production_rebinding_allowed": false,
     "test_overrides": true
   },
+  "extension_api": {
+    "owner_aware_bindings": true,
+    "binding_conflicts_fail_closed": true,
+    "service_decorators": true,
+    "decorator_priority": "higher_priority_then_registration_order",
+    "one_decorator_per_owner_per_service": true,
+    "decorator_type_preservation_for_class_or_interface_ids": true,
+    "decorator_cycles_use_container_cycle_detection": true,
+    "named_domain_events": true,
+    "typed_domain_events": true,
+    "event_priority": "higher_priority_then_registration_order",
+    "extension_graph_diagnostics": true
+  },
   "kernel": {
     "provider_register_phase_before_boot_phase": true,
     "boot_idempotent_after_success": true,
@@ -19,6 +33,7 @@
   },
   "authorization": {
     "container_resolution_grants_permission": false,
+    "event_listener_registration_grants_permission": false,
     "backend_permission_checks_remain_required": true
   }
 }

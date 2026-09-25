@@ -168,7 +168,7 @@ final class Container
                 $id,
                 $target,
                 $binding?->lifetime,
-                $this->bindingOwners[$id]?->value() ?? null,
+                ($this->bindingOwners[$id] ?? null)?->value(),
                 $decorators,
                 $this->diagnosticIssues($id),
             );
