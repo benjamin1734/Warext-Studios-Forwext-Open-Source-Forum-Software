@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Forwext\Tests\Unit\Core\Webhook;
 
 use DateTimeImmutable;
+use Forwext\Core\Addon\AddonId;
+use Forwext\Core\Addon\Backend\AddonBackendMetadataRegistry;
+use Forwext\Core\Addon\Backend\AddonWebhookDefinition;
+use Forwext\Core\Addon\Backend\AddonWebhookDirection;
 use Forwext\Core\Content\Ai\Transport\AiModerationEndpoint;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpResponse;
 use Forwext\Core\Content\Ai\Transport\AiModerationHttpTransport;
@@ -15,6 +19,7 @@ use Forwext\Core\Queue\QueueDriver;
 use Forwext\Core\Queue\QueueName;
 use Forwext\Core\Queue\QueueReservation;
 use Forwext\Core\Security\Secret\SecretStore;
+use Forwext\Core\Webhook\AddonWebhookPublisher;
 use Forwext\Core\Webhook\ApprovedWebhookDestination;
 use Forwext\Core\Webhook\PinnedHttpsWebhookTransport;
 use Forwext\Core\Webhook\WebhookDelivery;
@@ -134,6 +139,38 @@ final class WebhookPlatformTest extends TestCase
         self::assertNotNull($delivery);
         self::assertTrue($delivery->test);
         self::assertStringContainsString('"test":true',$delivery->bodyJson);
+        self::assertCount(1,$queue->jobs);
+    }
+
+    public function testAddonOutboundDefinitionPublishesThroughWebhookPlatform():void
+    {
+        $clock=new WebhookClockFixture(new DateTimeImmutable('2026-09-25T20:00:00Z'));
+        $repo=new WebhookRepositoryFixture();
+        $queue=new WebhookQueueFixture();
+        $platform=new WebhookPlatformService(
+            $repo,
+            new WebhookSecretManager(new WebhookSecretStoreFixture()),
+            new WebhookDestinationPolicy(new WebhookAddressResolverFixture(['93.184.216.34'])),
+            $queue,
+            $clock,
+        );
+        $event='addon.acme.events.thread.created';
+        $platform->createSubscription($event,'https://hooks.example.com/addon');
+
+        $metadata=new AddonBackendMetadataRegistry();
+        $owner=AddonId::fromString('Acme/Events');
+        $metadata->registerWebhook($owner,new AddonWebhookDefinition(
+            'addon.acme.events.thread_created',
+            AddonWebhookDirection::Outbound,
+            $event,
+            'Thread creation outbound webhook.',
+        ));
+
+        $ids=(new AddonWebhookPublisher($metadata,$platform))->publish(
+            'addon.acme.events.thread_created',
+            ['thread_id'=>str_repeat('c',32)],
+        );
+        self::assertCount(1,$ids);
         self::assertCount(1,$queue->jobs);
     }
 
