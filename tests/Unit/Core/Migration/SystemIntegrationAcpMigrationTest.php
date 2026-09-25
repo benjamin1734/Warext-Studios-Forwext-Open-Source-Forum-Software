@@ -31,7 +31,7 @@ final class SystemIntegrationAcpMigrationTest extends TestCase
         );
 
         self::assertStringContainsString("'integration.manage'", $source);
-        self::assertStringContainsString("$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
+        self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $source);
         self::assertStringContainsString("COUNT(*) FROM forwext_permission_template_rules", $source);
     }
 }
