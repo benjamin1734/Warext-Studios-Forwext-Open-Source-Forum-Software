@@ -21,6 +21,8 @@ final class AdminModuleManagerHtml
         BasePath $basePath,
         string $csrf,
         bool $updated,
+        string $search,
+        string $state,
     ): string {
         /** @var list<FirstPartyModuleDefinition> $definitions */
         $definitions = $snapshot['definitions'];
@@ -37,6 +39,22 @@ final class AdminModuleManagerHtml
         $selectedScope = $snapshot['selected_scope'];
         $selectedScopeId = $snapshot['selected_scope_id'];
         $pendingStorage = (int) $snapshot['pending_storage_count'];
+        $search = trim($search);
+        $visibleDefinitions = array_values(array_filter(
+            $definitions,
+            static function (FirstPartyModuleDefinition $definition) use ($records, $search, $state): bool {
+                $record = $records[$definition->key];
+                if ($state !== 'all' && $record->state->value !== $state) {
+                    return false;
+                }
+                if ($search === '') {
+                    return true;
+                }
+                $haystack = strtolower($definition->key . ' ' . $definition->label . ' ' . $definition->description);
+
+                return str_contains($haystack, strtolower($search));
+            },
+        ));
 
         $action = self::escape($basePath->prepend('/admin/modules'));
         $breadcrumbs = AdminBreadcrumbsHtml::render([
@@ -45,14 +63,18 @@ final class AdminModuleManagerHtml
         ], $basePath);
 
         $moduleList = '';
-        foreach ($definitions as $definition) {
+        foreach ($visibleDefinitions as $definition) {
             $record = $records[$definition->key];
             $selectedClass = $selected?->key === $definition->key ? ' is-selected' : '';
-            $moduleList .= '<a class="mod-list-item' . $selectedClass . '" href="' . $action
-                . '?module=' . rawurlencode($definition->key) . '"><span><strong>'
+            $moduleList .= '<a class="mod-list-item' . $selectedClass . '" href="'
+                . self::moduleUrl($action, $definition->key, $search, $state) . '"><span><strong>'
                 . self::escape($definition->label) . '</strong><small>' . self::escape($definition->key)
                 . '</small></span><span class="mod-state state-' . self::escape($record->state->value) . '">'
                 . self::escape(self::stateLabel($record->state)) . '</span></a>';
+        }
+
+        if ($moduleList === '') {
+            $moduleList = '<p class="mod-muted">Filtreyle eşleşen first-party modül yok.</p>';
         }
 
         $detail = $selected !== null && $selectedRecord !== null
@@ -75,19 +97,38 @@ final class AdminModuleManagerHtml
         $notice = $updated
             ? '<div class="mod-notice" role="status">Modül yapılandırması güncellendi.</div>'
             : '';
+        $stateOptions = '';
+        foreach (['all'=>'Tüm durumlar','enabled'=>'Aktif','disabled'=>'Kapalı','uninstalled'=>'Kaldırılmış'] as $key=>$label) {
+            $stateOptions .= '<option value="' . self::escape($key) . '"' . ($state === $key ? ' selected' : '') . '>'
+                . self::escape($label) . '</option>';
+        }
+        $filter = '<form class="mod-filter" method="get" action="' . $action . '">'
+            . '<label>Modüllerde ara<input name="q" maxlength="80" value="' . self::escape($search)
+            . '" placeholder="Ad, key veya açıklama"></label><label>Durum<select name="state">' . $stateOptions
+            . '</select></label><button class="mod-button primary" type="submit">Filtrele</button>'
+            . '<a class="mod-button" href="' . $action . '">Filtreyi sıfırla</a></form>';
 
         return '<section class="module-manager"><style>'
             . '.module-manager{display:grid;gap:18px}.mod-shell{display:grid;grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px}.mod-panel,.mod-sidebar,.mod-empty{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}'
             . '.mod-sidebar{display:grid;gap:8px;align-content:start}.mod-list-item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:11px;text-decoration:none}.mod-list-item span:first-child{display:grid;gap:2px}.mod-list-item small,.mod-muted{color:var(--muted)}.mod-list-item.is-selected{outline:2px solid var(--accent);outline-offset:1px}'
             . '.mod-state{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:.82rem;white-space:nowrap}.state-enabled{font-weight:700}.state-uninstalled{opacity:.72}.mod-detail{display:grid;gap:14px}.mod-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.mod-head h1,.mod-panel h2,.mod-card h3{margin:0}.mod-head p,.mod-card p{margin:5px 0 0}.mod-notice{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:11px}'
+            . '.mod-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px) auto auto;gap:8px;align-items:end}.mod-filter label{display:grid;gap:5px}.mod-filter input,.mod-filter select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 10px}'
             . '.mod-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.mod-card{border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:13px}.mod-actions{display:flex;gap:8px;flex-wrap:wrap}.mod-actions form{margin:0}.mod-button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 12px;cursor:pointer}.mod-button.primary{font-weight:700}.mod-button.danger{font-weight:700}.mod-warning{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel2)}'
             . '.mod-scope-nav{display:flex;flex-wrap:wrap;gap:7px}.mod-scope-nav a{border:1px solid var(--line);border-radius:999px;padding:7px 10px;text-decoration:none;color:var(--text)}.mod-scope-nav a[aria-current="page"]{outline:2px solid var(--accent);outline-offset:1px}.mod-target{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.mod-field{display:grid;gap:5px;min-width:180px;flex:1}.mod-field input,.mod-field select{border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 10px}.mod-setting{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,280px);gap:14px;align-items:end;border-top:1px solid var(--line);padding:13px 0}.mod-setting:first-of-type{border-top:0}.mod-setting-actions{display:flex;gap:7px;align-items:end;flex-wrap:wrap}.mod-setting-actions form{margin:0;flex:1}.mod-setting-actions form .mod-field{min-width:0}.mod-graph{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.mod-graph ul{margin:8px 0 0;padding-left:20px}.mod-confirm{width:190px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 10px}'
+            . AdminUxQualityHtml::css()
             . '.acp-breadcrumbs ol{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0;margin:0;color:var(--muted)}.acp-breadcrumbs li+li:before{content:"/";margin-right:7px}.acp-breadcrumbs a{color:inherit}'
             . '@media(max-width:900px){.mod-shell{grid-template-columns:1fr}.mod-sidebar{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.mod-graph{grid-template-columns:1fr}}'
-            . '@media(max-width:640px){.mod-detail .mod-head,.mod-setting{grid-template-columns:1fr;display:grid}.mod-actions,.mod-setting-actions,.mod-target{display:grid}.mod-button,.mod-confirm{width:100%}}'
+            . '@media(max-width:640px){.mod-detail .mod-head,.mod-setting{grid-template-columns:1fr;display:grid}.mod-actions,.mod-setting-actions,.mod-target,.mod-filter{display:grid;grid-template-columns:1fr}.mod-button,.mod-confirm{width:100%}}'
             . '</style>'
             . $breadcrumbs
+            . AdminUxQualityHtml::guidance(
+                'First-party modülleri ad/key/açıklama ve lifecycle durumuna göre filtrele; dependency graph ile etki alanını kontrol et.',
+                'Scoped ayarlar post → thread → forum → group → global → güvenli varsayılan sırasıyla çözülür; filtreleme hiçbir state değiştirmez.',
+                'Effective değer, dependency/conflict graph ve veri durumu mutasyondan önce görünür.',
+                'Setting override kaldırılabilir; uninstall sırasında veriyi koruma seçeneği vardır ve veri silme exact module key onayı ister.',
+            )
             . $notice
+            . $filter
             . '<div class="mod-shell"><aside class="mod-sidebar" aria-label="First-party modüller">' . $moduleList
             . '</aside><main class="mod-detail">' . $detail . '</main></div></section>';
     }
@@ -423,6 +464,19 @@ final class AdminModuleManagerHtml
             FirstPartyModuleScope::Thread => 'Thread',
             FirstPartyModuleScope::Post => 'Post',
         };
+    }
+
+    private static function moduleUrl(string $action, string $moduleKey, string $search, string $state): string
+    {
+        $query = ['module'=>$moduleKey];
+        if ($search !== '') {
+            $query['q'] = $search;
+        }
+        if ($state !== 'all') {
+            $query['state'] = $state;
+        }
+
+        return self::escape($action . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986));
     }
 
     private static function displayValue(bool|int|string $value): string

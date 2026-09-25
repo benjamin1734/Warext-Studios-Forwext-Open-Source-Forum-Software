@@ -53,6 +53,11 @@ final readonly class AdminModuleManagerHandler implements RequestHandlerInterfac
                 $this->optionalString($query, 'scope', 16) ?? FirstPartyModuleScope::Global->value,
             ) ?? throw new InvalidArgumentException('Module setting scope is invalid.');
             $scopeId = $this->optionalString($query, 'scope_id', 191);
+            $search = $this->optionalString($query, 'q', 80) ?? '';
+            $state = $this->optionalString($query, 'state', 16) ?? 'all';
+            if (!in_array($state, ['all', 'enabled', 'disabled', 'uninstalled'], true)) {
+                throw new InvalidArgumentException('Module manager state filter is invalid.');
+            }
 
             $snapshot = $this->modules->managementSnapshot($actor, $moduleKey, $scope, $scopeId);
             $content = AdminModuleManagerHtml::page(
@@ -60,6 +65,8 @@ final readonly class AdminModuleManagerHandler implements RequestHandlerInterfac
                 $this->basePath,
                 $csrf,
                 ($query['updated'] ?? null) === '1',
+                $search,
+                $state,
             );
 
             return Response::html(ProfileHtml::page(
