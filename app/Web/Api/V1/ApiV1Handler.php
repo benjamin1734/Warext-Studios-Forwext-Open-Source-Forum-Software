@@ -7,26 +7,29 @@ namespace Forwext\App\Web\Api\V1;
 use Forwext\Core\Api\V1\ApiV1EndpointDefinition;
 use Forwext\Core\Api\V1\ApiV1Operation;
 use Forwext\Core\Api\V1\ApiV1Page;
+use Forwext\Core\Api\V1\PrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\PublicApiV1Service;
+use Forwext\Core\Api\V1\Security\ApiV1Principal;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Routing\Router;
 use InvalidArgumentException;
-use LogicException;
 
 final readonly class ApiV1Handler implements RequestHandlerInterface
 {
     public function __construct(
         private PublicApiV1Service $service,
+        private PrivateApiV1ReadRepository $privateReads,
         private ApiV1EndpointDefinition $endpoint,
     ) {
     }
 
     public function handle(Request $request): Response
     {
-        if (!$this->endpoint->public) {
-            return $this->error(
+        $principal = $request->attribute(ApiV1SecurityMiddleware::ATTRIBUTE_PRINCIPAL);
+        if (!$this->endpoint->public && !$principal instanceof ApiV1Principal) {
+            return ApiV1ErrorResponder::error(
                 'authentication_required',
                 'This API resource requires an authenticated API context.',
                 401,
@@ -47,20 +50,26 @@ final readonly class ApiV1Handler implements RequestHandlerInterface
                 ApiV1Operation::MarketplaceIndex => $this->service->marketplace(...$this->pagination($request)),
                 ApiV1Operation::MarketplaceShow => $this->service->marketplaceListing($this->parameter($request, 'listingId')),
                 ApiV1Operation::SupportCategoryIndex => $this->service->supportCategories(...$this->pagination($request)),
-                default => throw new LogicException('Protected API operation reached the public dispatcher.'),
+                ApiV1Operation::ConversationIndex => $this->privateReads->conversations($principal->userId, ...$this->pagination($request)),
+                ApiV1Operation::NotificationIndex => $this->privateReads->notifications($principal->userId, ...$this->pagination($request)),
+                ApiV1Operation::SupportTicketIndex => $this->privateReads->supportTickets($principal->userId, ...$this->pagination($request)),
             };
         } catch (InvalidArgumentException $exception) {
-            return $this->error('invalid_request', $exception->getMessage(), 400);
+            return ApiV1ErrorResponder::error('invalid_request', $exception->getMessage(), 400);
         }
 
         if ($payload === null) {
-            return $this->error('not_found', 'Resource not found.', 404);
+            return ApiV1ErrorResponder::error('not_found', 'Resource not found.', 404);
         }
         if ($payload instanceof ApiV1Page) {
             $payload = $payload->toArray();
         }
 
-        return $this->json(['data'=>$payload], 200, 'public, max-age=30');
+        $cache = $this->endpoint->public ? 'public, max-age=30' : 'private, no-store';
+
+        return Response::json(['data'=>$payload], 200)
+            ->withHeader('Cache-Control', $cache)
+            ->withHeader('X-Content-Type-Options', 'nosniff');
     }
 
     private function parameter(Request $request, string $key): string
@@ -99,18 +108,5 @@ final readonly class ApiV1Handler implements RequestHandlerInterface
         }
 
         return $parsed;
-    }
-
-    private function error(string $code, string $message, int $status): Response
-    {
-        return $this->json(['error'=>['code'=>$code,'message'=>$message]], $status, 'no-store');
-    }
-
-    /** @param array<string,mixed> $payload */
-    private function json(array $payload, int $status, string $cacheControl): Response
-    {
-        return Response::json($payload, $status)
-            ->withHeader('Cache-Control', $cacheControl)
-            ->withHeader('X-Content-Type-Options', 'nosniff');
     }
 }

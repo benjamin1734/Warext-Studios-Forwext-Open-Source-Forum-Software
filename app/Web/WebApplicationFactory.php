@@ -161,7 +161,10 @@ use Forwext\Core\Admin\Operations\SystemOperationsService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
+use Forwext\Core\Api\V1\DatabasePrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\DatabasePublicApiV1ReadRepository;
+use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
+use Forwext\Core\Api\V1\Security\DatabaseApiV1CredentialRepository;
 use Forwext\Core\Analytics\Report\AnalyticsReportService;
 use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
@@ -250,6 +253,7 @@ use Forwext\Core\Health\HealthService;
 use Forwext\Core\Health\RuntimeEnvironmentHealthCheck;
 use Forwext\Core\Health\WritableDirectoryHealthCheck;
 use Forwext\Core\Http\HttpMethod;
+use Forwext\Core\Http\Security\RateLimit\FileRateLimitStore;
 use Forwext\Core\Http\Middleware\CallableRequestHandler;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
@@ -1017,7 +1021,14 @@ final readonly class WebApplicationFactory
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
         $routes = new RouteCollection();
-        ApiV1RouteRegistrar::register($routes, new DatabasePublicApiV1ReadRepository($database));
+        ApiV1RouteRegistrar::register(
+            $routes,
+            new DatabasePublicApiV1ReadRepository($database),
+            new DatabasePrivateApiV1ReadRepository($database),
+            new ApiV1CredentialResolver(new DatabaseApiV1CredentialRepository($database)),
+            new FileRateLimitStore($this->projectRoot . '/storage/ratelimit/api-v1'),
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
         $routes->add(new Route(
             'bug.report.create',
