@@ -8,6 +8,7 @@ use Forwext\Core\Migration\Migration;
 use Forwext\Database\Migrations\Core\AddDiscoveryQueryIndexes;
 use Forwext\Database\Migrations\Core\CreateAdminInformationArchitecture;
 use Forwext\Database\Migrations\Core\CreateAddonLifecycle;
+use Forwext\Database\Migrations\Core\CreateAddonBackendCapabilities;
 use Forwext\Database\Migrations\Core\CreateAbusePreventionTables;
 use Forwext\Database\Migrations\Core\CreateAiModerationWorkflow;
 use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
@@ -192,6 +193,7 @@ final class CoreMigrationRegistry
             new CreateSystemIntegrationAcp(),
             new CreateSystemOperationsAcp(),
             new CreateAddonLifecycle(),
+            new CreateAddonBackendCapabilities(),
         ];
     }
 }

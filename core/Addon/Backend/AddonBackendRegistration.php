@@ -164,6 +164,10 @@ final class AddonBackendRegistration
     public function permissions(): array { return $this->values($this->permissions); }
     /** @return list<AddonSettingDefinition> */
     public function settings(): array { return $this->values($this->settings); }
+    public function settingDefinition(string $key): ?AddonSettingDefinition
+    {
+        return $this->settings[$key] ?? null;
+    }
     /** @return list<AdminNavigationItem> */
     public function adminItems(): array { return $this->values($this->adminItems); }
     /** @return list<QueueJobHandler> */
