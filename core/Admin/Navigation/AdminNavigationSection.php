@@ -10,7 +10,8 @@ enum AdminNavigationSection: string
     case Commerce = 'commerce';
     case Analytics = 'analytics';
     case Appearance = 'appearance';
-    case Community = 'community';\n    case System = 'system';
+    case Community = 'community';
+    case System = 'system';
 
     public function label(): string
     {
@@ -19,7 +20,8 @@ enum AdminNavigationSection: string
             self::Commerce => 'Ticaret ve Gelir',
             self::Analytics => 'Analiz ve Raporlama',
             self::Appearance => 'Görünüm',
-            self::Community => 'Topluluk Araçları',\n            self::System => 'Sistem ve Entegrasyonlar',
+            self::Community => 'Topluluk Araçları',
+            self::System => 'Sistem ve Entegrasyonlar',
         };
     }
 
@@ -30,7 +32,8 @@ enum AdminNavigationSection: string
             self::Commerce => 20,
             self::Analytics => 30,
             self::Appearance => 40,
-            self::Community => 50,\n            self::System => 60,
+            self::Community => 50,
+            self::System => 60,
         };
     }
 }
