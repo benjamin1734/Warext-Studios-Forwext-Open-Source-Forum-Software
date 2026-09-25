@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 18.05 — SDK/CLI/test harness
+
+- Added the PHP Developer CLI with `addon:create`, `make:class/service/entity`, development-workspace install/upgrade, deterministic build, compatibility checks, developer-mode controls and IDE type generation.
+- Added bounded/symlink-safe workspace mutations, non-overwriting generators and a pure-PHP deterministic ZIP builder with SHA-256 build inventory.
+- Added token-level compatibility/security checks, add-on PHPStan configuration and regression coverage on PHP 8.4/8.5.
+- Kept developer mode strictly separate from production permissions and persisted add-on lifecycle state; normal cPanel runtime still does not require Composer/Node/npm.
+- Implementation/fix commits: `ce70eda93f4a5548ef7c9956104fe5a3ab75ff09`, `1a075af4d53130cb448c58311a98e4f0fcd24ebb`, `9b0988876aa2add8c7df2f5618cff9e1c207b073`, `e2148b28bdb38f6fa6c14e5a34952611ee590efa`.
+- GitHub Actions build run `36162815372` and database migration smoke run `36162823657` succeeded.
+
 ### 18.04 — Add-on UI capabilities
 
 - Added lifecycle-aware add-on UI contributions for slots, widgets, navigation, design tokens, templates and editor toolbar extensions using the existing native registries.

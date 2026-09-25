@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.54-dev
+CURRENT_VERSION = 0.0.7.55-dev
 LAST_COMPLETED_MAIN_STEP = 17
-LAST_COMPLETED_SUBSTEP = 18.04
-CURRENT_STEP = 18.05
-LAST_COMMIT = 60213323ec8764e5ee1c6cbb48b54e1fb4366e20
+LAST_COMPLETED_SUBSTEP = 18.05
+CURRENT_STEP = 18.06
+LAST_COMMIT = e2148b28bdb38f6fa6c14e5a34952611ee590efa
 BLOCKERS = none
-NEXT_STEP = 18.05 - SDK/CLI/test harness
+NEXT_STEP = 18.06 - Package signing/security/docs
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 18.05 - SDK/CLI/test harness
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.04`.
-- Current sub-step: `18.05 — SDK/CLI/test harness`.
-- Remaining roadmap work after 18.04: **16 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.05`.
+- Current sub-step: `18.06 — Package signing/security/docs`.
+- Remaining roadmap work after 18.05: **15 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 18.05
+
+- Added a dependency-light PHP Developer CLI entrypoint at `tools/forwext.php` with deterministic command dispatch and explicit exit codes.
+- Added `addon:create` with canonical `Vendor/AddOn` validation, valid `addon.json` generation, PHP 8.4 add-on Composer metadata and non-overwriting scaffold creation.
+- Added `make:class`, `make:service` and `make:entity` generators with strict types, canonical namespaces and overwrite refusal.
+- Added tool-only `dev:enable`, `dev:disable` and `dev:status`; developer mode gates workspace mutation commands and never bypasses runtime permissions, ACP authorization or persisted add-on lifecycle state.
+- Added development-workspace `addon:install` / `addon:upgrade` with manifest validation, bounded/symlink-safe source traversal, monotonic version upgrade enforcement, staged publication and rollback.
+- Added `addon:check` compatibility analysis using the core package inspector, Forwext-version validation, PHP parse validation, strict-types enforcement, namespace checks and token-level rejection of high-risk process/evaluation calls.
+- Added `addon:build` with compatibility preflight, deterministic pure-PHP ZIP32 packaging, safe archive paths, per-file SHA-256 inventory and `forwext-build.json`; ext-zip is not required.
+- Added `ide:types` to generate an IDE-only typed bridge for backend/UI registration APIs without loading it into production runtime.
+- Added `phpstan.addon.neon.dist` as the add-on static-analysis profile and kept development tooling out of the normal cPanel production runtime requirement.
+- Added unit coverage for scaffold/generator behavior, CLI dispatch, developer-mode state, compatibility rejection, deterministic ZIP output and IDE metadata generation.
+- No database migration was required; all developer-workspace filesystem mutations fail closed on unsafe paths/symlinks and production authorization remains unchanged.
+- Implementation/fix commits: `ce70eda93f4a5548ef7c9956104fe5a3ab75ff09`, `1a075af4d53130cb448c58311a98e4f0fcd24ebb`, `9b0988876aa2add8c7df2f5618cff9e1c207b073`, `e2148b28bdb38f6fa6c14e5a34952611ee590efa`.
+- GitHub Actions build run `36162815372`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel package build passed.
+- Database migration smoke run `36162823657`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.55-dev`.
+- Next: `18.06 — Package signing/security/docs`.
 
 ## Completed in 18.04
 
