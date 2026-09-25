@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Api\V1;
 
 use Forwext\Core\Api\V1\ApiV1EndpointDefinition;
+use Forwext\Core\Api\V1\Security\ApiV1AccountPermissionChecker;
 use Forwext\Core\Api\V1\Security\ApiV1AuthenticationException;
 use Forwext\Core\Api\V1\Security\ApiV1CredentialResolver;
 use Forwext\Core\Http\Middleware\MiddlewareInterface;
