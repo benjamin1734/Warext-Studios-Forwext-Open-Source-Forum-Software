@@ -46,6 +46,7 @@ final class SystemIntegrationCatalogTest extends TestCase
     {
         $catalog = SystemIntegrationCatalog::coreDefaults();
 
+        $rejected = 0;
         foreach ([
             'http://example.com/moderate',
             'https://user:pass@example.com/moderate',
@@ -55,6 +56,7 @@ final class SystemIntegrationCatalogTest extends TestCase
                 $catalog->setting('integration.ai.custom_endpoint')->normalize($unsafe);
                 self::fail('Unsafe HTTPS endpoint shape was accepted: ' . $unsafe);
             } catch (InvalidArgumentException) {
+                ++$rejected;
             }
         }
 
@@ -63,8 +65,11 @@ final class SystemIntegrationCatalogTest extends TestCase
                 $catalog->setting('integration.realtime.websocket_path')->normalize($unsafePath);
                 self::fail('Unsafe same-origin path was accepted: ' . $unsafePath);
             } catch (InvalidArgumentException) {
+                ++$rejected;
             }
         }
+
+        self::assertSame(6, $rejected);
     }
 
     public function testSecretDefinitionsNeverExposeDefaultSecretValues(): void

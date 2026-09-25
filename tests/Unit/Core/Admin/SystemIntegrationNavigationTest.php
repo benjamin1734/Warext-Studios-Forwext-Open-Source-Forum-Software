@@ -45,7 +45,7 @@ final class SystemIntegrationNavigationTest extends TestCase
             : [];
 
         return new PermissionAuthorizer(
-            new SystemIntegrationNavigationPermissionRepository($definition, $rules),
+            new PermissionEngine(new SystemIntegrationNavigationPermissionRepository($definition, $rules)),
             new SystemIntegrationNavigationAssignmentProvider(new UserAccessAssignment(
                 $actor,
                 EntityId::fromString('group:member'),
