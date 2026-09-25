@@ -21,6 +21,8 @@ final class AddonBackendRegistry
 
     public function register(AddonBackendRegistration $registration): void
     {
+        $registration->validate();
+
         $id = $registration->addonId->value();
         if (isset($this->registrations[$id])) {
             throw new InvalidArgumentException('Add-on backend registration is already loaded: ' . $id);

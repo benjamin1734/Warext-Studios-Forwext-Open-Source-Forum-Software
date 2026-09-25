@@ -9,6 +9,9 @@ use Forwext\Core\Addon\Backend\AddonBackendRegistration;
 use Forwext\Core\Addon\Backend\AddonBackendRegistry;
 use Forwext\Core\Addon\Backend\AddonSettingDefinition;
 use Forwext\Core\Addon\Backend\AddonSettingType;
+use Forwext\Core\Queue\QueueName;
+use Forwext\Core\Scheduler\CronExpression;
+use Forwext\Core\Scheduler\ScheduledTask;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -54,5 +57,21 @@ final class AddonBackendRegistryTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $registry->register(new AddonBackendRegistration(AddonId::fromString('Acme/Demo')));
+    }
+
+    public function testScheduledTaskCannotReferenceAnUnregisteredAddonJob(): void
+    {
+        $registration = new AddonBackendRegistration(AddonId::fromString('Acme/Demo'));
+        $registration->scheduledTask(new ScheduledTask(
+            'addon.acme.demo.hourly',
+            CronExpression::parse('0 * * * *'),
+            QueueName::fromString('addons'),
+            'addon.acme.demo.missing-job',
+        ));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('references an unregistered job type');
+
+        (new AddonBackendRegistry())->register($registration);
     }
 }

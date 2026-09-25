@@ -63,6 +63,7 @@ final class AddonBackendRegistration
         }
         $key = $migration->id()->value();
         $this->put($this->migrations, $key, $migration, 'migration');
+
         return $this;
     }
 
@@ -70,6 +71,7 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($definition->key, 'Add-on entity key');
         $this->put($this->entities, $definition->key, $definition, 'entity');
+
         return $this;
     }
 
@@ -77,6 +79,7 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($route->name(), 'Add-on route name');
         $this->put($this->routes, $route->name(), $route, 'route');
+
         return $this;
     }
 
@@ -85,6 +88,7 @@ final class AddonBackendRegistration
         $key = $permission->key()->value();
         $this->namespace->assertOwned($key, 'Add-on permission');
         $this->put($this->permissions, $key, $permission, 'permission');
+
         return $this;
     }
 
@@ -92,6 +96,7 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($setting->key, 'Add-on setting');
         $this->put($this->settings, $setting->key, $setting, 'setting');
+
         return $this;
     }
 
@@ -106,6 +111,7 @@ final class AddonBackendRegistration
             throw new InvalidArgumentException('Add-on ACP navigation must use its admin key and path namespace.');
         }
         $this->put($this->adminItems, $item->key, $item, 'ACP navigation');
+
         return $this;
     }
 
@@ -113,6 +119,7 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($handler->jobType(), 'Add-on job type');
         $this->put($this->jobs, $handler->jobType(), $handler, 'job');
+
         return $this;
     }
 
@@ -121,6 +128,7 @@ final class AddonBackendRegistration
         $this->namespace->assertOwned($task->name, 'Add-on scheduled task name');
         $this->namespace->assertOwned($task->jobType, 'Add-on scheduled task job type');
         $this->put($this->tasks, $task->name, $task, 'scheduled task');
+
         return $this;
     }
 
@@ -129,6 +137,7 @@ final class AddonBackendRegistration
         $type = $source->documentType();
         $this->namespace->assertOwned($type, 'Add-on search document type');
         $this->put($this->searchSources, $type, $source, 'search source');
+
         return $this;
     }
 
@@ -137,6 +146,7 @@ final class AddonBackendRegistration
         $this->namespace->assertOwned($definition->typeKey, 'Add-on notification type');
         $this->namespace->assertOwned($definition->categoryKey, 'Add-on notification category');
         $this->put($this->notifications, $definition->typeKey, $definition, 'notification');
+
         return $this;
     }
 
@@ -144,6 +154,7 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($definition->key, 'Add-on webhook');
         $this->put($this->webhooks, $definition->key, $definition, 'webhook');
+
         return $this;
     }
 
@@ -151,37 +162,99 @@ final class AddonBackendRegistration
     {
         $this->namespace->assertOwned($definition->key, 'Add-on content type');
         $this->put($this->contentTypes, $definition->key, $definition, 'content type');
+
         return $this;
     }
 
+    public function validate(): void
+    {
+        foreach ($this->tasks as $task) {
+            if (!isset($this->jobs[$task->jobType])) {
+                throw new InvalidArgumentException(sprintf(
+                    'Add-on scheduled task "%s" references an unregistered job type "%s".',
+                    $task->name,
+                    $task->jobType,
+                ));
+            }
+        }
+    }
+
     /** @return list<Migration> */
-    public function migrations(): array { return $this->values($this->migrations); }
+    public function migrations(): array
+    {
+        return $this->values($this->migrations);
+    }
+
     /** @return list<AddonEntityDefinition> */
-    public function entities(): array { return $this->values($this->entities); }
+    public function entities(): array
+    {
+        return $this->values($this->entities);
+    }
+
     /** @return list<Route> */
-    public function routes(): array { return $this->values($this->routes); }
+    public function routes(): array
+    {
+        return $this->values($this->routes);
+    }
+
     /** @return list<PermissionCatalogEntry> */
-    public function permissions(): array { return $this->values($this->permissions); }
+    public function permissions(): array
+    {
+        return $this->values($this->permissions);
+    }
+
     /** @return list<AddonSettingDefinition> */
-    public function settings(): array { return $this->values($this->settings); }
+    public function settings(): array
+    {
+        return $this->values($this->settings);
+    }
+
     public function settingDefinition(string $key): ?AddonSettingDefinition
     {
         return $this->settings[$key] ?? null;
     }
+
     /** @return list<AdminNavigationItem> */
-    public function adminItems(): array { return $this->values($this->adminItems); }
+    public function adminItems(): array
+    {
+        return $this->values($this->adminItems);
+    }
+
     /** @return list<QueueJobHandler> */
-    public function jobs(): array { return $this->values($this->jobs); }
+    public function jobs(): array
+    {
+        return $this->values($this->jobs);
+    }
+
     /** @return list<ScheduledTask> */
-    public function scheduledTasks(): array { return $this->values($this->tasks); }
+    public function scheduledTasks(): array
+    {
+        return $this->values($this->tasks);
+    }
+
     /** @return list<SearchContentSource> */
-    public function searchSources(): array { return $this->values($this->searchSources); }
+    public function searchSources(): array
+    {
+        return $this->values($this->searchSources);
+    }
+
     /** @return list<NotificationDefinition> */
-    public function notifications(): array { return $this->values($this->notifications); }
+    public function notifications(): array
+    {
+        return $this->values($this->notifications);
+    }
+
     /** @return list<AddonWebhookDefinition> */
-    public function webhooks(): array { return $this->values($this->webhooks); }
+    public function webhooks(): array
+    {
+        return $this->values($this->webhooks);
+    }
+
     /** @return list<AddonContentTypeDefinition> */
-    public function contentTypes(): array { return $this->values($this->contentTypes); }
+    public function contentTypes(): array
+    {
+        return $this->values($this->contentTypes);
+    }
 
     /** @template T @param array<string,T> $items @param T $value */
     private function put(array &$items, string $key, mixed $value, string $label): void
@@ -196,6 +269,7 @@ final class AddonBackendRegistration
     private function values(array $items): array
     {
         ksort($items, SORT_STRING);
+
         return array_values($items);
     }
 }
