@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.47-dev
+CURRENT_VERSION = 0.0.7.48-dev
 LAST_COMPLETED_MAIN_STEP = 16
-LAST_COMPLETED_SUBSTEP = 17.03
-CURRENT_STEP = 17.04
-LAST_COMMIT = d4e2442d915e69f9b7532d2b0c9a237a3f3b6f35
+LAST_COMPLETED_SUBSTEP = 17.04
+CURRENT_STEP = 17.05
+LAST_COMMIT = c2e9bd45acd61d87a6782f5470e07690ac7f06fd
 BLOCKERS = none
-NEXT_STEP = 17.04 - System/integration ACP
+NEXT_STEP = 17.05 - Health/logs/jobs/backup/maintenance ACP
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 17.04 - System/integration ACP
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.03`.
-- Current sub-step: `17.04 — System/integration ACP`.
-- Remaining roadmap work after 17.03: **23 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.04`.
+- Current sub-step: `17.05 — Health/logs/jobs/backup/maintenance ACP`.
+- Remaining roadmap work after 17.04: **22 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 17.04
+
+- Added a typed System/Integration configuration catalog covering Mail/SMTP, Google/Discord OAuth, Turnstile, AI providers, storage, cache, queue, search, realtime and API/webhook readiness.
+- Added dedicated `integration.manage` authorization layered with `acp.access`; built-in administrator gets allow while member/moderator templates remain denied.
+- Added native PHP `/admin/integrations` with server-side search, section filtering, responsive controls, safe reset, environment-override warnings and runtime capability visibility.
+- Added generated configuration persistence at `config/generated.php` with defaults → generated → environment precedence, cross-request locking and atomic replacement.
+- Secret values remain outside generated configuration and HTML snapshots; blank password controls write only to the encrypted secret store.
+- Secret Administration audit events record configured-state changes only and never include secret values; secret deletion requires exact integration-key confirmation.
+- Added bounded typed validation for HTTPS endpoints, OAuth redirect allowlists, same-origin WebSocket paths, enums, integer ranges and lists.
+- API/webhook activation remains read-only/disabled until roadmap step 19 provides the versioned API/webhook platform.
+- Added a dedicated ACP System/Integrations navigation section and permission-aware navigation entry.
+- Added catalog, generated-config concurrency, migration, navigation, CSRF/web-surface, secret-masking and SSRF/open-redirect boundary regression coverage.
+- Native cPanel minimum remains first-class; Redis/S3/external search/WebSocket remain optional advanced-runtime compositions.
+- Initial configuration core: `bd50bd9bc92977b5122fb217ff2f3ffafe7438d7`; hardening/navigation: `cbe1c7197d71f793eb7e684be2186591388542a9`; ACP surface: `b33ada8e0ed75d06056e2df725b887ce3d461fed`; tests/docs: `c3e608c22938282fdb7ffd66bde0ead9b99c511b`.
+- Patch/test corrections: `cd2c09ae13d08239599868bb88d75e3387178eaf`, `f252c2e66c16950a1991f48e229c9637a84ba326`, `70ea4a30b48f5d02f4f1bfc3331b8f3665697fd7`, `ffadd32c0768f942659a041b3767e7b304642618`, `5b3097f6f9a736eb919a9490e7388493ace1747c`, `c2e9bd45acd61d87a6782f5470e07690ac7f06fd`.
+- GitHub Actions build run `36108451982`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36108451988`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.48-dev`.
+- Next: `17.05 — Health/logs/jobs/backup/maintenance ACP`.
 
 ## Completed in 17.03
 

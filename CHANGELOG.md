@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.04 — System / Integration ACP
+
+- Added typed configuration and dedicated backend authorization for mail, OAuth, Turnstile, AI, storage, cache, queue, search, realtime and API/webhook readiness.
+- Added native PHP `/admin/integrations` with server-side search/filter, safe generated-config reset, environment-override visibility and runtime capabilities.
+- Added locked/atomic generated configuration plus encrypted secret management with secret values excluded from snapshots and Administration audit payloads.
+- Added typed URL/path/list/range validation, exact-key secret deletion confirmation and read-only step-19 API/webhook switches.
+- Added dedicated ACP navigation plus migration/security/UX regression coverage.
+- Implementation/fix commits: `bd50bd9bc92977b5122fb217ff2f3ffafe7438d7`, `cbe1c7197d71f793eb7e684be2186591388542a9`, `b33ada8e0ed75d06056e2df725b887ce3d461fed`, `c3e608c22938282fdb7ffd66bde0ead9b99c511b`, `cd2c09ae13d08239599868bb88d75e3387178eaf`, `f252c2e66c16950a1991f48e229c9637a84ba326`, `70ea4a30b48f5d02f4f1bfc3331b8f3665697fd7`, `ffadd32c0768f942659a041b3767e7b304642618`, `5b3097f6f9a736eb919a9490e7388493ace1747c`, `c2e9bd45acd61d87a6782f5470e07690ac7f06fd`.
+- GitHub Actions build run `36108451982` and DB smoke run `36108451988` both succeeded.
+
 ### 17.03 — First-party Module Manager
 
 - Added typed enabled/disabled/uninstalled lifecycle state, dependency/conflict graph validation and dedicated `module.manage` authorization.
