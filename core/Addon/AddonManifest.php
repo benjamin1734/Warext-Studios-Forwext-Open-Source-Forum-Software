@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Addon;
 
+use Forwext\Core\Addon\Security\AddonCapability;
 use Forwext\Core\Migration\SemanticVersion;
 use InvalidArgumentException;
 use JsonException;
@@ -14,10 +15,13 @@ final readonly class AddonManifest
     public array $requires;
     /** @var array<string,AddonVersionConstraint> */
     public array $conflicts;
+    /** @var list<AddonCapability> */
+    public array $capabilities;
 
     /**
      * @param array<string,AddonVersionConstraint> $requires
      * @param array<string,AddonVersionConstraint> $conflicts
+     * @param list<AddonCapability> $capabilities
      */
     private function __construct(
         public AddonId $id,
@@ -28,9 +32,11 @@ final readonly class AddonManifest
         array $requires,
         array $conflicts,
         public AddonDataRetentionPolicy $dataRetention,
+        array $capabilities,
     ) {
         $this->requires = $requires;
         $this->conflicts = $conflicts;
+        $this->capabilities = $capabilities;
     }
 
     public static function fromJson(string $json): self
@@ -48,7 +54,7 @@ final readonly class AddonManifest
             throw new InvalidArgumentException('Add-on manifest must be a JSON object.');
         }
 
-        self::assertOnlyKeys($data, ['id','version','title','description','requires','conflicts','data_retention'], 'manifest');
+        self::assertOnlyKeys($data, ['id','version','title','description','requires','conflicts','data_retention','capabilities'], 'manifest');
         $id = AddonId::fromString(self::requiredString($data, 'id', 129));
         $version = AddonVersion::parse(self::requiredString($data, 'version', 64));
         $title = self::requiredString($data, 'title', 100);
@@ -79,6 +85,22 @@ final readonly class AddonManifest
         $retention = AddonDataRetentionPolicy::tryFrom($retentionRaw)
             ?? throw new InvalidArgumentException('Add-on data retention policy is invalid.');
 
+        $capabilityData = $data['capabilities'] ?? [];
+        if (!is_array($capabilityData) || !array_is_list($capabilityData) || count($capabilityData) > 32) {
+            throw new InvalidArgumentException('Add-on capability disclosure must be a bounded list.');
+        }
+        $capabilities = [];
+        foreach ($capabilityData as $rawCapability) {
+            if (!is_string($rawCapability)) {
+                throw new InvalidArgumentException('Add-on capability disclosure contains an invalid entry.');
+            }
+            $capability = AddonCapability::tryFrom($rawCapability)
+                ?? throw new InvalidArgumentException('Add-on capability disclosure contains an unknown capability.');
+            $capabilities[$capability->value] = $capability;
+        }
+        ksort($capabilities, SORT_STRING);
+        $capabilities = array_values($capabilities);
+
         return new self(
             $id,
             $version,
@@ -88,6 +110,7 @@ final readonly class AddonManifest
             $requires,
             $conflicts,
             $retention,
+            $capabilities,
         );
     }
 
@@ -108,6 +131,7 @@ final readonly class AddonManifest
                 ],
                 'conflicts'=>['addons'=>$conflicts],
                 'data_retention'=>$this->dataRetention->value,
+                'capabilities'=>array_map(static fn (AddonCapability $capability): string => $capability->value, $this->capabilities),
             ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         } catch (JsonException $exception) {
             throw new InvalidArgumentException('Unable to normalize add-on manifest.', previous:$exception);

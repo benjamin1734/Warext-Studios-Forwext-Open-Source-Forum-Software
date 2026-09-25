@@ -7,6 +7,7 @@ namespace Forwext\Tools\Addon;
 use FilesystemIterator;
 use Forwext\Core\Addon\AddonId;
 use Forwext\Core\Addon\AddonPackageInspector;
+use Forwext\Core\Addon\Security\AddonCapabilityWarningService;
 use Forwext\Core\Migration\SemanticVersion;
 use ParseError;
 use RecursiveDirectoryIterator;
@@ -17,7 +18,10 @@ final readonly class AddonCompatibilityChecker
 {
     private string $root;
 
-    public function __construct(string $projectRoot)
+    public function __construct(
+        string $projectRoot,
+        private AddonCapabilityWarningService $capabilityWarnings = new AddonCapabilityWarningService(),
+    )
     {
         $root = realpath($projectRoot);
         if (!is_string($root) || !is_file($root . '/VERSION')) {
@@ -87,6 +91,10 @@ final readonly class AddonCompatibilityChecker
 
         if (is_dir($packagePath . '/vendor')) {
             $warnings[] = 'Bundled vendor/ dependencies are present; review licenses and PHP 8.4 compatibility.';
+        }
+        foreach ($this->capabilityWarnings->warnings($package->manifest) as $warning) {
+            $warnings[] = 'Capability disclosure [' . $warning->risk->value . '] '
+                . $warning->capability->value . ': ' . $warning->message;
         }
 
         sort($errors, SORT_STRING);

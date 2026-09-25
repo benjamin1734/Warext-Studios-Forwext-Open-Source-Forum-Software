@@ -47,6 +47,7 @@ final readonly class AddonScaffolder
                 'addons'=>[],
             ],
             'data_retention'=>'retain_only',
+            'capabilities'=>[],
         ];
 
         try {

@@ -103,6 +103,92 @@ final class AddonDependencyResolver
         }
     }
 
+    /**
+     * Resolve a closed package set into deterministic dependency-first install order.
+     *
+     * @param iterable<AddonManifest> $manifests
+     * @return list<AddonManifest>
+     */
+    public function resolveInstallOrder(iterable $manifests): array
+    {
+        $map = [];
+        foreach ($manifests as $manifest) {
+            if (!$manifest instanceof AddonManifest) {
+                throw new InvalidArgumentException('Add-on dependency plan contains an invalid manifest.');
+            }
+            $id = $manifest->id->value();
+            if (isset($map[$id])) {
+                throw new InvalidArgumentException('Add-on dependency plan contains a duplicate package: ' . $id);
+            }
+            $map[$id] = $manifest;
+        }
+        ksort($map, SORT_STRING);
+
+        foreach ($map as $manifest) {
+            foreach ($manifest->requires as $requiredId=>$constraint) {
+                $required = $map[$requiredId] ?? null;
+                if (!$required instanceof AddonManifest) {
+                    throw new InvalidArgumentException('Add-on dependency plan is missing required package: ' . $requiredId);
+                }
+                if (!$constraint->matches($required->version)) {
+                    throw new InvalidArgumentException('Add-on dependency plan contains incompatible version: ' . $requiredId);
+                }
+            }
+        }
+
+        $values = array_values($map);
+        for ($i = 0, $count = count($values); $i < $count; ++$i) {
+            for ($j = $i + 1; $j < $count; ++$j) {
+                if ($this->manifestsConflict($values[$i], $values[$j])) {
+                    throw new InvalidArgumentException(
+                        'Add-on dependency plan contains conflicting packages: '
+                        . $values[$i]->id->value() . ' / ' . $values[$j]->id->value(),
+                    );
+                }
+            }
+        }
+
+        $visiting = [];
+        $visited = [];
+        $ordered = [];
+        foreach (array_keys($map) as $id) {
+            $this->visitManifest($id, $map, $visiting, $visited, $ordered);
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @param array<string,AddonManifest> $map
+     * @param array<string,bool> $visiting
+     * @param array<string,bool> $visited
+     * @param list<AddonManifest> $ordered
+     */
+    private function visitManifest(
+        string $id,
+        array $map,
+        array &$visiting,
+        array &$visited,
+        array &$ordered,
+    ): void {
+        if (isset($visited[$id])) {
+            return;
+        }
+        if (isset($visiting[$id])) {
+            throw new InvalidArgumentException('Add-on dependency cycle detected at: ' . $id);
+        }
+
+        $visiting[$id] = true;
+        $dependencies = array_keys($map[$id]->requires);
+        sort($dependencies, SORT_STRING);
+        foreach ($dependencies as $dependency) {
+            $this->visitManifest($dependency, $map, $visiting, $visited, $ordered);
+        }
+        unset($visiting[$id]);
+        $visited[$id] = true;
+        $ordered[] = $map[$id];
+    }
+
     /** @param array<string,AddonInstallation> $active */
     private function assertGraphCompatible(array $active): void
     {
