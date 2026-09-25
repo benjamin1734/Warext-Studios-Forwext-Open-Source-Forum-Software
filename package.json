@@ -10,7 +10,11 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix --max-warnings=0",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "sdk:generate": "php tools/generate-api-v1-sdk-contract.php",
+    "sdk:generate:check": "php tools/generate-api-v1-sdk-contract.php --check",
+    "sdk:typecheck": "tsc -p packages/sdk/tsconfig.json --noEmit",
+    "sdk:build": "tsc -p packages/sdk/tsconfig.build.json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

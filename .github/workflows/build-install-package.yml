@@ -178,6 +178,25 @@ jobs:
       - name: Run PHPUnit on PHP 8.5
         run: vendor/bin/phpunit --configuration=phpunit.xml.dist
 
+      - name: Setup Node.js 22 for SDK validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install TypeScript tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify generated TypeScript SDK contract
+        run: npm run sdk:generate:check
+
+      - name: Typecheck and build TypeScript SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run sdk:typecheck
+          npm run sdk:build
+          rm -rf packages/sdk/dist
+
       - name: Build production vendor tree against PHP 8.4.0 baseline
         shell: bash
         run: |
