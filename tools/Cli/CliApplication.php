@@ -12,7 +12,7 @@ final class CliApplication
     private array $commands = [];
 
     /** @param iterable<CliCommand> $commands */
-    public function __construct(array|iterable $commands = [])
+    public function __construct(iterable $commands = [])
     {
         foreach ($commands as $command) {
             $this->register($command);
