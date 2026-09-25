@@ -148,9 +148,9 @@ final readonly class AddonLifecycleService
         }
         $this->resolver->assertCanUninstall($id, $all);
 
-        $dataState = AddonDataState::Retained;
+        $dataState = $current->dataState;
         $beforeSave = null;
-        if ($mode === AddonUninstallMode::DeleteData) {
+        if ($mode === AddonUninstallMode::DeleteData && $current->dataState !== AddonDataState::Purged) {
             if ($current->manifest->dataRetention !== AddonDataRetentionPolicy::PurgeSupported) {
                 throw new InvalidArgumentException('This add-on manifest does not support data purge.');
             }

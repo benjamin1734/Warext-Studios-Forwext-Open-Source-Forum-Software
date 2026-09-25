@@ -59,6 +59,17 @@ final class AddonLifecycleServiceTest extends TestCase
         self::assertSame(AddonState::Disabled, $saved->state);
         self::assertSame(AddonDataState::Purged, $saved->dataState);
 
+        self::service($actor, $repository)->uninstall(
+            $actor,
+            AddonId::fromString('Acme/Demo'),
+            AddonUninstallMode::KeepData,
+            AuditRequestId::fromString('uninstall-preserve-purged'),
+            self::now(),
+        );
+        $uninstalled = $repository->find(AddonId::fromString('Acme/Demo'));
+        self::assertInstanceOf(AddonInstallation::class, $uninstalled);
+        self::assertSame(AddonDataState::Purged, $uninstalled->dataState);
+
         $repository = self::repository(['Acme/Demo'=>$recorded]);
 
         $this->expectException(InvalidArgumentException::class);
