@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.02 — API security/rate/audit
+
+- Added personal-token, API-key and OAuth-type API principal contexts backed by digest-only credential persistence, expiry/revocation and typed scopes.
+- Added protected-route scope authorization plus account-permission intersection so API credentials cannot bypass the common Forwext role/permission engine.
+- Added owner-filtered private reads for notifications, support tickets and support/bug conversation summaries.
+- Added shared-store API rate limiting, consistent JSON security/routing errors and authenticated API audit events without logging raw credentials.
+- Added additive API credential migration and production WebApplicationFactory wiring while keeping the cPanel runtime dependency profile unchanged.
+- Implementation/fix commits: `2f12dfb1bafe2893c7676942f9ef4d2349a3544f`, `656dabf5065d3935d16faea340dd5a0571c27111`, `218ee3cb5a37a2922a00aea31216ffd05392c1ac`, `b1d7ec94b1520df9ffcd9b47392322492e749745`, `babb535328456ce50c241a5a0f91efde9356ca35`, `fd2cfdebe2d74a414d16c6352158854ccd120471`, `3677ce7b4d8218a4972b8715b159e3cdfa2a499b`.
+- GitHub Actions build run `36171959297` and database migration smoke run `36171959355` succeeded.
+
 ### 19.01 — Versioned REST API
 
 - Added the typed `/api/v1` endpoint/resource/scope registry and service document.

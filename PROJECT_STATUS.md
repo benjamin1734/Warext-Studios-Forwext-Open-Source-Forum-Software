@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.57-dev
+CURRENT_VERSION = 0.0.7.58-dev
 LAST_COMPLETED_MAIN_STEP = 18
-LAST_COMPLETED_SUBSTEP = 19.01
-CURRENT_STEP = 19.02
-LAST_COMMIT = 46945e328f38c2b02b307d86234504a9d227cae5
+LAST_COMPLETED_SUBSTEP = 19.02
+CURRENT_STEP = 19.03
+LAST_COMMIT = 3677ce7b4d8218a4972b8715b159e3cdfa2a499b
 BLOCKERS = none
-NEXT_STEP = 19.02 - API security/rate/audit
+NEXT_STEP = 19.03 - Webhook platformu
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 19.02 - API security/rate/audit
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01`.
-- Current sub-step: `19.02 — API security/rate/audit`.
-- Remaining roadmap work after 19.01: **13 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.02`.
+- Current sub-step: `19.03 — Webhook platformu`.
+- Remaining roadmap work after 19.02: **12 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 19.02
+
+- Added database-backed API credential records for personal access tokens, API keys and OAuth-type API access-token context.
+- Raw credential secrets are returned only when issued; persistence stores only SHA-256 digests, typed credential kind, owner, scopes, expiry/revocation and last-used metadata.
+- Added fail-closed credential presentation rules: PAT/OAuth credentials use Bearer auth, API keys use `X-API-Key`, malformed/expired/revoked/wrong-channel credentials are rejected, and supplying multiple credential mechanisms in one request is rejected.
+- Added scope authorization for protected v1 endpoints and intersected token scopes with the account's existing Forwext permission engine so a credential cannot restore a permission removed from the user.
+- Added real owner-filtered private read models for notifications, support tickets and first-party support/bug conversation summaries; private records cannot be selected for another principal.
+- Added API-specific rate limiting over the shared `RateLimitStore` abstraction: separate anonymous and credential policies, credential-id or canonical client-IP keys, JSON 429 errors, retry metadata and standard rate-limit headers.
+- Added authenticated API request audit events to the existing core audit stream with the new `api` scope. Audit snapshots contain route/resource/scope/status plus credential id/type only; raw secrets and authorization headers are never recorded.
+- Added consistent JSON error envelopes for authentication, insufficient scope, account-permission denial, rate limits, invalid requests and API router-level 404/405 responses while preserving normal non-API router behavior.
+- Existing bounded pagination from 19.01 remains authoritative for public and private collection reads.
+- Added additive migration `20260925185000_api_v1_credential_security`; normal upgrade does not reset existing data.
+- OAuth in 19.02 is an API principal/access-token context, not a new OAuth authorization server and not a replacement for the existing connected-account OAuth integrations.
+- Standard cPanel deployment uses the existing PHP/database runtime and file-backed rate-limit store; no mandatory Redis, Node, Docker, Supervisor or daemon requirement was introduced.
+- Implementation/fix commits: `2f12dfb1bafe2893c7676942f9ef4d2349a3544f`, `656dabf5065d3935d16faea340dd5a0571c27111`, `218ee3cb5a37a2922a00aea31216ffd05392c1ac`, `b1d7ec94b1520df9ffcd9b47392322492e749745`, `babb535328456ce50c241a5a0f91efde9356ca35`, `fd2cfdebe2d74a414d16c6352158854ccd120471`, `3677ce7b4d8218a4972b8715b159e3cdfa2a499b`.
+- GitHub Actions build run `36171959297`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel package build passed.
+- Database migration smoke run `36171959355`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Version: `0.0.7.58-dev`.
+- Next: `19.03 — Webhook platformu`.
 
 ## Completed in 19.01
 
