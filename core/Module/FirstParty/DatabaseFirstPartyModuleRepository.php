@@ -164,6 +164,31 @@ final readonly class DatabaseFirstPartyModuleRepository implements FirstPartyMod
         ));
     }
 
+    public function deleteSetting(
+        string $moduleKey,
+        FirstPartyModuleScope $scope,
+        string $scopeId,
+        string $settingKey,
+    ): void {
+        self::assertModuleKey($moduleKey);
+        self::assertScopeId($scope, $scopeId);
+        if (preg_match('/^[a-z][a-z0-9_.-]{1,63}$/D', $settingKey) !== 1) {
+            throw new InvalidArgumentException('First-party module setting key is invalid.');
+        }
+
+        $this->database->execute(new CompiledQuery(
+            'DELETE FROM forwext_first_party_module_settings '
+            . 'WHERE module_key=:module_key AND scope_type=:scope_type '
+            . 'AND scope_id=:scope_id AND setting_key=:setting_key',
+            [
+                'module_key'=>$moduleKey,
+                'scope_type'=>$scope->value,
+                'scope_id'=>$scopeId,
+                'setting_key'=>$settingKey,
+            ],
+        ));
+    }
+
     public function deleteSettings(string $moduleKey): void
     {
         self::assertModuleKey($moduleKey);

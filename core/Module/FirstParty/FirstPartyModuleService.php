@@ -34,18 +34,38 @@ final readonly class FirstPartyModuleService
     ) {
     }
 
-    public function managementSnapshot(EntityId $actor, ?string $selectedModuleKey = null): array
-    {
+    public function managementSnapshot(
+        EntityId $actor,
+        ?string $selectedModuleKey = null,
+        FirstPartyModuleScope $selectedScope = FirstPartyModuleScope::Global,
+        ?string $selectedScopeId = null,
+    ): array {
         $this->requireManage($actor);
         $records = $this->records();
         $selected = $selectedModuleKey === null ? null : $this->registry->require($selectedModuleKey);
         $settings = [];
+        $scopeTargets = [];
+        $resolvedScopeId = null;
+        $pendingStorage = 0;
+
         if ($selected !== null) {
-            $settings['global'] = $this->repository->settings(
-                $selected->key,
-                FirstPartyModuleScope::Global,
-                'global',
-            );
+            $scopeTargets = $this->scopeTargets($selectedScope);
+            if (!$selectedScope->needsTarget()) {
+                $resolvedScopeId = 'global';
+                $settings = $this->repository->settings(
+                    $selected->key,
+                    FirstPartyModuleScope::Global,
+                    'global',
+                );
+            } elseif ($selectedScopeId !== null && $selectedScopeId !== '') {
+                $resolvedScopeId = $this->scopeId($selectedScope, $selectedScopeId);
+                $settings = $this->repository->settings(
+                    $selected->key,
+                    $selectedScope,
+                    $resolvedScopeId,
+                );
+            }
+            $pendingStorage = $this->repository->pendingStoragePathCount($selected->key);
         }
 
         return [
@@ -53,7 +73,11 @@ final readonly class FirstPartyModuleService
             'records'=>$records,
             'selected'=>$selected,
             'selected_record'=>$selected === null ? null : $records[$selected->key],
+            'selected_scope'=>$selectedScope,
+            'selected_scope_id'=>$resolvedScopeId,
             'settings'=>$settings,
+            'scope_targets'=>$scopeTargets,
+            'pending_storage_count'=>$pendingStorage,
             'dependents'=>$selected === null ? [] : $this->registry->dependentsOf($selected->key),
             'conflicts'=>$selected === null ? [] : $this->registry->conflictsOf($selected->key),
         ];
@@ -350,6 +374,66 @@ final readonly class FirstPartyModuleService
         });
     }
 
+    public function resetSetting(
+        EntityId $actor,
+        string $moduleKey,
+        string $settingKey,
+        FirstPartyModuleScope $scope,
+        ?string $scopeId,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): void {
+        $this->requireManage($actor);
+        $definition = $this->registry->require($moduleKey);
+        if ($this->repository->state($moduleKey)->state === FirstPartyModuleState::Uninstalled) {
+            throw new InvalidArgumentException('Cannot edit settings for an uninstalled module.');
+        }
+        $setting = $definition->setting($settingKey)
+            ?? throw new InvalidArgumentException('Unknown module setting.');
+        if (!$setting->supports($scope)) {
+            throw new InvalidArgumentException('Module setting does not support this scope.');
+        }
+
+        $resolvedScopeId = $this->scopeId($scope, $scopeId);
+        $before = $this->repository->settings($moduleKey, $scope, $resolvedScopeId);
+        if (!array_key_exists($settingKey, $before)) {
+            return;
+        }
+
+        $event = $this->event(
+            $actor,
+            'module.setting.reset',
+            $moduleKey,
+            [
+                'scope'=>$scope->value,
+                'scope_id'=>$resolvedScopeId,
+                'setting'=>$settingKey,
+                'value'=>$before[$settingKey],
+            ],
+            [
+                'scope'=>$scope->value,
+                'scope_id'=>$resolvedScopeId,
+                'setting'=>$settingKey,
+                'override_removed'=>true,
+            ],
+            $requestId,
+            $at,
+        );
+        $this->audit->mutate($event, function () use (
+            $moduleKey,
+            $scope,
+            $resolvedScopeId,
+            $settingKey,
+        ): void {
+            $this->repository->deleteSetting(
+                $moduleKey,
+                $scope,
+                $resolvedScopeId,
+                $settingKey,
+            );
+        });
+    }
+
     public function effectiveSetting(
         string $moduleKey,
         string $settingKey,
@@ -463,6 +547,44 @@ final readonly class FirstPartyModuleService
         }
 
         return $scopeId;
+    }
+
+    /** @return list<array{id:string,label:string}> */
+    private function scopeTargets(FirstPartyModuleScope $scope): array
+    {
+        $query = match ($scope) {
+            FirstPartyModuleScope::Global => null,
+            FirstPartyModuleScope::Forum => new CompiledQuery(
+                "SELECT node_id AS id,title AS label FROM forwext_nodes WHERE node_type='forum' "
+                . 'ORDER BY title,node_id LIMIT 200',
+            ),
+            FirstPartyModuleScope::Group => new CompiledQuery(
+                'SELECT group_id AS id,name AS label FROM forwext_user_groups '
+                . 'ORDER BY sort_order,name,group_id LIMIT 200',
+            ),
+            FirstPartyModuleScope::Thread => new CompiledQuery(
+                'SELECT thread_id AS id,title AS label FROM forwext_threads '
+                . 'ORDER BY updated_at_utc DESC,thread_id DESC LIMIT 100',
+            ),
+            FirstPartyModuleScope::Post => new CompiledQuery(
+                "SELECT post_id AS id,CONCAT('Post #',position,' · ',thread_id) AS label FROM forwext_posts "
+                . 'ORDER BY updated_at_utc DESC,post_id DESC LIMIT 100',
+            ),
+        };
+        if (!$query instanceof CompiledQuery) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($this->database->fetchAll($query) as $row) {
+            $id = $row['id'] ?? null;
+            $label = $row['label'] ?? null;
+            if (is_string($id) && $id !== '' && is_string($label) && $label !== '') {
+                $result[] = ['id'=>$id,'label'=>$label];
+            }
+        }
+
+        return $result;
     }
 
     private function requireManage(EntityId $actor): void

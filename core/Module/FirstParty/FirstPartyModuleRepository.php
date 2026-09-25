@@ -35,6 +35,13 @@ interface FirstPartyModuleRepository
         DateTimeImmutable $at,
     ): void;
 
+    public function deleteSetting(
+        string $moduleKey,
+        FirstPartyModuleScope $scope,
+        string $scopeId,
+        string $settingKey,
+    ): void;
+
     public function deleteSettings(string $moduleKey): void;
 
     /** @param list<string> $paths */

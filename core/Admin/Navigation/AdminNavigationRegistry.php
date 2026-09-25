@@ -219,6 +219,15 @@ final readonly class AdminNavigationRegistry
                 ['layout', 'widget', 'slot', 'sidebar', 'header', 'footer'],
             ),
             new AdminNavigationItem(
+                'admin.modules',
+                'First-party Modüller',
+                'Enabled/disabled/uninstalled lifecycle, dependency graph, scoped settings ve keep/delete data politikası.',
+                AdminNavigationSection::Community,
+                '/admin/modules',
+                ['module.manage'],
+                ['module', 'modül', 'lifecycle', 'dependency', 'conflict', 'uninstall', 'scope'],
+            ),
+            new AdminNavigationItem(
                 'admin.rewards',
                 'Ödül Provider Sistemi',
                 'Ortak reward tanımları, provider hedefleri, binding ve retry işlemleri.',

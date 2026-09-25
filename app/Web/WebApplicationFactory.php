@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
+use Forwext\App\Web\Admin\AdminModuleManagerHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
@@ -238,6 +239,12 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
+use Forwext\Core\Module\FirstParty\DatabaseFirstPartyModuleRepository;
+use Forwext\Core\Module\FirstParty\FirstPartyModuleConditionalMiddleware;
+use Forwext\Core\Module\FirstParty\FirstPartyModuleDataPurger;
+use Forwext\Core\Module\FirstParty\FirstPartyModuleRegistry;
+use Forwext\Core\Module\FirstParty\FirstPartyModuleRouteMiddleware;
+use Forwext\Core\Module\FirstParty\FirstPartyModuleService;
 use Forwext\Core\Marketplace\DatabaseMarketplaceExternalSaleRepository;
 use Forwext\Core\Marketplace\DatabaseMarketplacePurchaseRepository;
 use Forwext\Core\Marketplace\Delivery\DatabaseMarketplaceDeliveryRepository;
@@ -392,6 +399,20 @@ final readonly class WebApplicationFactory
             new DatabaseDisciplineAuthenticationAvailability($database),
         );
         $storage = $this->localStorage($config);
+        $firstPartyModuleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
+        $firstPartyModuleRepository = new DatabaseFirstPartyModuleRepository($database);
+        $firstPartyModuleService = new FirstPartyModuleService(
+            $database,
+            $firstPartyModuleRegistry,
+            $firstPartyModuleRepository,
+            new FirstPartyModuleDataPurger($database, $firstPartyModuleRepository, $storage),
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
+        $firstPartyModuleRouteMiddleware = new FirstPartyModuleRouteMiddleware(
+            $firstPartyModuleRegistry,
+            $firstPartyModuleRepository,
+        );
         $mediaService = new ProfileMediaService($profileStore, $storage, $accessPolicy);
         $musicService = new ProfileMusicService(
             new DatabaseProfileMusicStore($database),
@@ -714,6 +735,12 @@ final readonly class WebApplicationFactory
             $basePath,
             new EasterEggRenderer(),
         );
+        $moduleEasterEggMiddleware = new FirstPartyModuleConditionalMiddleware(
+            'easter-egg',
+            $firstPartyModuleRegistry,
+            $firstPartyModuleRepository,
+            $easterEggMiddleware,
+        );
 
         $advertisingMiddleware = new AdvertisingMiddleware(
             $advertising,
@@ -723,6 +750,12 @@ final readonly class WebApplicationFactory
             new AdvertisingRenderer($basePath),
             $basePath,
             strtolower((string) parse_url(RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')), PHP_URL_SCHEME)) === 'https',
+        );
+        $moduleAdvertisingMiddleware = new FirstPartyModuleConditionalMiddleware(
+            'advertising',
+            $firstPartyModuleRegistry,
+            $firstPartyModuleRepository,
+            $advertisingMiddleware,
         );
 
         $giveawayFingerprint = new GiveawayFingerprint(
@@ -867,6 +900,12 @@ final readonly class WebApplicationFactory
             $browserDeviceClassifier,
             $config->requireString('authentication.session.cookie_name'),
         );
+        $moduleAnalyticsMiddleware = new FirstPartyModuleConditionalMiddleware(
+            'analytics',
+            $firstPartyModuleRegistry,
+            $firstPartyModuleRepository,
+            $analyticsMiddleware,
+        );
         $attachmentServices = new AttachmentServiceResolver(
             new DatabaseAttachmentRepository($database, $attachmentQuota),
             $posts,
@@ -914,6 +953,7 @@ final readonly class WebApplicationFactory
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $adminNavigationCsrf = $this->adminNavigationCsrfMiddleware($config);
         $adminCommunityCsrf = $this->adminCommunityCsrfMiddleware($config);
+        $moduleManagerCsrf = $this->moduleManagerCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
@@ -1697,6 +1737,13 @@ final readonly class WebApplicationFactory
             ));
         }
         $routes->add(new Route(
+            'admin.modules',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/modules'),
+            new AdminModuleManagerHandler($firstPartyModuleService, $viewerResolver, $basePath),
+            [$moduleManagerCsrf],
+        ));
+        $routes->add(new Route(
             'appearance.guide',
             [HttpMethod::Get],
             new PathTemplate('/admin/appearance'),
@@ -1764,7 +1811,12 @@ final readonly class WebApplicationFactory
             new ProfileUrlSettingsHandler($profileUrlService, $viewerResolver, $basePath), [$this->profileUrlCsrfMiddleware($config)],
         ));
 
-        return new Router($routes, $basePath, [$easterEggMiddleware, $advertisingMiddleware, $analyticsMiddleware]);
+        return new Router($routes, $basePath, [
+            $firstPartyModuleRouteMiddleware,
+            $moduleEasterEggMiddleware,
+            $moduleAdvertisingMiddleware,
+            $moduleAnalyticsMiddleware,
+        ]);
     }
 
     public function decorateLegacyEasterEgg(Request $request, Response $response): Response
@@ -1801,9 +1853,17 @@ final readonly class WebApplicationFactory
             $basePath,
             new EasterEggRenderer(),
         );
+        $moduleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
+        $moduleRepository = new DatabaseFirstPartyModuleRepository($database);
+        $moduleMiddleware = new FirstPartyModuleConditionalMiddleware(
+            'easter-egg',
+            $moduleRegistry,
+            $moduleRepository,
+            $middleware,
+        );
         $routed = $request->withAttribute(Router::ATTRIBUTE_ROUTE_NAME, 'legacy.path');
 
-        return $middleware->process(
+        return $moduleMiddleware->process(
             $routed,
             new CallableRequestHandler(static fn (Request $_request): Response => $response),
         );
@@ -1979,6 +2039,11 @@ final readonly class WebApplicationFactory
     private function adminNavigationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'admin-navigation', 'forwext.csrf.admin-navigation.v1');
+    }
+
+    private function moduleManagerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'module-manager', 'forwext.csrf.module-manager.v1');
     }
 
     private function themeCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
