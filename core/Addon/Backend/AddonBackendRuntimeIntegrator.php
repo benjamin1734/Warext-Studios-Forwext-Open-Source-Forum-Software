@@ -12,6 +12,35 @@ use Forwext\Core\Search\Lifecycle\SearchContentSourceRegistry;
 
 final readonly class AddonBackendRuntimeIntegrator
 {
+    public function applyRegistry(
+        AddonBackendRegistry $registry,
+        RouteCollection $routes,
+        QueueJobHandlerRegistry $jobs,
+        SchedulerRegistry $scheduler,
+        SearchContentSourceRegistry $search,
+        NotificationRegistry $notifications,
+    ): void {
+        $routeProbe = clone $routes;
+        $jobProbe = clone $jobs;
+        $schedulerProbe = clone $scheduler;
+        $searchProbe = clone $search;
+        $notificationProbe = clone $notifications;
+
+        foreach ($registry->all() as $registration) {
+            $this->applyInto(
+                $registration,
+                $routeProbe,
+                $jobProbe,
+                $schedulerProbe,
+                $searchProbe,
+                $notificationProbe,
+            );
+        }
+        foreach ($registry->all() as $registration) {
+            $this->applyInto($registration, $routes, $jobs, $scheduler, $search, $notifications);
+        }
+    }
+
     public function apply(
         AddonBackendRegistration $registration,
         RouteCollection $routes,
