@@ -10,7 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
-use Forwext\App\Web\Admin\AdminModuleManagerHandler;
+use Forwext\App\Web\Admin\AdminModuleManagerHandler;\nuse Forwext\App\Web\Admin\SystemIntegrationHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderExportHandler;
 use Forwext\App\Web\Appearance\LayoutBuilderHandler;
@@ -147,7 +147,7 @@ use Forwext\Core\Analytics\Commerce\DatabaseCommerceAnalyticsRepository;
 use Forwext\Core\Admin\AdminInformationArchitectureService;
 use Forwext\Core\Admin\Community\AdminCommunitySection;
 use Forwext\Core\Admin\Community\AdminCommunityService;
-use Forwext\Core\Admin\Dashboard\AdminActionQueueService;
+use Forwext\Core\Admin\Dashboard\AdminActionQueueService;\nuse Forwext\Core\Admin\Integration\GeneratedConfigStore;\nuse Forwext\Core\Admin\Integration\SystemIntegrationCatalog;\nuse Forwext\Core\Admin\Integration\SystemIntegrationService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
@@ -485,6 +485,14 @@ final readonly class WebApplicationFactory
             new DatabaseAdminNavigationPreferenceRepository($database),
             new AdminActionQueueService($database, $authorizer),
             $authorizer,
+        );
+        $systemIntegrations = new SystemIntegrationService(
+            SystemIntegrationCatalog::coreDefaults(),
+            $config,
+            new GeneratedConfigStore($this->projectRoot . '/config/generated.php'),
+            $secretStore,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
         $appearanceGuide = new AppearanceGuideService($authorizer);
         $layoutSlots = UiSlotRegistry::withCoreDefaults();
@@ -953,7 +961,7 @@ final readonly class WebApplicationFactory
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $adminNavigationCsrf = $this->adminNavigationCsrfMiddleware($config);
         $adminCommunityCsrf = $this->adminCommunityCsrfMiddleware($config);
-        $moduleManagerCsrf = $this->moduleManagerCsrfMiddleware($config);
+        $moduleManagerCsrf = $this->moduleManagerCsrfMiddleware($config);\n        $systemIntegrationCsrf = $this->systemIntegrationCsrfMiddleware($config);
         $analyticsReportCsrf = $this->analyticsReportCsrfMiddleware($config);
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
@@ -1744,6 +1752,13 @@ final readonly class WebApplicationFactory
             [$moduleManagerCsrf],
         ));
         $routes->add(new Route(
+            'admin.integrations',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/integrations'),
+            new SystemIntegrationHandler($systemIntegrations, $viewerResolver, $basePath),
+            [$systemIntegrationCsrf],
+        ));
+        $routes->add(new Route(
             'appearance.guide',
             [HttpMethod::Get],
             new PathTemplate('/admin/appearance'),
@@ -2044,6 +2059,11 @@ final readonly class WebApplicationFactory
     private function moduleManagerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'module-manager', 'forwext.csrf.module-manager.v1');
+    }
+
+    private function systemIntegrationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'system-integration', 'forwext.csrf.system-integration.v1');
     }
 
     private function themeCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
