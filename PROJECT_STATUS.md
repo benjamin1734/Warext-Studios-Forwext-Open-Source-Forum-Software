@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.58-dev
+CURRENT_VERSION = 0.0.7.59-dev
 LAST_COMPLETED_MAIN_STEP = 18
-LAST_COMPLETED_SUBSTEP = 19.02
-CURRENT_STEP = 19.03
-LAST_COMMIT = 3677ce7b4d8218a4972b8715b159e3cdfa2a499b
+LAST_COMPLETED_SUBSTEP = 19.03
+CURRENT_STEP = 19.04
+LAST_COMMIT = c2f6c1b789c41c58bf438f0b251e59ad647adf5d
 BLOCKERS = none
-NEXT_STEP = 19.03 - Webhook platformu
+NEXT_STEP = 19.04 - TypeScript SDK
 ```
 
 ## Current position
@@ -21,13 +21,33 @@ NEXT_STEP = 19.03 - Webhook platformu
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.02`.
-- Current sub-step: `19.03 — Webhook platformu`.
-- Remaining roadmap work after 19.02: **12 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.03`.
+- Current sub-step: `19.04 — TypeScript SDK`.
+- Remaining roadmap work after 19.03: **11 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 19.03
+
+- Added the outbound webhook platform with persistent subscriptions, delivery state and per-attempt delivery logs.
+- Added HTTPS-only SSRF-safe destination approval: no URL credentials/fragments, port 443 only, public hostname syntax, DNS resolution and rejection of private/reserved addresses.
+- Delivery re-validates the stored destination before each attempt and uses the existing pinned HTTPS transport infrastructure for TLS certificate/SNI verification, public-IP pinning, bounded responses and no redirect following.
+- Added encrypted versioned webhook signing secrets through the existing AES-256-GCM `SecretStore`; raw signing secrets are not stored in webhook database rows.
+- Added HMAC-SHA256 signed payload headers with delivery id, event, timestamp and versioned signatures. During secret-rotation grace, both current and previous valid signatures are emitted.
+- Added safe secret rotation: a second rotation is blocked while the prior grace window remains active; stale previous secrets are removed after expiry when the next rotation succeeds.
+- Added event publishing, targeted test delivery and add-on outbound webhook publishing through existing `AddonWebhookDefinition` metadata. Inbound definitions cannot be dispatched as outbound events.
+- Added queue-backed delivery with exponential backoff beginning at 30 seconds and capped at 24 hours. HTTP 408/425/429 and 5xx responses are retryable; other non-2xx 4xx responses are terminal.
+- Added bounded webhook worker support using the existing `DatabaseQueueDriver` default and a protected `bin/webhook-worker.php` cron entrypoint included in the cPanel package. Redis/daemon/Supervisor remain optional.
+- Added `webhook.manage` and management-service authorization for subscription creation, secret rotation, test delivery and delivery-log access. Starter templates grant it to administrators only.
+- Added migration `20260925202000_webhook_platform` for subscriptions, deliveries and per-attempt logs. The migration is additive and does not reset existing data.
+- Added delivery-log read APIs and add-on outbound event integration while preserving existing add-on metadata ownership rules.
+- Implementation/fix commits: `7b315700242f46bdf70270ad4019673556a44325`, `3db9553d7f58dd3b2811c3e41fcf508c4ff6828b`, `d208cdefea336bf2fb7e094adde92e01fc97ab41`, `b00d90aebc9d69d7101d3acb0f5bd38381e94dd0`, `5c427e36094033158646fb048a5805a94da3bdd5`, `85361519bcea3ebae6bea8e18920470ca1a6e062`, `91873947552cf9238a14f087d2166f4f9f071633`, `e1a62e6d1963b313f5be06c0cd7cecdfcff5af54`, `55cbff9ac85aee96921752c307ec2f28b7d24248`, `2ccf74241c9b43b7c53c068ba0dbc757d30af49d`, `da7bc9ad75b233d1d741bfd02d18c81d1c27256d`, `18e6a04cd213a4a785a8e39145fd9b4e44105039`, `c2f6c1b789c41c58bf438f0b251e59ad647adf5d`.
+- GitHub Actions build run `36174943841`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36174943681`: success on MySQL 8.4 and MariaDB 10.11 including post-install web bootstrap.
+- Version: `0.0.7.59-dev`.
+- Next: `19.04 — TypeScript SDK`.
 
 ## Completed in 19.02
 

@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.03 — Webhook platformu
+
+- Added persistent outbound webhook subscriptions, delivery/attempt logs, targeted test delivery and add-on outbound-event publishing.
+- Added versioned encrypted signing secrets, HMAC-SHA256 payload signatures and grace-window secret rotation with dual signatures.
+- Added HTTPS/443-only SSRF-safe destination validation and pinned TLS delivery by reusing the existing secure outbound transport.
+- Added queue-backed retry/backoff with bounded attempts, retryable HTTP status policy and a cPanel-safe bounded cron worker.
+- Added `webhook.manage` authorization and additive webhook-platform migration.
+- Implementation/fix commits: `7b315700242f46bdf70270ad4019673556a44325`, `3db9553d7f58dd3b2811c3e41fcf508c4ff6828b`, `d208cdefea336bf2fb7e094adde92e01fc97ab41`, `b00d90aebc9d69d7101d3acb0f5bd38381e94dd0`, `5c427e36094033158646fb048a5805a94da3bdd5`, `85361519bcea3ebae6bea8e18920470ca1a6e062`, `91873947552cf9238a14f087d2166f4f9f071633`, `e1a62e6d1963b313f5be06c0cd7cecdfcff5af54`, `55cbff9ac85aee96921752c307ec2f28b7d24248`, `2ccf74241c9b43b7c53c068ba0dbc757d30af49d`, `da7bc9ad75b233d1d741bfd02d18c81d1c27256d`, `18e6a04cd213a4a785a8e39145fd9b4e44105039`, `c2f6c1b789c41c58bf438f0b251e59ad647adf5d`.
+- GitHub Actions build run `36174943841` and database migration smoke run `36174943681` succeeded.
+
 ### 19.02 — API security/rate/audit
 
 - Added personal-token, API-key and OAuth-type API principal contexts backed by digest-only credential persistence, expiry/revocation and typed scopes.
