@@ -6,9 +6,11 @@ namespace Forwext\Tests\Unit\Core\Container;
 
 use Forwext\Core\Container\Container;
 use Forwext\Core\Container\Exception\CircularDependencyException;
+use Forwext\Core\Container\Exception\ContainerException;
 use Forwext\Core\Container\Exception\OverrideNotAllowedException;
 use Forwext\Core\Container\Exception\UnresolvableDependencyException;
 use Forwext\Core\Container\ServiceLifetime;
+use Forwext\Core\Extension\ExtensionOwner;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -98,6 +100,90 @@ final class ContainerTest extends TestCase
         $container->overrideInstance('value', 'replacement');
 
         self::assertSame('replacement', $container->get('value'));
+    }
+
+    public function testServiceDecoratorsUsePriorityThenRegistrationOrderAndExposeDiagnostics(): void
+    {
+        $container = new Container();
+        $container->bind('service', static fn (): string => 'base');
+
+        $container->decorate(
+            'service',
+            static fn (mixed $service, Container $container): string => (string) $service . '|low',
+            ExtensionOwner::addon('Acme/Low'),
+            -10,
+        );
+        $container->decorate(
+            'service',
+            static fn (mixed $service, Container $container): string => (string) $service . '|high',
+            ExtensionOwner::addon('Acme/High'),
+            20,
+        );
+
+        self::assertSame('base|high|low', $container->get('service'));
+
+        $diagnostics = $container->extensionDiagnostics();
+        self::assertCount(1, $diagnostics);
+        self::assertSame('service', $diagnostics[0]->serviceId);
+        self::assertSame(['addon:Acme/High', 'addon:Acme/Low'], array_map(
+            static fn ($decorator): string => $decorator->owner,
+            $diagnostics[0]->decorators,
+        ));
+        self::assertSame([], $diagnostics[0]->issues);
+    }
+
+    public function testSameExtensionOwnerCannotDecorateSameServiceTwice(): void
+    {
+        $container = new Container();
+        $container->bind('service', static fn (): string => 'base');
+        $owner = ExtensionOwner::addon('Acme/Demo');
+        $container->decorate(
+            'service',
+            static fn (mixed $service, Container $container): mixed => $service,
+            $owner,
+        );
+
+        $this->expectException(ContainerException::class);
+        $container->decorate(
+            'service',
+            static fn (mixed $service, Container $container): mixed => $service,
+            $owner,
+        );
+    }
+
+    public function testDecoratorResolutionParticipatesInCircularDependencyDetection(): void
+    {
+        $container = new Container();
+        $container->bind('service', static fn (): string => 'base');
+        $container->decorate(
+            'service',
+            static function (mixed $service, Container $container): mixed {
+                $container->get('service');
+
+                return $service;
+            },
+            ExtensionOwner::addon('Acme/Cycle'),
+        );
+
+        $this->expectException(CircularDependencyException::class);
+        $container->get('service');
+    }
+
+    public function testExtensionDiagnosticsReportsBindingAliasCycleWithoutResolvingIt(): void
+    {
+        $container = new Container();
+        $container->bind('service.a', 'service.b');
+        $container->bind('service.b', 'service.a');
+
+        $issues = [];
+        foreach ($container->extensionDiagnostics() as $diagnostic) {
+            array_push($issues, ...$diagnostic->issues);
+        }
+
+        self::assertTrue((bool) array_filter(
+            $issues,
+            static fn (string $issue): bool => str_starts_with($issue, 'binding_cycle:'),
+        ));
     }
 }
 

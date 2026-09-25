@@ -10,6 +10,7 @@ use Forwext\Core\Domain\Event\AbstractDomainEvent;
 use Forwext\Core\Domain\Event\DomainEvent;
 use Forwext\Core\Domain\Event\DomainEventDispatcher;
 use Forwext\Core\Domain\Event\RecordsDomainEvents;
+use Forwext\Core\Extension\ExtensionOwner;
 use PHPUnit\Framework\TestCase;
 
 final class DomainEventTest extends TestCase
@@ -43,6 +44,40 @@ final class DomainEventTest extends TestCase
         $dispatcher->dispatch(new FixtureRenamed(EntityId::fromInt(9)));
 
         self::assertSame(['first:fixture.renamed', 'second:fixture.renamed'], $observed);
+    }
+
+    public function testDispatcherCombinesTypedAndNamedListenersByPriority(): void
+    {
+        $dispatcher = new DomainEventDispatcher();
+        $observed = [];
+
+        $dispatcher->listen(
+            'fixture.renamed',
+            static function (DomainEvent $event) use (&$observed): void {
+                $observed[] = 'named:' . $event->eventName();
+            },
+            -5,
+            ExtensionOwner::addon('Acme/Named'),
+        );
+        $dispatcher->listenTyped(
+            FixtureRenamed::class,
+            static function (DomainEvent $event) use (&$observed): void {
+                $observed[] = 'typed:' . $event->eventName();
+            },
+            25,
+            ExtensionOwner::addon('Acme/Typed'),
+        );
+
+        $dispatcher->dispatch(new FixtureRenamed(EntityId::fromInt(10)));
+
+        self::assertSame(['typed:fixture.renamed', 'named:fixture.renamed'], $observed);
+        $diagnostics = $dispatcher->listenerDiagnostics();
+        self::assertSame(['addon:Acme/Named', 'addon:Acme/Typed'], array_map(
+            static fn ($diagnostic): string => $diagnostic->owner,
+            $diagnostics,
+        ));
+        self::assertSame(FixtureRenamed::class, $diagnostics[1]->eventClass);
+        self::assertSame(25, $diagnostics[1]->priority);
     }
 }
 
