@@ -161,6 +161,7 @@ use Forwext\Core\Admin\Operations\SystemOperationsService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
+use Forwext\Core\Api\V1\DatabasePublicApiV1ReadRepository;
 use Forwext\Core\Analytics\Report\AnalyticsReportService;
 use Forwext\Core\Analytics\Report\DatabaseAnalyticsReportRepository;
 use Forwext\Core\Audit\CoreAuditRecorder;
