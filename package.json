@@ -14,7 +14,8 @@
     "sdk:generate": "php tools/generate-api-v1-sdk-contract.php",
     "sdk:generate:check": "php tools/generate-api-v1-sdk-contract.php --check",
     "sdk:typecheck": "tsc -p packages/sdk/tsconfig.json --noEmit",
-    "sdk:build": "tsc -p packages/sdk/tsconfig.build.json"
+    "sdk:build": "tsc -p packages/sdk/tsconfig.build.json",
+    "sdk:test": "npm run sdk:build && node packages/sdk/test/sdk-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

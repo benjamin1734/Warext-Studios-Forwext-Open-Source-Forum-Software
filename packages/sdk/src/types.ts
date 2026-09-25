@@ -1,3 +1,9 @@
+import type {
+  ForwextApiEndpointName,
+  ForwextApiResource,
+  ForwextApiScope,
+} from "./generated/contract.js";
+
 export type ForwextEntityId = string;
 export type ForwextIsoTimestamp = string;
 
@@ -25,18 +31,18 @@ export interface ApiErrorBody {
 }
 
 export interface ApiServiceEndpoint {
-  name: string;
+  name: ForwextApiEndpointName;
   methods: string[];
   path: string;
-  resource: string | null;
-  scope: string | null;
+  resource: ForwextApiResource | null;
+  scope: ForwextApiScope | null;
   public: boolean;
 }
 
 export interface ApiServiceDocument {
-  version: "v1";
-  resources: string[];
-  scopes: string[];
+  version: string;
+  resources: ForwextApiResource[];
+  scopes: ForwextApiScope[];
   endpoints: ApiServiceEndpoint[];
 }
 

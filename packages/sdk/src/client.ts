@@ -168,7 +168,7 @@ export class ForwextClient {
     query?: URLSearchParams,
     signal?: AbortSignal,
   ): Promise<T> {
-    const url = new URL(path, this.#baseUrl);
+    const url = new URL(path.replace(/^\\//u, ""), this.#baseUrl);
     if (query !== undefined) url.search = query.toString();
 
     const response = await this.#fetch(url, {
