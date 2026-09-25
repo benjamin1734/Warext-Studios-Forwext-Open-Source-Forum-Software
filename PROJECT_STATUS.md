@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.46-dev
+CURRENT_VERSION = 0.0.7.47-dev
 LAST_COMPLETED_MAIN_STEP = 16
-LAST_COMPLETED_SUBSTEP = 17.02
-CURRENT_STEP = 17.03
-LAST_COMMIT = f1af2bf54c5fbdd7e89470ac8d90bbb1dad33f64
+LAST_COMPLETED_SUBSTEP = 17.03
+CURRENT_STEP = 17.04
+LAST_COMMIT = d4e2442d915e69f9b7532d2b0c9a237a3f3b6f35
 BLOCKERS = none
-NEXT_STEP = 17.03 - First-party module manager
+NEXT_STEP = 17.04 - System/integration ACP
 ```
 
 ## Current position
@@ -21,13 +21,36 @@ NEXT_STEP = 17.03 - First-party module manager
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`.
-- Current sub-step: `17.03 — First-party module manager`.
-- Remaining roadmap work after 17.02: **24 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.03`.
+- Current sub-step: `17.04 — System/integration ACP`.
+- Remaining roadmap work after 17.03: **23 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 17.03
+
+- Added typed `enabled` / `disabled` / `uninstalled` lifecycle contracts for 19 first-party modules.
+- Added dependency/conflict graph validation with unknown-reference checks, symmetric conflict lookup and dependency-cycle rejection.
+- Added additive MySQL/MariaDB persistence for lifecycle state, typed scoped settings and durable storage purge objects.
+- Added dedicated `module.manage` permission; module mutations require both ACP access and this dedicated permission.
+- Added native PHP `/admin/modules` with CSRF-protected lifecycle actions, dependency/dependent/conflict visibility, exact-key uninstall confirmation and responsive scoped-setting management.
+- Added global/forum/group/thread/post setting scopes with typed validation, existence-checked targets, override reset and post → thread → forum → group → global → safe-default resolution.
+- Forum/group configuration targets are discoverable through bounded selectors; thread/post scopes require exact valid IDs to avoid unnecessary content metadata disclosure.
+- Added keep-data and delete-data uninstall policies. Destructive parent purge requires dependent modules to be uninstalled and their retained data purged first.
+- Database purge, lifecycle state and Administration audit event are committed transactionally; audit snapshots record the actual resulting data state and pending storage-object count.
+- Storage objects are collected before database purge and processed through a durable retryable purge queue.
+- Reinstall returns module data state to `retained` and leaves the module safely disabled until explicit enable.
+- Added global route lifecycle enforcement: disabled mapped module routes return temporary unavailable; uninstalled mapped routes return not found.
+- Added module-conditional ambient gating for Easter Egg, Advertising/Notice and Analytics collection, including the legacy Easter Egg decorator.
+- Added ACP navigation integration plus registry, lifecycle graph, runtime middleware, migration, security/privacy and native web-surface regression coverage.
+- Initial lifecycle/registry commits: `a25b013688068f46da8b0c714205a08f59ab2987`, `3f7552ce1ea09a0b90f0bdd57f46ca6118f77a8d`, `d2a59de0cd36a262e80060a9e5c39c40117cc9c1`, `d1a34f92d9a863fa361da68561a910af26fd64e3`.
+- ACP/runtime integration: `67ed20083e97688a7fd72185bc16a9fe68232c46`; lifecycle hardening/tests/docs: `230ec7e4aa9e2426ce85cd97c4ecf341a6d8e88e`; scope privacy/test alignment: `fc75d5e2bd90151e3719186085905a813191467e`; final warning fix: `d4e2442d915e69f9b7532d2b0c9a237a3f3b6f35`.
+- GitHub Actions build run `36104953356`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36104953305`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.47-dev`.
+- Next: `17.04 — System/integration ACP`.
 
 ## Completed in 17.02
 

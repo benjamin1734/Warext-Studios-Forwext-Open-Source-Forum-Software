@@ -6,6 +6,17 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.03 — First-party Module Manager
+
+- Added typed enabled/disabled/uninstalled lifecycle state, dependency/conflict graph validation and dedicated `module.manage` authorization.
+- Added native PHP `/admin/modules` with CSRF lifecycle controls, exact-key uninstall confirmation, scoped settings and dependency visibility.
+- Added global/forum/group/thread/post typed setting overrides with reset-to-fallback and validated targets.
+- Added keep/delete-data uninstall policy, dependent-data purge protection, transactional database purge/audit state and retryable storage cleanup.
+- Added runtime route gating plus module-conditional Easter Egg, Advertising and Analytics ambient middleware.
+- Added additive/idempotent MySQL/MariaDB module lifecycle/settings/purge migration and regression coverage.
+- Implementation commits: `a25b013688068f46da8b0c714205a08f59ab2987`, `3f7552ce1ea09a0b90f0bdd57f46ca6118f77a8d`, `d2a59de0cd36a262e80060a9e5c39c40117cc9c1`, `d1a34f92d9a863fa361da68561a910af26fd64e3`, `67ed20083e97688a7fd72185bc16a9fe68232c46`, `230ec7e4aa9e2426ce85cd97c4ecf341a6d8e88e`, `fc75d5e2bd90151e3719186085905a813191467e`, `d4e2442d915e69f9b7532d2b0c9a237a3f3b6f35`.
+- GitHub Actions build run `36104953356` and DB smoke run `36104953305` both succeeded.
+
 ### 17.02 — Users / Roles / Forums / Moderation ACP
 
 - Added native PHP ACP surfaces for users, groups/roles/banner/permission analysis, forums, content and moderation.
