@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.49-dev
-LAST_COMPLETED_MAIN_STEP = 16
-LAST_COMPLETED_SUBSTEP = 17.05
-CURRENT_STEP = 17.06
-LAST_COMMIT = af752d8c2c582f5d888af3e07af255b5db8dfb49
+CURRENT_VERSION = 0.0.7.50-dev
+LAST_COMPLETED_MAIN_STEP = 17
+LAST_COMPLETED_SUBSTEP = 17.06
+CURRENT_STEP = 18.01
+LAST_COMMIT = 837af3c93edb8e23dc38779e217b5622bed654e4
 BLOCKERS = none
-NEXT_STEP = 17.06 - ACP UX kalite standardı
+NEXT_STEP = 18.01 - Add-on manifest/package/lifecycle
 ```
 
 ## Current position
@@ -20,14 +20,29 @@ NEXT_STEP = 17.06 - ACP UX kalite standardı
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`; main step `17` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.05`.
-- Current sub-step: `17.06 — ACP UX kalite standardı`.
-- Remaining roadmap work after 17.05: **21 real sub-steps**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`; main step `18` is active.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`.
+- Current sub-step: `18.01 — Add-on manifest/package/lifecycle`.
+- Remaining roadmap work after 17.06: **20 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 17.06
+
+- Added shared native PHP ACP safe-work guidance covering purpose, safe defaults, preview/verification and recovery without creating any new authorization layer.
+- Added server-validated text + lifecycle-state filters to the First-party Module Manager while preserving backend `acp.access` + `module.manage` authorization.
+- Added bounded System Operations section filtering for health/integrity, maintenance, jobs/cron, backups, logs and repair tools; permission-gated rendering remains authoritative.
+- Added Access ACP group/role filtering, Forum ACP node filtering and a non-mutating persisted role-appearance preview.
+- Preserved existing destructive typed confirmations, generated-setting reset, scoped-setting override removal, retained-data uninstall mode, permission analyzer, backup verification and audit behavior as recovery/verification paths.
+- Added responsive shared UX guidance and architecture documentation; no JavaScript authorization path, schema migration or new mandatory cPanel runtime dependency was introduced.
+- Feature commits: `95ac070697423fc439d5a42f1247db0dec2b9cc0`, `6caa3e734f083c25c221a3613498f885c800d2ba`, `86c141417d7c7edc56e9bf7cbdde20296a66229f`, `be447b089cab3846bcd33bfda209fd794ecf51d3`; tests/docs: `837af3c93edb8e23dc38779e217b5622bed654e4`.
+- GitHub Actions build run `36115869110`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel full-package build passed.
+- Database migration smoke run `36115869130`: success on MySQL 8.4 and MariaDB 10.11 with post-install web bootstrap smoke.
+- Version: `0.0.7.50-dev`.
+- Main step 17 is complete.
+- Next: `18.01 — Add-on manifest/package/lifecycle`.
 
 ## Completed in 17.05
 

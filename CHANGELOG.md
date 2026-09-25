@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 17.06 — ACP UX quality standard
+
+- Added a shared safe-work guidance contract across the native Administration dashboard, Community ACP, Module Manager, System/Integrations and System Operations.
+- Added bounded module text/state filters, System Operations section filtering, Access group/role filtering and Forum node filtering.
+- Added effective-state verification cues including permission analysis, persisted role-appearance preview, dependency/conflict visibility and explicit recovery paths.
+- Kept permission, CSRF, audit and typed destructive confirmation enforcement backend-authoritative; no migration or new mandatory cPanel dependency was introduced.
+- Feature/test commits: `95ac070697423fc439d5a42f1247db0dec2b9cc0`, `6caa3e734f083c25c221a3613498f885c800d2ba`, `86c141417d7c7edc56e9bf7cbdde20296a66229f`, `be447b089cab3846bcd33bfda209fd794ecf51d3`, `837af3c93edb8e23dc38779e217b5622bed654e4`.
+- GitHub Actions build run `36115869110` and DB smoke run `36115869130` succeeded.
+
 ### 17.05 — System Operations ACP
 
 - Added native PHP `/admin/system/operations` with granular backend authorization for health/capabilities, logs, jobs/cron, backups, maintenance and repair.
