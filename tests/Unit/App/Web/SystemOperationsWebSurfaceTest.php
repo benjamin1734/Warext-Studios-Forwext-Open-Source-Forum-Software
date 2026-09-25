@@ -41,7 +41,8 @@ final class SystemOperationsWebSurfaceTest extends TestCase
         $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
 
         self::assertStringNotContainsString('$job->payload', $html);
-        self::assertStringNotContainsString('SELECT job_id,queue_name,job_type,payload', $service);
+        self::assertStringContainsString('failedJobMetadata', $service);
+        self::assertStringNotContainsString("'payload'=>", $service);
         self::assertStringNotContainsString('/admin/system/backups/download', $factory);
         self::assertStringContainsString('Job payloadları ACP’ye taşınmaz', $html);
         self::assertStringContainsString('ACP download endpoint’i yoktur', $html);
