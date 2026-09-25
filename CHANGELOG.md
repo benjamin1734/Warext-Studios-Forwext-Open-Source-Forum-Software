@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.01 — Versioned REST API
+
+- Added the typed `/api/v1` endpoint/resource/scope registry and service document.
+- Added real public read surfaces for users, forums, threads, posts, enabled first-party modules, public Marketplace listings and support categories.
+- Added protected contracts for conversations, notifications and support tickets; these fail closed with `401 authentication_required` until 19.02 API authentication/scope enforcement is wired.
+- Added bounded pagination and consistent JSON error/cache/nosniff behavior while keeping the existing router/database abstractions.
+- Implementation/fix commits: `308fc206601509a744e12f75b852357b29e15f32`, `106f7383f3490101d73dd64ef0aa2758b6978c39`, `46945e328f38c2b02b307d86234504a9d227cae5`.
+- GitHub Actions build run `36169403225` and database migration smoke run `36169403232` succeeded.
+
 ### 18.06 — Package signing/security/docs
 
 - Added typed capability disclosures and risk warnings without turning manifest declarations into authorization grants.

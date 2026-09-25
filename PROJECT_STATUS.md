@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.56-dev
+CURRENT_VERSION = 0.0.7.57-dev
 LAST_COMPLETED_MAIN_STEP = 18
-LAST_COMPLETED_SUBSTEP = 18.06
-CURRENT_STEP = 19.01
-LAST_COMMIT = 9a10e8e099aa7afc6b93dc337cf0dd9f3bfa22d4
+LAST_COMPLETED_SUBSTEP = 19.01
+CURRENT_STEP = 19.02
+LAST_COMMIT = 46945e328f38c2b02b307d86234504a9d227cae5
 BLOCKERS = none
-NEXT_STEP = 19.01 - Versioned REST API
+NEXT_STEP = 19.02 - API security/rate/audit
 ```
 
 ## Current position
@@ -21,13 +21,29 @@ NEXT_STEP = 19.01 - Versioned REST API
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`.
-- Current sub-step: `19.01 — Versioned REST API`.
-- Remaining roadmap work after 18.06: **14 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01`.
+- Current sub-step: `19.02 — API security/rate/audit`.
+- Remaining roadmap work after 19.01: **13 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 19.01
+
+- Added a versioned REST root at `/api/v1` with a typed endpoint registry, resource enum, operation enum and resource-bound read scopes.
+- Added real public read endpoints for users, forums, forum threads, threads, thread posts and posts with visibility/deletion/moderation-state filtering in the database read model.
+- Added public first-party module discovery, public Marketplace listing/index reads and public support-category discovery using existing production tables.
+- Declared protected route/scope contracts for conversations, notifications and support tickets. Until 19.02 authentication/scope middleware is attached, these endpoints fail closed with `401 authentication_required` and never expose private rows.
+- Added bounded `page`/`per_page` parsing, typed pagination metadata, JSON error envelopes, no-store errors and `X-Content-Type-Options: nosniff`.
+- The service document advertises users/forums/threads/posts/conversations/notifications/modules/marketplace/support resources and their read scopes without exposing secrets or private data.
+- Reused the existing native router and database/query abstractions; no parallel HTTP framework and no mandatory cPanel runtime dependency were introduced.
+- No database migration was required because 19.01 consumes existing domain schemas.
+- Implementation/fix commits: `308fc206601509a744e12f75b852357b29e15f32`, `106f7383f3490101d73dd64ef0aa2758b6978c39`, `46945e328f38c2b02b307d86234504a9d227cae5`.
+- GitHub Actions build run `36169403225`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, production PHP 8.4 dependency baseline and cPanel package build passed.
+- Database migration smoke run `36169403232`: success on MySQL 8.4 and MariaDB 10.11.
+- Version: `0.0.7.57-dev`.
+- Next: `19.02 — API security/rate/audit`.
 
 ## Completed in 18.06
 
