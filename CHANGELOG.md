@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 20.04 — VDS/Docker/advanced deployment
+
+- Added real Redis-backed advanced runtime composition for sessions, cache, queue, locks, scheduler claims and shared rate limiting.
+- Added S3-compatible SigV4 storage, Meilisearch production search integration and Redis WebSocket broadcast plumbing.
+- Added Nginx/PHP-FPM, Docker Compose, Supervisor/systemd worker management, health endpoints and horizontal-scaling guidance.
+- Preserved the cPanel-first no-Redis/no-Docker default runtime and validated the full PHP 8.4/8.5/package + database matrix.
+- Architecture: `docs/architecture/advanced-deployment.md`.
+- Implementation completion commit: `a10c290422e057bcaecb9f609846b4fa9601fe2e`; final validation build `36263438673`, DB smoke `36263438643`.
+
 ### 20.03 — Updater/migration/backup/rollback
 
 - Added a production transactional updater for differential release ZIPs with strict source/target, checksum, path and protected-state validation.
