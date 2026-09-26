@@ -538,6 +538,8 @@ jobs:
               required = {
                   f"{root}/VERSION",
                   f"{root}/LICENSE",
+                  f"{root}/NOTICE",
+                  f"{root}/THIRD_PARTY_NOTICES.md",
                   f"{root}/install.php",
                   f"{root}/public/install.php",
                   f"{root}/vendor/autoload.php",
