@@ -28,6 +28,8 @@ use Forwext\Core\Queue\QueueDriver;
 use Forwext\Core\Scheduler\DatabaseSchedulerClaimStore;
 use Forwext\Core\Scheduler\ScheduledTask;
 use Forwext\Core\Scheduler\SchedulerRegistry;
+use Forwext\Core\Update\UpdateCoordinator;
+use Forwext\Core\Update\UpdateReport;
 use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
@@ -57,6 +59,7 @@ final readonly class SystemOperationsService
         private PermissionAuthorizer $authorizer,
         private AuditRecorder $audit,
         private string $cacheDirectory,
+        private ?UpdateCoordinator $updater = null,
     ) {
         if ($this->cacheDirectory === '' || str_contains($this->cacheDirectory, "\0")) {
             throw new InvalidArgumentException('System cache directory is invalid.');
@@ -362,6 +365,68 @@ final readonly class SystemOperationsService
         );
 
         return $this->audit->mutate($event, fn (): int => $this->clearDirectory($this->cacheDirectory));
+    }
+
+    public function assertUpdateAllowed(EntityId $actor): void
+    {
+        $this->require($actor, self::BACKUP_PERMISSION);
+        $this->require($actor, self::MAINTENANCE_PERMISSION);
+        $this->require($actor, self::REPAIR_PERMISSION);
+        if ($this->updater === null) {
+            throw new RuntimeException('System updater is unavailable in this runtime.');
+        }
+    }
+
+    public function applyUpdate(
+        EntityId $actor,
+        string $packagePath,
+        AuditRequestId $requestId,
+        DateTimeImmutable $at,
+    ): UpdateReport {
+        $this->assertUpdateAllowed($actor);
+        $updater = $this->updater;
+        if ($updater === null) {
+            throw new RuntimeException('System updater is unavailable in this runtime.');
+        }
+
+        try {
+            $report = $updater->apply($packagePath, $at);
+        } catch (Throwable $failure) {
+            try {
+                $this->audit->append($this->event(
+                    $actor,
+                    'system.update.failed',
+                    'system.update',
+                    'package',
+                    [],
+                    ['status'=>'failed','failure_code'=>'update_failed'],
+                    $requestId,
+                    $at,
+                ));
+            } catch (Throwable) {
+            }
+            throw $failure;
+        }
+
+        $this->audit->append($this->event(
+            $actor,
+            'system.update.apply',
+            'system.update',
+            $report->targetVersion->value(),
+            ['version'=>$report->sourceVersion->value()],
+            [
+                'version'=>$report->targetVersion->value(),
+                'backup'=>$report->databaseBackupName,
+                'file_snapshot'=>$report->fileSnapshotId,
+                'health'=>$report->healthStatus->value,
+                'migrations_applied'=>count($report->migrations->applied),
+                'migrations_skipped'=>count($report->migrations->skipped),
+            ],
+            $requestId,
+            $at,
+        ));
+
+        return $report;
     }
 
     /** @return list<string> */
