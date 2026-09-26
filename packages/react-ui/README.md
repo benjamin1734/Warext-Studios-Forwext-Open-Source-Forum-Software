@@ -19,3 +19,12 @@ The primitives use native semantic controls, keyboard-visible focus, status/aler
 `PermissionProvider`, `useCan()` and `<Can>` can hide or reveal controls using a server-provided permission snapshot.
 
 This is presentation logic only. Backend/API permission checks remain authoritative and must never be replaced by React visibility checks.
+
+
+## Add-on extension slots
+
+`AddonReactSlotRegistry` consumes the enabled add-on UI manifest exported by the PHP runtime. React renderers can only register for widget keys that the enabled manifest already declares, and the add-on id must match the canonical namespace owner.
+
+`<AddonSlot>` renders registered widgets in the server-declared order. Optional renderer permission requirements are presentation filters only; the server/API still performs authoritative permission checks.
+
+The registry accepts statically bundled React component references. It does not evaluate remote JavaScript, execute manifest code or patch core components.

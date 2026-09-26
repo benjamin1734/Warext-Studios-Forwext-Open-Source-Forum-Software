@@ -199,6 +199,19 @@ jobs:
           node packages/sdk/test/package-smoke.mjs
           rm -rf packages/sdk/dist
 
+      - name: Verify generated React UI design-token contract
+        run: npm run react-ui:generate:check
+
+      - name: Typecheck, build and test React UI/extension slots
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run react-ui:typecheck
+          npm run react-ui:build
+          node packages/react-ui/test/react-ui-smoke.mjs
+          node packages/react-ui/test/package-smoke.mjs
+          rm -rf packages/react-ui/dist
+
       - name: Build production vendor tree against PHP 8.4.0 baseline
         shell: bash
         run: |

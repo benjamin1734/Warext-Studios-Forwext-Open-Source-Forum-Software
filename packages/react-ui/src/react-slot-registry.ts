@@ -107,8 +107,13 @@ export class AddonReactSlotRegistry {
     addonIds: Set<string>,
     namespaces: Set<string>,
   ): void {
-    if (!ADDON_ID.test(addon.id) || !NAMESPACE.test(addon.namespace)) {
+    if (!ADDON_ID.test(addon.id) || !NAMESPACE.test(addon.namespace) || !Array.isArray(addon.widgets)) {
       throw new Error("Invalid add-on identity in UI manifest.");
+    }
+    const [vendor, name] = addon.id.split("/");
+    const expectedNamespace = `addon.${vendor?.toLowerCase()}.${name?.toLowerCase()}`;
+    if (addon.namespace !== expectedNamespace) {
+      throw new Error("Add-on UI manifest namespace does not match its add-on id.");
     }
     if (addonIds.has(addon.id) || namespaces.has(addon.namespace)) {
       throw new Error("Duplicate add-on identity in UI manifest.");

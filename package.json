@@ -21,7 +21,7 @@
     "react-ui:generate:check": "php tools/generate-react-design-token-contract.php --check",
     "react-ui:typecheck": "tsc -p packages/react-ui/tsconfig.json --noEmit",
     "react-ui:build": "tsc -p packages/react-ui/tsconfig.build.json",
-    "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs"
+    "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs && node packages/react-ui/test/package-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
