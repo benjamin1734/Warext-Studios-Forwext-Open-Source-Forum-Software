@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.05 — React UI/extension slots
+
+- Added optional `@forwext/react-ui` accessible React primitives backed by the existing Forwext design-token CSS variables.
+- Added generated core design-token metadata and CI stale-generation enforcement.
+- Added permission-aware presentation helpers without weakening backend/API authorization.
+- Added a manifest-bound add-on React widget/slot registry that accepts only enabled, declared add-on widgets with canonical namespace ownership.
+- Added React typecheck/build, SSR accessibility/permission/slot smoke and npm package-surface validation to CI.
+- Implementation/fix commits: `bcf36f3c34ee548ee1c5e9cf40b9cd96160c0fa7`, `54ac796d97c0093f2d60d78060daf06a052253dd`, `a646cd3f0b0cd9527172638c84cac626e6cbba55`, `f20349847fd13d32f0bab2a0d13cd0c559c66447`, `8062cebfefc5d9e77372cd502c78553548226ae1`, `8b68ce60a24b2102b4b71d47babb149bc464a2ae`.
+- GitHub Actions build run `36232851960` and database migration smoke run `36232851799` succeeded.
+
 ### 19.04 — TypeScript SDK
 
 - Added the official dependency-free `@forwext/sdk` ESM client with typed v1 resource methods, bearer/API-key auth helpers, pagination and structured API errors.

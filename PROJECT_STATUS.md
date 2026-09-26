@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.60-dev
+CURRENT_VERSION = 0.0.7.61-dev
 LAST_COMPLETED_MAIN_STEP = 18
-LAST_COMPLETED_SUBSTEP = 19.04
-CURRENT_STEP = 19.05
-LAST_COMMIT = f6f235bb57058516c3a555f439b196b6c2042633
+LAST_COMPLETED_SUBSTEP = 19.05
+CURRENT_STEP = 19.06
+LAST_COMMIT = 8b68ce60a24b2102b4b71d47babb149bc464a2ae
 BLOCKERS = none
-NEXT_STEP = 19.05 - React UI/extension slots
+NEXT_STEP = 19.06 - Resmî Next.js frontend
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 19.05 - React UI/extension slots
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.04`.
-- Current sub-step: `19.05 — React UI/extension slots`.
-- Remaining roadmap work after 19.04: **10 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.05`.
+- Current sub-step: `19.06 — Resmî Next.js frontend`.
+- Remaining roadmap work after 19.05: **9 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 19.05
+
+- Added the official optional `@forwext/react-ui` package; React remains a modern-frontend peer dependency and is not required by the native PHP/cPanel runtime.
+- Added generated React design-token metadata sourced directly from the existing PHP `DesignTokenCatalog`; CI rejects stale generated token contracts.
+- Added accessible UI primitives: semantic button, alert/status live region, surface and visually-hidden text with keyboard-visible focus styling.
+- React styling consumes the same `--forwext-*` CSS custom properties as the native theme system instead of inventing a parallel color/spacing/theme source.
+- Added `PermissionProvider`, `useCan()` and `<Can>` presentation helpers with permission-key validation. Documentation and code preserve the rule that backend/API authorization remains authoritative.
+- Added a canonical TypeScript add-on UI manifest contract shared with the existing PHP `AddonUiReactManifestExporter`.
+- Added `AddonReactSlotRegistry`: renderers may register only for widget keys declared by the enabled PHP add-on manifest, add-on id must match its canonical `addon.vendor.name` namespace and duplicate/unknown registrations fail closed.
+- Added `<AddonSlot>` rendering in manifest-declared widget order with optional permission-aware presentation filtering and explicit context passing.
+- React extension registration accepts statically bundled component references only; it does not evaluate manifest code, load arbitrary remote components or patch core React components.
+- Added strict React typecheck/build, SSR accessibility/permission/slot smoke and npm package-surface validation to the release CI.
+- Implementation/fix commits: `bcf36f3c34ee548ee1c5e9cf40b9cd96160c0fa7`, `54ac796d97c0093f2d60d78060daf06a052253dd`, `a646cd3f0b0cd9527172638c84cac626e6cbba55`, `f20349847fd13d32f0bab2a0d13cd0c559c66447`, `8062cebfefc5d9e77372cd502c78553548226ae1`, `8b68ce60a24b2102b4b71d47babb149bc464a2ae`.
+- GitHub Actions build run `36232851960`: success; PHP 8.4/8.5 PHPUnit, SDK checks, React generated-token check, React typecheck/build, runtime/package smoke and cPanel build passed.
+- Database migration smoke run `36232851799`: success on MySQL 8.4 and MariaDB 10.11.
+- No database migration was required for the React UI package.
+- Version: `0.0.7.61-dev`.
+- Next: `19.06 — Resmî Next.js frontend`.
 
 ## Completed in 19.04
 
