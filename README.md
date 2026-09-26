@@ -2,7 +2,7 @@
 
 **Forwext** is an open-source, extensible forum platform developed by Warext Studios.
 
-The project targets a production-grade `1.0.0`, not an MVP. Its baseline is PHP 8.4+, MySQL/MariaDB, a cPanel-first installation experience, and an architecture that can scale to VDS, Docker and advanced infrastructure without rewriting application code.
+Forwext `1.0.0` is the first production release. Its baseline is PHP 8.4+, MySQL/MariaDB, a cPanel-first installation experience, and an architecture that can scale to VDS, Docker and advanced infrastructure without rewriting application code.
 
 ## Product principles
 

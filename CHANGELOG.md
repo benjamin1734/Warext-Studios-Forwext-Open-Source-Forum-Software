@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+## 1.0.0 — Production release
+
+- Completed roadmap 20.08 production documentation and stable-release acceptance work.
+- Added the production operator/developer handbook covering install, ACP, themes, modules, add-ons, API, SDK, React/Next.js, updates/backups and security operations.
+- Added stable production-version support to immutable release packaging while preserving full/update ZIP, SHA-256 and immediate-predecessor rules.
+- Strengthened full-package integrity so LICENSE, NOTICE and THIRD_PARTY_NOTICES.md are mandatory release contents.
+- The production release remains subject to the same PHP 8.4/8.5, MySQL/MariaDB, security, performance, SDK/React/Next.js and archive-integrity gates as development releases.
+
 ### 20.07 — Performance/observability qualification
 
 - Added a real MySQL 8.4 shared-hosting performance gate with 800 threads, 6,400 posts, 800 search documents and 25 repeated production-repository/search iterations under a 128 MiB PHP profile.
