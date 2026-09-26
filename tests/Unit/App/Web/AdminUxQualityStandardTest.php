@@ -52,7 +52,7 @@ final class AdminUxQualityStandardTest extends TestCase
         $handler = (string) file_get_contents($root . '/app/Web/Admin/SystemOperationsHandler.php');
         $html = (string) file_get_contents($root . '/app/Web/Admin/SystemOperationsHtml.php');
 
-        self::assertStringContainsString("['all','health','maintenance','jobs','backups','logs','repairs']", $handler);
+        self::assertStringContainsString("['all','health','maintenance','updates','jobs','backups','logs','repairs']", $handler);
         self::assertStringContainsString('name="section"', $html);
         self::assertStringContainsString('Filtreyi sıfırla', $html);
         self::assertStringContainsString('typed confirmation', strtolower($html));
