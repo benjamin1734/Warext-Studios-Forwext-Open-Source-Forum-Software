@@ -30,7 +30,7 @@ final class SystemOperationsHtml
             ? ''
             : '<div class="ops-notice">İşlem tamamlandı: <strong>' . self::escape(str_replace('_', ' ', $notice)) . '</strong></div>';
         $sectionOptions = '';
-        foreach (['all'=>'Tüm bölümler','health'=>'Health / integrity','maintenance'=>'Maintenance','jobs'=>'Jobs / cron','backups'=>'Backups','logs'=>'Loglar','repairs'=>'Repair araçları'] as $key=>$label) {
+        foreach (['all'=>'Tüm bölümler','health'=>'Health / integrity','maintenance'=>'Maintenance','updates'=>'Updater','jobs'=>'Jobs / cron','backups'=>'Backups','logs'=>'Loglar','repairs'=>'Repair araçları'] as $key=>$label) {
             $sectionOptions .= '<option value="' . self::escape($key) . '"' . ($section === $key ? ' selected' : '') . '>'
                 . self::escape($label) . '</option>';
         }
@@ -46,6 +46,9 @@ final class SystemOperationsHtml
         }
         if ($section === 'all' || $section === 'maintenance') {
             $sections .= self::maintenance($snapshot, $action, $csrf);
+        }
+        if ($section === 'all' || $section === 'updates') {
+            $sections .= self::updates($snapshot, $action, $csrf);
         }
         if ($section === 'all' || $section === 'jobs') {
             $sections .= self::jobs($snapshot, $action, $csrf);
@@ -152,6 +155,30 @@ final class SystemOperationsHtml
             . '<option value="1"' . ($enabled ? ' selected' : '') . '>Açık</option></select></label>'
             . '<label>Onay için <code>MAINTENANCE</code> yaz <input class="ops-input" name="confirm" autocomplete="off"' . $disabled . '></label>'
             . '<button class="ops-button" type="submit"' . $disabled . '>Maintenance durumunu değiştir</button></form></section>';
+    }
+
+    private static function updates(SystemOperationsSnapshot $snapshot, string $action, string $csrf): string
+    {
+        if (
+            !self::allowed($snapshot, SystemOperationsService::BACKUP_PERMISSION)
+            || !self::allowed($snapshot, SystemOperationsService::MAINTENANCE_PERMISSION)
+            || !self::allowed($snapshot, SystemOperationsService::REPAIR_PERMISSION)
+        ) {
+            return '';
+        }
+
+        return '<section class="ops-panel"><h2>Forwext Updater</h2>'
+            . '<p class="ops-muted">Yalnız mevcut kurulum sürümüyle birebir eşleşen resmî differential update ZIP uygulanır. Manifest, SHA-256 payload, protected-path ve source/target sürüm kontrolleri dosyalara dokunmadan önce yapılır.</p>'
+            . '<div class="ops-grid"><article class="ops-card"><h3>Transactional update</h3>'
+            . '<p>Updater önce doğrulanmış veritabanı backup ve dosya snapshot oluşturur; maintenance lock açar, migration ve gerekli rebuild adımlarını çalıştırır, health doğrular. Hata halinde DB + sürüm + dosyalar otomatik geri alınır.</p>'
+            . '<p class="ops-muted">Güncelleme sırasında PHP ZIP extension gerekir. Paket en fazla 512 MiB olabilir ve yükleme web kökü dışında geçici olarak tutulur.</p>'
+            . '<form class="ops-form" method="post" enctype="multipart/form-data" action="' . $action . '">'
+            . self::csrf($csrf)
+            . '<input type="hidden" name="action" value="apply_update">'
+            . '<label>Update ZIP <input class="ops-input" type="file" name="update_package" accept=".zip,application/zip" required></label>'
+            . '<label>Onay için <code>UPDATE</code> yaz <input class="ops-input" name="confirm" autocomplete="off" required></label>'
+            . '<button class="ops-button ops-danger" type="submit">Doğrula ve güncellemeyi uygula</button>'
+            . '</form></article></div></section>';
     }
 
     private static function jobs(SystemOperationsSnapshot $snapshot, string $action, string $csrf): string
