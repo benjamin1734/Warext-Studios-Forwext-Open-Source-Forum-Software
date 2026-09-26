@@ -5,29 +5,47 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.69-dev
-LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.07
-CURRENT_STEP = 20.08
-LAST_COMMIT = c7e5a39abb31cde95564a16ea5f511b39880d8b6
+CURRENT_VERSION = 1.0.0
+LAST_COMPLETED_MAIN_STEP = 20
+LAST_COMPLETED_SUBSTEP = 20.08
+CURRENT_STEP = complete
+LAST_COMMIT = c34dbffa9e7d3a39f937fdb44faad83d4bdcace1
 BLOCKERS = none
-NEXT_STEP = 20.08 - Documentation + 1.0.0 final acceptance
+NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
 ```
 
 ## Current position
 
-- Target: **Forwext 1.0.0 Production**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.0 Production — released**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.07`.
-- Current sub-step: `20.08 — Documentation + 1.0.0 final acceptance`.
-- Remaining roadmap work after 20.07: **1 real sub-step**.
+- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`. The binding v2.0 roadmap is complete.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.08` — **138/138 complete**.
+- Current sub-step: none; the binding v2.0 roadmap is complete.
+- Remaining roadmap work after 20.08: **0 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.08
+
+- Added the production handbook covering installation, administration, themes, first-party modules, add-ons, REST API, TypeScript SDK, React UI/Next.js, updates/backups and security operations.
+- Extended immutable release automation to accept stable semantic production versions while keeping development releases as prereleases.
+- Enforced LICENSE, NOTICE and THIRD_PARTY_NOTICES.md as required full-package contents.
+- Final release commit: `c34dbffa9e7d3a39f937fdb44faad83d4bdcace1`.
+- Qualification matrix run `36272244396`: success.
+- Security qualification run `36272244419`: success.
+- Performance/observability run `36272244391`: success.
+- Database migration smoke run `36272244413`: success on MySQL 8.4 and MariaDB 10.11.
+- Build/package/release run `36272244421`: success, including PHP 8.4/8.5, SDK, React UI, Next.js, production dependency baseline, full/update ZIP integrity and immutable Release publication.
+- GitHub Release: `v1.0.0`, release id `397398446`, stable (`prerelease=false`), published 2026-09-26 21:17:18 UTC.
+- Full package: `forwext-v1.0.0-full.zip`, 3,922,189 bytes, SHA-256 `bac7053e37be00c49fed869f0beb742ee901998cd1bd10d3bec129eee7838644`.
+- Differential update: `forwext-v1.0.0-update.zip`, 3,036 bytes, SHA-256 `d623099686b50721566421042b0763142fecf4aa3f11527ee7031eb0885975fd`.
+- Version: `1.0.0`.
+- Result: binding plan v2.0 completed — **20/20 main steps, 138/138 sub-steps**.
+- Next: no remaining roadmap sub-step; future work starts only from a new approved roadmap/version line.
 
 ## Completed in 20.07
 

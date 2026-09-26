@@ -22,11 +22,9 @@ Forwext ships native first-party systems for moderation workspace and independen
 
 These are not ports of proprietary forum add-ons. They are developed for Forwext and share the common platform services instead of creating parallel authentication, permission, moderation, notification or user systems.
 
-## Development roadmap
+## Production roadmap
 
-The binding production roadmap is **v2.0**, containing **20 main phases and 138 real sub-steps**. Progress is tracked in [`PROJECT_STATUS.md`](PROJECT_STATUS.md). The binding roadmap is `forwext_master_gelistirme_plani_v2.txt` (plan v2.0, 20 main steps / 138 sub-steps).
-
-The first persistent server installation is expected after the migration/install/upgrade engine is functional at step **03.03**. Before that point development work does not require repeatedly installing each commit on a hosting account.
+The binding v2.0 production roadmap is **complete: 20/20 main phases and 138/138 real sub-steps**. Forwext 1.0.0 is the resulting first stable production release. Completion evidence is tracked in [`PROJECT_STATUS.md`](PROJECT_STATUS.md), while the binding historical roadmap remains `forwext_master_gelistirme_plani_v2.txt`.
 
 ## Repository
 

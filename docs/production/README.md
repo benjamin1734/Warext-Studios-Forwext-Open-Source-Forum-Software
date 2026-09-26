@@ -120,3 +120,19 @@ Roadmap 20.08 is complete only after all of the following are true:
 9. GitHub `v1.0.0` is published as a stable, immutable release and is not marked prerelease.
 
 The final changelog records the release commit, workflow evidence and published artifact hashes.
+
+## Final acceptance evidence
+
+Forwext 1.0.0 passed the final roadmap acceptance gates:
+
+- release commit: `c34dbffa9e7d3a39f937fdb44faad83d4bdcace1`;
+- qualification matrix: `36272244396` — success;
+- security qualification: `36272244419` — success;
+- performance/observability: `36272244391` — success;
+- database migration smoke: `36272244413` — success on MySQL 8.4 and MariaDB 10.11;
+- build/package/release: `36272244421` — success;
+- GitHub Release: `v1.0.0`, id `397398446`, stable and not a prerelease;
+- `forwext-v1.0.0-full.zip`: SHA-256 `bac7053e37be00c49fed869f0beb742ee901998cd1bd10d3bec129eee7838644`;
+- `forwext-v1.0.0-update.zip`: SHA-256 `d623099686b50721566421042b0763142fecf4aa3f11527ee7031eb0885975fd`.
+
+This closes roadmap 20.08 and the binding v2.0 plan at 20/20 main steps and 138/138 sub-steps.
