@@ -59,10 +59,10 @@ final class UpdateCoordinatorTest extends TestCase
 
     public function testSuccessfulUpdateCommitsFilesVersionAndReleasesMaintenance(): void
     {
-        $released = false;
+        $lockState = (object) ['released'=>false];
         $coordinator = $this->coordinator(
             new UpdateRebuildRegistry(['cache.clear'=>static function (): void {}]),
-            $released,
+            $lockState,
             HealthStatus::Healthy,
         );
 
@@ -80,19 +80,19 @@ final class UpdateCoordinatorTest extends TestCase
             (new FileInstalledVersionStore($this->directory . '/installed-version.json'))->current()?->value(),
         );
         self::assertFalse(is_file($this->directory . '/maintenance.json'));
-        self::assertTrue($released);
+        self::assertTrue($lockState->released);
     }
 
     public function testRebuildFailureRestoresDatabaseVersionAndFilesBeforeLeavingMaintenance(): void
     {
-        $released = false;
+        $lockState = (object) ['released'=>false];
         $coordinator = $this->coordinator(
             new UpdateRebuildRegistry([
                 'cache.clear'=>static function (): void {
                     throw new RuntimeException('synthetic rebuild failure');
                 },
             ]),
-            $released,
+            $lockState,
             HealthStatus::Healthy,
         );
 
@@ -115,7 +115,7 @@ final class UpdateCoordinatorTest extends TestCase
             (new FileInstalledVersionStore($this->directory . '/installed-version.json'))->current()?->value(),
         );
         self::assertFalse(is_file($this->directory . '/maintenance.json'));
-        self::assertTrue($released);
+        self::assertTrue($lockState->released);
 
         $backups = glob($this->directory . '/backups/forwext-backup-*.jsonl');
         self::assertIsArray($backups);
@@ -124,10 +124,10 @@ final class UpdateCoordinatorTest extends TestCase
 
     public function testUnhealthyPostUpdateVerificationTriggersFullRollback(): void
     {
-        $released = false;
+        $lockState = (object) ['released'=>false];
         $coordinator = $this->coordinator(
             new UpdateRebuildRegistry(['cache.clear'=>static function (): void {}]),
-            $released,
+            $lockState,
             HealthStatus::Unhealthy,
         );
 
@@ -146,13 +146,13 @@ final class UpdateCoordinatorTest extends TestCase
                 (new FileInstalledVersionStore($this->directory . '/installed-version.json'))->current()?->value(),
             );
             self::assertFalse(is_file($this->directory . '/maintenance.json'));
-            self::assertTrue($released);
+            self::assertTrue($lockState->released);
         }
     }
 
     private function coordinator(
         UpdateRebuildRegistry $rebuilds,
-        bool &$released,
+        object $lockState,
         HealthStatus $healthStatus,
     ): UpdateCoordinator {
         $database = new class implements TransactionalQueryExecutor {
@@ -254,7 +254,7 @@ final class UpdateCoordinatorTest extends TestCase
         return new UpdateCoordinator(
             new UpdatePackageInspector(),
             $versions,
-            self::lockManager($released),
+            self::lockManager($lockState),
             new UpdateMaintenanceLock($this->directory . '/maintenance.json'),
             new SystemBackupService($database, $this->directory . '/backups', 50),
             new UpdateFileTransaction($this->directory . '/project', $this->directory . '/snapshots'),
@@ -265,19 +265,19 @@ final class UpdateCoordinatorTest extends TestCase
         );
     }
 
-    private static function lockManager(bool &$released): LockManager
+    private static function lockManager(object $state): LockManager
     {
-        return new class($released) implements LockManager {
-            public function __construct(private bool &$released)
+        return new class($state) implements LockManager {
+            public function __construct(private object $state)
             {
             }
 
             public function acquire(string $name, int $ttlSeconds = 30, int $waitMilliseconds = 0): ?LockHandle
             {
-                return new class($name, $this->released) implements LockHandle {
+                return new class($name, $this->state) implements LockHandle {
                     public function __construct(
                         private string $lockName,
-                        private bool &$released,
+                        private object $state,
                     ) {
                     }
 
@@ -288,7 +288,7 @@ final class UpdateCoordinatorTest extends TestCase
 
                     public function release(): void
                     {
-                        $this->released = true;
+                        $this->state->released = true;
                     }
                 };
             }
