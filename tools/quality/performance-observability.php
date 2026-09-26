@@ -111,7 +111,7 @@ $database->transaction(function (TransactionalQueryExecutor $db) use (
         'INSERT INTO forwext_nodes '
         . '(node_id,parent_id,node_type,title,slug,description,visibility,sort_order,page_content,link_target,'
         . 'link_new_window,created_at_utc,updated_at_utc) '
-        . "VALUES (:id,NULL,'forum','Performance Forum','performance-forum','CI performance qualification','public',"
+        . "VALUES (:id,NULL,'forum','Performance Forum','performance-forum','CI performance qualification','listed',"
         . '0,NULL,NULL,0,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))',
         ['id'=>$forumId],
     ));
