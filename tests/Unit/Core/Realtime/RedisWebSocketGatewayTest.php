@@ -21,7 +21,11 @@ final class RedisWebSocketGatewayTest extends TestCase
             ->with(
                 self::stringContains("redis.call('PUBLISH'"),
                 ['forwext:realtime:broadcast'],
-                [self::callback(static function (string $payload): bool {
+                self::callback(static function (array $arguments): bool {
+                    $payload = $arguments[0] ?? null;
+                    if (!is_string($payload)) {
+                        return false;
+                    }
                     $decoded = json_decode($payload, true);
 
                     return is_array($decoded)
@@ -29,7 +33,7 @@ final class RedisWebSocketGatewayTest extends TestCase
                         && ($decoded['channel'] ?? null) === 'user:7'
                         && ($decoded['event'] ?? null) === 'notification.created'
                         && ($decoded['payload'] ?? null) === '{"id":9}';
-                })],
+                }),
             )
             ->willReturn(2);
 

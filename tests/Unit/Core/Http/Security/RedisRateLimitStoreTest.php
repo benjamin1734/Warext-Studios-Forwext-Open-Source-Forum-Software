@@ -19,7 +19,11 @@ final class RedisRateLimitStoreTest extends TestCase
             ->method('evaluate')
             ->with(
                 self::stringContains("redis.call('HSET'"),
-                [self::matchesRegularExpression('/^forwext:rate-limit:[a-f0-9]{64}$/D')],
+                self::callback(static fn (array $keys): bool =>
+                    count($keys) === 1
+                    && is_string($keys[0] ?? null)
+                    && preg_match('/^forwext:rate-limit:[a-f0-9]{64}$/D', $keys[0]) === 1
+                ),
                 ['1000', '60', '10'],
             )
             ->willReturn([1, 10, 9, 1060]);
