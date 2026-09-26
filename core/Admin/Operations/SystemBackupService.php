@@ -217,6 +217,94 @@ final readonly class SystemBackupService
         );
     }
 
+    public function restore(string $name, string $expectedSha256): SystemBackupEntry
+    {
+        if (preg_match('/^[a-f0-9]{64}$/D', $expectedSha256) !== 1) {
+            throw new RuntimeException('Backup restore checksum is invalid.');
+        }
+
+        $entry = $this->verify($name);
+        if (!$entry->verified || $entry->sha256 === null || !hash_equals($expectedSha256, $entry->sha256)) {
+            throw new RuntimeException('Backup restore checksum or manifest verification failed.');
+        }
+
+        $path = $this->path($name);
+        $this->validateRestorePayload($path);
+
+        $tables = $this->database->fetchAll(new CompiledQuery(
+            "SELECT TABLE_NAME FROM information_schema.TABLES "
+            . "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE' "
+            . "AND TABLE_NAME LIKE 'forwext\\_%' ESCAPE '\\\\' ORDER BY TABLE_NAME DESC"
+        ));
+
+        $this->database->execute(new CompiledQuery('SET FOREIGN_KEY_CHECKS=0'));
+        try {
+            foreach ($tables as $row) {
+                $table = $row['TABLE_NAME'] ?? null;
+                if (!is_string($table) || !self::validIdentifier($table)) {
+                    throw new RuntimeException('Backup restore encountered an invalid existing table name.');
+                }
+                $this->database->execute(new CompiledQuery('DROP TABLE IF EXISTS ' . self::quoteIdentifier($table)));
+            }
+
+            $handle = @fopen($path, 'rb');
+            if ($handle === false) {
+                throw new RuntimeException('Backup restore file cannot be opened.');
+            }
+
+            $currentTable = null;
+            try {
+                while (($line = fgets($handle)) !== false) {
+                    $record = self::decodeRecord($line);
+                    $type = $record['type'];
+
+                    if ($type === 'table') {
+                        $table = $record['name'] ?? null;
+                        $createSql = $record['create_sql'] ?? null;
+                        if (!is_string($table) || !is_string($createSql)) {
+                            throw new RuntimeException('Backup restore table record is invalid.');
+                        }
+                        $this->database->execute(new CompiledQuery($createSql));
+                        $currentTable = $table;
+                        continue;
+                    }
+
+                    if ($type !== 'row') {
+                        continue;
+                    }
+
+                    $table = $record['table'] ?? null;
+                    $data = $record['data'] ?? null;
+                    if (!is_string($table) || $table !== $currentTable || !is_array($data)) {
+                        throw new RuntimeException('Backup restore row record is invalid.');
+                    }
+
+                    [$columns, $parameters] = self::decodeRowForRestore($data);
+                    if ($columns === []) {
+                        throw new RuntimeException('Backup restore row has no columns.');
+                    }
+
+                    $columnSql = implode(',', array_map(self::quoteIdentifier(...), $columns));
+                    $placeholderSql = implode(',', array_map(
+                        static fn (int $index): string => ':v' . $index,
+                        array_keys($columns),
+                    ));
+                    $this->database->execute(new CompiledQuery(
+                        'INSERT INTO ' . self::quoteIdentifier($table)
+                        . ' (' . $columnSql . ') VALUES (' . $placeholderSql . ')',
+                        $parameters,
+                    ));
+                }
+            } finally {
+                fclose($handle);
+            }
+        } finally {
+            $this->database->execute(new CompiledQuery('SET FOREIGN_KEY_CHECKS=1'));
+        }
+
+        return $this->verify($name);
+    }
+
     public function delete(string $name): void
     {
         $path = $this->path($name);
@@ -271,6 +359,178 @@ final readonly class SystemBackupService
             $tables,
             $rows,
         );
+    }
+
+    private function validateRestorePayload(string $path): void
+    {
+        $handle = @fopen($path, 'rb');
+        if ($handle === false) {
+            throw new RuntimeException('Backup restore file cannot be opened.');
+        }
+
+        $headerSeen = false;
+        $manifestSeen = false;
+        $tables = [];
+        $currentTable = null;
+        try {
+            while (($line = fgets($handle)) !== false) {
+                $record = self::decodeRecord($line);
+                $type = $record['type'];
+
+                if (!$headerSeen) {
+                    if ($type !== 'header' || ($record['format'] ?? null) !== self::FORMAT) {
+                        throw new RuntimeException('Backup restore header is invalid.');
+                    }
+                    $headerSeen = true;
+                    continue;
+                }
+
+                if ($manifestSeen) {
+                    throw new RuntimeException('Backup restore contains records after its manifest.');
+                }
+
+                if ($type === 'table') {
+                    $name = $record['name'] ?? null;
+                    $createSql = $record['create_sql'] ?? null;
+                    if (
+                        !is_string($name)
+                        || !self::validIdentifier($name)
+                        || isset($tables[$name])
+                        || !is_string($createSql)
+                        || preg_match('/^CREATE TABLE(?: IF NOT EXISTS)? `?' . preg_quote($name, '/') . '`?\\s/iD', $createSql) !== 1
+                    ) {
+                        throw new RuntimeException('Backup restore table definition is invalid.');
+                    }
+                    $tables[$name] = true;
+                    $currentTable = $name;
+                    continue;
+                }
+
+                if ($type === 'row') {
+                    $table = $record['table'] ?? null;
+                    $data = $record['data'] ?? null;
+                    if (!is_string($table) || $table !== $currentTable || !is_array($data) || $data === []) {
+                        throw new RuntimeException('Backup restore row ordering is invalid.');
+                    }
+                    self::decodeRowForRestore($data);
+                    continue;
+                }
+
+                if ($type === 'manifest') {
+                    $manifestSeen = true;
+                    continue;
+                }
+
+                throw new RuntimeException('Backup restore record type is unsupported.');
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if (!$headerSeen || !$manifestSeen) {
+            throw new RuntimeException('Backup restore payload is incomplete.');
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private static function decodeRecord(string $line): array
+    {
+        if (strlen($line) > 16777216) {
+            throw new RuntimeException('Backup contains an oversized record.');
+        }
+        try {
+            $record = json_decode(trim($line), true, 64, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new RuntimeException('Backup contains invalid JSON.', previous: $exception);
+        }
+        if (!is_array($record) || !is_string($record['type'] ?? null)) {
+            throw new RuntimeException('Backup record shape is invalid.');
+        }
+
+        return $record;
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array{0:list<string>,1:array<string,string|int|float|bool|null>}
+     */
+    private static function decodeRowForRestore(array $data): array
+    {
+        $columns = [];
+        $parameters = [];
+        foreach ($data as $column => $encoded) {
+            if (!is_string($column) || !self::validIdentifier($column) || !is_array($encoded)) {
+                throw new RuntimeException('Backup restore row column is invalid.');
+            }
+            $type = $encoded['type'] ?? null;
+            if (!is_string($type)) {
+                throw new RuntimeException('Backup restore row value type is invalid.');
+            }
+
+            $value = match ($type) {
+                'null' => null,
+                'int' => self::restoreInteger($encoded['value'] ?? null),
+                'float' => self::restoreFloat($encoded['value'] ?? null),
+                'bool' => self::restoreBool($encoded['value'] ?? null),
+                'base64' => self::restoreBinary($encoded['value'] ?? null),
+                default => throw new RuntimeException('Backup restore row value type is unsupported.'),
+            };
+
+            $index = count($columns);
+            $columns[] = $column;
+            $parameters['v' . $index] = $value;
+        }
+
+        return [$columns, $parameters];
+    }
+
+    private static function restoreInteger(mixed $value): int
+    {
+        if (!is_int($value)) {
+            throw new RuntimeException('Backup restore integer value is invalid.');
+        }
+        return $value;
+    }
+
+    private static function restoreFloat(mixed $value): float
+    {
+        if (!is_float($value) && !is_int($value)) {
+            throw new RuntimeException('Backup restore float value is invalid.');
+        }
+        return (float) $value;
+    }
+
+    private static function restoreBool(mixed $value): bool
+    {
+        if (!is_bool($value)) {
+            throw new RuntimeException('Backup restore boolean value is invalid.');
+        }
+        return $value;
+    }
+
+    private static function restoreBinary(mixed $value): string
+    {
+        if (!is_string($value)) {
+            throw new RuntimeException('Backup restore base64 value is invalid.');
+        }
+        $decoded = base64_decode($value, true);
+        if ($decoded === false) {
+            throw new RuntimeException('Backup restore base64 value is invalid.');
+        }
+        return $decoded;
+    }
+
+    private static function validIdentifier(string $value): bool
+    {
+        return preg_match('/^[A-Za-z0-9_]{1,64}$/D', $value) === 1;
+    }
+
+    private static function quoteIdentifier(string $value): string
+    {
+        if (!self::validIdentifier($value)) {
+            throw new RuntimeException('Backup SQL identifier is invalid.');
+        }
+        return '`' . $value . '`';
     }
 
     /** @param resource $handle @param array<string,mixed> $record */
