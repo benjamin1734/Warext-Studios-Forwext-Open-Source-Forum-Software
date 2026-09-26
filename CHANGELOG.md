@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.04 — TypeScript SDK
+
+- Added the official dependency-free `@forwext/sdk` ESM client with typed v1 resource methods, bearer/API-key auth helpers, pagination and structured API errors.
+- Added generated endpoint/resource/scope contract types sourced from the PHP API registry and CI stale-generation enforcement.
+- Added live API version compatibility checks and subfolder-safe URL resolution.
+- Added browser/import/default package exports and consumer package smoke validation that rejects Node-only/CommonJS leakage and verifies the npm publish surface.
+- Implementation/fix commits: `8f7eb36c2d2ce28169cdcdf17372e76d518c6dfa`, `ac77419bfeb7a01baf2e31fadfed32d51e879843`, `78566e767db8ebe28797895a2572af6e980d48e6`, `3804331051c0b4cb157a5475a16d4df585570b09`, `f6f235bb57058516c3a555f439b196b6c2042633`.
+- GitHub Actions build run `36231907490` and database migration smoke run `36231907513` succeeded.
+
 ### 19.03 — Webhook platformu
 
 - Added persistent outbound webhook subscriptions, delivery/attempt logs, targeted test delivery and add-on outbound-event publishing.

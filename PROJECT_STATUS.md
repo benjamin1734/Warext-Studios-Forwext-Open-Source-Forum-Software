@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.59-dev
+CURRENT_VERSION = 0.0.7.60-dev
 LAST_COMPLETED_MAIN_STEP = 18
-LAST_COMPLETED_SUBSTEP = 19.03
-CURRENT_STEP = 19.04
-LAST_COMMIT = c2f6c1b789c41c58bf438f0b251e59ad647adf5d
+LAST_COMPLETED_SUBSTEP = 19.04
+CURRENT_STEP = 19.05
+LAST_COMMIT = f6f235bb57058516c3a555f439b196b6c2042633
 BLOCKERS = none
-NEXT_STEP = 19.04 - TypeScript SDK
+NEXT_STEP = 19.05 - React UI/extension slots
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 19.04 - TypeScript SDK
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`; main step `19` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.03`.
-- Current sub-step: `19.04 — TypeScript SDK`.
-- Remaining roadmap work after 19.03: **11 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.04`.
+- Current sub-step: `19.05 — React UI/extension slots`.
+- Remaining roadmap work after 19.04: **10 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 19.04
+
+- Added the official dependency-free `@forwext/sdk` TypeScript client for the versioned `/api/v1` surface.
+- Added typed methods for users, forums, threads, posts, conversations, notifications, modules, Marketplace and support resources.
+- Added bearer-token and API-key helpers with managed-header protection so callers cannot accidentally override SDK authentication headers.
+- Added bounded pagination helpers, `ApiPage<T>`, `nextPageParams()` and async pagination iteration aligned with the server's `page/per_page/has_more` contract.
+- Added `ForwextApiError` with stable API code/status/details/retry metadata plus `ForwextCompatibilityError` and `assertCompatible()` for the live `v1` contract.
+- Added generated route/resource/scope contract types from the PHP `ApiV1EndpointRegistry`; CI rejects stale generated TypeScript.
+- Added subfolder-safe base URL resolution so installations such as `https://forum.example.com/community/` produce `/community/api/v1/...` requests.
+- Added explicit ESM browser/import/default package exports and runtime-neutral implementation based only on Web Platform `fetch`, `URL` and `AbortSignal`.
+- Added consumer package validation: compiled output is imported, checked for Node-only/CommonJS leakage and verified through `npm pack --dry-run` to include the published declarations/runtime without source/test leakage.
+- Node/npm remain SDK development/consumer tools only and are not required by the native PHP/cPanel runtime.
+- Implementation/fix commits: `8f7eb36c2d2ce28169cdcdf17372e76d518c6dfa`, `ac77419bfeb7a01baf2e31fadfed32d51e879843`, `78566e767db8ebe28797895a2572af6e980d48e6`, `3804331051c0b4cb157a5475a16d4df585570b09`, `f6f235bb57058516c3a555f439b196b6c2042633`.
+- GitHub Actions build run `36231907490`: success; PHP 8.4/8.5 PHPUnit, generated SDK contract check, TypeScript typecheck/build, runtime/package smoke and cPanel package build passed.
+- Database migration smoke run `36231907513`: success on MySQL 8.4 and MariaDB 10.11.
+- No database migration was required for the SDK.
+- Version: `0.0.7.60-dev`.
+- Next: `19.05 — React UI/extension slots`.
 
 ## Completed in 19.03
 
