@@ -17,6 +17,9 @@ use Forwext\Core\Queue\QueueName;
 use Forwext\Core\Search\NativeDatabaseSearchDriver;
 use Forwext\Core\Search\SearchQuery;
 
+$root = dirname(__DIR__, 2);
+require $root . '/vendor/autoload.php';
+
 final class PerformanceCountingDatabase implements TransactionalQueryExecutor
 {
     public int $queries = 0;
@@ -64,9 +67,6 @@ final class PerformanceCountingDatabase implements TransactionalQueryExecutor
         return $this->inner->transaction(fn (): mixed => $callback($this));
     }
 }
-
-$root = dirname(__DIR__, 2);
-require $root . '/vendor/autoload.php';
 
 $env = static function (string $key, ?string $default = null): string {
     $value = getenv($key);
