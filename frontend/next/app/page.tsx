@@ -43,7 +43,7 @@ export default async function HomePage() {
         {marketplace.status === "fulfilled" && marketplace.value.items.length > 0 ? (
           <div className="grid">
             {marketplace.value.items.map((listing) => (
-              <Link className="card-link" href={"/marketplace/" + listing.id} key={listing.id}>
+              <Link className="card-link" href={"/marketplace/listings/" + listing.id} key={listing.id}>
                 <ForwextSurface heading={listing.title}>
                   <p className="muted">{listing.description}</p>
                   <div className="meta">

@@ -40,7 +40,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
           <div className="post-body">{listing.description}</div>
         </ForwextSurface>
         <ForwextSurface heading="Satıcı">
-          <Link href={"/members/" + listing.seller_user_id}>
+          <Link href={"/users/" + listing.seller_user_id}>
             Satıcı profilini görüntüle
           </Link>
         </ForwextSurface>

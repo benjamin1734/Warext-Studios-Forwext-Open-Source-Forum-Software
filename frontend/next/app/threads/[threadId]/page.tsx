@@ -55,7 +55,7 @@ export default async function ThreadPage({ params, searchParams }: ThreadPagePro
                   post.author_user_id === null ? (
                     "Silinmiş kullanıcı"
                   ) : (
-                    <Link href={"/members/" + post.author_user_id}>
+                    <Link href={"/users/" + post.author_user_id}>
                       Kullanıcı {post.author_user_id.slice(0, 8)}
                     </Link>
                   )

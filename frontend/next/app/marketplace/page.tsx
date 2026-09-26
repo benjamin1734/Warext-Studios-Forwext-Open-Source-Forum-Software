@@ -31,7 +31,7 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
       ) : (
         <div className="grid">
           {result.items.map((listing) => (
-            <Link className="card-link" href={"/marketplace/" + listing.id} key={listing.id}>
+            <Link className="card-link" href={"/marketplace/listings/" + listing.id} key={listing.id}>
               <ForwextSurface heading={listing.title}>
                 <p className="muted">{listing.description}</p>
                 <div className="meta">
