@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Closure;
 use Forwext\Core\Cache\DatabaseCacheStore;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\DatabaseConfig;
@@ -17,7 +16,54 @@ use Forwext\Core\Queue\DatabaseQueueDriver;
 use Forwext\Core\Queue\QueueName;
 use Forwext\Core\Search\NativeDatabaseSearchDriver;
 use Forwext\Core\Search\SearchQuery;
-use RuntimeException;
+
+final class PerformanceCountingDatabase implements TransactionalQueryExecutor
+{
+    public int $queries = 0;
+
+    public function __construct(private readonly TransactionalQueryExecutor $inner)
+    {
+    }
+
+    public function reset(): void
+    {
+        $this->queries = 0;
+    }
+
+    public function execute(CompiledQuery $query): int
+    {
+        ++$this->queries;
+        return $this->inner->execute($query);
+    }
+
+    public function fetchOne(CompiledQuery $query): ?array
+    {
+        ++$this->queries;
+        return $this->inner->fetchOne($query);
+    }
+
+    public function fetchAll(CompiledQuery $query): array
+    {
+        ++$this->queries;
+        return $this->inner->fetchAll($query);
+    }
+
+    public function fetchValue(CompiledQuery $query): mixed
+    {
+        ++$this->queries;
+        return $this->inner->fetchValue($query);
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->inner->inTransaction();
+    }
+
+    public function transaction(\Closure $callback): mixed
+    {
+        return $this->inner->transaction(fn (): mixed => $callback($this));
+    }
+}
 
 $root = dirname(__DIR__, 2);
 require $root . '/vendor/autoload.php';
@@ -28,7 +74,7 @@ $env = static function (string $key, ?string $default = null): string {
         if ($default !== null) {
             return $default;
         }
-        throw new RuntimeException(sprintf('Required environment variable %s is missing.', $key));
+        throw new \RuntimeException(sprintf('Required environment variable %s is missing.', $key));
     }
     return $value;
 };
@@ -40,7 +86,7 @@ if ($threadCount < 200 || $threadCount > 5000
     || $postsPerThread < 2 || $postsPerThread > 50
     || $iterations < 10 || $iterations > 200
 ) {
-    throw new RuntimeException('Performance qualification dimensions are outside their safe CI bounds.');
+    throw new \RuntimeException('Performance qualification dimensions are outside their safe CI bounds.');
 }
 
 $database = (new PdoConnectionFactory())->create(new DatabaseConfig(
@@ -132,7 +178,7 @@ $database->transaction(function (TransactionalQueryExecutor $db) use (
 });
 
 if ($targetThreadId === '') {
-    throw new RuntimeException('Performance seed did not select a target thread.');
+    throw new \RuntimeException('Performance seed did not select a target thread.');
 }
 
 $seedMilliseconds = (hrtime(true) - $started) / 1_000_000;
@@ -147,21 +193,21 @@ $searchQuery = new SearchQuery('forwextneedle', ['public'], ['thread'], 'en', 20
 
 $counting->reset();
 if (count($nodes->all()) < 1 || $counting->queries !== 1) {
-    throw new RuntimeException('Forum listing violated its one-query N+1 budget.');
+    throw new \RuntimeException('Forum listing violated its one-query N+1 budget.');
 }
 $counting->reset();
 if (count($threads->findByForum($forumEntityId, 50, 0)) !== 50 || $counting->queries !== 1) {
-    throw new RuntimeException('Thread listing violated its one-query N+1 budget.');
+    throw new \RuntimeException('Thread listing violated its one-query N+1 budget.');
 }
 $counting->reset();
 $postPage = $posts->pageByThread($threadEntityId, 1, 50);
 if (count($postPage->posts) !== $postsPerThread || $counting->queries !== 2) {
-    throw new RuntimeException('Post pagination violated its two-query count+page budget.');
+    throw new \RuntimeException('Post pagination violated its two-query count+page budget.');
 }
 $counting->reset();
 $hits = $search->search($searchQuery);
 if ($hits === [] || $counting->queries !== 1) {
-    throw new RuntimeException('Native search violated its one-query budget or returned no benchmark hit.');
+    throw new \RuntimeException('Native search violated its one-query budget or returned no benchmark hit.');
 }
 
 $latencies = [
@@ -193,7 +239,7 @@ foreach ($latencies as $name=>$values) {
 }
 foreach (['forum_ms'=>750.0,'thread_ms'=>750.0,'post_ms'=>750.0,'search_ms'=>1500.0] as $name=>$budget) {
     if ($summary[$name]['p95'] > $budget) {
-        throw new RuntimeException(sprintf(
+        throw new \RuntimeException(sprintf(
             '%s p95 %.2f ms exceeds the shared-hosting qualification budget %.2f ms.',
             $name,
             $summary[$name]['p95'],
@@ -202,14 +248,14 @@ foreach (['forum_ms'=>750.0,'thread_ms'=>750.0,'post_ms'=>750.0,'search_ms'=>150
     }
 }
 if ($loadMilliseconds > 20000.0) {
-    throw new RuntimeException(sprintf('Combined load probe %.2f ms exceeds the 20 second CI budget.', $loadMilliseconds));
+    throw new \RuntimeException(sprintf('Combined load probe %.2f ms exceeds the 20 second CI budget.', $loadMilliseconds));
 }
 
 $cache = new DatabaseCacheStore($database);
 $cacheWriteMs = performanceMeasure(static fn () => $cache->put('perf.hot', 'warm-value', 300, ['perf']));
 $cacheReadMs = performanceMeasure(static fn () => $cache->get('perf.hot'));
 if ($cache->get('perf.hot') === null) {
-    throw new RuntimeException('Database cache qualification did not return the written entry.');
+    throw new \RuntimeException('Database cache qualification did not return the written entry.');
 }
 $cacheEntries = (int) $database->fetchValue(new CompiledQuery('SELECT COUNT(*) FROM forwext_cache'));
 
@@ -224,7 +270,7 @@ $queueReadyBefore = (int) $database->fetchValue(new CompiledQuery(
 ));
 $reservation = $queue->reserve($queueName);
 if ($reservation === null) {
-    throw new RuntimeException('Database queue qualification could not reserve a ready job.');
+    throw new \RuntimeException('Database queue qualification could not reserve a ready job.');
 }
 $queue->acknowledge($reservation);
 $queueReadyAfter = (int) $database->fetchValue(new CompiledQuery(
@@ -233,17 +279,17 @@ $queueReadyAfter = (int) $database->fetchValue(new CompiledQuery(
 ));
 $failedJobs = (int) $database->fetchValue(new CompiledQuery('SELECT COUNT(*) FROM forwext_failed_jobs'));
 if ($queueReadyBefore !== 3 || $queueReadyAfter !== 2) {
-    throw new RuntimeException('Queue backlog metrics did not track reserve/ack behavior.');
+    throw new \RuntimeException('Queue backlog metrics did not track reserve/ack behavior.');
 }
 
 $peakMemory = memory_get_peak_usage(true);
 if ($peakMemory > 100 * 1024 * 1024) {
-    throw new RuntimeException(sprintf('Peak memory %d bytes exceeds the 100 MiB qualification ceiling.', $peakMemory));
+    throw new \RuntimeException(sprintf('Peak memory %d bytes exceeds the 100 MiB qualification ceiling.', $peakMemory));
 }
 
 $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
 if (!is_array($opcache) || ($opcache['opcache_enabled'] ?? false) !== true) {
-    throw new RuntimeException('OPcache must be enabled for the low-resource performance qualification.');
+    throw new \RuntimeException('OPcache must be enabled for the low-resource performance qualification.');
 }
 
 $result = [
@@ -286,16 +332,16 @@ $result = [
 
 $build = $root . '/build';
 if (!is_dir($build) && !mkdir($build, 0775, true) && !is_dir($build)) {
-    throw new RuntimeException('Cannot create performance artifact directory.');
+    throw new \RuntimeException('Cannot create performance artifact directory.');
 }
 $json = json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
 if (file_put_contents($build . '/performance-observability.json', $json) === false) {
-    throw new RuntimeException('Cannot write performance observability artifact.');
+    throw new \RuntimeException('Cannot write performance observability artifact.');
 }
 
 echo $json;
 
-function performanceMeasure(Closure $operation): float
+function performanceMeasure(\Closure $operation): float
 {
     $started = hrtime(true);
     $operation();
@@ -308,52 +354,4 @@ function performancePercentile(array $values, int $percentile): float
     sort($values, SORT_NUMERIC);
     $index = (int) ceil((count($values) * $percentile) / 100) - 1;
     return round($values[max(0, min(count($values) - 1, $index))], 3);
-}
-
-final class PerformanceCountingDatabase implements TransactionalQueryExecutor
-{
-    public int $queries = 0;
-
-    public function __construct(private readonly TransactionalQueryExecutor $inner)
-    {
-    }
-
-    public function reset(): void
-    {
-        $this->queries = 0;
-    }
-
-    public function execute(CompiledQuery $query): int
-    {
-        ++$this->queries;
-        return $this->inner->execute($query);
-    }
-
-    public function fetchOne(CompiledQuery $query): ?array
-    {
-        ++$this->queries;
-        return $this->inner->fetchOne($query);
-    }
-
-    public function fetchAll(CompiledQuery $query): array
-    {
-        ++$this->queries;
-        return $this->inner->fetchAll($query);
-    }
-
-    public function fetchValue(CompiledQuery $query): mixed
-    {
-        ++$this->queries;
-        return $this->inner->fetchValue($query);
-    }
-
-    public function inTransaction(): bool
-    {
-        return $this->inner->inTransaction();
-    }
-
-    public function transaction(Closure $callback): mixed
-    {
-        return $this->inner->transaction(fn (): mixed => $callback($this));
-    }
 }
