@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { classNames } from "../class-names.js";
 
-export interface ForwextAlertProps extends HTMLAttributes<HTMLDivElement> {
+export interface ForwextAlertProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   tone?: "info" | "success" | "warning" | "danger";
   title?: ReactNode;
 }
