@@ -27,6 +27,10 @@ final class SystemOperationsWebSurfaceTest extends TestCase
         self::assertStringContainsString('system.backup.manage', $service);
         self::assertStringContainsString('system.maintenance.manage', $service);
         self::assertStringContainsString('system.repair.manage', $service);
+        self::assertStringContainsString('assertUpdateAllowed', $service);
+        self::assertStringContainsString('self::BACKUP_PERMISSION', $service);
+        self::assertStringContainsString('self::MAINTENANCE_PERMISSION', $service);
+        self::assertStringContainsString('self::REPAIR_PERMISSION', $service);
         self::assertStringContainsString('X-Robots-Tag', $handler);
         self::assertStringContainsString('private, no-store', $handler);
         self::assertStringContainsString('name="_csrf"', $html);
@@ -60,6 +64,7 @@ final class SystemOperationsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("!== 'MAINTENANCE'", $handler);
         self::assertStringContainsString("!== 'CLEAR CACHE'", $handler);
+        self::assertStringContainsString("!== 'UPDATE'", $handler);
         self::assertStringContainsString("!== \$jobId", $handler);
         self::assertStringContainsString("!== \$name", $handler);
     }
