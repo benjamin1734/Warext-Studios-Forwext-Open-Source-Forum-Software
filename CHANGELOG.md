@@ -6,6 +6,13 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 20.07 — Performance/observability qualification
+
+- Added a real MySQL 8.4 shared-hosting performance gate with 800 threads, 6,400 posts, 800 search documents and 25 repeated production-repository/search iterations under a 128 MiB PHP profile.
+- Added structural N+1 query budgets, p50/p95/max latency reporting, database cache/queue observability, peak-memory and OPcache acceptance.
+- Final performance run `36270594699` succeeded; security `36270594844`, qualification `36270594757`, database `36270594763` and package `36270594697` also succeeded.
+- Final fix commit: `c7e5a39abb31cde95564a16ea5f511b39880d8b6`.
+
 ### 20.06 — Security qualification
 
 - Added explicit PHP 8.4/8.5 gates for SQLi, XSS, CSRF, SSRF, IDOR/BOLA, upload/path traversal, OAuth linking, session, webhook and secret-leakage controls.

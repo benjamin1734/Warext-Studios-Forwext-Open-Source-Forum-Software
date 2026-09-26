@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.68-dev
+CURRENT_VERSION = 0.0.7.69-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.06
-CURRENT_STEP = 20.07
-LAST_COMMIT = b9274e7a61859b3fd573efc1dc79bf8ea9766374
+LAST_COMPLETED_SUBSTEP = 20.07
+CURRENT_STEP = 20.08
+LAST_COMMIT = c7e5a39abb31cde95564a16ea5f511b39880d8b6
 BLOCKERS = none
-NEXT_STEP = 20.07 - Performance/observability qualification
+NEXT_STEP = 20.08 - Documentation + 1.0.0 final acceptance
 ```
 
 ## Current position
@@ -21,13 +21,31 @@ NEXT_STEP = 20.07 - Performance/observability qualification
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.06`.
-- Current sub-step: `20.07 — Performance/observability qualification`.
-- Remaining roadmap work after 20.06: **2 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.07`.
+- Current sub-step: `20.08 — Documentation + 1.0.0 final acceptance`.
+- Remaining roadmap work after 20.07: **1 real sub-step**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.07
+
+- Added a reproducible shared-hosting performance/observability qualification workflow on PHP 8.4 + MySQL 8.4 under a 128 MiB memory limit with CLI OPcache enabled.
+- Seeded the real production schema with 1 forum, 800 threads, 6,400 posts and 800 native FULLTEXT search documents.
+- Exercised production forum/thread/post repositories and native search for 25 iterations with p50/p95/max latency reporting.
+- Added structural N+1 query budgets: forum listing 1 query, thread listing 1 query, post page 2 queries and search 1 query.
+- Exercised the real database cache and database queue, recording cache timings/backlog/failed-job metrics without requiring Redis or worker daemons.
+- Peak process memory was 4 MiB under the 128 MiB profile; OPcache was enabled.
+- Final measured run: seed 4245.521 ms; combined load 67.871 ms; p95 forum 0.727 ms, thread 1.54 ms, post 1.432 ms, search 1.093 ms.
+- Performance run `36270594699`: success; artifact `performance-observability` uploaded.
+- Security run `36270594844`: success.
+- Qualification matrix run `36270594757`: success.
+- Database migration smoke run `36270594763`: success on MySQL 8.4 and MariaDB 10.11.
+- Build/package run `36270594697`: success.
+- Implementation/fix commits: `8d40836828d434f66a377552ca54fab5120b740d`, `82d364474a52c016401e3b637e24b227ea094a06`, `fd4825df53bfebee2403e4cdd354023cc59177df`, `c7e5a39abb31cde95564a16ea5f511b39880d8b6`.
+- Version: `0.0.7.69-dev`.
+- Next: `20.08 — Documentation + 1.0.0 final acceptance`.
 
 ## Completed in 20.06
 
