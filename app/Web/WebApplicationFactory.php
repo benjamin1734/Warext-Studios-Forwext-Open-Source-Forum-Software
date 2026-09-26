@@ -199,6 +199,7 @@ use Forwext\Core\Content\Spellcheck\TurkishSpellcheckProvider;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\DatabaseConnection;
 use Forwext\Core\Database\PdoConnectionFactory;
+use Forwext\Core\Deployment\AdvancedRuntimeFactory;
 use Forwext\Core\Domain\Access\Appearance\DatabaseRoleAppearanceRepository;
 use Forwext\Core\Domain\Access\DatabaseUserAccessAssignmentProvider;
 use Forwext\Core\Domain\Access\Permission\Analyzer\PermissionAnalyzer;
@@ -420,6 +421,7 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('security.secret_store_path')),
             new SecretCipher($this->masterKey($config)),
         );
+        $runtime = new AdvancedRuntimeFactory($config, $database, $secretStore, $this->projectRoot);
         $authorizer = $this->permissionAuthorizer($database);
         $users = new DatabaseUserRepository($database);
         $discipline = new DatabaseDisciplineRepository($database);
@@ -427,7 +429,7 @@ final readonly class WebApplicationFactory
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
         $profileService = new ProfileService($profileStore, $accessPolicy);
         $sessions = new AuthSessionManager(
-            $this->sessionStore($config, $database),
+            $runtime->sessionStore(),
             new DatabaseCredentialStore($database),
             $config->requireInt('authentication.session.ttl_seconds'),
         );
@@ -590,8 +592,8 @@ final readonly class WebApplicationFactory
             new SystemLogReader($this->projectPath($config->requireString('logging.path'))),
             $systemBackups,
             SystemMaintenanceSchedulerCatalog::coreDefaults(),
-            new DatabaseQueueDriver($database),
-            new DatabaseSchedulerClaimStore($database),
+            $runtime->queueDriver(),
+            $runtime->schedulerClaimStore(),
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
             $this->projectPath($config->requireString('cache.path')),
@@ -643,7 +645,7 @@ final readonly class WebApplicationFactory
             new AuthorizerSpellcheckPermissionResolver($authorizer),
             $contentGovernanceAudit,
         );
-        $contentManagerQueue = new DatabaseQueueDriver($database);
+        $contentManagerQueue = $runtime->queueDriver();
         $contentManagerRepository = new DatabaseContentManagerRepository($database);
         $contentManagerOperations = new DatabaseContentManagerOperationRepository($database);
         $contentManagerPipeline = ForumContentPipelineFactory::create(
@@ -916,7 +918,7 @@ final readonly class WebApplicationFactory
             $marketplace,
         );
         $searchService = new PermissionAwareSearchService(
-            new ResilientSearchDriver(new NativeDatabaseSearchDriver($database)),
+            $runtime->searchDriver(),
             $authorizer,
             [
                 new PublicSearchAccessScopeProvider(),
@@ -963,7 +965,7 @@ final readonly class WebApplicationFactory
             NotificationSoundCatalog::coreDefaults(),
         );
         $notificationRealtime = new NotificationRealtimeService(
-            new PollingRealtimeTransport(new DatabaseRealtimeMessageStore($database)),
+            $runtime->realtimeTransport(),
             new DatabaseNotificationRealtimeReader($database),
             $authorizer,
         );
@@ -1084,7 +1086,7 @@ final readonly class WebApplicationFactory
             new DatabasePrivateApiV1ReadRepository($database),
             new ApiV1CredentialResolver(new DatabaseApiV1CredentialRepository($database)),
             new PermissionEngineApiV1AccountPermissionChecker($authorizer),
-            new FileRateLimitStore($this->projectRoot . '/storage/ratelimit/api-v1'),
+            $runtime->rateLimitStore(),
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
@@ -1973,12 +1975,13 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('security.secret_store_path')),
             new SecretCipher($this->masterKey($config)),
         );
+        $runtime=new AdvancedRuntimeFactory($config,$database,$secretStore,$this->projectRoot);
 
         return new WebhookPlatformService(
             new DatabaseWebhookRepository($database),
             new WebhookSecretManager($secretStore),
             new WebhookDestinationPolicy(new NativeHostAddressResolver()),
-            new DatabaseQueueDriver($database),
+            $runtime->queueDriver(),
         );
     }
 
@@ -1990,10 +1993,11 @@ final readonly class WebApplicationFactory
             $this->projectPath($config->requireString('security.secret_store_path')),
             new SecretCipher($this->masterKey($config)),
         );
+        $runtime=new AdvancedRuntimeFactory($config,$database,$secretStore,$this->projectRoot);
         $repository=new DatabaseWebhookRepository($database);
         $secrets=new WebhookSecretManager($secretStore);
         $destinations=new WebhookDestinationPolicy(new NativeHostAddressResolver());
-        $queue=new DatabaseQueueDriver($database);
+        $queue=$runtime->queueDriver();
 
         return new WebhookWorker(
             $queue,
@@ -2011,9 +2015,14 @@ final readonly class WebApplicationFactory
     {
         $config = $this->config();
         $database = $this->database($config);
+        $secretStore = new EncryptedFileSecretStore(
+            $this->projectPath($config->requireString('security.secret_store_path')),
+            new SecretCipher($this->masterKey($config)),
+        );
+        $runtime = new AdvancedRuntimeFactory($config, $database, $secretStore, $this->projectRoot);
         $users = new DatabaseUserRepository($database);
         $sessions = new AuthSessionManager(
-            $this->sessionStore($config, $database),
+            $runtime->sessionStore(),
             new DatabaseCredentialStore($database),
             $config->requireInt('authentication.session.ttl_seconds'),
         );

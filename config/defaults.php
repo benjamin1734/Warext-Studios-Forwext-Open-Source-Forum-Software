@@ -79,12 +79,15 @@ return [
         'hidden_poll_interval_ms' => 15000,
         'sse_retry_ms' => 4000,
         'websocket_path' => null,
+        'redis_broadcast_channel' => 'forwext:realtime:broadcast',
         'message_retention_seconds' => 86400,
     ],
     'search' => [
         'driver' => 'native',
         'external' => [
             'endpoint' => null,
+            'index' => 'forwext',
+            'timeout_ms' => 5000,
             'api_key_secret' => 'search.external.api_key',
         ],
     ],
@@ -277,6 +280,7 @@ return [
             'cookie_max_age' => 7200,
         ],
         'rate_limit' => [
+            'driver' => 'file',
             'storage_path' => 'storage/rate-limit',
             'default_limit' => 120,
             'default_window_seconds' => 60,
