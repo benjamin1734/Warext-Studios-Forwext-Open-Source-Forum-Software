@@ -29,3 +29,14 @@ API keys use `apiKeyAuth(...)`. The client rejects attempts to override managed 
 Collection methods return typed `ApiPage<T>` values. `client.paginate(...)` can stream page item arrays while respecting server pagination metadata.
 
 Node/npm are SDK development/consumer concerns only. The Forwext PHP application and cPanel production runtime do not require Node.js to serve the REST API.
+
+
+## Runtime compatibility
+
+The package is ESM and exposes the same dependency-free build for browser and server consumers. It does not import Node.js built-ins; runtime networking uses the WHATWG `fetch`, `URL` and `AbortSignal` APIs.
+
+- Modern browsers: use the `browser`/ES module export.
+- Node.js 20+: use the ESM `import` export.
+- Subfolder installations are supported by passing the installation root as `baseUrl`, for example `https://forum.example.com/community/`.
+
+`assertCompatible()` verifies the live Forwext API major contract before application code relies on the client. A mismatch throws `ForwextCompatibilityError`.

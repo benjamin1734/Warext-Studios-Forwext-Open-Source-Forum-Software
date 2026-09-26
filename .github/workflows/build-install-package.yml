@@ -196,6 +196,7 @@ jobs:
           npm run sdk:typecheck
           npm run sdk:build
           node packages/sdk/test/sdk-smoke.mjs
+          node packages/sdk/test/package-smoke.mjs
           rm -rf packages/sdk/dist
 
       - name: Build production vendor tree against PHP 8.4.0 baseline
