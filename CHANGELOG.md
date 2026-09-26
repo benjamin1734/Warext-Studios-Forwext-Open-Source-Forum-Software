@@ -6,6 +6,13 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 20.06 — Security qualification
+
+- Added explicit PHP 8.4/8.5 gates for SQLi, XSS, CSRF, SSRF, IDOR/BOLA, upload/path traversal, OAuth linking, session, webhook and secret-leakage controls.
+- Added Composer and production JavaScript dependency advisory scans plus a maintained security threat model.
+- Added architecture regression coverage preventing required security qualification dimensions from being silently removed.
+- Implementation commit: `b9274e7a61859b3fd573efc1dc79bf8ea9766374`; security `36269635344`, qualification `36269635346`, database `36269635447` and package `36269635396` all succeeded.
+
 ### 20.05 — CI ve otomatik test matrisi
 
 - Added explicit PHP 8.4/8.5 qualification gates for unit/integration, API, native web/browser, module lifecycle, sample add-on, architecture and security contract coverage.

@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.67-dev
+CURRENT_VERSION = 0.0.7.68-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.05
-CURRENT_STEP = 20.06
-LAST_COMMIT = e010f424ce4791937eef52792722a685fc96548b
+LAST_COMPLETED_SUBSTEP = 20.06
+CURRENT_STEP = 20.07
+LAST_COMMIT = b9274e7a61859b3fd573efc1dc79bf8ea9766374
 BLOCKERS = none
-NEXT_STEP = 20.06 - Security qualification
+NEXT_STEP = 20.07 - Performance/observability qualification
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 20.06 - Security qualification
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.05`.
-- Current sub-step: `20.06 — Security qualification`.
-- Remaining roadmap work after 20.05: **3 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.06`.
+- Current sub-step: `20.07 — Performance/observability qualification`.
+- Remaining roadmap work after 20.06: **2 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.06
+
+- Added a dedicated read-only security qualification workflow on PHP 8.4 and PHP 8.5.
+- Added explicit CI gates for SQL injection, XSS output escaping, CSRF, SSRF, IDOR/BOLA, upload/path traversal, OAuth linking, session security, webhook signing/destination policy and secret leakage/encryption.
+- Added hostile dynamic SQL identifier regression coverage against the strict SqlIdentifier allowlist.
+- Added independent Composer and production JavaScript dependency advisory scans; both passed at qualification time.
+- Added a release threat model covering assets, trust boundaries, required threat classes, controls and residual risk.
+- Added architecture policy coverage so the required security gates, dependency scans and threat model cannot be silently removed from CI.
+- Security qualification run `36269635344`: success on PHP 8.4/8.5 and dependency advisory qualification.
+- Qualification matrix run `36269635346`: success.
+- Database migration smoke run `36269635447`: success on MySQL 8.4 and MariaDB 10.11.
+- Build/package run `36269635396`: success; PHP 8.4/8.5, SDK, React UI, Next.js, production dependency baseline and cPanel package integrity passed.
+- Implementation completion commit: `b9274e7a61859b3fd573efc1dc79bf8ea9766374`.
+- No schema migration or new production runtime dependency was required.
+- Version: `0.0.7.68-dev`.
+- Next: `20.07 — Performance/observability qualification`.
 
 ## Completed in 20.05
 
