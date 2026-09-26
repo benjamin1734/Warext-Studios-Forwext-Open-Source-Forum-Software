@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.64-dev
+CURRENT_VERSION = 0.0.7.65-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.02
-CURRENT_STEP = 20.03
-LAST_COMMIT = d887514ec58b4daaad8bd18f16e80f2b2e3cf916
+LAST_COMPLETED_SUBSTEP = 20.03
+CURRENT_STEP = 20.04
+LAST_COMMIT = 523e1f02c9a24071f981ec6696744e6ab9b8879e
 BLOCKERS = none
-NEXT_STEP = 20.03 - Updater/migration/backup/rollback
+NEXT_STEP = 20.04 - VDS/Docker/advanced deployment
 ```
 
 ## Current position
@@ -21,13 +21,32 @@ NEXT_STEP = 20.03 - Updater/migration/backup/rollback
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.02`.
-- Current sub-step: `20.03 — Updater/migration/backup/rollback`.
-- Remaining roadmap work after 20.02: **6 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.03`.
+- Current sub-step: `20.04 — VDS/Docker/advanced deployment`.
+- Remaining roadmap work after 20.03: **5 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.03
+
+- Added strict differential update ZIP inspection with source/target semantic-version validation, sorted disjoint operations, protected mutable-path enforcement, exact SHA-256 payload coverage, archive traversal/symlink rejection and bounded ZIP limits.
+- Added a global update lock plus token-owned maintenance lease; the public entry point returns HTTP 503 for concurrent requests while an update transaction is active.
+- Added checksum-bound logical database backup verification and restore, transactional file snapshots, atomic add/replace/delete publication and verified file rollback.
+- Added update orchestration that performs backup → maintenance → files → idempotent migrations → registered rebuild actions → health verification and restores database/version/files on failure.
+- Added fixed rebuild actions for cache clearing and bounded search-index rebuild; update manifests cannot invoke arbitrary PHP callables.
+- Added native ACP update upload staging with restrictive permissions, typed `UPDATE` confirmation, backend permission enforcement and success/failure audit events.
+- Added production runtime wiring without Composer/npm/Node/SSH/Redis/Docker/Supervisor requirements on the cPanel-first profile.
+- Added regression coverage for successful updates, rebuild failure rollback, unhealthy-health rollback, ACP authorization, maintenance locking, manifest/package validation and backup restore safety.
+- Architecture documentation: `docs/architecture/transactional-updater-recovery.md`.
+- Implementation commit: `523e1f02c9a24071f981ec6696744e6ab9b8879e`.
+- Supporting implementation/fix/test commits: `9e26d2810c05`, `6cbac551c571`, `660a3c1f2f39`, `b3ea5d1007db`, `ec5ec4543e11`, `2fa05f698e85`, `eb1b89b63a1a`, `65941cd0134e`, `31e7b96aeac5`, `3d2f58bf0948`, `c2aa5b43d975`, `4e6952e8298a`, `d8dc4cf98f84`.
+- GitHub Actions build/package run `36261520804`: success; PHP 8.4/8.5 tests, SDK, React, official Next.js build, production dependency baseline, cPanel full package and package-integrity verification passed.
+- Database migration smoke run `36261520799`: success on MySQL 8.4 and MariaDB 10.11.
+- No new schema migration was required; the updater consumes the existing migration history, backup, health, search and ACP permission infrastructure.
+- Version: `0.0.7.65-dev`.
+- Next: `20.04 — VDS/Docker/advanced deployment`.
 
 ## Completed in 20.02
 

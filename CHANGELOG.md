@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 20.03 — Updater/migration/backup/rollback
+
+- Added a production transactional updater for differential release ZIPs with strict source/target, checksum, path and protected-state validation.
+- Added verified pre-update database backups, maintenance/update locks, transactional file snapshots and automatic database/version/file rollback.
+- Added idempotent migration execution, fixed cache/search rebuild actions and post-update health verification before maintenance is released.
+- Added a native permission-gated ACP ZIP upload flow with typed confirmation, restrictive staging and audit-safe success/failure events.
+- Added updater recovery regression tests on PHP 8.4/8.5 plus successful MySQL 8.4 and MariaDB 10.11 migration smoke validation.
+- Architecture: `docs/architecture/transactional-updater-recovery.md`.
+- Implementation commit: `523e1f02c9a24071f981ec6696744e6ab9b8879e`; final validation build `36261520804`, DB smoke `36261520799`.
+
 ### 19.06 — Resmî Next.js frontend
 
 - Added the official optional Next.js App Router/RSC frontend with standalone self-hosting output while keeping the native PHP/cPanel frontend mandatory and Node-free.
