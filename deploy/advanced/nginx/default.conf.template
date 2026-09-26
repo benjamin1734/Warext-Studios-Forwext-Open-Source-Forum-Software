@@ -1,0 +1,46 @@
+server {
+    listen 80 default_server;
+    server_name _;
+    root /app/public;
+    index index.php;
+
+    client_max_body_size 32m;
+
+    location = /health/live {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "ok\n";
+    }
+
+    location /ws {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 65s;
+        proxy_pass http://${FORWEXT_REALTIME_UPSTREAM};
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_pass ${FORWEXT_FPM_UPSTREAM};
+        fastcgi_read_timeout 65s;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+
+    location ~* \.(?:ini|log|sql|bak|dist)$ {
+        deny all;
+    }
+}

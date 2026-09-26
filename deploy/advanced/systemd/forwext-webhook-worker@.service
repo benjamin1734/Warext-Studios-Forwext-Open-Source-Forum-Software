@@ -1,0 +1,23 @@
+[Unit]
+Description=Forwext webhook worker instance %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/forwext
+Environment=FORWEXT_WEBHOOK_WORKER_LIMIT=100
+Environment=FORWEXT_WORKER_IDLE_SLEEP=2
+ExecStart=/bin/sh /var/www/forwext/deploy/advanced/scripts/webhook-worker-loop.sh
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/forwext/storage /var/www/forwext/config
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+/.git
+/.github
+/vendor
+/frontend/node_modules
+/frontend/.next
+/packages/*/node_modules
+/packages/*/dist
+/storage/*
+!/storage/.gitignore
+!/storage/README.md
+/config/generated.php
+/config/secret.key
+.env
+.env.*

@@ -261,6 +261,7 @@ use Forwext\Core\Migration\FileInstalledVersionStore;
 use Forwext\Core\Migration\InstallUpgradeEngine;
 use Forwext\Core\Migration\MigrationEngine;
 use Forwext\Core\Migration\MySqlMigrationHistoryStore;
+use Forwext\Core\Http\Health\HealthHandler;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\RateLimit\FileRateLimitStore;
 use Forwext\Core\Http\Middleware\CallableRequestHandler;
@@ -1080,6 +1081,12 @@ final readonly class WebApplicationFactory
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
         $routes = new RouteCollection();
+        $routes->add(new Route(
+            'system.health',
+            [HttpMethod::Get],
+            new PathTemplate('/health'),
+            new HealthHandler($systemHealth, $config->requireBool('health.public_details')),
+        ));
         ApiV1RouteRegistrar::register(
             $routes,
             new DatabasePublicApiV1ReadRepository($database),

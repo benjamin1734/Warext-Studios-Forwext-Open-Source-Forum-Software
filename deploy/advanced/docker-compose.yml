@@ -1,0 +1,117 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "${FORWEXT_HTTP_PORT:-8080}:80"
+    environment:
+      FORWEXT_FPM_UPSTREAM: app:9000
+      FORWEXT_REALTIME_UPSTREAM: "${FORWEXT_REALTIME_UPSTREAM:-127.0.0.1:65535}"
+    volumes:
+      - ../../public:/app/public:ro
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/advanced/Dockerfile
+    environment: &forwext-env
+      FORWEXT_MASTER_KEY: "${FORWEXT_MASTER_KEY:?set FORWEXT_MASTER_KEY}"
+      FORWEXT_CONFIG__APP__ENVIRONMENT: production
+      FORWEXT_CONFIG__DATABASE__HOST: db
+      FORWEXT_CONFIG__DATABASE__PORT: 3306
+      FORWEXT_CONFIG__CACHE__DRIVER: redis
+      FORWEXT_CONFIG__SESSION__DRIVER: redis
+      FORWEXT_CONFIG__LOCK__DRIVER: redis
+      FORWEXT_CONFIG__QUEUE__DRIVER: redis
+      FORWEXT_CONFIG__SCHEDULER__CLAIM_DRIVER: redis
+      FORWEXT_CONFIG__HTTP_SECURITY__RATE_LIMIT__DRIVER: redis
+      FORWEXT_CONFIG__REDIS__HOST: redis
+      FORWEXT_CONFIG__REDIS__PORT: 6379
+      FORWEXT_CONFIG__SEARCH__DRIVER: meilisearch
+      FORWEXT_CONFIG__SEARCH__EXTERNAL__ENDPOINT: http://meilisearch:7700
+      FORWEXT_CONFIG__SEARCH__EXTERNAL__INDEX: forwext
+      FORWEXT_CONFIG__REALTIME__MODE: polling
+    volumes:
+      - forwext-config:/app/config
+      - forwext-storage:/app/storage
+      - forwext-public-storage:/app/public/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  webhook-worker:
+    build:
+      context: ../..
+      dockerfile: deploy/advanced/Dockerfile
+    command: ["/bin/sh", "/app/deploy/advanced/scripts/webhook-worker-loop.sh"]
+    environment: *forwext-env
+    volumes:
+      - forwext-config:/app/config
+      - forwext-storage:/app/storage
+      - forwext-public-storage:/app/public/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: "${FORWEXT_DB_NAME:-forwext}"
+      MYSQL_USER: "${FORWEXT_DB_USER:-forwext}"
+      MYSQL_PASSWORD: "${FORWEXT_DB_PASSWORD:?set FORWEXT_DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${FORWEXT_DB_ROOT_PASSWORD:?set FORWEXT_DB_ROOT_PASSWORD}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    environment:
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+  meili-data:
+  forwext-config:
+  forwext-storage:
+  forwext-public-storage:
