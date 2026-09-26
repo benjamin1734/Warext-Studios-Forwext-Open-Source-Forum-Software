@@ -128,7 +128,7 @@ final readonly class DatabaseThemeRepository implements ThemeRepository
         $this->database->execute(new CompiledQuery(
             'INSERT INTO forwext_themes '
             . '(theme_id,theme_key,name,parent_theme_id,staging_revision_id,published_revision_id,created_by_user_id,updated_by_user_id,created_at_utc,updated_at_utc) '
-            . 'VALUES (:theme_id,:theme_key,:name,:parent_theme_id,NULL,NULL,:actor,:actor,:created_at,:updated_at) '
+            . 'VALUES (:theme_id,:theme_key,:name,:parent_theme_id,NULL,NULL,:created_by_actor,:updated_by_actor,:created_at,:updated_at) '
             . 'ON DUPLICATE KEY UPDATE name=VALUES(name),parent_theme_id=VALUES(parent_theme_id),'
             . 'updated_by_user_id=VALUES(updated_by_user_id),updated_at_utc=VALUES(updated_at_utc)',
             [
@@ -136,7 +136,8 @@ final readonly class DatabaseThemeRepository implements ThemeRepository
                 'theme_key' => $theme->key,
                 'name' => $theme->name,
                 'parent_theme_id' => $theme->parentThemeId?->value(),
-                'actor' => $actor->value(),
+                'created_by_actor' => $actor->value(),
+                'updated_by_actor' => $actor->value(),
                 'created_at' => $created,
                 'updated_at' => $updated,
             ],
