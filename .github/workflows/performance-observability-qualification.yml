@@ -1,0 +1,78 @@
+name: Performance and observability qualification
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forwext-performance-main
+  cancel-in-progress: true
+
+jobs:
+  shared-hosting-low-resource:
+    name: Shared-hosting low-resource performance
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: forwext_perf
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 with OPcache
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip, opcache
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Verify performance qualification policy
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture/PerformanceObservabilityPolicyTest.php
+
+      - name: Install clean schema
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3306
+          FORWEXT_TEST_DB_NAME: forwext_perf
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+        run: php tools/quality/smoke-core-migrations.php
+
+      - name: Run low-resource forum/search/cache/queue qualification
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3306
+          FORWEXT_TEST_DB_NAME: forwext_perf
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+          FORWEXT_PERF_THREADS: 800
+          FORWEXT_PERF_POSTS_PER_THREAD: 8
+          FORWEXT_PERF_ITERATIONS: 25
+        run: php -d memory_limit=128M -d opcache.enable_cli=1 tools/quality/performance-observability.php
+
+      - name: Upload performance observability artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-observability
+          path: build/performance-observability.json
+          if-no-files-found: error
+          retention-days: 14
