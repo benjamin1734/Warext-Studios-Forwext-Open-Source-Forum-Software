@@ -30,10 +30,2097 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="$(tr -d '\r\n' < VERSION)"
-          MAIN_RE='^[0-9]+\.[0-9]+\.[0-9]+-dev$'
-          SIDE_RE='^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]{2}-dev$'
+          PRODUCTION_RE='^[0-9]+\.[0-9]+\.[0-9]+
+            RELEASE_KIND="side-update"
+            CORE="${VERSION%-dev}"
+            IFS='.' read -r MAJOR MINOR PATCH SIDE <<< "$CORE"
+            if (( 10#$SIDE < 1 )); then
+              echo "Side-update suffix must start at .01." >&2
+              exit 1
+            fi
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+          else
+            echo "Invalid Forwext release version: ${VERSION}" >&2
+            echo "Expected production X.Y.Z, development X.Y.Z-dev, or X.Y.Z.NN-dev (NN starts at 01)." >&2
+            exit 1
+          fi
 
-          if [[ "$VERSION" =~ $MAIN_RE ]]; then
+          TAG="v${VERSION}"
+          SHOULD_PUBLISH="false"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            SHOULD_PUBLISH="true"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
+            SHOULD_PUBLISH="true"
+          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+            SHOULD_PUBLISH="true"
+          # A failed publication may be retried explicitly with a release-retry(...) commit
+          # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
+          fi
+
+          PREVIOUS_TAG=""
+          if [[ "$SHOULD_PUBLISH" == "true" ]]; then
+            if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+              echo "Release tag ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "GitHub Release ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+
+            PREVIOUS_TAG="$(python3 - "$VERSION" <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          production_pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
+          development_pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d{2}))?-dev$")
+
+          def parse(value: str):
+              cleaned = value.strip()
+              production = production_pattern.fullmatch(cleaned)
+              if production is not None:
+                  major, minor, patch = production.groups()
+                  return (int(major), int(minor), int(patch), 1, 0)
+
+              development = development_pattern.fullmatch(cleaned)
+              if development is not None:
+                  major, minor, patch, side = development.groups()
+                  return (int(major), int(minor), int(patch), 0, int(side or "0"))
+
+              return None
+
+          current = parse(sys.argv[1])
+          if current is None:
+              raise SystemExit("Current VERSION could not be parsed.")
+
+          raw_tags = subprocess.check_output(
+              ["git", "tag", "--list", "v*"],
+              text=True,
+          ).splitlines()
+          valid = []
+          for tag in raw_tags:
+              parsed = parse(tag)
+              if parsed is not None:
+                  valid.append((parsed, tag))
+
+          if valid:
+              latest_version, latest_tag = max(valid)
+              if latest_version >= current:
+                  raise SystemExit(
+                      f"VERSION must advance beyond latest release {latest_tag}; "
+                      "published versions are immutable."
+                  )
+              print(latest_tag)
+          PY
+          )"
+          fi
+
+          PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "kind=${RELEASE_KIND}" >> "$GITHUB_OUTPUT"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "should_publish=${SHOULD_PUBLISH}" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREVIOUS_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Version: ${VERSION}"
+          echo "Release kind: ${RELEASE_KIND}"
+          echo "Publish: ${SHOULD_PUBLISH}"
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "Previous release: ${PREVIOUS_TAG}"
+          fi
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+
+      - name: Validate application release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          require __DIR__ . "/vendor/autoload.php";
+          $version = trim((string) file_get_contents(__DIR__ . "/VERSION"));
+          \Forwext\Core\Migration\SemanticVersion::parse($version);
+          echo "Application release version accepted: {$version}\n";
+          '
+
+      - name: Enforce strict types
+        run: php tools/quality/check-strict-types.php
+
+      - name: Lint PHP sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app core config database modules packages public resources tests themes tools \
+            -type f -name '*.php' -print0 \
+            | xargs -0 -r -n1 php -l >/dev/null
+
+      - name: Run PHPUnit on PHP 8.4
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup PHP 8.5 compatibility runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Run PHPUnit on PHP 8.5
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup Node.js 22 for SDK validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install TypeScript tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify generated TypeScript SDK contract
+        run: npm run sdk:generate:check
+
+      - name: Typecheck and build TypeScript SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run sdk:typecheck
+          npm run sdk:build
+          node packages/sdk/test/sdk-smoke.mjs
+          node packages/sdk/test/package-smoke.mjs
+
+      - name: Verify generated React UI design-token contract
+        run: npm run react-ui:generate:check
+
+      - name: Typecheck, build and test React UI/extension slots
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run react-ui:typecheck
+          npm run react-ui:build
+          node packages/react-ui/test/react-ui-smoke.mjs
+          node packages/react-ui/test/package-smoke.mjs
+
+      - name: Typecheck and build official Next.js frontend
+        shell: bash
+        env:
+          FORWEXT_BACKEND_URL: http://127.0.0.1:8080/
+          FORWEXT_PUBLIC_URL: http://127.0.0.1:3000/
+          FORWEXT_NEXT_AUTH_SECRET: ci-only-auth-secret-000000000000000000000000
+          FORWEXT_NEXT_REVALIDATION_SECRET: ci-only-revalidate-secret-00000000000000000000
+        run: |
+          set -euo pipefail
+          npm run next-frontend:typecheck
+          npm run next-frontend:build
+          test -f frontend/next/.next/BUILD_ID
+          test -f frontend/next/.next/standalone/server.js || find frontend/next/.next/standalone -name server.js -print -quit | grep -q .
+          rm -rf frontend/next/.next packages/sdk/dist packages/react-ui/dist
+
+      - name: Build production vendor tree against PHP 8.4.0 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $data = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR);
+          unset($data["require-dev"], $data["autoload-dev"], $data["scripts"]);
+          $data["config"] ??= [];
+          $data["config"]["platform"] ??= [];
+          $data["config"]["platform"]["php"] = "8.4.0";
+          file_put_contents(
+              "composer.production.json",
+              json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL
+          );
+          '
+          rm -rf vendor composer.production.lock
+          COMPOSER=composer.production.json composer update --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Verify production dependencies keep PHP 8.4.0 minimum
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $file = __DIR__ . "/vendor/composer/platform_check.php";
+          $content = file_get_contents($file);
+          if ($content === false) { fwrite(STDERR, "platform_check.php missing\n"); exit(1); }
+          preg_match_all("/PHP_VERSION_ID\\s*>=\\s*(\\d+)/", $content, $matches);
+          foreach ($matches[1] as $minimum) {
+              if ((int) $minimum > 80400) {
+                  fwrite(STDERR, "Production dependency minimum exceeds PHP 8.4.0: {$minimum}\n");
+                  exit(1);
+              }
+          }
+          require __DIR__ . "/vendor/autoload.php";
+          '
+
+      - name: Build cPanel full package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION)"
+          ROOT="forwext-${VERSION}"
+          mkdir -p "dist/${ROOT}"
+          rsync -a ./ "dist/${ROOT}/" \
+            --exclude '/.htaccess' \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.editorconfig' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.cache' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude 'eslint.config.mjs' \
+            --exclude 'tsconfig.base.json' \
+            --exclude 'package.json' \
+            --exclude 'public/.htaccess' \
+            --exclude 'dist/' \
+            --exclude 'tests/' \
+            --exclude 'tools/' \
+            --exclude 'node_modules/' \
+            --exclude 'frontend/next/' \
+            --exclude 'composer*.json' \
+            --exclude 'composer*.lock' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpstan.neon.dist' \
+            --exclude 'psalm.xml' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'PROJECT_STATUS.md' \
+            --exclude 'docs/' \
+            --exclude 'CHANGELOG.md' \
+            --exclude 'README.md' \
+            --exclude 'README.*'
+
+          GUARD='Options -Indexes
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+              Order allow,deny
+              Deny from all
+          </IfModule>'
+
+          for dir in app bin core config database modules packages resources storage themes vendor; do
+            if [ -d "dist/${ROOT}/${dir}" ]; then
+              printf '%s\n' "$GUARD" > "dist/${ROOT}/${dir}/.htaccess"
+            fi
+          done
+
+          (
+            cd dist
+            zip -rq "forwext-v${VERSION}-full.zip" "${ROOT}"
+            sha256sum "forwext-v${VERSION}-full.zip" > "forwext-v${VERSION}-full.zip.sha256"
+          )
+
+      - name: Build differential update package
+        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          WORK="dist/update-work"
+          PREVIOUS_DIR="${WORK}/previous-release"
+          OLD_UNPACK="${WORK}/old"
+          NEW_UNPACK="${WORK}/new"
+          UPDATE_ROOT="${WORK}/payload"
+          mkdir -p "$PREVIOUS_DIR" "$OLD_UNPACK" "$NEW_UNPACK" "$UPDATE_ROOT"
+
+          if ! gh release download "$PREVIOUS_TAG" \
+            --pattern 'forwext-v*-full.zip' \
+            --dir "$PREVIOUS_DIR"; then
+            echo "Previous release predates the full.zip naming contract; using the immutable legacy install.zip asset as source." >&2
+            gh release download "$PREVIOUS_TAG" \
+              --pattern 'forwext-*-install.zip' \
+              --dir "$PREVIOUS_DIR"
+          fi
+
+          PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-v*-full.zip' | head -n 1)"
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-*-install.zip' | head -n 1)"
+          fi
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            echo "Previous full package was not found for ${PREVIOUS_TAG}." >&2
+            exit 1
+          fi
+
+          unzip -q "$PREVIOUS_ZIP" -d "$OLD_UNPACK"
+          unzip -q "dist/forwext-v${VERSION}-full.zip" -d "$NEW_UNPACK"
+
+          OLD_ROOT="$(find "$OLD_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          NEW_ROOT="$(find "$NEW_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          if [ -z "$OLD_ROOT" ] || [ -z "$NEW_ROOT" ]; then
+            echo "Could not determine package roots." >&2
+            exit 1
+          fi
+
+          export OLD_ROOT NEW_ROOT UPDATE_ROOT FROM_VERSION VERSION
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          old_root = Path(os.environ["OLD_ROOT"])
+          new_root = Path(os.environ["NEW_ROOT"])
+          update_root = Path(os.environ["UPDATE_ROOT"])
+          from_version = os.environ["FROM_VERSION"]
+          to_version = os.environ["VERSION"]
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          preserved_paths = {".htaccess", "public/.htaccess"}
+
+          def inventory(root: Path) -> dict[str, dict[str, object]]:
+              result: dict[str, dict[str, object]] = {}
+              for path in sorted(root.rglob("*")):
+                  if path.is_symlink():
+                      raise RuntimeError(f"Release package must not contain symlinks: {path}")
+                  if not path.is_file():
+                      continue
+                  relative = path.relative_to(root).as_posix()
+                  if relative in preserved_paths:
+                      continue
+                  result[relative] = {"path": path, "sha256": sha256(path)}
+              return result
+
+          old_files = inventory(old_root)
+          new_files = inventory(new_root)
+          update_root.mkdir(parents=True, exist_ok=True)
+
+          added: list[str] = []
+          replaced: list[str] = []
+          checksums: dict[str, str] = {}
+
+          for relative, metadata in new_files.items():
+              old_metadata = old_files.get(relative)
+              if old_metadata is not None and old_metadata["sha256"] == metadata["sha256"]:
+                  continue
+
+              destination = update_root / relative
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(metadata["path"], destination)
+              checksums[relative] = str(metadata["sha256"])
+              if old_metadata is None:
+                  added.append(relative)
+              else:
+                  replaced.append(relative)
+
+          deleted = sorted(set(old_files) - set(new_files))
+          migrations = sorted(
+              path for path in [*added, *replaced]
+              if path.startswith("database/migrations/") and path.endswith(".php")
+          )
+          manifest = {
+              "schema": 1,
+              "source_version": from_version,
+              "target_version": to_version,
+              "add": sorted(added),
+              "replace": sorted(replaced),
+              "delete": deleted,
+              "preserve": [
+                  "config/generated.php",
+                  "config/secret.key",
+                  "public/storage/**",
+                  "storage/backups/**",
+                  "storage/files/**",
+                  "storage/install/installed-version.json",
+                  "storage/logs/**",
+                  "storage/secrets/**",
+              ],
+              "migrations": migrations,
+              "rebuild": [],
+              "checksum_algorithm": "sha256",
+              "checksum": dict(sorted(checksums.items())),
+          }
+          (update_root / "update-manifest.json").write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          print(
+              f"Update from {from_version} to {to_version}: "
+              f"{len(added)} add, {len(replaced)} replace, {len(deleted)} delete, "
+              f"{len(migrations)} migration file(s)"
+          )
+          PY
+
+          (
+            cd "$UPDATE_ROOT"
+            zip -rq "../../forwext-v${VERSION}-update.zip" .
+          )
+          (
+            cd dist
+            sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
+          )
+
+      - name: Verify full and update package integrity
+        shell: bash
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          (
+            cd dist
+            sha256sum -c "forwext-v${VERSION}-full.zip.sha256"
+            unzip -tq "forwext-v${VERSION}-full.zip" >/dev/null
+            if [[ -f "forwext-v${VERSION}-update.zip" ]]; then
+              sha256sum -c "forwext-v${VERSION}-update.zip.sha256"
+              unzip -tq "forwext-v${VERSION}-update.zip" >/dev/null
+            fi
+          )
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import PurePosixPath, Path
+
+          version = os.environ["VERSION"]
+          from_version = os.environ.get("FROM_VERSION", "")
+          dist = Path("dist")
+
+          def safe_path(value: str) -> bool:
+              if not value or "\\" in value or value.startswith("/"):
+                  return False
+              path = PurePosixPath(value)
+              return not path.is_absolute() and ".." not in path.parts and "." not in path.parts
+
+          def sha256_bytes(payload: bytes) -> str:
+              return hashlib.sha256(payload).hexdigest()
+
+          full_path = dist / f"forwext-v{version}-full.zip"
+          with zipfile.ZipFile(full_path) as archive:
+              files = [name for name in archive.namelist() if not name.endswith("/")]
+              if not files or any(not safe_path(name) for name in files):
+                  raise SystemExit("Full package contains an unsafe or empty file path.")
+              roots = {PurePosixPath(name).parts[0] for name in files}
+              if len(roots) != 1:
+                  raise SystemExit("Full package must contain exactly one application root.")
+              root = next(iter(roots))
+              required = {
+                  f"{root}/VERSION",
+                  f"{root}/LICENSE",
+                  f"{root}/install.php",
+                  f"{root}/public/install.php",
+                  f"{root}/vendor/autoload.php",
+              }
+              missing = sorted(required - set(files))
+              if missing:
+                  raise SystemExit(f"Full package is incomplete: {missing}")
+              packaged_version = archive.read(f"{root}/VERSION").decode("utf-8").strip()
+              if packaged_version != version:
+                  raise SystemExit(
+                      f"Full package VERSION {packaged_version!r} does not match {version!r}."
+                  )
+              forbidden = {
+                  f"{root}/config/generated.php",
+                  f"{root}/config/secret.key",
+                  f"{root}/storage/install/installed-version.json",
+                  f"{root}/storage/secrets/forwext.secrets",
+              }
+              leaked = sorted(forbidden & set(files))
+              if leaked:
+                  raise SystemExit(f"Full package leaked mutable installation state: {leaked}")
+
+          update_path = dist / f"forwext-v{version}-update.zip"
+          if not update_path.is_file():
+              print("No differential update ZIP on this non-release build; full package integrity passed.")
+              raise SystemExit(0)
+
+          with zipfile.ZipFile(update_path) as archive:
+              file_names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+              if any(not safe_path(name) for name in file_names):
+                  raise SystemExit("Update package contains an unsafe path.")
+              if "update-manifest.json" not in file_names:
+                  raise SystemExit("Update package is missing update-manifest.json.")
+
+              manifest = json.loads(archive.read("update-manifest.json"))
+              required_keys = {
+                  "schema", "source_version", "target_version", "add", "replace", "delete",
+                  "preserve", "migrations", "rebuild", "checksum_algorithm", "checksum",
+              }
+              if not required_keys.issubset(manifest):
+                  raise SystemExit(
+                      f"Update manifest is missing keys: {sorted(required_keys - set(manifest))}"
+                  )
+              if manifest["schema"] != 1 or manifest["target_version"] != version:
+                  raise SystemExit("Update manifest schema/target version is invalid.")
+              if from_version and manifest["source_version"] != from_version:
+                  raise SystemExit(
+                      f"Update source must be immediate predecessor {from_version!r}, "
+                      f"got {manifest['source_version']!r}."
+                  )
+              if manifest["checksum_algorithm"] != "sha256":
+                  raise SystemExit("Update manifest must use sha256 payload checksums.")
+
+              operations: dict[str, list[str]] = {}
+              for key in ("add", "replace", "delete", "preserve", "migrations", "rebuild"):
+                  values = manifest[key]
+                  if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
+                      raise SystemExit(f"Manifest {key} must be a string list.")
+                  if values != sorted(set(values)):
+                      raise SystemExit(f"Manifest {key} must be sorted and unique.")
+                  if key not in ("rebuild",) and any(not safe_path(v.replace("/**", "/placeholder")) for v in values):
+                      raise SystemExit(f"Manifest {key} contains an unsafe path.")
+                  operations[key] = values
+
+              added = set(operations["add"])
+              replaced = set(operations["replace"])
+              deleted = set(operations["delete"])
+              if added & replaced or added & deleted or replaced & deleted:
+                  raise SystemExit("Update add/replace/delete sets must be disjoint.")
+
+              changed = added | replaced
+              payload_names = set(file_names) - {"update-manifest.json"}
+              if payload_names != changed:
+                  raise SystemExit(
+                      "Update ZIP payload must contain exactly the manifest add+replace files."
+                  )
+
+              checksums = manifest["checksum"]
+              if not isinstance(checksums, dict) or set(checksums) != changed:
+                  raise SystemExit("Update checksum map must exactly cover add+replace files.")
+              for name in sorted(changed):
+                  expected = checksums[name]
+                  if not isinstance(expected, str) or len(expected) != 64:
+                      raise SystemExit(f"Invalid checksum metadata for {name}.")
+                  actual = sha256_bytes(archive.read(name))
+                  if actual != expected:
+                      raise SystemExit(f"Payload checksum mismatch for {name}.")
+
+              protected_exact = {
+                  "config/generated.php",
+                  "config/secret.key",
+                  "storage/install/installed-version.json",
+              }
+              protected_prefixes = (
+                  "storage/secrets/",
+                  "storage/files/",
+                  "storage/logs/",
+                  "storage/backups/",
+                  "public/storage/",
+              )
+              for name in sorted(added | replaced | deleted):
+                  if name in protected_exact or name.startswith(protected_prefixes):
+                      raise SystemExit(f"Update manifest touches protected mutable path: {name}")
+
+              migrations = operations["migrations"]
+              if any(
+                  name not in changed
+                  or not name.startswith("database/migrations/")
+                  or not name.endswith(".php")
+                  for name in migrations
+              ):
+                  raise SystemExit("Update migration list contains a non-payload migration.")
+
+          print(
+              f"Release package integrity passed: {from_version or 'n/a'} -> {version}; "
+              f"update payload={len(changed)} delete={len(deleted)}."
+          )
+          PY
+
+      - name: Upload CI package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forwext-packages-${{ steps.release_meta.outputs.version }}-${{ github.run_number }}
+          path: |
+            dist/forwext-v*-full.zip
+            dist/forwext-v*-full.zip.sha256
+            dist/forwext-v*-update.zip
+            dist/forwext-v*-update.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish immutable GitHub Release
+        if: steps.release_meta.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          RELEASE_KIND: ${{ steps.release_meta.outputs.kind }}
+          BASE_VERSION: ${{ steps.release_meta.outputs.base_version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          PREVIOUS_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}" || gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Refusing to overwrite immutable release ${TAG}. Bump VERSION instead." >&2
+            exit 1
+          fi
+
+          TITLE="Forwext ${VERSION}"
+          if [[ "$RELEASE_KIND" == "side-update" ]]; then
+            TITLE="${TITLE} — Side Update"
+          fi
+
+          ZIP="dist/forwext-v${VERSION}-full.zip"
+          SHA="dist/forwext-v${VERSION}-full.zip.sha256"
+          UPDATE_ZIP="dist/forwext-v${VERSION}-update.zip"
+          UPDATE_SHA="dist/forwext-v${VERSION}-update.zip.sha256"
+          NOTES="dist/release-notes.md"
+
+          if [[ "$RELEASE_KIND" == "production" ]]; then
+            KIND_TEXT="Production release"
+          elif [[ "$RELEASE_KIND" == "main" ]]; then
+            KIND_TEXT="Main development milestone"
+          else
+            KIND_TEXT="Side update / hotfix"
+          fi
+
+          {
+            echo "## Forwext ${VERSION}"
+            echo
+            echo "${KIND_TEXT}, generated from the tested \`main\` branch."
+            echo
+            echo "- Release type: \`${RELEASE_KIND}\`"
+            echo "- Main line: \`${BASE_VERSION}\`"
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "- Differential predecessor: \`${PREVIOUS_TAG}\`"
+            fi
+            echo "- PHP 8.4.0+ minimum; PHP 8.5 compatibility tested"
+            echo "- Full cPanel package: \`forwext-v${VERSION}-full.zip\`"
+            if [[ -f "$UPDATE_ZIP" ]]; then
+              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-v${VERSION}-update.zip\`"
+              echo "- Update package includes \`update-manifest.json\` with add/replace/delete, migrations, rebuild actions, source/target versions and SHA-256 payload checksums."
+            fi
+            echo "- Published release tags and assets are immutable. A correction requires the next side-update or main version."
+            echo "- Root \`.htaccess\` handling and bundled production dependencies follow the tested cPanel package profile."
+            if [[ "$RELEASE_KIND" == "production" ]]; then
+              echo "- This is a production release."
+            else
+              echo "- This is a development prerelease, not a production release."
+            fi
+          } > "$NOTES"
+
+          ASSETS=("$ZIP" "$SHA")
+          if [[ -f "$UPDATE_ZIP" ]]; then
+            ASSETS+=("$UPDATE_ZIP" "$UPDATE_SHA")
+          fi
+
+          RELEASE_ARGS=(
+            --target "$GITHUB_SHA"
+            --title "$TITLE"
+            --notes-file "$NOTES"
+          )
+          if [[ "$RELEASE_KIND" != "production" ]]; then
+            RELEASE_ARGS+=(--prerelease)
+          fi
+
+          gh release create "$TAG" "${ASSETS[@]}" "${RELEASE_ARGS[@]}"
+
+          MAIN_RE='^[0-9]+\.[0-9]+\.[0-9]+-dev
+            RELEASE_KIND="side-update"
+            CORE="${VERSION%-dev}"
+            IFS='.' read -r MAJOR MINOR PATCH SIDE <<< "$CORE"
+            if (( 10#$SIDE < 1 )); then
+              echo "Side-update suffix must start at .01." >&2
+              exit 1
+            fi
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+          else
+            echo "Invalid Forwext development version: ${VERSION}" >&2
+            echo "Expected X.Y.Z-dev or X.Y.Z.NN-dev (NN starts at 01)." >&2
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+          SHOULD_PUBLISH="false"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            SHOULD_PUBLISH="true"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
+            SHOULD_PUBLISH="true"
+          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+            SHOULD_PUBLISH="true"
+          # A failed publication may be retried explicitly with a release-retry(...) commit
+          # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
+          fi
+
+          PREVIOUS_TAG=""
+          if [[ "$SHOULD_PUBLISH" == "true" ]]; then
+            if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+              echo "Release tag ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "GitHub Release ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+
+            PREVIOUS_TAG="$(python3 - "$VERSION" <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d{2}))?-dev$")
+
+          def parse(value: str):
+              match = pattern.fullmatch(value.strip())
+              if match is None:
+                  return None
+              major, minor, patch, side = match.groups()
+              return (int(major), int(minor), int(patch), int(side or "0"))
+
+          current = parse(sys.argv[1])
+          if current is None:
+              raise SystemExit("Current VERSION could not be parsed.")
+
+          raw_tags = subprocess.check_output(
+              ["git", "tag", "--list", "v*-dev"],
+              text=True,
+          ).splitlines()
+          valid = []
+          for tag in raw_tags:
+              parsed = parse(tag)
+              if parsed is not None:
+                  valid.append((parsed, tag))
+
+          if valid:
+              latest_version, latest_tag = max(valid)
+              if latest_version >= current:
+                  raise SystemExit(
+                      f"VERSION must advance beyond latest release {latest_tag}; "
+                      "published versions are immutable."
+                  )
+              print(latest_tag)
+          PY
+          )"
+          fi
+
+          PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "kind=${RELEASE_KIND}" >> "$GITHUB_OUTPUT"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "should_publish=${SHOULD_PUBLISH}" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREVIOUS_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Version: ${VERSION}"
+          echo "Release kind: ${RELEASE_KIND}"
+          echo "Publish: ${SHOULD_PUBLISH}"
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "Previous release: ${PREVIOUS_TAG}"
+          fi
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+
+      - name: Validate application release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          require __DIR__ . "/vendor/autoload.php";
+          $version = trim((string) file_get_contents(__DIR__ . "/VERSION"));
+          \Forwext\Core\Migration\SemanticVersion::parse($version);
+          echo "Application release version accepted: {$version}\n";
+          '
+
+      - name: Enforce strict types
+        run: php tools/quality/check-strict-types.php
+
+      - name: Lint PHP sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app core config database modules packages public resources tests themes tools \
+            -type f -name '*.php' -print0 \
+            | xargs -0 -r -n1 php -l >/dev/null
+
+      - name: Run PHPUnit on PHP 8.4
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup PHP 8.5 compatibility runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Run PHPUnit on PHP 8.5
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup Node.js 22 for SDK validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install TypeScript tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify generated TypeScript SDK contract
+        run: npm run sdk:generate:check
+
+      - name: Typecheck and build TypeScript SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run sdk:typecheck
+          npm run sdk:build
+          node packages/sdk/test/sdk-smoke.mjs
+          node packages/sdk/test/package-smoke.mjs
+
+      - name: Verify generated React UI design-token contract
+        run: npm run react-ui:generate:check
+
+      - name: Typecheck, build and test React UI/extension slots
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run react-ui:typecheck
+          npm run react-ui:build
+          node packages/react-ui/test/react-ui-smoke.mjs
+          node packages/react-ui/test/package-smoke.mjs
+
+      - name: Typecheck and build official Next.js frontend
+        shell: bash
+        env:
+          FORWEXT_BACKEND_URL: http://127.0.0.1:8080/
+          FORWEXT_PUBLIC_URL: http://127.0.0.1:3000/
+          FORWEXT_NEXT_AUTH_SECRET: ci-only-auth-secret-000000000000000000000000
+          FORWEXT_NEXT_REVALIDATION_SECRET: ci-only-revalidate-secret-00000000000000000000
+        run: |
+          set -euo pipefail
+          npm run next-frontend:typecheck
+          npm run next-frontend:build
+          test -f frontend/next/.next/BUILD_ID
+          test -f frontend/next/.next/standalone/server.js || find frontend/next/.next/standalone -name server.js -print -quit | grep -q .
+          rm -rf frontend/next/.next packages/sdk/dist packages/react-ui/dist
+
+      - name: Build production vendor tree against PHP 8.4.0 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $data = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR);
+          unset($data["require-dev"], $data["autoload-dev"], $data["scripts"]);
+          $data["config"] ??= [];
+          $data["config"]["platform"] ??= [];
+          $data["config"]["platform"]["php"] = "8.4.0";
+          file_put_contents(
+              "composer.production.json",
+              json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL
+          );
+          '
+          rm -rf vendor composer.production.lock
+          COMPOSER=composer.production.json composer update --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Verify production dependencies keep PHP 8.4.0 minimum
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $file = __DIR__ . "/vendor/composer/platform_check.php";
+          $content = file_get_contents($file);
+          if ($content === false) { fwrite(STDERR, "platform_check.php missing\n"); exit(1); }
+          preg_match_all("/PHP_VERSION_ID\\s*>=\\s*(\\d+)/", $content, $matches);
+          foreach ($matches[1] as $minimum) {
+              if ((int) $minimum > 80400) {
+                  fwrite(STDERR, "Production dependency minimum exceeds PHP 8.4.0: {$minimum}\n");
+                  exit(1);
+              }
+          }
+          require __DIR__ . "/vendor/autoload.php";
+          '
+
+      - name: Build cPanel full package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION)"
+          ROOT="forwext-${VERSION}"
+          mkdir -p "dist/${ROOT}"
+          rsync -a ./ "dist/${ROOT}/" \
+            --exclude '/.htaccess' \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.editorconfig' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.cache' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude 'eslint.config.mjs' \
+            --exclude 'tsconfig.base.json' \
+            --exclude 'package.json' \
+            --exclude 'public/.htaccess' \
+            --exclude 'dist/' \
+            --exclude 'tests/' \
+            --exclude 'tools/' \
+            --exclude 'node_modules/' \
+            --exclude 'frontend/next/' \
+            --exclude 'composer*.json' \
+            --exclude 'composer*.lock' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpstan.neon.dist' \
+            --exclude 'psalm.xml' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'PROJECT_STATUS.md' \
+            --exclude 'docs/' \
+            --exclude 'CHANGELOG.md' \
+            --exclude 'README.md' \
+            --exclude 'README.*'
+
+          GUARD='Options -Indexes
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+              Order allow,deny
+              Deny from all
+          </IfModule>'
+
+          for dir in app bin core config database modules packages resources storage themes vendor; do
+            if [ -d "dist/${ROOT}/${dir}" ]; then
+              printf '%s\n' "$GUARD" > "dist/${ROOT}/${dir}/.htaccess"
+            fi
+          done
+
+          (
+            cd dist
+            zip -rq "forwext-v${VERSION}-full.zip" "${ROOT}"
+            sha256sum "forwext-v${VERSION}-full.zip" > "forwext-v${VERSION}-full.zip.sha256"
+          )
+
+      - name: Build differential update package
+        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          WORK="dist/update-work"
+          PREVIOUS_DIR="${WORK}/previous-release"
+          OLD_UNPACK="${WORK}/old"
+          NEW_UNPACK="${WORK}/new"
+          UPDATE_ROOT="${WORK}/payload"
+          mkdir -p "$PREVIOUS_DIR" "$OLD_UNPACK" "$NEW_UNPACK" "$UPDATE_ROOT"
+
+          if ! gh release download "$PREVIOUS_TAG" \
+            --pattern 'forwext-v*-full.zip' \
+            --dir "$PREVIOUS_DIR"; then
+            echo "Previous release predates the full.zip naming contract; using the immutable legacy install.zip asset as source." >&2
+            gh release download "$PREVIOUS_TAG" \
+              --pattern 'forwext-*-install.zip' \
+              --dir "$PREVIOUS_DIR"
+          fi
+
+          PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-v*-full.zip' | head -n 1)"
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-*-install.zip' | head -n 1)"
+          fi
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            echo "Previous full package was not found for ${PREVIOUS_TAG}." >&2
+            exit 1
+          fi
+
+          unzip -q "$PREVIOUS_ZIP" -d "$OLD_UNPACK"
+          unzip -q "dist/forwext-v${VERSION}-full.zip" -d "$NEW_UNPACK"
+
+          OLD_ROOT="$(find "$OLD_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          NEW_ROOT="$(find "$NEW_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          if [ -z "$OLD_ROOT" ] || [ -z "$NEW_ROOT" ]; then
+            echo "Could not determine package roots." >&2
+            exit 1
+          fi
+
+          export OLD_ROOT NEW_ROOT UPDATE_ROOT FROM_VERSION VERSION
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          old_root = Path(os.environ["OLD_ROOT"])
+          new_root = Path(os.environ["NEW_ROOT"])
+          update_root = Path(os.environ["UPDATE_ROOT"])
+          from_version = os.environ["FROM_VERSION"]
+          to_version = os.environ["VERSION"]
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          preserved_paths = {".htaccess", "public/.htaccess"}
+
+          def inventory(root: Path) -> dict[str, dict[str, object]]:
+              result: dict[str, dict[str, object]] = {}
+              for path in sorted(root.rglob("*")):
+                  if path.is_symlink():
+                      raise RuntimeError(f"Release package must not contain symlinks: {path}")
+                  if not path.is_file():
+                      continue
+                  relative = path.relative_to(root).as_posix()
+                  if relative in preserved_paths:
+                      continue
+                  result[relative] = {"path": path, "sha256": sha256(path)}
+              return result
+
+          old_files = inventory(old_root)
+          new_files = inventory(new_root)
+          update_root.mkdir(parents=True, exist_ok=True)
+
+          added: list[str] = []
+          replaced: list[str] = []
+          checksums: dict[str, str] = {}
+
+          for relative, metadata in new_files.items():
+              old_metadata = old_files.get(relative)
+              if old_metadata is not None and old_metadata["sha256"] == metadata["sha256"]:
+                  continue
+
+              destination = update_root / relative
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(metadata["path"], destination)
+              checksums[relative] = str(metadata["sha256"])
+              if old_metadata is None:
+                  added.append(relative)
+              else:
+                  replaced.append(relative)
+
+          deleted = sorted(set(old_files) - set(new_files))
+          migrations = sorted(
+              path for path in [*added, *replaced]
+              if path.startswith("database/migrations/") and path.endswith(".php")
+          )
+          manifest = {
+              "schema": 1,
+              "source_version": from_version,
+              "target_version": to_version,
+              "add": sorted(added),
+              "replace": sorted(replaced),
+              "delete": deleted,
+              "preserve": [
+                  "config/generated.php",
+                  "config/secret.key",
+                  "public/storage/**",
+                  "storage/backups/**",
+                  "storage/files/**",
+                  "storage/install/installed-version.json",
+                  "storage/logs/**",
+                  "storage/secrets/**",
+              ],
+              "migrations": migrations,
+              "rebuild": [],
+              "checksum_algorithm": "sha256",
+              "checksum": dict(sorted(checksums.items())),
+          }
+          (update_root / "update-manifest.json").write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          print(
+              f"Update from {from_version} to {to_version}: "
+              f"{len(added)} add, {len(replaced)} replace, {len(deleted)} delete, "
+              f"{len(migrations)} migration file(s)"
+          )
+          PY
+
+          (
+            cd "$UPDATE_ROOT"
+            zip -rq "../../forwext-v${VERSION}-update.zip" .
+          )
+          (
+            cd dist
+            sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
+          )
+
+      - name: Verify full and update package integrity
+        shell: bash
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          (
+            cd dist
+            sha256sum -c "forwext-v${VERSION}-full.zip.sha256"
+            unzip -tq "forwext-v${VERSION}-full.zip" >/dev/null
+            if [[ -f "forwext-v${VERSION}-update.zip" ]]; then
+              sha256sum -c "forwext-v${VERSION}-update.zip.sha256"
+              unzip -tq "forwext-v${VERSION}-update.zip" >/dev/null
+            fi
+          )
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import PurePosixPath, Path
+
+          version = os.environ["VERSION"]
+          from_version = os.environ.get("FROM_VERSION", "")
+          dist = Path("dist")
+
+          def safe_path(value: str) -> bool:
+              if not value or "\\" in value or value.startswith("/"):
+                  return False
+              path = PurePosixPath(value)
+              return not path.is_absolute() and ".." not in path.parts and "." not in path.parts
+
+          def sha256_bytes(payload: bytes) -> str:
+              return hashlib.sha256(payload).hexdigest()
+
+          full_path = dist / f"forwext-v{version}-full.zip"
+          with zipfile.ZipFile(full_path) as archive:
+              files = [name for name in archive.namelist() if not name.endswith("/")]
+              if not files or any(not safe_path(name) for name in files):
+                  raise SystemExit("Full package contains an unsafe or empty file path.")
+              roots = {PurePosixPath(name).parts[0] for name in files}
+              if len(roots) != 1:
+                  raise SystemExit("Full package must contain exactly one application root.")
+              root = next(iter(roots))
+              required = {
+                  f"{root}/VERSION",
+                  f"{root}/LICENSE",
+                  f"{root}/install.php",
+                  f"{root}/public/install.php",
+                  f"{root}/vendor/autoload.php",
+              }
+              missing = sorted(required - set(files))
+              if missing:
+                  raise SystemExit(f"Full package is incomplete: {missing}")
+              packaged_version = archive.read(f"{root}/VERSION").decode("utf-8").strip()
+              if packaged_version != version:
+                  raise SystemExit(
+                      f"Full package VERSION {packaged_version!r} does not match {version!r}."
+                  )
+              forbidden = {
+                  f"{root}/config/generated.php",
+                  f"{root}/config/secret.key",
+                  f"{root}/storage/install/installed-version.json",
+                  f"{root}/storage/secrets/forwext.secrets",
+              }
+              leaked = sorted(forbidden & set(files))
+              if leaked:
+                  raise SystemExit(f"Full package leaked mutable installation state: {leaked}")
+
+          update_path = dist / f"forwext-v{version}-update.zip"
+          if not update_path.is_file():
+              print("No differential update ZIP on this non-release build; full package integrity passed.")
+              raise SystemExit(0)
+
+          with zipfile.ZipFile(update_path) as archive:
+              file_names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+              if any(not safe_path(name) for name in file_names):
+                  raise SystemExit("Update package contains an unsafe path.")
+              if "update-manifest.json" not in file_names:
+                  raise SystemExit("Update package is missing update-manifest.json.")
+
+              manifest = json.loads(archive.read("update-manifest.json"))
+              required_keys = {
+                  "schema", "source_version", "target_version", "add", "replace", "delete",
+                  "preserve", "migrations", "rebuild", "checksum_algorithm", "checksum",
+              }
+              if not required_keys.issubset(manifest):
+                  raise SystemExit(
+                      f"Update manifest is missing keys: {sorted(required_keys - set(manifest))}"
+                  )
+              if manifest["schema"] != 1 or manifest["target_version"] != version:
+                  raise SystemExit("Update manifest schema/target version is invalid.")
+              if from_version and manifest["source_version"] != from_version:
+                  raise SystemExit(
+                      f"Update source must be immediate predecessor {from_version!r}, "
+                      f"got {manifest['source_version']!r}."
+                  )
+              if manifest["checksum_algorithm"] != "sha256":
+                  raise SystemExit("Update manifest must use sha256 payload checksums.")
+
+              operations: dict[str, list[str]] = {}
+              for key in ("add", "replace", "delete", "preserve", "migrations", "rebuild"):
+                  values = manifest[key]
+                  if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
+                      raise SystemExit(f"Manifest {key} must be a string list.")
+                  if values != sorted(set(values)):
+                      raise SystemExit(f"Manifest {key} must be sorted and unique.")
+                  if key not in ("rebuild",) and any(not safe_path(v.replace("/**", "/placeholder")) for v in values):
+                      raise SystemExit(f"Manifest {key} contains an unsafe path.")
+                  operations[key] = values
+
+              added = set(operations["add"])
+              replaced = set(operations["replace"])
+              deleted = set(operations["delete"])
+              if added & replaced or added & deleted or replaced & deleted:
+                  raise SystemExit("Update add/replace/delete sets must be disjoint.")
+
+              changed = added | replaced
+              payload_names = set(file_names) - {"update-manifest.json"}
+              if payload_names != changed:
+                  raise SystemExit(
+                      "Update ZIP payload must contain exactly the manifest add+replace files."
+                  )
+
+              checksums = manifest["checksum"]
+              if not isinstance(checksums, dict) or set(checksums) != changed:
+                  raise SystemExit("Update checksum map must exactly cover add+replace files.")
+              for name in sorted(changed):
+                  expected = checksums[name]
+                  if not isinstance(expected, str) or len(expected) != 64:
+                      raise SystemExit(f"Invalid checksum metadata for {name}.")
+                  actual = sha256_bytes(archive.read(name))
+                  if actual != expected:
+                      raise SystemExit(f"Payload checksum mismatch for {name}.")
+
+              protected_exact = {
+                  "config/generated.php",
+                  "config/secret.key",
+                  "storage/install/installed-version.json",
+              }
+              protected_prefixes = (
+                  "storage/secrets/",
+                  "storage/files/",
+                  "storage/logs/",
+                  "storage/backups/",
+                  "public/storage/",
+              )
+              for name in sorted(added | replaced | deleted):
+                  if name in protected_exact or name.startswith(protected_prefixes):
+                      raise SystemExit(f"Update manifest touches protected mutable path: {name}")
+
+              migrations = operations["migrations"]
+              if any(
+                  name not in changed
+                  or not name.startswith("database/migrations/")
+                  or not name.endswith(".php")
+                  for name in migrations
+              ):
+                  raise SystemExit("Update migration list contains a non-payload migration.")
+
+          print(
+              f"Release package integrity passed: {from_version or 'n/a'} -> {version}; "
+              f"update payload={len(changed)} delete={len(deleted)}."
+          )
+          PY
+
+      - name: Upload CI package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forwext-packages-${{ steps.release_meta.outputs.version }}-${{ github.run_number }}
+          path: |
+            dist/forwext-v*-full.zip
+            dist/forwext-v*-full.zip.sha256
+            dist/forwext-v*-update.zip
+            dist/forwext-v*-update.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish immutable GitHub Release
+        if: steps.release_meta.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          RELEASE_KIND: ${{ steps.release_meta.outputs.kind }}
+          BASE_VERSION: ${{ steps.release_meta.outputs.base_version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          PREVIOUS_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}" || gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Refusing to overwrite immutable release ${TAG}. Bump VERSION instead." >&2
+            exit 1
+          fi
+
+          TITLE="Forwext ${VERSION}"
+          if [[ "$RELEASE_KIND" == "side-update" ]]; then
+            TITLE="${TITLE} — Side Update"
+          fi
+
+          ZIP="dist/forwext-v${VERSION}-full.zip"
+          SHA="dist/forwext-v${VERSION}-full.zip.sha256"
+          UPDATE_ZIP="dist/forwext-v${VERSION}-update.zip"
+          UPDATE_SHA="dist/forwext-v${VERSION}-update.zip.sha256"
+          NOTES="dist/release-notes.md"
+
+          if [[ "$RELEASE_KIND" == "main" ]]; then
+            KIND_TEXT="Main development milestone"
+          else
+            KIND_TEXT="Side update / hotfix"
+          fi
+
+          {
+            echo "## Forwext ${VERSION}"
+            echo
+            echo "${KIND_TEXT}, generated from the tested \`main\` branch."
+            echo
+            echo "- Release type: \`${RELEASE_KIND}\`"
+            echo "- Main line: \`${BASE_VERSION}\`"
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "- Differential predecessor: \`${PREVIOUS_TAG}\`"
+            fi
+            echo "- PHP 8.4.0+ minimum; PHP 8.5 compatibility tested"
+            echo "- Full cPanel package: \`forwext-v${VERSION}-full.zip\`"
+            if [[ -f "$UPDATE_ZIP" ]]; then
+              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-v${VERSION}-update.zip\`"
+              echo "- Update package includes \`update-manifest.json\` with add/replace/delete, migrations, rebuild actions, source/target versions and SHA-256 payload checksums."
+            fi
+            echo "- Published release tags and assets are immutable. A correction requires the next side-update or main version."
+            echo "- Root \`.htaccess\` handling and bundled production dependencies follow the tested cPanel package profile."
+            echo "- This is a development prerelease, not Forwext 1.0.0."
+          } > "$NOTES"
+
+          ASSETS=("$ZIP" "$SHA")
+          if [[ -f "$UPDATE_ZIP" ]]; then
+            ASSETS+=("$UPDATE_ZIP" "$UPDATE_SHA")
+          fi
+
+          gh release create "$TAG" "${ASSETS[@]}" \
+            --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes-file "$NOTES" \
+            --prerelease
+
+          SIDE_RE='^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]{2}-dev
+            RELEASE_KIND="side-update"
+            CORE="${VERSION%-dev}"
+            IFS='.' read -r MAJOR MINOR PATCH SIDE <<< "$CORE"
+            if (( 10#$SIDE < 1 )); then
+              echo "Side-update suffix must start at .01." >&2
+              exit 1
+            fi
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+          else
+            echo "Invalid Forwext development version: ${VERSION}" >&2
+            echo "Expected X.Y.Z-dev or X.Y.Z.NN-dev (NN starts at 01)." >&2
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+          SHOULD_PUBLISH="false"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            SHOULD_PUBLISH="true"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
+            SHOULD_PUBLISH="true"
+          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+            SHOULD_PUBLISH="true"
+          # A failed publication may be retried explicitly with a release-retry(...) commit
+          # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
+          fi
+
+          PREVIOUS_TAG=""
+          if [[ "$SHOULD_PUBLISH" == "true" ]]; then
+            if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
+              echo "Release tag ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "GitHub Release ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
+              exit 1
+            fi
+
+            PREVIOUS_TAG="$(python3 - "$VERSION" <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d{2}))?-dev$")
+
+          def parse(value: str):
+              match = pattern.fullmatch(value.strip())
+              if match is None:
+                  return None
+              major, minor, patch, side = match.groups()
+              return (int(major), int(minor), int(patch), int(side or "0"))
+
+          current = parse(sys.argv[1])
+          if current is None:
+              raise SystemExit("Current VERSION could not be parsed.")
+
+          raw_tags = subprocess.check_output(
+              ["git", "tag", "--list", "v*-dev"],
+              text=True,
+          ).splitlines()
+          valid = []
+          for tag in raw_tags:
+              parsed = parse(tag)
+              if parsed is not None:
+                  valid.append((parsed, tag))
+
+          if valid:
+              latest_version, latest_tag = max(valid)
+              if latest_version >= current:
+                  raise SystemExit(
+                      f"VERSION must advance beyond latest release {latest_tag}; "
+                      "published versions are immutable."
+                  )
+              print(latest_tag)
+          PY
+          )"
+          fi
+
+          PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "kind=${RELEASE_KIND}" >> "$GITHUB_OUTPUT"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "should_publish=${SHOULD_PUBLISH}" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREVIOUS_TAG}" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREVIOUS_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Version: ${VERSION}"
+          echo "Release kind: ${RELEASE_KIND}"
+          echo "Publish: ${SHOULD_PUBLISH}"
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "Previous release: ${PREVIOUS_TAG}"
+          fi
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+
+      - name: Validate application release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          require __DIR__ . "/vendor/autoload.php";
+          $version = trim((string) file_get_contents(__DIR__ . "/VERSION"));
+          \Forwext\Core\Migration\SemanticVersion::parse($version);
+          echo "Application release version accepted: {$version}\n";
+          '
+
+      - name: Enforce strict types
+        run: php tools/quality/check-strict-types.php
+
+      - name: Lint PHP sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app core config database modules packages public resources tests themes tools \
+            -type f -name '*.php' -print0 \
+            | xargs -0 -r -n1 php -l >/dev/null
+
+      - name: Run PHPUnit on PHP 8.4
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup PHP 8.5 compatibility runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Run PHPUnit on PHP 8.5
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist
+
+      - name: Setup Node.js 22 for SDK validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install TypeScript tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify generated TypeScript SDK contract
+        run: npm run sdk:generate:check
+
+      - name: Typecheck and build TypeScript SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run sdk:typecheck
+          npm run sdk:build
+          node packages/sdk/test/sdk-smoke.mjs
+          node packages/sdk/test/package-smoke.mjs
+
+      - name: Verify generated React UI design-token contract
+        run: npm run react-ui:generate:check
+
+      - name: Typecheck, build and test React UI/extension slots
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run react-ui:typecheck
+          npm run react-ui:build
+          node packages/react-ui/test/react-ui-smoke.mjs
+          node packages/react-ui/test/package-smoke.mjs
+
+      - name: Typecheck and build official Next.js frontend
+        shell: bash
+        env:
+          FORWEXT_BACKEND_URL: http://127.0.0.1:8080/
+          FORWEXT_PUBLIC_URL: http://127.0.0.1:3000/
+          FORWEXT_NEXT_AUTH_SECRET: ci-only-auth-secret-000000000000000000000000
+          FORWEXT_NEXT_REVALIDATION_SECRET: ci-only-revalidate-secret-00000000000000000000
+        run: |
+          set -euo pipefail
+          npm run next-frontend:typecheck
+          npm run next-frontend:build
+          test -f frontend/next/.next/BUILD_ID
+          test -f frontend/next/.next/standalone/server.js || find frontend/next/.next/standalone -name server.js -print -quit | grep -q .
+          rm -rf frontend/next/.next packages/sdk/dist packages/react-ui/dist
+
+      - name: Build production vendor tree against PHP 8.4.0 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $data = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR);
+          unset($data["require-dev"], $data["autoload-dev"], $data["scripts"]);
+          $data["config"] ??= [];
+          $data["config"]["platform"] ??= [];
+          $data["config"]["platform"]["php"] = "8.4.0";
+          file_put_contents(
+              "composer.production.json",
+              json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . PHP_EOL
+          );
+          '
+          rm -rf vendor composer.production.lock
+          COMPOSER=composer.production.json composer update --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Verify production dependencies keep PHP 8.4.0 minimum
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+          $file = __DIR__ . "/vendor/composer/platform_check.php";
+          $content = file_get_contents($file);
+          if ($content === false) { fwrite(STDERR, "platform_check.php missing\n"); exit(1); }
+          preg_match_all("/PHP_VERSION_ID\\s*>=\\s*(\\d+)/", $content, $matches);
+          foreach ($matches[1] as $minimum) {
+              if ((int) $minimum > 80400) {
+                  fwrite(STDERR, "Production dependency minimum exceeds PHP 8.4.0: {$minimum}\n");
+                  exit(1);
+              }
+          }
+          require __DIR__ . "/vendor/autoload.php";
+          '
+
+      - name: Build cPanel full package
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION)"
+          ROOT="forwext-${VERSION}"
+          mkdir -p "dist/${ROOT}"
+          rsync -a ./ "dist/${ROOT}/" \
+            --exclude '/.htaccess' \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.editorconfig' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.cache' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude 'eslint.config.mjs' \
+            --exclude 'tsconfig.base.json' \
+            --exclude 'package.json' \
+            --exclude 'public/.htaccess' \
+            --exclude 'dist/' \
+            --exclude 'tests/' \
+            --exclude 'tools/' \
+            --exclude 'node_modules/' \
+            --exclude 'frontend/next/' \
+            --exclude 'composer*.json' \
+            --exclude 'composer*.lock' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpstan.neon.dist' \
+            --exclude 'psalm.xml' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'PROJECT_STATUS.md' \
+            --exclude 'docs/' \
+            --exclude 'CHANGELOG.md' \
+            --exclude 'README.md' \
+            --exclude 'README.*'
+
+          GUARD='Options -Indexes
+          <IfModule mod_authz_core.c>
+              Require all denied
+          </IfModule>
+          <IfModule !mod_authz_core.c>
+              Order allow,deny
+              Deny from all
+          </IfModule>'
+
+          for dir in app bin core config database modules packages resources storage themes vendor; do
+            if [ -d "dist/${ROOT}/${dir}" ]; then
+              printf '%s\n' "$GUARD" > "dist/${ROOT}/${dir}/.htaccess"
+            fi
+          done
+
+          (
+            cd dist
+            zip -rq "forwext-v${VERSION}-full.zip" "${ROOT}"
+            sha256sum "forwext-v${VERSION}-full.zip" > "forwext-v${VERSION}-full.zip.sha256"
+          )
+
+      - name: Build differential update package
+        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          WORK="dist/update-work"
+          PREVIOUS_DIR="${WORK}/previous-release"
+          OLD_UNPACK="${WORK}/old"
+          NEW_UNPACK="${WORK}/new"
+          UPDATE_ROOT="${WORK}/payload"
+          mkdir -p "$PREVIOUS_DIR" "$OLD_UNPACK" "$NEW_UNPACK" "$UPDATE_ROOT"
+
+          if ! gh release download "$PREVIOUS_TAG" \
+            --pattern 'forwext-v*-full.zip' \
+            --dir "$PREVIOUS_DIR"; then
+            echo "Previous release predates the full.zip naming contract; using the immutable legacy install.zip asset as source." >&2
+            gh release download "$PREVIOUS_TAG" \
+              --pattern 'forwext-*-install.zip' \
+              --dir "$PREVIOUS_DIR"
+          fi
+
+          PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-v*-full.zip' | head -n 1)"
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            PREVIOUS_ZIP="$(find "$PREVIOUS_DIR" -maxdepth 1 -type f -name 'forwext-*-install.zip' | head -n 1)"
+          fi
+          if [ -z "$PREVIOUS_ZIP" ]; then
+            echo "Previous full package was not found for ${PREVIOUS_TAG}." >&2
+            exit 1
+          fi
+
+          unzip -q "$PREVIOUS_ZIP" -d "$OLD_UNPACK"
+          unzip -q "dist/forwext-v${VERSION}-full.zip" -d "$NEW_UNPACK"
+
+          OLD_ROOT="$(find "$OLD_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          NEW_ROOT="$(find "$NEW_UNPACK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          if [ -z "$OLD_ROOT" ] || [ -z "$NEW_ROOT" ]; then
+            echo "Could not determine package roots." >&2
+            exit 1
+          fi
+
+          export OLD_ROOT NEW_ROOT UPDATE_ROOT FROM_VERSION VERSION
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          old_root = Path(os.environ["OLD_ROOT"])
+          new_root = Path(os.environ["NEW_ROOT"])
+          update_root = Path(os.environ["UPDATE_ROOT"])
+          from_version = os.environ["FROM_VERSION"]
+          to_version = os.environ["VERSION"]
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as handle:
+                  for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          preserved_paths = {".htaccess", "public/.htaccess"}
+
+          def inventory(root: Path) -> dict[str, dict[str, object]]:
+              result: dict[str, dict[str, object]] = {}
+              for path in sorted(root.rglob("*")):
+                  if path.is_symlink():
+                      raise RuntimeError(f"Release package must not contain symlinks: {path}")
+                  if not path.is_file():
+                      continue
+                  relative = path.relative_to(root).as_posix()
+                  if relative in preserved_paths:
+                      continue
+                  result[relative] = {"path": path, "sha256": sha256(path)}
+              return result
+
+          old_files = inventory(old_root)
+          new_files = inventory(new_root)
+          update_root.mkdir(parents=True, exist_ok=True)
+
+          added: list[str] = []
+          replaced: list[str] = []
+          checksums: dict[str, str] = {}
+
+          for relative, metadata in new_files.items():
+              old_metadata = old_files.get(relative)
+              if old_metadata is not None and old_metadata["sha256"] == metadata["sha256"]:
+                  continue
+
+              destination = update_root / relative
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(metadata["path"], destination)
+              checksums[relative] = str(metadata["sha256"])
+              if old_metadata is None:
+                  added.append(relative)
+              else:
+                  replaced.append(relative)
+
+          deleted = sorted(set(old_files) - set(new_files))
+          migrations = sorted(
+              path for path in [*added, *replaced]
+              if path.startswith("database/migrations/") and path.endswith(".php")
+          )
+          manifest = {
+              "schema": 1,
+              "source_version": from_version,
+              "target_version": to_version,
+              "add": sorted(added),
+              "replace": sorted(replaced),
+              "delete": deleted,
+              "preserve": [
+                  "config/generated.php",
+                  "config/secret.key",
+                  "public/storage/**",
+                  "storage/backups/**",
+                  "storage/files/**",
+                  "storage/install/installed-version.json",
+                  "storage/logs/**",
+                  "storage/secrets/**",
+              ],
+              "migrations": migrations,
+              "rebuild": [],
+              "checksum_algorithm": "sha256",
+              "checksum": dict(sorted(checksums.items())),
+          }
+          (update_root / "update-manifest.json").write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          print(
+              f"Update from {from_version} to {to_version}: "
+              f"{len(added)} add, {len(replaced)} replace, {len(deleted)} delete, "
+              f"{len(migrations)} migration file(s)"
+          )
+          PY
+
+          (
+            cd "$UPDATE_ROOT"
+            zip -rq "../../forwext-v${VERSION}-update.zip" .
+          )
+          (
+            cd dist
+            sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
+          )
+
+      - name: Verify full and update package integrity
+        shell: bash
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          (
+            cd dist
+            sha256sum -c "forwext-v${VERSION}-full.zip.sha256"
+            unzip -tq "forwext-v${VERSION}-full.zip" >/dev/null
+            if [[ -f "forwext-v${VERSION}-update.zip" ]]; then
+              sha256sum -c "forwext-v${VERSION}-update.zip.sha256"
+              unzip -tq "forwext-v${VERSION}-update.zip" >/dev/null
+            fi
+          )
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import PurePosixPath, Path
+
+          version = os.environ["VERSION"]
+          from_version = os.environ.get("FROM_VERSION", "")
+          dist = Path("dist")
+
+          def safe_path(value: str) -> bool:
+              if not value or "\\" in value or value.startswith("/"):
+                  return False
+              path = PurePosixPath(value)
+              return not path.is_absolute() and ".." not in path.parts and "." not in path.parts
+
+          def sha256_bytes(payload: bytes) -> str:
+              return hashlib.sha256(payload).hexdigest()
+
+          full_path = dist / f"forwext-v{version}-full.zip"
+          with zipfile.ZipFile(full_path) as archive:
+              files = [name for name in archive.namelist() if not name.endswith("/")]
+              if not files or any(not safe_path(name) for name in files):
+                  raise SystemExit("Full package contains an unsafe or empty file path.")
+              roots = {PurePosixPath(name).parts[0] for name in files}
+              if len(roots) != 1:
+                  raise SystemExit("Full package must contain exactly one application root.")
+              root = next(iter(roots))
+              required = {
+                  f"{root}/VERSION",
+                  f"{root}/LICENSE",
+                  f"{root}/install.php",
+                  f"{root}/public/install.php",
+                  f"{root}/vendor/autoload.php",
+              }
+              missing = sorted(required - set(files))
+              if missing:
+                  raise SystemExit(f"Full package is incomplete: {missing}")
+              packaged_version = archive.read(f"{root}/VERSION").decode("utf-8").strip()
+              if packaged_version != version:
+                  raise SystemExit(
+                      f"Full package VERSION {packaged_version!r} does not match {version!r}."
+                  )
+              forbidden = {
+                  f"{root}/config/generated.php",
+                  f"{root}/config/secret.key",
+                  f"{root}/storage/install/installed-version.json",
+                  f"{root}/storage/secrets/forwext.secrets",
+              }
+              leaked = sorted(forbidden & set(files))
+              if leaked:
+                  raise SystemExit(f"Full package leaked mutable installation state: {leaked}")
+
+          update_path = dist / f"forwext-v{version}-update.zip"
+          if not update_path.is_file():
+              print("No differential update ZIP on this non-release build; full package integrity passed.")
+              raise SystemExit(0)
+
+          with zipfile.ZipFile(update_path) as archive:
+              file_names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+              if any(not safe_path(name) for name in file_names):
+                  raise SystemExit("Update package contains an unsafe path.")
+              if "update-manifest.json" not in file_names:
+                  raise SystemExit("Update package is missing update-manifest.json.")
+
+              manifest = json.loads(archive.read("update-manifest.json"))
+              required_keys = {
+                  "schema", "source_version", "target_version", "add", "replace", "delete",
+                  "preserve", "migrations", "rebuild", "checksum_algorithm", "checksum",
+              }
+              if not required_keys.issubset(manifest):
+                  raise SystemExit(
+                      f"Update manifest is missing keys: {sorted(required_keys - set(manifest))}"
+                  )
+              if manifest["schema"] != 1 or manifest["target_version"] != version:
+                  raise SystemExit("Update manifest schema/target version is invalid.")
+              if from_version and manifest["source_version"] != from_version:
+                  raise SystemExit(
+                      f"Update source must be immediate predecessor {from_version!r}, "
+                      f"got {manifest['source_version']!r}."
+                  )
+              if manifest["checksum_algorithm"] != "sha256":
+                  raise SystemExit("Update manifest must use sha256 payload checksums.")
+
+              operations: dict[str, list[str]] = {}
+              for key in ("add", "replace", "delete", "preserve", "migrations", "rebuild"):
+                  values = manifest[key]
+                  if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
+                      raise SystemExit(f"Manifest {key} must be a string list.")
+                  if values != sorted(set(values)):
+                      raise SystemExit(f"Manifest {key} must be sorted and unique.")
+                  if key not in ("rebuild",) and any(not safe_path(v.replace("/**", "/placeholder")) for v in values):
+                      raise SystemExit(f"Manifest {key} contains an unsafe path.")
+                  operations[key] = values
+
+              added = set(operations["add"])
+              replaced = set(operations["replace"])
+              deleted = set(operations["delete"])
+              if added & replaced or added & deleted or replaced & deleted:
+                  raise SystemExit("Update add/replace/delete sets must be disjoint.")
+
+              changed = added | replaced
+              payload_names = set(file_names) - {"update-manifest.json"}
+              if payload_names != changed:
+                  raise SystemExit(
+                      "Update ZIP payload must contain exactly the manifest add+replace files."
+                  )
+
+              checksums = manifest["checksum"]
+              if not isinstance(checksums, dict) or set(checksums) != changed:
+                  raise SystemExit("Update checksum map must exactly cover add+replace files.")
+              for name in sorted(changed):
+                  expected = checksums[name]
+                  if not isinstance(expected, str) or len(expected) != 64:
+                      raise SystemExit(f"Invalid checksum metadata for {name}.")
+                  actual = sha256_bytes(archive.read(name))
+                  if actual != expected:
+                      raise SystemExit(f"Payload checksum mismatch for {name}.")
+
+              protected_exact = {
+                  "config/generated.php",
+                  "config/secret.key",
+                  "storage/install/installed-version.json",
+              }
+              protected_prefixes = (
+                  "storage/secrets/",
+                  "storage/files/",
+                  "storage/logs/",
+                  "storage/backups/",
+                  "public/storage/",
+              )
+              for name in sorted(added | replaced | deleted):
+                  if name in protected_exact or name.startswith(protected_prefixes):
+                      raise SystemExit(f"Update manifest touches protected mutable path: {name}")
+
+              migrations = operations["migrations"]
+              if any(
+                  name not in changed
+                  or not name.startswith("database/migrations/")
+                  or not name.endswith(".php")
+                  for name in migrations
+              ):
+                  raise SystemExit("Update migration list contains a non-payload migration.")
+
+          print(
+              f"Release package integrity passed: {from_version or 'n/a'} -> {version}; "
+              f"update payload={len(changed)} delete={len(deleted)}."
+          )
+          PY
+
+      - name: Upload CI package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forwext-packages-${{ steps.release_meta.outputs.version }}-${{ github.run_number }}
+          path: |
+            dist/forwext-v*-full.zip
+            dist/forwext-v*-full.zip.sha256
+            dist/forwext-v*-update.zip
+            dist/forwext-v*-update.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish immutable GitHub Release
+        if: steps.release_meta.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          RELEASE_KIND: ${{ steps.release_meta.outputs.kind }}
+          BASE_VERSION: ${{ steps.release_meta.outputs.base_version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+          PREVIOUS_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+
+          if git show-ref --tags --verify --quiet "refs/tags/${TAG}" || gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Refusing to overwrite immutable release ${TAG}. Bump VERSION instead." >&2
+            exit 1
+          fi
+
+          TITLE="Forwext ${VERSION}"
+          if [[ "$RELEASE_KIND" == "side-update" ]]; then
+            TITLE="${TITLE} — Side Update"
+          fi
+
+          ZIP="dist/forwext-v${VERSION}-full.zip"
+          SHA="dist/forwext-v${VERSION}-full.zip.sha256"
+          UPDATE_ZIP="dist/forwext-v${VERSION}-update.zip"
+          UPDATE_SHA="dist/forwext-v${VERSION}-update.zip.sha256"
+          NOTES="dist/release-notes.md"
+
+          if [[ "$RELEASE_KIND" == "main" ]]; then
+            KIND_TEXT="Main development milestone"
+          else
+            KIND_TEXT="Side update / hotfix"
+          fi
+
+          {
+            echo "## Forwext ${VERSION}"
+            echo
+            echo "${KIND_TEXT}, generated from the tested \`main\` branch."
+            echo
+            echo "- Release type: \`${RELEASE_KIND}\`"
+            echo "- Main line: \`${BASE_VERSION}\`"
+            if [[ -n "$PREVIOUS_TAG" ]]; then
+              echo "- Differential predecessor: \`${PREVIOUS_TAG}\`"
+            fi
+            echo "- PHP 8.4.0+ minimum; PHP 8.5 compatibility tested"
+            echo "- Full cPanel package: \`forwext-v${VERSION}-full.zip\`"
+            if [[ -f "$UPDATE_ZIP" ]]; then
+              echo "- Differential update package from \`${PREVIOUS_VERSION}\`: \`forwext-v${VERSION}-update.zip\`"
+              echo "- Update package includes \`update-manifest.json\` with add/replace/delete, migrations, rebuild actions, source/target versions and SHA-256 payload checksums."
+            fi
+            echo "- Published release tags and assets are immutable. A correction requires the next side-update or main version."
+            echo "- Root \`.htaccess\` handling and bundled production dependencies follow the tested cPanel package profile."
+            echo "- This is a development prerelease, not Forwext 1.0.0."
+          } > "$NOTES"
+
+          ASSETS=("$ZIP" "$SHA")
+          if [[ -f "$UPDATE_ZIP" ]]; then
+            ASSETS+=("$UPDATE_ZIP" "$UPDATE_SHA")
+          fi
+
+          gh release create "$TAG" "${ASSETS[@]}" \
+            --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes-file "$NOTES" \
+            --prerelease
+
+
+          if [[ "$VERSION" =~ $PRODUCTION_RE ]]; then
+            RELEASE_KIND="production"
+            BASE_VERSION="$VERSION"
+          elif [[ "$VERSION" =~ $MAIN_RE ]]; then
             RELEASE_KIND="main"
             BASE_VERSION="$VERSION"
           elif [[ "$VERSION" =~ $SIDE_RE ]]; then
