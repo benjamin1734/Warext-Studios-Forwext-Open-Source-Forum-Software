@@ -61,7 +61,7 @@ jobs:
           elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
             SHOULD_PUBLISH="true"
           # A failed publication may be retried explicitly with a release-retry(...) commit
-          # or workflow_dispatch. Ordinary later commits with the same VERSION never publish.
+          # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
           fi
 
           PREVIOUS_TAG=""
