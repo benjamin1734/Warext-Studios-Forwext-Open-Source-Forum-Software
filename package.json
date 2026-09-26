@@ -6,6 +6,11 @@
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0"
   },
+  "workspaces": [
+    "packages/sdk",
+    "packages/react-ui",
+    "frontend/next"
+  ],
   "scripts": {
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix --max-warnings=0",
@@ -21,7 +26,9 @@
     "react-ui:generate:check": "php tools/generate-react-design-token-contract.php --check",
     "react-ui:typecheck": "tsc -p packages/react-ui/tsconfig.json --noEmit",
     "react-ui:build": "tsc -p packages/react-ui/tsconfig.build.json",
-    "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs && node packages/react-ui/test/package-smoke.mjs"
+    "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs && node packages/react-ui/test/package-smoke.mjs",
+    "next-frontend:typecheck": "npm run typecheck --workspace=@forwext/next-frontend",
+    "next-frontend:build": "npm run build --workspace=@forwext/next-frontend"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -30,9 +37,9 @@
     "eslint": "^10.10.0",
     "prettier": "^3.9.6",
     "typescript": "^5.9.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }
