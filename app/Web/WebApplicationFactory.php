@@ -254,6 +254,12 @@ use Forwext\Core\Health\DatabaseConnectivityHealthCheck;
 use Forwext\Core\Health\HealthService;
 use Forwext\Core\Health\RuntimeEnvironmentHealthCheck;
 use Forwext\Core\Health\WritableDirectoryHealthCheck;
+use Forwext\Core\Install\CoreMigrationRegistry;
+use Forwext\Core\Lock\FileLockManager;
+use Forwext\Core\Migration\FileInstalledVersionStore;
+use Forwext\Core\Migration\InstallUpgradeEngine;
+use Forwext\Core\Migration\MigrationEngine;
+use Forwext\Core\Migration\MySqlMigrationHistoryStore;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\RateLimit\FileRateLimitStore;
 use Forwext\Core\Http\Middleware\CallableRequestHandler;
@@ -344,7 +350,9 @@ use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
+use Forwext\Core\Search\Lifecycle\CoreSearchContentSources;
 use Forwext\Core\Search\Lifecycle\DatabaseSearchIndexChangeStore;
+use Forwext\Core\Search\Lifecycle\SearchIndexLifecycleService;
 use Forwext\Core\Search\NativeDatabaseSearchDriver;
 use Forwext\Core\Search\ResilientSearchDriver;
 use Forwext\Core\Search\PermissionAwareSearchService;
@@ -380,6 +388,11 @@ use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
 use Forwext\Core\Ui\Theme\PublishedThemeAssetService;
 use Forwext\Core\Ui\Theme\ThemeService;
 use Forwext\Core\Ui\Theme\ThemeTemplateCache;
+use Forwext\Core\Update\UpdateCoordinator;
+use Forwext\Core\Update\UpdateFileTransaction;
+use Forwext\Core\Update\UpdateMaintenanceLock;
+use Forwext\Core\Update\UpdatePackageInspector;
+use Forwext\Core\Update\UpdateRuntimeRebuildService;
 use Forwext\Core\Webhook\DatabaseWebhookRepository;
 use Forwext\Core\Webhook\PinnedHttpsWebhookTransport;
 use Forwext\Core\Webhook\WebhookDeliveryJobHandler;
@@ -525,29 +538,64 @@ final readonly class WebApplicationFactory
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
+        $systemHealth = new HealthService([
+            new RuntimeEnvironmentHealthCheck(),
+            new DatabaseConnectivityHealthCheck($database),
+            new WritableDirectoryHealthCheck('storage', $this->projectRoot . '/storage'),
+            new WritableDirectoryHealthCheck('config', $this->projectRoot . '/config'),
+        ]);
+        $systemBackups = new SystemBackupService(
+            $database,
+            $this->projectPath($config->requireString('operations.backup_path')),
+            $config->requireInt('operations.backup_chunk_rows'),
+        );
+        $installedVersions = new FileInstalledVersionStore(
+            $this->projectRoot . '/storage/install/installed-version.json',
+        );
+        $updateSearchSources = CoreSearchContentSources::create($database);
+        $updateSearch = new SearchIndexLifecycleService(
+            new NativeDatabaseSearchDriver($database),
+            $updateSearchSources,
+            new DatabaseSearchIndexChangeStore($database),
+        );
+        $updateRebuilds = (new UpdateRuntimeRebuildService(
+            $this->projectPath($config->requireString('cache.path')),
+            $updateSearch,
+            $updateSearchSources,
+        ))->registry();
+        $systemUpdater = new UpdateCoordinator(
+            new UpdatePackageInspector(),
+            $installedVersions,
+            new FileLockManager($this->projectRoot . '/storage/locks'),
+            new UpdateMaintenanceLock($this->projectRoot . '/storage/update/maintenance.json'),
+            $systemBackups,
+            new UpdateFileTransaction(
+                $this->projectRoot,
+                $this->projectRoot . '/storage/backups/update-files',
+            ),
+            new InstallUpgradeEngine(
+                new MigrationEngine($database, new MySqlMigrationHistoryStore($database)),
+                $installedVersions,
+            ),
+            $updateRebuilds,
+            $systemHealth,
+            static fn (): array => CoreMigrationRegistry::all(),
+        );
         $systemOperations = new SystemOperationsService(
             $database,
             $config,
             new GeneratedConfigStore($this->projectRoot . '/config/generated.php'),
-            new HealthService([
-                new RuntimeEnvironmentHealthCheck(),
-                new DatabaseConnectivityHealthCheck($database),
-                new WritableDirectoryHealthCheck('storage', $this->projectRoot . '/storage'),
-                new WritableDirectoryHealthCheck('config', $this->projectRoot . '/config'),
-            ]),
+            $systemHealth,
             new CapabilityResolver(databaseProbe: new DatabaseServerCapabilityProbe($database)),
             new SystemLogReader($this->projectPath($config->requireString('logging.path'))),
-            new SystemBackupService(
-                $database,
-                $this->projectPath($config->requireString('operations.backup_path')),
-                $config->requireInt('operations.backup_chunk_rows'),
-            ),
+            $systemBackups,
             SystemMaintenanceSchedulerCatalog::coreDefaults(),
             new DatabaseQueueDriver($database),
             new DatabaseSchedulerClaimStore($database),
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
             $this->projectPath($config->requireString('cache.path')),
+            $systemUpdater,
         );
         $appearanceGuide = new AppearanceGuideService($authorizer);
         $layoutSlots = UiSlotRegistry::withCoreDefaults();
@@ -1828,7 +1876,12 @@ final readonly class WebApplicationFactory
             'admin.system.operations',
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/admin/system/operations'),
-            new SystemOperationsHandler($systemOperations, $viewerResolver, $basePath),
+            new SystemOperationsHandler(
+                $systemOperations,
+                $viewerResolver,
+                $basePath,
+                $this->projectRoot . '/storage/update/incoming',
+            ),
             [$systemOperationsCsrf],
         ));
         $routes->add(new Route(
