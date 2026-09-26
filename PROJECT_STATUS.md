@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.62-dev
+CURRENT_VERSION = 0.0.7.63-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 19.06
-CURRENT_STEP = 20.01
-LAST_COMMIT = bd5fc5b071826e814c522d072f6ae27283ab51b6
+LAST_COMPLETED_SUBSTEP = 20.01
+CURRENT_STEP = 20.02
+LAST_COMMIT = d432a7bfea2611b6334ced3da025cb3c139c5a5d
 BLOCKERS = none
-NEXT_STEP = 20.01 - cPanel-first web installer
+NEXT_STEP = 20.02 - Full ZIP + update ZIP release sistemi
 ```
 
 ## Current position
@@ -21,13 +21,34 @@ NEXT_STEP = 20.01 - cPanel-first web installer
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`.
-- Current sub-step: `20.01 — cPanel-first web installer`.
-- Remaining roadmap work after 19.06: **8 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01`.
+- Current sub-step: `20.02 — Full ZIP + update ZIP release sistemi`.
+- Remaining roadmap work after 20.01: **7 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.01
+
+- Rebuilt the cPanel-first browser installer around a reusable preflight service for PHP 8.4+, OpenSSL, PDO/PDO MySQL, JSON, bundled production autoload and safe writable config/storage paths.
+- Added site identity, locale/timezone, database, first-administrator, mail/SMTP, first-party module and initial-theme stages without requiring Composer, npm, Node.js, SSH or terminal access.
+- Database and SMTP passwords are written only to the existing encrypted secret store; generated configuration carries secret references rather than plaintext credentials.
+- Added a real first-administrator bootstrap: active user aggregate row, password credential, registered primary group, protected staff administrator role and a snapshot of the release-current `administrator` permission template.
+- Added fail-closed existing-database protection. Installer recovery accepts only its own already-authorized interrupted bootstrap administrator and rejects unrelated pre-existing user data.
+- Added server-side first-party module dependency/conflict validation and persisted initial enabled/disabled states through the registered module catalog.
+- Added initial theme revision creation/publication and compiled theme cache through the existing theme repository; fixed the native-prepared-statement duplicate placeholder bug exposed by the new integration path.
+- Moved the permanent installed-version write to the final stage so migration/bootstrap/health failures cannot falsely lock a partial installation as complete.
+- Added post-install runtime/database/writable-directory health verification and cPanel Cron Jobs instructions for the bounded webhook worker.
+- Added installer CSRF/no-store/CSP/referrer/permissions-policy hardening and password fields that are never echoed back into HTML.
+- Extended the real post-install DB smoke to verify administrator credential/permissions, all selected module states, published theme, generated secret references, health status and existing root/subfolder web routes.
+- Architecture documentation: `docs/architecture/cpanel-web-installer.md`.
+- Implementation/fix commits: `f53c4d4b199e5f2bb245484bcb86c54fb536b43f`, `3f987e56d39fdc4ceb4d85683dcb51c69affe056`, `d432a7bfea2611b6334ced3da025cb3c139c5a5d`.
+- GitHub Actions build run `36239530201`: success; strict-types, PHP lint, PHPUnit PHP 8.4/8.5, SDK/React/Next validation and cPanel package build passed.
+- Database migration smoke run `36239530210`: success on MySQL 8.4 and MariaDB 10.11 including full installer bootstrap acceptance.
+- No new schema migration was required; 20.01 consumes the existing user/auth/permission/module/theme/audit schemas after core migrations.
+- Version: `0.0.7.63-dev`.
+- Next: `20.02 — Full ZIP + update ZIP release sistemi`.
 
 ## Completed in 19.06
 
