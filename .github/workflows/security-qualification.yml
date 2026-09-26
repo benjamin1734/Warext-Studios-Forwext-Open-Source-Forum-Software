@@ -1,0 +1,115 @@
+name: Security qualification
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ format('forwext-security-{0}', github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  php-security:
+    name: PHP ${{ matrix.php }} security qualification
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: SQL injection qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Security/Qualification/SqlInjectionBoundaryTest.php
+
+      - name: XSS output-escaping qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web/Support/SupportTicketDetailHtmlTest.php
+
+      - name: CSRF qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Http/Security/CsrfTest.php
+
+      - name: SSRF qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web/Editor/EditorLinkPreviewHandlerTest.php
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Webhook/WebhookPlatformTest.php
+
+      - name: IDOR and BOLA authorization qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web/Api/ApiV1SecurityPipelineTest.php
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Forum/Node/ForumNodeAuthorizationTest.php
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Security/Permission
+
+      - name: Upload and path traversal qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Http/UploadNormalizerTest.php
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Forum/Attachment/AttachmentInspectorTest.php
+
+      - name: OAuth linking qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Auth/OAuth/OAuthConnectedAccountServiceTest.php
+
+      - name: Session qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Auth/PasswordSessionTest.php
+
+      - name: Webhook signing and destination qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Webhook/WebhookPlatformTest.php
+
+      - name: Secret leakage and encryption qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Security/Secret/SecretStoreTest.php
+
+      - name: Security policy and threat-model regression
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture/SecurityQualificationPolicyTest.php
+
+  dependency-security:
+    name: Dependency advisory qualification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve PHP dependency graph
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Composer security advisory scan
+        run: composer audit --no-interaction
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Resolve JavaScript dependency graph
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Production JavaScript advisory scan
+        run: npm audit --omit=dev --audit-level=high
