@@ -1,14 +1,18 @@
 # Forwext release and versioning policy
 
-Forwext development releases use immutable GitHub tags and immutable release assets. Once a release is published, its ZIP files are never replaced in place. Any correction or follow-up must advance `VERSION` and publish a new tag.
+Forwext releases use immutable GitHub tags and immutable release assets. Development builds remain prereleases; stable semantic versions such as `1.0.0` are production releases. Once a release is published, its ZIP files are never replaced in place. Any correction or follow-up must advance `VERSION` and publish a new tag.
 
 ## Version forms
 
-Main development milestones use `X.Y.Z-dev`, for example `0.0.7-dev`. Side updates and hotfixes use `X.Y.Z.NN-dev`, for example `0.0.7.01-dev` and `0.0.7.02-dev`; `NN` starts at `01`. When the next main milestone is completed, the version advances to the next main version.
+Production releases use normal semantic versions such as `1.0.0` and are published as stable GitHub Releases.
+
+Main development milestones use `X.Y.Z-dev`, for example `0.0.7-dev`. Side updates and hotfixes use `X.Y.Z.NN-dev`, for example `0.0.7.01-dev` and `0.0.7.02-dev`; `NN` starts at `01`.
+
+A production release must compare newer than every recognized Forwext tag. A development tag for a future core version may follow a stable release, but a prerelease for the same semantic core sorts before that core's production tag.
 
 ## Tags and package contract
 
-Each version has its own prerelease tag. The package naming contract is fixed:
+Each version has its own immutable tag. Development versions are marked prerelease; production versions are not. The package naming contract is fixed:
 
 - `forwext-vX.Y.Z-full.zip`
 - `forwext-vX.Y.Z-update.zip`
@@ -51,8 +55,14 @@ Published releases are immutable, so historical prereleases that already used th
 
 The release workflow publishes a GitHub Release only when the `VERSION` file changes, or when an explicit manual release is requested for a version that does not already exist. Normal commits with an unchanged `VERSION` still run tests and build a full CI artifact, but do not modify a published Release.
 
-Before publication the workflow verifies that neither the Git tag nor the GitHub Release already exists and that the new version advances beyond the latest valid Forwext development tag. Published assets are never overwritten.
+Before publication the workflow verifies that neither the Git tag nor the GitHub Release already exists and that the new version advances beyond the latest recognized Forwext development or production tag. Published assets are never overwritten.
 
 ## Transition at 0.0.7
 
 The historical `v0.0.7-dev` transition baseline and already published side-update assets remain immutable. Compatibility with their older installation-package name exists only for reading the predecessor during differential generation; it does not change the current package contract.
+
+## Production publication
+
+A stable `X.Y.Z` VERSION is classified as a production release. It runs the same PHP 8.4/8.5, SDK, React UI, Next.js and package-integrity gates as development builds, resolves the immediate predecessor across recognized development/production tags, builds the full ZIP plus differential update ZIP when a predecessor exists, publishes SHA-256 files, and creates a GitHub Release without the prerelease flag.
+
+Forwext `1.0.0` is the first production release governed by this rule.
