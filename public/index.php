@@ -17,6 +17,23 @@ use Forwext\Core\Migration\FileInstalledVersionStore;
 
 $root = dirname(__DIR__);
 $autoload = $root . '/vendor/autoload.php';
+$updateMaintenance = $root . '/storage/update/maintenance.json';
+
+if (is_file($updateMaintenance) && !is_link($updateMaintenance)) {
+    http_response_code(503);
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store, max-age=0');
+    header('Retry-After: 60');
+    header('X-Robots-Tag: noindex, nofollow');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+    echo '<!doctype html><html lang="tr"><meta charset="utf-8"><title>Forwext güncelleniyor</title>';
+    echo '<body style="font:16px/1.55 system-ui,sans-serif;max-width:720px;margin:48px auto;padding:0 20px">';
+    echo '<h1>Forwext güncelleniyor</h1><p>Dosya ve veritabanı güncellemesi doğrulanıyor. Kısa süre sonra tekrar deneyin.</p>';
+    echo '</body></html>';
+    exit;
+}
 
 if (PHP_VERSION_ID < 80400) {
     http_response_code(500);
