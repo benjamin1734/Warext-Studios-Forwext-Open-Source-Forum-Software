@@ -18,16 +18,20 @@ use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
+use Forwext\Core\Http\Upload\UploadedFile;
 use Forwext\Core\Routing\BasePath;
 use InvalidArgumentException;
 use RuntimeException;
 
 final readonly class SystemOperationsHandler implements RequestHandlerInterface
 {
+    private const MAX_UPDATE_PACKAGE_BYTES = 536870912;
+
     public function __construct(
         private SystemOperationsService $operations,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
+        private ?string $updateUploadDirectory = null,
     ) {
     }
 
@@ -125,6 +129,9 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
             case 'clear_cache':
                 $this->clearCache($actor, $body, $auditRequestId, $now);
                 break;
+            case 'apply_update':
+                $this->applyUpdate($actor, $request, $body, $auditRequestId, $now);
+                break;
             default:
                 throw new InvalidArgumentException('Unknown system operation action.');
         }
@@ -193,6 +200,55 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
         $this->operations->clearCache($actor, $requestId, $now);
     }
 
+    /** @param array<string,mixed> $body */
+    private function applyUpdate(
+        EntityId $actor,
+        Request $request,
+        array $body,
+        \Forwext\Core\Audit\AuditRequestId $requestId,
+        DateTimeImmutable $now,
+    ): void {
+        $this->operations->assertUpdateAllowed($actor);
+
+        if (($body['confirm'] ?? null) !== 'UPDATE') {
+            throw new InvalidArgumentException('Update confirmation is invalid.');
+        }
+
+        $upload = $request->uploads()['update_package'] ?? null;
+        if (
+            !$upload instanceof UploadedFile
+            || !$upload->isSuccessful()
+            || $upload->size < 1
+            || $upload->size > self::MAX_UPDATE_PACKAGE_BYTES
+            || $upload->clientFilename === null
+            || !str_ends_with(strtolower($upload->clientFilename), '.zip')
+        ) {
+            throw new InvalidArgumentException('Update package upload is invalid.');
+        }
+
+        $directory = $this->updateUploadDirectory;
+        if ($directory === null || $directory === '' || str_contains($directory, "\0")) {
+            throw new RuntimeException('Update upload staging is unavailable.');
+        }
+        if (is_link($directory)) {
+            throw new RuntimeException('Update upload staging directory may not be a symbolic link.');
+        }
+        if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
+            throw new RuntimeException('Update upload staging directory cannot be created.');
+        }
+
+        $path = rtrim($directory, '/\\') . '/' . bin2hex(random_bytes(16)) . '.zip';
+        try {
+            $upload->moveTo($path);
+            @chmod($path, 0600);
+            $this->operations->applyUpdate($actor, $path, $requestId, $now);
+        } finally {
+            if (is_file($path) && !is_link($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
     private function verification(EntityId $actor, Request $request): ?SystemBackupEntry
     {
         $name = $request->query()['verify'] ?? null;
@@ -223,7 +279,7 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
     private function section(Request $request): string
     {
         $value = $request->query()['section'] ?? 'all';
-        if (!is_string($value) || !in_array($value, ['all','health','maintenance','jobs','backups','logs','repairs'], true)) {
+        if (!is_string($value) || !in_array($value, ['all','health','maintenance','updates','jobs','backups','logs','repairs'], true)) {
             throw new InvalidArgumentException('System operations section filter is invalid.');
         }
 
