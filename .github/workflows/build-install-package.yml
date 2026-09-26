@@ -436,6 +436,16 @@ jobs:
               "add": sorted(added),
               "replace": sorted(replaced),
               "delete": deleted,
+              "preserve": [
+                  "config/generated.php",
+                  "config/secret.key",
+                  "storage/install/installed-version.json",
+                  "storage/secrets/**",
+                  "storage/files/**",
+                  "storage/logs/**",
+                  "storage/backups/**",
+                  "public/storage/**",
+              ],
               "migrations": migrations,
               "rebuild": [],
               "checksum_algorithm": "sha256",
@@ -461,6 +471,176 @@ jobs:
             cd dist
             sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
           )
+
+      - name: Verify full and update package integrity
+        shell: bash
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          FROM_VERSION: ${{ steps.release_meta.outputs.previous_version }}
+        run: |
+          set -euo pipefail
+          (
+            cd dist
+            sha256sum -c "forwext-v${VERSION}-full.zip.sha256"
+            unzip -tq "forwext-v${VERSION}-full.zip" >/dev/null
+            if [[ -f "forwext-v${VERSION}-update.zip" ]]; then
+              sha256sum -c "forwext-v${VERSION}-update.zip.sha256"
+              unzip -tq "forwext-v${VERSION}-update.zip" >/dev/null
+            fi
+          )
+
+          python3 <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import PurePosixPath, Path
+
+          version = os.environ["VERSION"]
+          from_version = os.environ.get("FROM_VERSION", "")
+          dist = Path("dist")
+
+          def safe_path(value: str) -> bool:
+              if not value or "\\" in value or value.startswith("/"):
+                  return False
+              path = PurePosixPath(value)
+              return not path.is_absolute() and ".." not in path.parts and "." not in path.parts
+
+          def sha256_bytes(payload: bytes) -> str:
+              return hashlib.sha256(payload).hexdigest()
+
+          full_path = dist / f"forwext-v{version}-full.zip"
+          with zipfile.ZipFile(full_path) as archive:
+              files = [name for name in archive.namelist() if not name.endswith("/")]
+              if not files or any(not safe_path(name) for name in files):
+                  raise SystemExit("Full package contains an unsafe or empty file path.")
+              roots = {PurePosixPath(name).parts[0] for name in files}
+              if len(roots) != 1:
+                  raise SystemExit("Full package must contain exactly one application root.")
+              root = next(iter(roots))
+              required = {
+                  f"{root}/VERSION",
+                  f"{root}/LICENSE",
+                  f"{root}/install.php",
+                  f"{root}/public/install.php",
+                  f"{root}/vendor/autoload.php",
+              }
+              missing = sorted(required - set(files))
+              if missing:
+                  raise SystemExit(f"Full package is incomplete: {missing}")
+              packaged_version = archive.read(f"{root}/VERSION").decode("utf-8").strip()
+              if packaged_version != version:
+                  raise SystemExit(
+                      f"Full package VERSION {packaged_version!r} does not match {version!r}."
+                  )
+              forbidden = {
+                  f"{root}/config/generated.php",
+                  f"{root}/config/secret.key",
+                  f"{root}/storage/install/installed-version.json",
+                  f"{root}/storage/secrets/forwext.secrets",
+              }
+              leaked = sorted(forbidden & set(files))
+              if leaked:
+                  raise SystemExit(f"Full package leaked mutable installation state: {leaked}")
+
+          update_path = dist / f"forwext-v{version}-update.zip"
+          if not update_path.is_file():
+              print("No differential update ZIP on this non-release build; full package integrity passed.")
+              raise SystemExit(0)
+
+          with zipfile.ZipFile(update_path) as archive:
+              file_names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+              if any(not safe_path(name) for name in file_names):
+                  raise SystemExit("Update package contains an unsafe path.")
+              if "update-manifest.json" not in file_names:
+                  raise SystemExit("Update package is missing update-manifest.json.")
+
+              manifest = json.loads(archive.read("update-manifest.json"))
+              required_keys = {
+                  "schema", "source_version", "target_version", "add", "replace", "delete",
+                  "preserve", "migrations", "rebuild", "checksum_algorithm", "checksum",
+              }
+              if not required_keys.issubset(manifest):
+                  raise SystemExit(
+                      f"Update manifest is missing keys: {sorted(required_keys - set(manifest))}"
+                  )
+              if manifest["schema"] != 1 or manifest["target_version"] != version:
+                  raise SystemExit("Update manifest schema/target version is invalid.")
+              if from_version and manifest["source_version"] != from_version:
+                  raise SystemExit(
+                      f"Update source must be immediate predecessor {from_version!r}, "
+                      f"got {manifest['source_version']!r}."
+                  )
+              if manifest["checksum_algorithm"] != "sha256":
+                  raise SystemExit("Update manifest must use sha256 payload checksums.")
+
+              operations: dict[str, list[str]] = {}
+              for key in ("add", "replace", "delete", "preserve", "migrations", "rebuild"):
+                  values = manifest[key]
+                  if not isinstance(values, list) or any(not isinstance(v, str) for v in values):
+                      raise SystemExit(f"Manifest {key} must be a string list.")
+                  if values != sorted(set(values)):
+                      raise SystemExit(f"Manifest {key} must be sorted and unique.")
+                  if key not in ("rebuild",) and any(not safe_path(v.replace("/**", "/placeholder")) for v in values):
+                      raise SystemExit(f"Manifest {key} contains an unsafe path.")
+                  operations[key] = values
+
+              added = set(operations["add"])
+              replaced = set(operations["replace"])
+              deleted = set(operations["delete"])
+              if added & replaced or added & deleted or replaced & deleted:
+                  raise SystemExit("Update add/replace/delete sets must be disjoint.")
+
+              changed = added | replaced
+              payload_names = set(file_names) - {"update-manifest.json"}
+              if payload_names != changed:
+                  raise SystemExit(
+                      "Update ZIP payload must contain exactly the manifest add+replace files."
+                  )
+
+              checksums = manifest["checksum"]
+              if not isinstance(checksums, dict) or set(checksums) != changed:
+                  raise SystemExit("Update checksum map must exactly cover add+replace files.")
+              for name in sorted(changed):
+                  expected = checksums[name]
+                  if not isinstance(expected, str) or len(expected) != 64:
+                      raise SystemExit(f"Invalid checksum metadata for {name}.")
+                  actual = sha256_bytes(archive.read(name))
+                  if actual != expected:
+                      raise SystemExit(f"Payload checksum mismatch for {name}.")
+
+              protected_exact = {
+                  "config/generated.php",
+                  "config/secret.key",
+                  "storage/install/installed-version.json",
+              }
+              protected_prefixes = (
+                  "storage/secrets/",
+                  "storage/files/",
+                  "storage/logs/",
+                  "storage/backups/",
+                  "public/storage/",
+              )
+              for name in sorted(added | replaced | deleted):
+                  if name in protected_exact or name.startswith(protected_prefixes):
+                      raise SystemExit(f"Update manifest touches protected mutable path: {name}")
+
+              migrations = operations["migrations"]
+              if any(
+                  name not in changed
+                  or not name.startswith("database/migrations/")
+                  or not name.endswith(".php")
+                  for name in migrations
+              ):
+                  raise SystemExit("Update migration list contains a non-payload migration.")
+
+          print(
+              f"Release package integrity passed: {from_version or 'n/a'} -> {version}; "
+              f"update payload={len(changed)} delete={len(deleted)}."
+          )
+          PY
 
       - name: Upload CI package artifact
         uses: actions/upload-artifact@v4

@@ -32,6 +32,7 @@ final class ReleasePackagingPolicyTest extends TestCase
             '"add"',
             '"replace"',
             '"delete"',
+            '"preserve"',
             '"migrations"',
             '"rebuild"',
             '"checksum"',
@@ -64,6 +65,19 @@ final class ReleasePackagingPolicyTest extends TestCase
         self::assertStringContainsString("\$this->projectRoot . '/public/.htaccess'", $installer);
         self::assertStringContainsString("\$root . '/.htaccess'", $runtime);
         self::assertStringContainsString("\$root . '/public/.htaccess'", $runtime);
+    }
+
+    public function testWorkflowVerifiesBuiltArchiveAndPayloadIntegrity(): void
+    {
+        $workflow = $this->read('.github/workflows/build-install-package.yml');
+
+        self::assertStringContainsString('Verify full and update package integrity', $workflow);
+        self::assertStringContainsString('sha256sum -c "forwext-v${VERSION}-full.zip.sha256"', $workflow);
+        self::assertStringContainsString('zipfile.ZipFile', $workflow);
+        self::assertStringContainsString('Update ZIP payload must contain exactly the manifest add+replace files.', $workflow);
+        self::assertStringContainsString('Update source must be immediate predecessor', $workflow);
+        self::assertStringContainsString('config/generated.php', $workflow);
+        self::assertStringContainsString('storage/secrets/**', $workflow);
     }
 
     private function read(string $relativePath): string
