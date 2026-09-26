@@ -1,0 +1,103 @@
+name: Qualification test matrix
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ format('forwext-qualification-{0}', github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  php-contracts:
+    name: PHP ${{ matrix.php }} qualification contracts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Unit and integration qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Application
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Migration
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Update
+
+      - name: Versioned API qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web/Api
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Api
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Extension/ExtensionApiSecurityContractTest.php
+
+      - name: Native browser and web-surface qualification
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web
+
+      - name: First-party module ON/OFF contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Module/FirstPartyModuleRuntimeMiddlewareTest.php
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/App/Web/FirstPartyModuleManagerWebSurfaceTest.php
+
+      - name: Sample add-on compatibility contract
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Unit/Core/Addon/SampleAddonContractTest.php
+
+      - name: Architecture and security regression qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture
+          vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Security
+
+  release-contract:
+    name: Release build contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Verify full/update release policy
+        run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture/ReleasePackagingPolicyTest.php
+
+      - name: Verify official SDK, React and Next.js release surfaces exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f packages/sdk/package.json
+          test -f packages/react-ui/package.json
+          test -f frontend/next/package.json
+          test -f .github/workflows/build-install-package.yml
