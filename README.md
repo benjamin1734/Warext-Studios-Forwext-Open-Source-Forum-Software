@@ -33,3 +33,7 @@ The first persistent server installation is expected after the migration/install
 This repository is the canonical source repository for Forwext.
 
 Current development status: see [`PROJECT_STATUS.md`](PROJECT_STATUS.md).
+
+## Production documentation
+
+The production operator/developer handbook is available at [`docs/production/README.md`](docs/production/README.md). It covers installation, administration, themes/modules/add-ons, API/SDK/Next.js, updates/backups, security operations and the 1.0.0 final acceptance gate.
