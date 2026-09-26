@@ -16,7 +16,12 @@
     "sdk:typecheck": "tsc -p packages/sdk/tsconfig.json --noEmit",
     "sdk:build": "tsc -p packages/sdk/tsconfig.build.json",
     "sdk:test": "npm run sdk:build && node packages/sdk/test/sdk-smoke.mjs",
-    "sdk:package:check": "npm run sdk:build && node packages/sdk/test/package-smoke.mjs"
+    "sdk:package:check": "npm run sdk:build && node packages/sdk/test/package-smoke.mjs",
+    "react-ui:generate": "php tools/generate-react-design-token-contract.php",
+    "react-ui:generate:check": "php tools/generate-react-design-token-contract.php --check",
+    "react-ui:typecheck": "tsc -p packages/react-ui/tsconfig.json --noEmit",
+    "react-ui:build": "tsc -p packages/react-ui/tsconfig.build.json",
+    "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -24,6 +29,10 @@
     "@typescript-eslint/parser": "^8.70.0",
     "eslint": "^10.10.0",
     "prettier": "^3.9.6",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
