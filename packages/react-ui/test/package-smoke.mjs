@@ -29,6 +29,15 @@ for (const exportName of [
   assert.ok(exportName in module, `Missing React UI export: ${exportName}`);
 }
 
+for (const clientBoundary of ["dist/permissions.js", "dist/AddonSlot.js"]) {
+  const source = await readFile(join(packageRoot, clientBoundary), "utf8");
+  assert.match(
+    source,
+    /^["']use client["'];/u,
+    `React client boundary directive missing from ${clientBoundary}`,
+  );
+}
+
 const builtFiles = await walk(join(packageRoot, "dist"));
 for (const file of builtFiles.filter((path) => path.endsWith(".js"))) {
   const source = await readFile(file, "utf8");
