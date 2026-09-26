@@ -6,6 +6,14 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 20.05 — CI ve otomatik test matrisi
+
+- Added explicit PHP 8.4/8.5 qualification gates for unit/integration, API, native web/browser, module lifecycle, sample add-on, architecture and security contract coverage.
+- Extended MySQL 8.4 and MariaDB 10.11 CI with real incremental migration-upgrade and installed module ON/OFF runtime smoke tests alongside the existing clean-install/post-install checks.
+- Kept full release-build validation independent: complete PHP suites, SDK, React UI, official Next.js build, PHP 8.4 production dependency baseline, cPanel full ZIP and differential update integrity remain mandatory in the package workflow.
+- Added architecture policy coverage and documented the acceptance matrix in `docs/architecture/ci-qualification-matrix.md`.
+- Implementation commit: `e010f424ce4791937eef52792722a685fc96548b`; qualification `36269114528`, database `36269114522` and package `36269114524` all succeeded.
+
 ### 20.04 — VDS/Docker/advanced deployment
 
 - Added real Redis-backed advanced runtime composition for sessions, cache, queue, locks, scheduler claims and shared rate limiting.

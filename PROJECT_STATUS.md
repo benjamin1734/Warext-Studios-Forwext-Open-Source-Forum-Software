@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.66-dev
+CURRENT_VERSION = 0.0.7.67-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.04
-CURRENT_STEP = 20.05
-LAST_COMMIT = a10c290422e057bcaecb9f609846b4fa9601fe2e
+LAST_COMPLETED_SUBSTEP = 20.05
+CURRENT_STEP = 20.06
+LAST_COMMIT = e010f424ce4791937eef52792722a685fc96548b
 BLOCKERS = none
-NEXT_STEP = 20.05 - CI ve otomatik test matrisi
+NEXT_STEP = 20.06 - Security qualification
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 20.05 - CI ve otomatik test matrisi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.04`.
-- Current sub-step: `20.05 — CI ve otomatik test matrisi`.
-- Remaining roadmap work after 20.04: **4 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.05`.
+- Current sub-step: `20.06 — Security qualification`.
+- Remaining roadmap work after 20.05: **3 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.05
+
+- Added an explicit read-only qualification workflow with PHP 8.4 and PHP 8.5 gates for unit/integration, API, native browser/web-surface, first-party module, sample add-on, architecture and security regression contracts.
+- Extended the database qualification matrix on MySQL 8.4 and MariaDB 10.11 with real clean-install/post-install acceptance, incremental migration-upgrade verification and persisted Marketplace module ON/OFF runtime checks.
+- Kept the existing package workflow as the independent release-build authority for the full PHP suites, SDK, React UI, official Next.js production build, PHP 8.4 dependency baseline, cPanel full ZIP and differential update ZIP integrity.
+- Added a real migration-upgrade smoke that applies the historical registry first, then requires exactly the missing migration and an idempotent final pass.
+- Added a database-backed module runtime smoke that requires a disabled Marketplace route to fail closed with HTTP 503 and verifies normal service after re-enable, restoring state in all cases.
+- Added architecture policy coverage so future CI edits cannot silently remove the roadmap-required qualification dimensions.
+- Architecture documentation: `docs/architecture/ci-qualification-matrix.md`.
+- Implementation completion commit: `e010f424ce4791937eef52792722a685fc96548b`.
+- Qualification matrix run `36269114528`: success on PHP 8.4/8.5 and all explicit contract slices.
+- Database migration smoke run `36269114522`: success on MySQL 8.4 and MariaDB 10.11, including clean install, upgrade and module ON/OFF acceptance.
+- Build/package run `36269114524`: success; PHP 8.4/8.5, SDK, React UI, Next.js, production dependency baseline, cPanel full package and integrity checks passed.
+- No schema migration or new production runtime dependency was required.
+- Version: `0.0.7.67-dev`.
+- Next: `20.06 — Security qualification`.
 
 ## Completed in 20.04
 
