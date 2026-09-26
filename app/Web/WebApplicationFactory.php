@@ -444,7 +444,7 @@ final readonly class WebApplicationFactory
             $config->requireString('authentication.session.cookie_name'),
             new DatabaseDisciplineAuthenticationAvailability($database),
         );
-        $storage = $this->localStorage($config);
+        $storage = $runtime->storageDriver();
         $firstPartyModuleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
         $firstPartyModuleRepository = new DatabaseFirstPartyModuleRepository($database);
         $firstPartyModuleService = new FirstPartyModuleService(

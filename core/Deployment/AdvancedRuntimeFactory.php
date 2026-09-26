@@ -41,6 +41,10 @@ use Forwext\Core\Session\DatabaseSessionStore;
 use Forwext\Core\Session\FileSessionStore;
 use Forwext\Core\Session\RedisSessionStore;
 use Forwext\Core\Session\SessionStore;
+use Forwext\Core\Storage\LocalStorageDriver;
+use Forwext\Core\Storage\S3\S3StorageDriver;
+use Forwext\Core\Storage\S3\SigV4S3CompatibleClient;
+use Forwext\Core\Storage\StorageDriver;
 use RuntimeException;
 
 final class AdvancedRuntimeFactory
@@ -76,6 +80,62 @@ final class AdvancedRuntimeFactory
             'redis' => new RedisCacheStore($this->redis()),
             default => throw new RuntimeException('Unsupported cache driver.'),
         };
+    }
+
+    public function storageDriver(): StorageDriver
+    {
+        $driver = $this->config->requireString('storage.driver');
+        if ($driver === 'local') {
+            $baseUrl = $this->config->get('storage.local.public_base_url');
+            if ($baseUrl !== null && !is_string($baseUrl)) {
+                throw new RuntimeException('Public storage base URL configuration is invalid.');
+            }
+
+            return new LocalStorageDriver(
+                $this->path($this->config->requireString('storage.local.private_root')),
+                $this->path($this->config->requireString('storage.local.public_root')),
+                $baseUrl,
+            );
+        }
+        if ($driver !== 's3') {
+            throw new RuntimeException('Unsupported storage driver.');
+        }
+
+        $bucket = $this->config->get('storage.s3.bucket');
+        $endpoint = $this->config->get('storage.s3.endpoint');
+        $region = $this->config->get('storage.s3.region');
+        $prefix = $this->config->get('storage.s3.prefix', '');
+        $publicBaseUrl = $this->config->get('storage.s3.public_base_url');
+        $timeoutMs = $this->config->get('storage.s3.timeout_ms', 15000);
+        if (
+            !is_string($bucket) || $bucket === ''
+            || !is_string($endpoint) || $endpoint === ''
+            || !is_string($region) || $region === ''
+            || !is_string($prefix)
+            || ($publicBaseUrl !== null && !is_string($publicBaseUrl))
+            || !is_int($timeoutMs)
+        ) {
+            throw new RuntimeException('S3 storage configuration is incomplete.');
+        }
+
+        $accessKey = $this->secrets->get($this->config->requireString('storage.s3.access_key_secret'));
+        $secretKey = $this->secrets->get($this->config->requireString('storage.s3.secret_key_secret'));
+        if ($accessKey === null || $secretKey === null) {
+            throw new RuntimeException('S3 storage credentials are unavailable in the secret store.');
+        }
+
+        return new S3StorageDriver(
+            new SigV4S3CompatibleClient(
+                $endpoint,
+                $region,
+                $accessKey,
+                $secretKey,
+                $publicBaseUrl,
+                $timeoutMs,
+            ),
+            $bucket,
+            $prefix,
+        );
     }
 
     public function queueDriver(): QueueDriver
