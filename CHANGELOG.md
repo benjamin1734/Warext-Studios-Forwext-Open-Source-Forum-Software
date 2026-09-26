@@ -6,6 +6,18 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### 19.06 — Resmî Next.js frontend
+
+- Added the official optional Next.js App Router/RSC frontend with standalone self-hosting output while keeping the native PHP/cPanel frontend mandatory and Node-free.
+- Added modern core pages for forums, threads/posts, public users, Marketplace, modules and support plus protected notification/conversation/support-ticket reads.
+- Added an AES-256-GCM sealed HttpOnly API credential bridge, no-store protected data access and authoritative PHP API scope/account permission enforcement.
+- Added SEO metadata, robots/sitemap, tagged public caching, bounded health checks and fixed-event secret-authenticated cache revalidation.
+- Added a PHP fallback rewrite so native account/moderation/admin/module routes retain feature parity and existing CSRF/permission behavior until rendered natively in App Router.
+- Added RSC client-boundary regression tests, modern response security headers and safe production error handling.
+- Added mandatory Next.js typecheck/production build to release CI; native cPanel packages exclude the optional Node frontend source.
+- Implementation/fix/test commits: `05415cc6253218496c197faa22591a4764e4aaba`, `b67475b80c08c0882404fd7a9b3678f11dea1923`, `cdf995a3f15569b531eabea41da68271d89d53a7`, `bd5fc5b071826e814c522d072f6ae27283ab51b6`.
+- GitHub Actions build run `36234157715` and database migration smoke run `36234157826` succeeded.
+
 ### 19.05 — React UI/extension slots
 
 - Added optional `@forwext/react-ui` accessible React primitives backed by the existing Forwext design-token CSS variables.
