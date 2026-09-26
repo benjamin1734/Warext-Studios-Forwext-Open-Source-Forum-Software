@@ -8,6 +8,12 @@ return [
         'debug' => false,
         'maintenance' => false,
     ],
+    'site' => [
+        'name' => 'Forwext',
+        'description' => '',
+        'default_locale' => 'tr',
+        'timezone' => 'UTC',
+    ],
     'routing' => [
         'canonical_url' => null,
         'trusted_proxies' => [],
@@ -93,6 +99,10 @@ return [
             'username' => null,
             'password_secret' => 'mail.smtp.password',
         ],
+    ],
+    'appearance' => [
+        'default_theme_key' => 'forwext-balanced',
+        'installer_preset' => 'balanced',
     ],
     'registration' => [
         'mode' => 'closed',
