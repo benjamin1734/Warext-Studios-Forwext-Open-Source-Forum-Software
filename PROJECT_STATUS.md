@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 0.0.7.63-dev
+CURRENT_VERSION = 0.0.7.64-dev
 LAST_COMPLETED_MAIN_STEP = 19
-LAST_COMPLETED_SUBSTEP = 20.01
-CURRENT_STEP = 20.02
-LAST_COMMIT = d432a7bfea2611b6334ced3da025cb3c139c5a5d
+LAST_COMPLETED_SUBSTEP = 20.02
+CURRENT_STEP = 20.03
+LAST_COMMIT = d887514ec58b4daaad8bd18f16e80f2b2e3cf916
 BLOCKERS = none
-NEXT_STEP = 20.02 - Full ZIP + update ZIP release sistemi
+NEXT_STEP = 20.03 - Updater/migration/backup/rollback
 ```
 
 ## Current position
@@ -21,13 +21,30 @@ NEXT_STEP = 20.02 - Full ZIP + update ZIP release sistemi
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
 - Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`; main step `20` is active.
-- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01`.
-- Current sub-step: `20.02 — Full ZIP + update ZIP release sistemi`.
-- Remaining roadmap work after 20.01: **7 real sub-steps**.
+- Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.02`.
+- Current sub-step: `20.03 — Updater/migration/backup/rollback`.
+- Remaining roadmap work after 20.02: **6 real sub-steps**.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
 `LAST_COMMIT` records the implementation/fix commit that completed the last roadmap sub-step. Status-only, changelog-only and unrelated contract-correction commits are intentionally not used as the roadmap completion pointer.
+
+## Completed in 20.02
+
+- Finalized the immutable full ZIP + immediate-predecessor differential update ZIP release contract.
+- Full packages are built as clean-install cPanel distributions with production dependencies and are checked for one safe application root, required runtime/installer files, matching packaged VERSION and absence of generated local secrets/state.
+- Update packages are derived from the immediately preceding immutable GitHub Release full package; legacy install ZIPs remain read-only predecessor compatibility only.
+- Added machine-readable `update-manifest.json` with exact source/target versions, sorted disjoint add/replace/delete operations, preserve rules, changed migration files, rebuild actions and SHA-256 payload checksums.
+- Added archive-level integrity validation: unsafe/traversal paths are rejected, update payload must equal manifest add+replace exactly, delete entries carry no payload, checksums must match and protected mutable site paths cannot be touched.
+- Both full and update ZIPs receive external SHA-256 files and release publication refuses to overwrite an existing tag/release.
+- Normal commits with an unchanged VERSION may build CI artifacts but cannot mutate an immutable published release.
+- Architecture documentation: `docs/architecture/full-update-release-system.md`.
+- Implementation commit: `d887514ec58b4daaad8bd18f16e80f2b2e3cf916`.
+- GitHub Actions build/package run `36239996601`: success; PHP 8.4/8.5 tests, SDK/React/Next checks, full package build and package-integrity verification passed.
+- Database migration smoke run `36239996555`: success on MySQL 8.4 and MariaDB 10.11.
+- No schema migration was required; 20.02 defines and verifies release artifacts only.
+- Version: `0.0.7.64-dev`.
+- Next: `20.03 — Updater/migration/backup/rollback`.
 
 ## Completed in 20.01
 
