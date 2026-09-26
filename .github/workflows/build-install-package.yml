@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('forwext-build-manual-{0}', github.run_id) || startsWith(github.event.head_commit.message, 'release(') && format('forwext-build-release-{0}', github.sha) || format('forwext-build-{0}', github.ref) }}
-  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' && !startsWith(github.event.head_commit.message, 'release(') }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('forwext-build-manual-{0}', github.run_id) || (startsWith(github.event.head_commit.message, 'release(') || startsWith(github.event.head_commit.message, 'release-retry(')) && format('forwext-build-release-{0}', github.sha) || format('forwext-build-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' && !startsWith(github.event.head_commit.message, 'release(') && !startsWith(github.event.head_commit.message, 'release-retry(') }}
 
 jobs:
   package:
@@ -55,10 +55,13 @@ jobs:
           SHOULD_PUBLISH="false"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             SHOULD_PUBLISH="true"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
+            SHOULD_PUBLISH="true"
           elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
             SHOULD_PUBLISH="true"
-          # Failed release publication is retried only through workflow_dispatch.
-          # A normal later commit with the same VERSION must never publish that version.
+          # A failed publication may be retried explicitly with a release-retry(...) commit
+          # or workflow_dispatch. Ordinary later commits with the same VERSION never publish.
           fi
 
           PREVIOUS_TAG=""
@@ -439,12 +442,12 @@ jobs:
               "preserve": [
                   "config/generated.php",
                   "config/secret.key",
-                  "storage/install/installed-version.json",
-                  "storage/secrets/**",
-                  "storage/files/**",
-                  "storage/logs/**",
-                  "storage/backups/**",
                   "public/storage/**",
+                  "storage/backups/**",
+                  "storage/files/**",
+                  "storage/install/installed-version.json",
+                  "storage/logs/**",
+                  "storage/secrets/**",
               ],
               "migrations": migrations,
               "rebuild": [],
