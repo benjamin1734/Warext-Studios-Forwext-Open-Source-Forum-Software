@@ -197,7 +197,6 @@ jobs:
           npm run sdk:build
           node packages/sdk/test/sdk-smoke.mjs
           node packages/sdk/test/package-smoke.mjs
-          rm -rf packages/sdk/dist
 
       - name: Verify generated React UI design-token contract
         run: npm run react-ui:generate:check
@@ -210,7 +209,21 @@ jobs:
           npm run react-ui:build
           node packages/react-ui/test/react-ui-smoke.mjs
           node packages/react-ui/test/package-smoke.mjs
-          rm -rf packages/react-ui/dist
+
+      - name: Typecheck and build official Next.js frontend
+        shell: bash
+        env:
+          FORWEXT_BACKEND_URL: http://127.0.0.1:8080/
+          FORWEXT_PUBLIC_URL: http://127.0.0.1:3000/
+          FORWEXT_NEXT_AUTH_SECRET: ci-only-auth-secret-000000000000000000000000
+          FORWEXT_NEXT_REVALIDATION_SECRET: ci-only-revalidate-secret-00000000000000000000
+        run: |
+          set -euo pipefail
+          npm run next-frontend:typecheck
+          npm run next-frontend:build
+          test -f frontend/next/.next/BUILD_ID
+          test -f frontend/next/.next/standalone/server.js || find frontend/next/.next/standalone -name server.js -print -quit | grep -q .
+          rm -rf frontend/next/.next packages/sdk/dist packages/react-ui/dist
 
       - name: Build production vendor tree against PHP 8.4.0 baseline
         shell: bash
@@ -272,6 +285,7 @@ jobs:
             --exclude 'tests/' \
             --exclude 'tools/' \
             --exclude 'node_modules/' \
+            --exclude 'frontend/next/' \
             --exclude 'composer*.json' \
             --exclude 'composer*.lock' \
             --exclude 'phpunit.xml.dist' \
