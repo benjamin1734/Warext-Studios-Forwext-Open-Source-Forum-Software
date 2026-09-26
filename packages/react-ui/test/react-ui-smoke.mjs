@@ -41,8 +41,7 @@ const allowed = renderToStaticMarkup(
     React.createElement(Can, { required: "support.ticket.view_own", fallback: "Yok" }, "Var"),
   ),
 );
-assert.match(allowed, />Var</u);
-assert.doesNotMatch(allowed, /Yok/u);
+assert.equal(allowed, "Var");
 
 const denied = renderToStaticMarkup(
   React.createElement(
@@ -51,8 +50,7 @@ const denied = renderToStaticMarkup(
     React.createElement(Can, { required: "support.ticket.view_own", fallback: "Yok" }, "Var"),
   ),
 );
-assert.match(denied, /Yok/u);
-assert.doesNotMatch(denied, />Var</u);
+assert.equal(denied, "Yok");
 
 const manifest = {
   schema: 1,
