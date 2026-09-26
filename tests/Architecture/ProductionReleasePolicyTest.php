@@ -48,6 +48,11 @@ final class ProductionReleasePolicyTest extends TestCase
         foreach (['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md'] as $path) {
             self::assertNotSame('', trim($this->read($path)), $path . ' must not be empty.');
         }
+
+        $workflow = $this->read('.github/workflows/build-install-package.yml');
+        self::assertStringContainsString('f"{root}/LICENSE"', $workflow);
+        self::assertStringContainsString('f"{root}/NOTICE"', $workflow);
+        self::assertStringContainsString('f"{root}/THIRD_PARTY_NOTICES.md"', $workflow);
     }
 
     private function read(string $relativePath): string
