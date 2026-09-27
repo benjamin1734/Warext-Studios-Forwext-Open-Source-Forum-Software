@@ -72,6 +72,7 @@ final class ProfileHtml
         $presenceSettingsScript = self::escape($basePath->prepend('/assets/presence-settings.js'));
         $bugReportScript = self::escape($basePath->prepend('/assets/bug-report-link.js'));
         $mobileNavScript = self::escape($basePath->prepend('/assets/mobile-nav.js'));
+        $siteShellStylesheet = self::escape($basePath->prepend('/assets/site-shell.css'));
         $bugReportLink = $authenticated
             ? '<a class="bug-report-fab" data-bug-report-link href="' . self::escape($basePath->prepend('/bugs/report'))
                 . '" aria-label="Hata bildir" title="Hata bildir">'
@@ -96,7 +97,9 @@ final class ProfileHtml
         }
 
         $footerHtml = '<footer class="site-footer"><div class="footerin">'
-            . $footerBefore . $footerAfter . '</div></footer>';
+            . $footerBefore
+            . '<div class="core-brand-footer"><strong>Forwext</strong><span>Açık kaynak, modern topluluk forum altyapısı.</span></div>'
+            . $footerAfter . '</div></footer>';
 
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -153,7 +156,7 @@ final class ProfileHtml
             . '@media(max-width:900px){.layout-shell{grid-template-columns:1fr}.layout-sidebar{order:2}.forum-home-layout{grid-template-columns:1fr}.forum-home-side{grid-template-columns:repeat(2,minmax(0,1fr))}.forum-node{grid-template-columns:44px minmax(0,1fr) 110px}.forum-node-last{grid-column:2/-1;padding-top:8px;border-top:1px solid var(--line)}.forum-thread-row{grid-template-columns:28px minmax(0,1fr) 75px}.forum-thread-last{grid-column:2/-1;padding-top:6px;border-top:1px solid var(--line)}}'
             . '@media(max-width:620px){.wrap{margin-top:20px}.search-form,.member-directory-form{grid-template-columns:1fr}.search-wide,.search-actions{grid-column:1}.banner{height:150px}.profilebody{padding:0 16px 20px}.profilehead{align-items:center;margin-top:-34px}'
             . '.profilehead .avatar{width:76px;height:76px}.identity h1{font-size:22px}.profile-relationship-actions{width:100%;margin-left:0;padding-bottom:0;justify-content:flex-start}.profile-wall-post>header>div,.profile-wall-comment>div{display:grid}.profile-wall-composer>div,.profile-wall-comment-form>div{align-items:flex-start}.profile-wall-reaction-popover{left:0;right:auto}.relationship-row{display:grid}.relationship-actions{justify-content:flex-start}.topin{min-height:58px;align-items:flex-start;padding:14px 0}.nav{gap:10px}.profilemusic{padding:12px}.profilemusic audio{height:42px}.portfolio-media{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.forum-home-side{grid-template-columns:1fr}.forum-hero,.forum-view-head,.thread-view-head,.forum-compose-head{display:grid;padding:18px}.forum-hero h1,.forum-view-head h1,.thread-view-head h1,.forum-compose-head h1{font-size:23px}.forum-node{grid-template-columns:36px minmax(0,1fr);padding:14px}.forum-node-icon{width:34px;height:34px}.forum-node-counts{grid-column:2;justify-content:start;grid-template-columns:repeat(2,65px);text-align:left}.forum-node-last{grid-column:2}.forum-thread-row{grid-template-columns:24px minmax(0,1fr)}.forum-thread-count,.forum-thread-last{grid-column:2;text-align:left}.forum-thread-count strong,.forum-thread-count span,.forum-thread-last strong,.forum-thread-last span{display:inline;margin-right:5px}.thread-post{grid-template-columns:1fr}.thread-post-author{border-right:0;border-bottom:1px solid var(--line);border-radius:14px 14px 0 0;display:grid;grid-template-columns:52px 1fr;justify-items:start;text-align:left}.thread-post-avatar{grid-row:1/3;width:52px;height:52px;font-size:18px}.thread-post-body{padding:14px;border-radius:0 0 14px 14px}.thread-post-body>footer{display:grid}.thread-post-interactions{justify-content:start}.thread-reaction-popover,.thread-bookmark-form{left:0;right:auto}.forum-subforums>div{grid-template-columns:1fr}.notification-hero,.notification-item,.notification-settings-hero{display:grid}.account-center-grid{grid-template-columns:1fr}.account-center-card,.bookmark-card{display:grid}.activity-feed-item{grid-template-columns:24px minmax(0,1fr)}.activity-feed-item>.fx-btn{grid-column:2;justify-self:start}.notification-unread{justify-self:start}.notification-actions{justify-content:start;min-width:0}}}'
-            . '</style></head><body data-forwext-background-scope="site">'
+            . '</style><link rel="stylesheet" href="' . $siteShellStylesheet . '"></head><body data-forwext-background-scope="site">'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
             . '<div class="topin"><a class="brand" href="' . $home . '">Forwext <b>Forum</b></a>'
