@@ -30,6 +30,13 @@ final class NavigationRegistry
         $registry->register(new NavigationItem('marketplace', 'Marketplace', '/marketplace', 245));
         $registry->register(new NavigationItem('faq', 'SSS', '/faq', 250));
         $registry->register(new NavigationItem(
+            'account.own',
+            'Hesabım',
+            '/account',
+            255,
+            NavigationAudience::Member,
+        ));
+        $registry->register(new NavigationItem(
             'referrals.own',
             'Davetlerim',
             '/account/referrals',
