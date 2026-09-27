@@ -75,7 +75,7 @@ final class NotificationInboxWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'notifications.own'", $navigation);
         self::assertStringContainsString("'/account/notifications'", $navigation);
-        self::assertStringContainsString("$payload['unread_count']", $handler);
+        self::assertStringContainsString("\$payload['unread_count']", $handler);
         self::assertStringContainsString('nav-notification-badge', $asset);
         self::assertStringContainsString('data-nav-key="notifications.own"', $asset);
         self::assertStringContainsString('.nav-notification-badge', $profile);
