@@ -11,6 +11,9 @@ final readonly class BookmarkEntry
     public function __construct(
         public EntityId $postId,
         public ?string $note,
+        public ?EntityId $threadId = null,
+        public ?string $threadTitle = null,
+        public ?int $postPosition = null,
     ) {
     }
 }

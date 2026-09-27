@@ -2111,7 +2111,7 @@ final readonly class WebApplicationFactory
         ));
         $routes->add(new Route(
             'account.bookmarks', [HttpMethod::Get], new PathTemplate('/account/bookmarks'),
-            new BookmarkListHandler($socialInteractions, $viewerResolver), [$interactionCsrf],
+            new BookmarkListHandler($socialInteractions, $viewerResolver, $basePath), [$interactionCsrf],
         ));
         $routes->add(new Route(
             'user.follow', [HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/follow'),
@@ -2147,12 +2147,17 @@ final readonly class WebApplicationFactory
             new ProfileActivityDeleteHandler($profileActivity, $viewerResolver, true), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
-            'account.profile-activity', [HttpMethod::Get, HttpMethod::Put], new PathTemplate('/account/profile-activity'),
-            new ProfileActivitySettingsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
+            'account.profile-activity', [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put], new PathTemplate('/account/profile-activity'),
+            new ProfileActivitySettingsHandler($profileActivity, $viewerResolver, $basePath), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
             'activity.feed', [HttpMethod::Get], new PathTemplate('/activity'),
-            new ActivityFeedHandler($activityFeed, $viewerResolver),
+            new ActivityFeedHandler(
+                $activityFeed,
+                $viewerResolver,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+            ),
         ));
 
         $routes->add(new Route(

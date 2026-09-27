@@ -11,21 +11,59 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Profile\Activity\ActivityFeedEntry;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
 use Forwext\Core\Profile\Activity\ProfileActivityException;
+use Forwext\Core\Routing\BasePath;
 
 final readonly class ActivityFeedHandler implements RequestHandlerInterface
 {
-    public function __construct(private ActivityFeedService $service, private ProfileViewerResolver $viewers) {}
+    public function __construct(
+        private ActivityFeedService $service,
+        private ProfileViewerResolver $viewers,
+        private BasePath $basePath,
+        private DateTimeZone $timezone,
+    ) {}
 
     public function handle(Request $request): Response
     {
         $actor = $this->viewers->resolve($request);
         if ($actor === null) return $this->json(['error' => 'authentication_required'], 401);
         try {
+            if ($this->wantsHtml($request)) {
+                $page = $this->page($request->query()['page'] ?? null);
+                $items = $this->service->feed($actor, 31, ($page - 1) * 30);
+                $hasMore = count($items) > 30;
+                if ($hasMore) {
+                    array_pop($items);
+                }
+                return Response::html(ActivityFeedHtml::page(
+                    $items,
+                    $page,
+                    $hasMore,
+                    $this->basePath,
+                    $this->timezone,
+                ))->withHeader('Cache-Control', 'private, no-store')
+                    ->withHeader('X-Robots-Tag', 'noindex,nofollow');
+            }
+
             $items = $this->service->feed($actor, $this->queryInt($request, 'limit', 50), $this->queryInt($request, 'offset', 0));
             return $this->json(['items' => array_map($this->serialize(...), $items)]);
         } catch (ProfileActivityException) {
-            return $this->json(['error' => 'invalid_activity_request'], 400);
+            return $this->wantsHtml($request)
+                ? Response::text('Bad Request', 400)->withHeader('Cache-Control', 'private, no-store')
+                : $this->json(['error' => 'invalid_activity_request'], 400);
         }
+    }
+
+    private function wantsHtml(Request $request): bool
+    {
+        return str_contains(strtolower($request->headers()->line('accept') ?? ''), 'text/html');
+    }
+
+    private function page(mixed $raw): int
+    {
+        if ($raw === null || $raw === '') return 1;
+        if (is_int($raw) && $raw >= 1 && $raw <= 10000) return $raw;
+        if (is_string($raw) && preg_match('/^[1-9][0-9]{0,3}$/D', $raw) === 1) return (int) $raw;
+        return 1;
     }
 
     /** @return array<string,mixed> */
