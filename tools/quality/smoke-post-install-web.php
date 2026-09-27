@@ -199,6 +199,15 @@ if (!str_contains($rootResponse->body(), '<h1>Forumlar</h1>')) {
 if ($rootResponse->headers()->first('Content-Security-Policy') === null) {
     throw new RuntimeException('Post-install home response is missing Content-Security-Policy.');
 }
+if (!str_contains($rootResponse->body(), 'Genel Sohbet')) {
+    throw new RuntimeException('Post-install home response did not expose the starter forum.');
+}
+$starterForumResponse = $handle('/forums/genel-sohbet');
+if ($starterForumResponse->status() !== 200
+    || !str_contains($starterForumResponse->body(), '<h1>Genel Sohbet</h1>')
+) {
+    throw new RuntimeException('Post-install starter forum route is not usable.');
+}
 
 $navigationRoutes = [
     '/forums',
