@@ -174,7 +174,10 @@ final readonly class LoginHandler implements RequestHandlerInterface
             . '<label><span>Parola</span><input type="password" name="password" autocomplete="current-password" '
             . 'maxlength="1024" required></label>'
             . '<button class="fx-btn fx-btn--primary auth-entry-submit" type="submit">Giriş yap</button>'
-            . '</form></div></section>';
+            . '</form>'
+            . '<div class="auth-entry-links"><a href="' . self::e($this->basePath->prepend('/forgot-password'))
+            . '">Parolamı unuttum</a><a href="' . self::e($this->basePath->prepend('/register'))
+            . '">Kayıt ol</a></div></div></section>';
 
         return Response::html(ProfileHtml::page(
             'Giriş yap',
