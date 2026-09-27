@@ -49,7 +49,7 @@ final readonly class ProfileActivityWallRenderer
 
         $cards = '';
         foreach ($posts as $post) {
-            $cards .= $this->post($viewerId, $profileOwnerId, $post, $authorCache);
+            $cards .= $this->post($viewerId, $post, $authorCache);
         }
         if ($cards === '') {
             $cards = '<div class="profile-wall-empty card"><strong>Henüz profil gönderisi yok.</strong>'
@@ -67,7 +67,6 @@ final readonly class ProfileActivityWallRenderer
      */
     private function post(
         EntityId $viewerId,
-        EntityId $profileOwnerId,
         ProfilePost $post,
         array &$authorCache,
     ): string {
