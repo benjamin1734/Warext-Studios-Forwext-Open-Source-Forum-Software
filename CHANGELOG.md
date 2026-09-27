@@ -6,6 +6,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+## 1.0.5 — Native authentication entry
+
+- Added native PHP login and logout routes with dedicated CSRF protection and responsive account-entry UI.
+- Composed login through the existing AuthenticationService, password policy, DB rate limits, login history, device tracking, discipline availability and group-based MFA policy.
+- Added trusted-proxy-aware client IP resolution and secure `__Host-` session cookie issuance; logout revokes server-side sessions and expires the browser cookie.
+- MFA-required accounts fail closed and do not receive an authenticated session until a native MFA completion flow is added.
+- Added regression coverage for auth route/security/runtime wiring.
+- No database migration is required.
+
+
 ## 1.0.4 — Native forum authoring
 
 - Added first-class native PHP thread creation and reply workflows with permission-aware actions on forum/thread pages.
