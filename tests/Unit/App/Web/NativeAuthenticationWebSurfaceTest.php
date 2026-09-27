@@ -64,6 +64,17 @@ final class NativeAuthenticationWebSurfaceTest extends TestCase
         self::assertStringContainsString('name="_csrf"', $handler);
     }
 
+    public function testFailedMfaVerificationConsumesTheLoginChallenge(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $completion = (string) file_get_contents($root . '/core/Auth/Mfa/Login/MfaLoginCompletionService.php');
+
+        self::assertStringContainsString('rejectChallenge($challengeToken', $completion);
+        self::assertStringContainsString('$this->challenges->consume($challengeToken);', $completion);
+        self::assertStringContainsString("'Multi-factor verification failed.'", $completion);
+        self::assertStringContainsString("'Passkey verification failed.'", $completion);
+    }
+
     public function testPasskeyBrowserClientUsesNativeCredentialApiAndPostsAssertion(): void
     {
         $root = dirname(__DIR__, 4);
