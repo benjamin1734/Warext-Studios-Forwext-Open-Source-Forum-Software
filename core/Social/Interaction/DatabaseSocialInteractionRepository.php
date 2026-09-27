@@ -89,14 +89,21 @@ final readonly class DatabaseSocialInteractionRepository implements SocialIntera
         UserId::assert($actorId);
         if ($limit < 1 || $limit > 100 || $offset < 0 || $offset > 1_000_000) throw new SocialInteractionException('Bookmark pagination is invalid.');
         $rows = $this->database->fetchAll(new CompiledQuery(
-            'SELECT `post_id`, `note` FROM `forwext_post_bookmarks` WHERE `user_id` = :user_id '
-            . 'ORDER BY `updated_at_utc` DESC, `post_id` LIMIT ' . $limit . ' OFFSET ' . $offset,
+            'SELECT b.`post_id`, b.`note`, p.`thread_id`, p.`position`, t.`title` AS `thread_title` '
+            . 'FROM `forwext_post_bookmarks` b '
+            . 'INNER JOIN `forwext_posts` p ON p.`post_id` = b.`post_id` '
+            . 'INNER JOIN `forwext_threads` t ON t.`thread_id` = p.`thread_id` '
+            . 'WHERE b.`user_id` = :user_id '
+            . 'ORDER BY b.`updated_at_utc` DESC, b.`post_id` LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['user_id' => $actorId->value()],
         ));
         return array_map(
             static fn (array $row): BookmarkEntry => new BookmarkEntry(
                 PostId::fromStored((string) $row['post_id']),
                 isset($row['note']) && is_string($row['note']) ? $row['note'] : null,
+                EntityId::fromString((string) $row['thread_id']),
+                (string) $row['thread_title'],
+                max(1, (int) $row['position']),
             ),
             $rows,
         );
