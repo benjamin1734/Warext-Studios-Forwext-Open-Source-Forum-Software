@@ -52,6 +52,8 @@ use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\ForumIndexHandler;
 use Forwext\App\Web\Forum\ForumViewHandler;
 use Forwext\App\Web\Forum\ThreadViewHandler;
+use Forwext\App\Web\Forum\ThreadCreateHandler;
+use Forwext\App\Web\Forum\ThreadReplyHandler;
 use Forwext\App\Web\Forum\ThreadFreshnessHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
 use Forwext\App\Web\Notification\NotificationRealtimeHandler;
@@ -499,7 +501,8 @@ final readonly class WebApplicationFactory
         );
         $mentionSuggestions = new DatabaseMentionSuggestionProvider($database);
         $posts = new DatabasePostRepository($database);
-        $threads = new DatabaseThreadRepository($database, ThreadTypeRegistry::withCoreDefaults());
+        $threadTypes = ThreadTypeRegistry::withCoreDefaults();
+        $threads = new DatabaseThreadRepository($database, $threadTypes);
         $analytics = new AnalyticsEventRecorder(
             AnalyticsEventRegistry::withCoreDefaults(),
             new DatabaseAnalyticsRepository($database),
@@ -684,6 +687,27 @@ final readonly class WebApplicationFactory
             $database,
             $searchChanges,
             spellcheck: $spellcheck,
+        );
+        $threadCreateHandler = new ThreadCreateHandler(
+            $database,
+            $nodes,
+            $threads,
+            $posts,
+            $threadTypes,
+            $viewerResolver,
+            $authorizer,
+            $contentManagerPipeline,
+            $basePath,
+        );
+        $threadReplyHandler = new ThreadReplyHandler(
+            $nodes,
+            $threads,
+            $posts,
+            $threadTypes,
+            $viewerResolver,
+            $authorizer,
+            $contentManagerPipeline,
+            $basePath,
         );
         $contentManagerModeration = new DatabaseContentModerationRepository(
             $database,
@@ -1109,6 +1133,7 @@ final readonly class WebApplicationFactory
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
         $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
+        $forumCsrf = $this->forumCsrfMiddleware($config);
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
         $routes = new RouteCollection();
@@ -1130,6 +1155,13 @@ final readonly class WebApplicationFactory
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
         $routes->add(new Route(
+            'thread.create',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/forums/{slug}/new-thread', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            $threadCreateHandler,
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
             'forum.view',
             [HttpMethod::Get],
             new PathTemplate('/forums/{slug}', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
@@ -1140,6 +1172,13 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/threads/{threadId}', ['threadId'=>'[a-f0-9]{32}']),
             $threadViewHandler,
+        ));
+        $routes->add(new Route(
+            'thread.reply',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/threads/{threadId}/reply', ['threadId'=>'[a-f0-9]{32}']),
+            $threadReplyHandler,
+            [$forumCsrf],
         ));
         $routes->add(new Route(
             'bug.report.create',
@@ -2177,6 +2216,11 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function forumCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'forum-write', 'forwext.csrf.forum-write.v1');
     }
 
     private function freshnessCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
