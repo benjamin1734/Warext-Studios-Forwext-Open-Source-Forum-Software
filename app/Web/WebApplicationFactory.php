@@ -27,8 +27,12 @@ use Forwext\App\Web\Analytics\OperationsAnalyticsHandler;
 use Forwext\App\Web\Analytics\CommerceAnalyticsHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportBuilderHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportExportHandler;
+use Forwext\App\Web\Auth\EmailVerificationHandler;
 use Forwext\App\Web\Auth\LoginHandler;
 use Forwext\App\Web\Auth\LogoutHandler;
+use Forwext\App\Web\Auth\PasswordResetHandler;
+use Forwext\App\Web\Auth\PasswordResetRequestHandler;
+use Forwext\App\Web\Auth\RegisterHandler;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -181,7 +185,10 @@ use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Capability\CapabilityResolver;
 use Forwext\Core\Capability\DatabaseServerCapabilityProbe;
 use Forwext\Core\Auth\AuthenticationFingerprint;
+use Forwext\Core\Auth\Challenge\DatabaseAuthChallengeTokenStore;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
+use Forwext\Core\Auth\Credential\PasswordCredentialProvisioner;
+use Forwext\Core\Auth\Delivery\DisabledAuthLinkDelivery;
 use Forwext\Core\Auth\Device\DatabaseDeviceRepository;
 use Forwext\Core\Auth\Login\AuthenticationService;
 use Forwext\Core\Auth\Login\DatabaseAuthenticationRateLimiter;
@@ -199,6 +206,7 @@ use Forwext\Core\Auth\Mfa\Totp\DatabaseTotpService;
 use Forwext\Core\Auth\Mfa\TrustedDevice\TrustedDeviceService;
 use Forwext\Core\Auth\Password\NativePasswordHasher;
 use Forwext\Core\Auth\Password\PasswordHashPolicy;
+use Forwext\Core\Auth\Password\PasswordResetService;
 use Forwext\Core\Auth\Remember\RememberTokenService;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Bug\Conversation\DatabaseBugReportConversationRepository;
@@ -368,6 +376,19 @@ use Forwext\Core\Reward\DatabaseRoleRewardProvider;
 use Forwext\Core\Reward\DatabaseSecondaryGroupRewardProvider;
 use Forwext\Core\Reward\RewardProviderRegistry;
 use Forwext\Core\Reward\RewardService;
+use Forwext\Core\Registration\Captcha\CloudflareTurnstileVerifier;
+use Forwext\Core\Registration\Captcha\NativeTurnstileTransport;
+use Forwext\Core\Registration\DatabaseEmailVerificationTokenStore;
+use Forwext\Core\Registration\DatabaseLegalAcceptanceStore;
+use Forwext\Core\Registration\DatabaseRegistrationInviteStore;
+use Forwext\Core\Registration\DatabaseRegistrationRateLimiter;
+use Forwext\Core\Registration\DomainSetDisposableEmailChecker;
+use Forwext\Core\Registration\EmailVerificationService;
+use Forwext\Core\Registration\LegalDocumentRequirement;
+use Forwext\Core\Registration\RegistrationFingerprint;
+use Forwext\Core\Registration\RegistrationMode;
+use Forwext\Core\Registration\RegistrationPolicy;
+use Forwext\Core\Registration\RegistrationService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Routing\PathTemplate;
@@ -578,6 +599,54 @@ final readonly class WebApplicationFactory
             $config->requireInt('authentication.login_rate_limit.window_seconds'),
             availability: new DatabaseDisciplineAuthenticationAvailability($database),
         );
+
+        $authLinkDelivery = new DisabledAuthLinkDelivery();
+        $authChallengeTokens = new DatabaseAuthChallengeTokenStore($database);
+        $passwordReset = new PasswordResetService(
+            $database,
+            $credentials,
+            $passwordHasher,
+            $authChallengeTokens,
+            $rememberTokens,
+            $config->requireInt('authentication.password_reset.ttl_seconds'),
+        );
+        $registrationPolicy = $this->registrationPolicy($config);
+        $turnstileProvider = $config->requireString('registration.captcha.provider');
+        if ($registrationPolicy->captchaRequired && $turnstileProvider !== 'turnstile') {
+            throw new RuntimeException('Only the first-party Turnstile registration challenge is currently supported.');
+        }
+        $turnstileHostname = $config->get('registration.captcha.expected_hostname');
+        if ($turnstileHostname !== null && !is_string($turnstileHostname)) {
+            throw new RuntimeException('Registration Turnstile hostname must be a string or null.');
+        }
+        $disposableDomains = $config->get('registration.disposable_email_domains', []);
+        if (!is_array($disposableDomains)) {
+            throw new RuntimeException('Registration disposable-email domain list must be an array.');
+        }
+        $verificationTokens = new DatabaseEmailVerificationTokenStore($database);
+        $registration = new RegistrationService(
+            $database,
+            $users,
+            $registrationPolicy,
+            new CloudflareTurnstileVerifier(
+                $secretStore,
+                new NativeTurnstileTransport(),
+                $config->requireString('registration.captcha.secret_name'),
+                $turnstileHostname,
+                $config->requireString('registration.captcha.expected_action'),
+            ),
+            new DomainSetDisposableEmailChecker($disposableDomains),
+            new DatabaseRegistrationRateLimiter($database),
+            new RegistrationFingerprint(
+                $secretStore,
+                $config->requireString('registration.rate_limit.fingerprint_secret_name'),
+            ),
+            new DatabaseRegistrationInviteStore($database),
+            new DatabaseLegalAcceptanceStore($database),
+            $verificationTokens,
+            new PasswordCredentialProvisioner($credentials, $passwordHasher),
+        );
+        $emailVerification = new EmailVerificationService($database, $users, $verificationTokens);
         $storage = $runtime->storageDriver();
         $firstPartyModuleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
         $firstPartyModuleRepository = new DatabaseFirstPartyModuleRepository($database);
@@ -614,6 +683,31 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_url.maximum_changes_per_window'),
         );
         $basePath = $this->basePath($config);
+        $turnstileSiteKey = $config->get('registration.captcha.site_key');
+        if ($turnstileSiteKey !== null && !is_string($turnstileSiteKey)) {
+            throw new RuntimeException('Registration Turnstile site key must be a string or null.');
+        }
+        $registerHandler = new RegisterHandler(
+            $registration,
+            $registrationPolicy,
+            $viewerResolver,
+            $this->trustedProxyResolver($config),
+            $basePath,
+            $config->requireString('site.default_locale'),
+            $config->requireString('site.timezone'),
+            $authLinkDelivery,
+            $turnstileSiteKey,
+            $config->requireString('registration.captcha.expected_action'),
+        );
+        $emailVerificationHandler = new EmailVerificationHandler($emailVerification, $basePath);
+        $passwordResetRequestHandler = new PasswordResetRequestHandler(
+            $users,
+            $passwordReset,
+            $authLinkDelivery,
+            $viewerResolver,
+            $basePath,
+        );
+        $passwordResetHandler = new PasswordResetHandler($passwordReset, $viewerResolver, $basePath);
         $loginHandler = new LoginHandler(
             $authentication,
             $viewerResolver,
@@ -1303,6 +1397,34 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/logout'),
             $logoutHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.register',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/register'),
+            $registerHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.verify-email',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/verify-email'),
+            $emailVerificationHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.forgot-password',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/forgot-password'),
+            $passwordResetRequestHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.reset-password',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/reset-password'),
+            $passwordResetHandler,
             [$authCsrf],
         ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
@@ -2396,6 +2518,44 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function registrationPolicy(ConfigRepository $config): RegistrationPolicy
+    {
+        $mode = RegistrationMode::tryFrom($config->requireString('registration.mode'));
+        if ($mode === null) {
+            throw new RuntimeException('Registration mode is invalid.');
+        }
+
+        $rawDocuments = $config->get('registration.legal_documents', []);
+        if (!is_array($rawDocuments)) {
+            throw new RuntimeException('Registration legal-document configuration must be an array.');
+        }
+
+        $documents = [];
+        foreach ($rawDocuments as $key => $rawDocument) {
+            if (!is_array($rawDocument)) {
+                throw new RuntimeException('Registration legal-document entries must be arrays.');
+            }
+            $type = $rawDocument['type'] ?? (is_string($key) ? $key : null);
+            $version = $rawDocument['version'] ?? null;
+            $contentSha256 = $rawDocument['content_sha256'] ?? null;
+            if (!is_string($type) || !is_string($version) || !is_string($contentSha256)) {
+                throw new RuntimeException('Registration legal-document entries are incomplete.');
+            }
+            $documents[] = new LegalDocumentRequirement($type, $version, $contentSha256);
+        }
+
+        return new RegistrationPolicy(
+            $mode,
+            $config->requireBool('registration.email_verification_required'),
+            $config->requireBool('registration.captcha.required'),
+            $documents,
+            $config->requireInt('registration.rate_limit.ip_attempts'),
+            $config->requireInt('registration.rate_limit.email_attempts'),
+            $config->requireInt('registration.rate_limit.window_seconds'),
+            $config->requireInt('registration.email_verification_ttl_seconds'),
+        );
     }
 
     private function authCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
