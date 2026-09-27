@@ -103,6 +103,7 @@ return [
             'encryption' => 'starttls',
             'username' => null,
             'password_secret' => 'mail.smtp.password',
+            'timeout_seconds' => 10,
         ],
     ],
     'appearance' => [
