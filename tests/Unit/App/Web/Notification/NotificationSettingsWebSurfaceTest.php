@@ -25,7 +25,7 @@ final class NotificationSettingsWebSurfaceTest extends TestCase
         self::assertStringContainsString('new NotificationSettingsHandler(', $factory);
         self::assertStringContainsString('$notificationSoundCsrf', $factory);
         self::assertStringContainsString('$this->sounds->updateSettings(', $handler);
-        self::assertStringContainsString("$volume < 0 || $volume > 100", $handler);
+        self::assertStringContainsString("\$volume < 0 || \$volume > 100", $handler);
         self::assertStringContainsString("preg_match('/^[a-z][a-z0-9_-]{1,31}$/D'", $handler);
         self::assertStringContainsString('private, no-store', $handler);
         self::assertStringContainsString('X-Robots-Tag', $handler);
