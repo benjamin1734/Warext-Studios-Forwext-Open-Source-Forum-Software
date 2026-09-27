@@ -5,14 +5,26 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.2
+CURRENT_VERSION = 1.0.3
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = complete
-LAST_COMMIT = c34dbffa9e7d3a39f937fdb44faad83d4bdcace1
-BLOCKERS = none
-NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
+CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-1
+LAST_COMMIT = 77f7f8be8d75634f2a4b0c1aad7e12301e18c990
+BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
+NEXT_STEP = native PHP authoring/auth/account UI pass, then notifications/social/ACP/module UI parity
 ```
+
+## Production acceptance correction — 1.0.3
+
+- The historical v2.0 implementation checklist reached **20/20 main steps and 138/138 sub-steps**, but a real cPanel installation exposed that this was incorrectly treated as equivalent to final product acceptance.
+- Production acceptance is therefore **reopened**. A backend/service/test implementation does not count as a finished user-facing capability unless its required native PHP UI, routing, responsive behavior and end-to-end workflow are usable.
+- Native PHP UI pass 1 replaces the temporary health-style home page with a real forum surface and adds `/forums`, `/forums/{slug}` and `/threads/{threadId}` public browsing.
+- Forum index now renders category/forum hierarchy, descriptions, thread/post counts, latest activity, recent threads and quick links.
+- Forum pages now render subforums, production thread lists, sticky/featured/locked states, reply counts, latest activity and pagination.
+- Thread pages now render public post cards through the existing safe BBCode renderer with author identity, timestamps, pagination and breadcrumbs.
+- Empty fresh installations receive an idempotent starter **Genel → Genel Sohbet** structure; existing forum trees are never overwritten.
+- Real post-install acceptance now requires the native forum index and starter forum route on both supported database profiles.
+- Remaining production-acceptance work is tracked as remediation passes rather than falsely declaring the product complete: authoring/editor flows, authentication/account UI, notifications/social UX, ACP completeness and first-party module UI parity are still to be closed.
 
 ## Maintenance hotfix 1.0.2
 
@@ -30,14 +42,15 @@ NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
 
 ## Current position
 
-- Target: **Forwext 1.0.2 Production — maintenance hotfix**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.3 Production acceptance remediation**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Completed main steps: `01`, `02`, `03`, `04`, `05`, `06`, `07`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`. The binding v2.0 roadmap is complete.
+- Historical implementation checklist: `01` through `20` were marked complete. **Final production acceptance is reopened and this historical checkbox state must not be interpreted as proof that every required UI/workflow is finished.**
 - Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.08` — **138/138 complete**.
-- Current sub-step: none; the binding v2.0 roadmap is complete.
-- Remaining roadmap work after 20.08: **0 real sub-steps**.
+- Current roadmap sub-step: none; the original v2.0 numbered checklist is exhausted.
+- Current acceptance work: **open** — native PHP public/ACP end-to-end remediation is active.
+- Remaining original numbered roadmap work after 20.08: **0 sub-steps**; remaining production-acceptance defects are tracked separately until the product satisfies the plan's actual completion criteria.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
 
