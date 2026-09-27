@@ -34,6 +34,10 @@ final readonly class MailAuthLinkDelivery implements AuthLinkDelivery
 
     public function sendEmailVerification(EmailAddress $recipient, string $token): bool
     {
+        if (!$this->validToken($token)) {
+            return false;
+        }
+
         return $this->send(
             $recipient,
             'E-posta adresini doğrula',
@@ -44,12 +48,21 @@ final readonly class MailAuthLinkDelivery implements AuthLinkDelivery
 
     public function sendPasswordReset(EmailAddress $recipient, string $token): bool
     {
+        if (!$this->validToken($token)) {
+            return false;
+        }
+
         return $this->send(
             $recipient,
             'Parolanı sıfırla',
             '/reset-password?token=' . rawurlencode($token),
             'Forwext hesabının parolasını sıfırlamak için aşağıdaki bağlantıyı kullan. Bu isteği sen yapmadıysan e-postayı yok sayabilirsin.',
         );
+    }
+
+    private function validToken(string $token): bool
+    {
+        return preg_match('/^[A-Za-z0-9_-]{43}$/D', $token) === 1;
     }
 
     private function send(
