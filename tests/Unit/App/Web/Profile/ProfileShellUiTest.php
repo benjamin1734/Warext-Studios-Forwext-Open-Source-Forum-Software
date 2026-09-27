@@ -23,6 +23,9 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.account-center-card:hover', $css);
         self::assertStringContainsString('.notification-item.is-unread', $css);
         self::assertStringContainsString('.auth-entry-card::before', $css);
+        self::assertStringContainsString('.market-card:hover', $css);
+        self::assertStringContainsString('.trophy-card:hover', $css);
+        self::assertStringContainsString('.portfolio-media figure:hover', $css);
         self::assertStringContainsString('@media(max-width:920px)', $css);
         self::assertStringContainsString('.nav[data-mobile-open="1"]', $css);
         self::assertStringContainsString('@media(prefers-reduced-motion:reduce)', $css);

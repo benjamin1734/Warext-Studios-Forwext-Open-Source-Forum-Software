@@ -955,3 +955,159 @@ select:focus{
   .notification-hero-side{display:grid;grid-template-columns:1fr}
   .notification-unread{width:100%}
 }
+
+
+/* module-card-polish */
+.portfolio-media figure,
+.market-media figure{
+  position:relative;
+  border-radius:14px;
+  box-shadow:0 8px 22px rgba(0,0,0,.09);
+  transition:transform var(--fx-transition),border-color var(--fx-transition),box-shadow var(--fx-transition);
+}
+.portfolio-media figure:hover,
+.market-media figure:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+  box-shadow:0 12px 28px rgba(0,0,0,.13);
+}
+.portfolio-media img,
+.market-media img,
+.market-cover img{
+  transition:transform 220ms ease,filter 220ms ease;
+}
+.portfolio-media figure:hover img,
+.market-media figure:hover img,
+.market-card:hover .market-cover img{
+  transform:scale(1.018);
+}
+.trophy-card{
+  border-radius:14px;
+  background:var(--panel2);
+  transition:transform var(--fx-transition),border-color var(--fx-transition),box-shadow var(--fx-transition);
+}
+.trophy-card:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 28%,var(--line));
+  box-shadow:0 11px 26px rgba(0,0,0,.11);
+}
+.trophy-banner{
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel));
+}
+.trophy-icon{
+  border:1px solid var(--line);
+  background:var(--panel);
+}
+.market-head{
+  gap:12px;
+}
+.market-head h1{
+  letter-spacing:-.025em;
+}
+.market-manage-link,
+.market-category-links a{
+  transition:background var(--fx-transition),border-color var(--fx-transition),color var(--fx-transition),transform var(--fx-transition);
+}
+.market-manage-link:hover,
+.market-category-links a:hover{
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel2));
+  border-color:color-mix(in srgb,var(--accent) 32%,var(--line));
+  color:var(--text);
+  transform:translateY(-1px);
+}
+.market-grid{
+  gap:13px;
+}
+.market-card{
+  border-radius:16px;
+  box-shadow:0 9px 24px rgba(0,0,0,.08);
+  transition:transform var(--fx-transition),border-color var(--fx-transition),box-shadow var(--fx-transition);
+}
+.market-card:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+  box-shadow:0 14px 32px rgba(0,0,0,.13);
+}
+.market-cover{
+  overflow:hidden;
+}
+.market-card h3 a{
+  transition:color var(--fx-transition);
+}
+.market-card h3 a:hover{color:var(--accent)}
+.market-price{
+  color:var(--text);
+  letter-spacing:-.02em;
+}
+.market-badge{
+  background:color-mix(in srgb,var(--accent) 7%,var(--forwext-component-badge-background));
+}
+.market-tags a{
+  transition:color var(--fx-transition),border-color var(--fx-transition),background var(--fx-transition);
+}
+.market-tags a:hover{
+  color:var(--text);
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+  background:var(--panel2);
+}
+.market-specs{
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--panel2);
+}
+.market-actions button{
+  min-height:38px;
+  transition:border-color var(--fx-transition),background var(--fx-transition),transform var(--fx-transition);
+}
+.market-actions button:hover{
+  transform:translateY(-1px);
+  border-color:color-mix(in srgb,var(--accent) 34%,var(--line));
+  background:color-mix(in srgb,var(--accent) 5%,var(--forwext-component-button-background));
+}
+.market-detail{
+  display:grid;
+  gap:16px;
+}
+.market-detail-top{
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line);
+}
+.market-review{
+  border-radius:10px;
+  transition:background var(--fx-transition);
+}
+.market-review:hover{
+  background:color-mix(in srgb,var(--accent) 3%,var(--panel2));
+}
+.market-success{
+  border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
+  background:color-mix(in srgb,var(--accent) 9%,var(--panel2));
+}
+
+@media(max-width:680px){
+  .market-result-head,
+  .market-detail-top{
+    display:grid;
+  }
+  .market-specs{
+    grid-template-columns:1fr;
+    gap:3px;
+  }
+  .market-specs dd{
+    margin-bottom:8px;
+  }
+  .market-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .market-actions form,
+  .market-actions button,
+  .market-actions .fx-btn{
+    width:100%;
+  }
+  .portfolio-media,
+  .market-media{
+    grid-template-columns:1fr;
+  }
+}
