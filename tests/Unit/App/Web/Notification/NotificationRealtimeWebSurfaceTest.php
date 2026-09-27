@@ -29,6 +29,8 @@ final class NotificationRealtimeWebSurfaceTest extends TestCase
         self::assertStringContainsString('startPolling()', $script);
         self::assertStringContainsString("CustomEvent('forwext:notification'", $script);
         self::assertStringContainsString('ForwextNotificationSound?.play', $script);
+        self::assertStringContainsString('updateUnreadBadge', $script);
+        self::assertStringContainsString('unread_count', $script);
         self::assertStringContainsString('textContent =', $script);
         self::assertStringNotContainsString('innerHTML =', $script);
     }
