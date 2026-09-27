@@ -188,7 +188,7 @@ use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Challenge\DatabaseAuthChallengeTokenStore;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
 use Forwext\Core\Auth\Credential\PasswordCredentialProvisioner;
-use Forwext\Core\Auth\Delivery\DisabledAuthLinkDelivery;
+use Forwext\Core\Auth\Delivery\MailAuthLinkDelivery;
 use Forwext\Core\Auth\Device\DatabaseDeviceRepository;
 use Forwext\Core\Auth\Login\AuthenticationService;
 use Forwext\Core\Auth\Login\DatabaseAuthenticationRateLimiter;
@@ -240,6 +240,7 @@ use Forwext\Core\Domain\Access\Permission\DatabasePermissionRuleRepository;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionEngine;
 use Forwext\Core\Domain\User\DatabaseUserRepository;
+use Forwext\Core\Domain\User\EmailAddress;
 use Forwext\Core\EasterEgg\DatabaseEasterEggRepository;
 use Forwext\Core\EasterEgg\EasterEggService;
 use Forwext\Core\Faq\DatabaseFaqRepository;
@@ -305,6 +306,10 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Security\Csrf\CsrfTokenManager;
+use Forwext\Core\Mail\DisabledMailTransport;
+use Forwext\Core\Mail\MailTransport;
+use Forwext\Core\Mail\NativePhpMailTransport;
+use Forwext\Core\Mail\NativeSmtpTransport;
 use Forwext\Core\Marketplace\DatabaseMarketplaceRepository;
 use Forwext\Core\Module\FirstParty\DatabaseFirstPartyModuleRepository;
 use Forwext\Core\Module\FirstParty\FirstPartyModuleConditionalMiddleware;
@@ -400,6 +405,7 @@ use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
 use Forwext\Core\Security\Secret\RuntimeSecretBootstrapper;
 use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
+use Forwext\Core\Security\Secret\SecretStore;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
 use Forwext\Core\Search\Lifecycle\CoreSearchContentSources;
@@ -600,7 +606,12 @@ final readonly class WebApplicationFactory
             availability: new DatabaseDisciplineAuthenticationAvailability($database),
         );
 
-        $authLinkDelivery = new DisabledAuthLinkDelivery();
+        $mailTransport = $this->mailTransport($config, $secretStore);
+        $authLinkDelivery = new MailAuthLinkDelivery(
+            $mailTransport,
+            RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
+            $config->requireString('site.name'),
+        );
         $authChallengeTokens = new DatabaseAuthChallengeTokenStore($database);
         $passwordReset = new PasswordResetService(
             $database,
@@ -2525,6 +2536,66 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function mailTransport(ConfigRepository $config, SecretStore $secrets): MailTransport
+    {
+        $driver = $config->requireString('mail.driver');
+        if ($driver === 'disabled') {
+            return new DisabledMailTransport();
+        }
+
+        $fromRaw = $config->get('mail.from_address');
+        $fromName = $config->requireString('mail.from_name');
+        if (!is_string($fromRaw) || trim($fromRaw) === '' || trim($fromName) === '') {
+            return new DisabledMailTransport();
+        }
+
+        try {
+            $from = EmailAddress::fromString($fromRaw);
+        } catch (InvalidArgumentException) {
+            return new DisabledMailTransport();
+        }
+
+        if ($driver === 'php_mail') {
+            return new NativePhpMailTransport($from, $fromName);
+        }
+        if ($driver !== 'smtp') {
+            throw new RuntimeException('Mail driver is invalid.');
+        }
+
+        $host = $config->get('mail.smtp.host');
+        $username = $config->get('mail.smtp.username');
+        if (!is_string($host) || trim($host) === '') {
+            return new DisabledMailTransport();
+        }
+        if ($username !== null && !is_string($username)) {
+            return new DisabledMailTransport();
+        }
+        $username = is_string($username) && trim($username) !== '' ? trim($username) : null;
+
+        $password = null;
+        if ($username !== null) {
+            $password = $secrets->get($config->requireString('mail.smtp.password_secret'));
+            if (!is_string($password) || $password === '') {
+                return new DisabledMailTransport();
+            }
+        }
+
+        try {
+            return new NativeSmtpTransport(
+                trim($host),
+                $config->requireInt('mail.smtp.port'),
+                $config->requireString('mail.smtp.encryption'),
+                $username,
+                $password,
+                $from,
+                $fromName,
+                $config->requireInt('mail.smtp.timeout_seconds'),
+            );
+        } catch (InvalidArgumentException) {
+            return new DisabledMailTransport();
+        }
     }
 
     private function registrationPolicy(ConfigRepository $config): RegistrationPolicy

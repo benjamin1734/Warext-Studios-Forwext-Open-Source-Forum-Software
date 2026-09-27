@@ -40,14 +40,15 @@ final class NativeRegistrationRecoveryWebSurfaceTest extends TestCase
         self::assertStringContainsString('new DatabaseAuthChallengeTokenStore($database)', $factory);
     }
 
-    public function testAuthLinkDeliveryFailsClosedUntilTransactionalMailIsAvailable(): void
+    public function testAuthLinkDeliveryFailsClosedWhenTransactionalMailIsUnavailable(): void
     {
         $root = dirname(__DIR__, 4);
         $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
         $registration = (string) file_get_contents($root . '/app/Web/Auth/RegisterHandler.php');
         $recovery = (string) file_get_contents($root . '/app/Web/Auth/PasswordResetRequestHandler.php');
 
-        self::assertStringContainsString('new DisabledAuthLinkDelivery()', $factory);
+        self::assertStringContainsString('new MailAuthLinkDelivery(', $factory);
+        self::assertStringContainsString('$this->mailTransport($config, $secretStore)', $factory);
         self::assertStringContainsString('!$this->delivery->available()', $registration);
         self::assertStringContainsString('!$this->delivery->available()', $recovery);
         self::assertStringContainsString('sendEmailVerification(', $registration);

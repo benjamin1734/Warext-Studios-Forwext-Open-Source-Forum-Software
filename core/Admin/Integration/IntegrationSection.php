@@ -36,7 +36,7 @@ enum IntegrationSection: string
     public function description(): string
     {
         return match ($this) {
-            self::Mail => 'Outgoing mail configuration contract. Transport delivery is composed by the owning runtime/installer.',
+            self::Mail => 'Outgoing transactional mail for account verification, password recovery and runtime delivery.',
             self::OAuth => 'Google/Discord provider enablement, client ids and HTTPS redirect allowlists.',
             self::Turnstile => 'Registration CAPTCHA behavior and Cloudflare Turnstile identity settings.',
             self::Ai => 'AI moderation provider/model/endpoint policy. Credentials remain in encrypted secret storage.',
