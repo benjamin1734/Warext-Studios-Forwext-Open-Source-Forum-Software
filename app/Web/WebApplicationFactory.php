@@ -521,19 +521,6 @@ final readonly class WebApplicationFactory
             $config->requireInt('authentication.login_rate_limit.window_seconds'),
             availability: new DatabaseDisciplineAuthenticationAvailability($database),
         );
-        $loginHandler = new LoginHandler(
-            $authentication,
-            $viewerResolver,
-            $this->trustedProxyResolver($config),
-            $basePath,
-            $config->requireString('authentication.session.cookie_name'),
-            $config->requireInt('authentication.session.ttl_seconds'),
-        );
-        $logoutHandler = new LogoutHandler(
-            $sessions,
-            $basePath,
-            $config->requireString('authentication.session.cookie_name'),
-        );
         $storage = $runtime->storageDriver();
         $firstPartyModuleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
         $firstPartyModuleRepository = new DatabaseFirstPartyModuleRepository($database);
@@ -570,6 +557,19 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_url.maximum_changes_per_window'),
         );
         $basePath = $this->basePath($config);
+        $loginHandler = new LoginHandler(
+            $authentication,
+            $viewerResolver,
+            $this->trustedProxyResolver($config),
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
+            $config->requireInt('authentication.session.ttl_seconds'),
+        );
+        $logoutHandler = new LogoutHandler(
+            $sessions,
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
+        );
         $editorLinks = new SafeEditorLinkPolicy();
         $editorPreview = new EditorPreviewService(
             new BbCodeRenderer(
