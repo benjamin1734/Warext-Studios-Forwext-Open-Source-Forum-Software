@@ -32,7 +32,9 @@ use Forwext\Core\Migration\SemanticVersion;
 use Forwext\Core\Module\FirstParty\FirstPartyModuleRegistry;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
+use Forwext\Core\Security\Secret\RuntimeSecretBootstrapper;
 use Forwext\Core\Security\Secret\SecretCipher;
+use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Security\Secret\SecretStore;
 use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
 use Forwext\Core\Ui\Theme\ThemeDefinition;
@@ -93,6 +95,7 @@ final class InstallationService
             (new ApacheHtaccessManager($this->projectRoot . '/public/.htaccess'))->ensurePublicRouting();
 
             $secrets = $this->secretStore();
+            (new RuntimeSecretBootstrapper($secrets, $this->masterKey()))->ensure();
             $secrets->set(self::DATABASE_PASSWORD_SECRET, $input->databasePassword);
             if ($input->mailDriver === 'smtp' && $input->smtpPassword !== '') {
                 $secrets->set(self::SMTP_PASSWORD_SECRET, $input->smtpPassword);
@@ -146,16 +149,18 @@ final class InstallationService
 
     private function secretStore(): SecretStore
     {
-        $keyProvider = new EnvironmentOrFileSecretKeyProvider(
-            $this->projectRoot . '/config/secret.key',
-            'FORWEXT_MASTER_KEY',
-        );
-        $key = $keyProvider->initializeFileIfMissing();
-
         return new EncryptedFileSecretStore(
             $this->projectRoot . '/storage/secrets/forwext.secrets',
-            new SecretCipher($key),
+            new SecretCipher($this->masterKey()),
         );
+    }
+
+    private function masterKey(): SecretKey
+    {
+        return (new EnvironmentOrFileSecretKeyProvider(
+            $this->projectRoot . '/config/secret.key',
+            'FORWEXT_MASTER_KEY',
+        ))->initializeFileIfMissing();
     }
 
     private function assertDatabaseIsFreshOrRecoverable(
