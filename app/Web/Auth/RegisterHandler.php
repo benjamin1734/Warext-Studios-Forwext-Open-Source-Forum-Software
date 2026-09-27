@@ -35,9 +35,9 @@ final readonly class RegisterHandler implements RequestHandlerInterface
         private BasePath $basePath,
         private string $defaultLocale,
         private string $defaultTimezone,
+        private AuthLinkDelivery $delivery,
         private ?string $turnstileSiteKey = null,
         private string $turnstileAction = 'register',
-        private AuthLinkDelivery $delivery,
     ) {
         if ($defaultLocale === '' || $defaultTimezone === '') {
             throw new InvalidArgumentException('Registration locale/timezone defaults are invalid.');
@@ -92,7 +92,6 @@ final readonly class RegisterHandler implements RequestHandlerInterface
 
         $captcha = $body['cf-turnstile-response'] ?? null;
         $invite = $body['invite_code'] ?? null;
-        $referral = $body['referral_code'] ?? null;
         $userAgent = trim((string) ($request->headers()->first('User-Agent') ?? ''));
         if ($userAgent === '') {
             $userAgent = 'Forwext Browser';
@@ -110,7 +109,6 @@ final readonly class RegisterHandler implements RequestHandlerInterface
                 $legal,
                 $password,
                 $userAgent,
-                is_string($referral) && trim($referral) !== '' ? trim($referral) : null,
             ));
         } catch (RegistrationException|InvalidArgumentException) {
             return $this->view($request, true, trim($username), trim($email));
@@ -152,8 +150,6 @@ final readonly class RegisterHandler implements RequestHandlerInterface
         if ($this->policy->mode->requiresInvite()) {
             $fields .= '<label><span>Davet kodu</span><input type="text" name="invite_code" autocomplete="off" maxlength="128" required></label>';
         }
-        $fields .= '<label><span>Referans kodu <small>(isteğe bağlı)</small></span><input type="text" name="referral_code" autocomplete="off" maxlength="128"></label>';
-
         foreach ($this->policy->legalDocuments() as $type => $document) {
             $fields .= '<label class="auth-entry-check"><input type="checkbox" name="legal_' . self::e($type) . '" value="'
                 . self::e($document->version) . '" required><span>' . self::e($type) . ' belgesinin '
