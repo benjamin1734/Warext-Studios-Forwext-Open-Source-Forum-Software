@@ -18,6 +18,7 @@ final class AccountDashboardHtml
             ['Profil Etkinliği', 'Profil gönderileri ve etkinlik tercihlerini yönet.', '/account/profile-activity', 'Etkinlik ayarları'],
             ['Etkinlik Akışı', 'Erişebildiğin forum ve profil hareketlerini takip et.', '/activity', 'Akışı aç'],
             ['Yer İmleri', 'Kaydettiğin forum içeriklerini görüntüle.', '/account/bookmarks', 'Yer imlerini aç'],
+            ['Sosyal İlişkiler', 'Takip ettiğin, seni takip eden ve yok saydığın kullanıcıları yönet.', '/account/relationships', 'İlişkileri yönet'],
             ['Davetlerim', 'Referans bağlantılarını ve davet kazanımlarını takip et.', '/account/referrals', 'Davetleri aç'],
             ['Upgrades', 'Hesabına uygun planları ve üyelik yükseltmelerini görüntüle.', '/account/upgrades', 'Planları aç'],
             ['Yazım Sözlüğü', 'Kişisel yazım denetimi sözlüğünü yönet.', '/account/spellcheck-dictionary', 'Sözlüğü aç'],
