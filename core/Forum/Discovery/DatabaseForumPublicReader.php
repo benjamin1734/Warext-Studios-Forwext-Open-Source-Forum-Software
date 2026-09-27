@@ -69,7 +69,7 @@ final readonly class DatabaseForumPublicReader
             . 'FROM ('
             . 'SELECT t.forum_node_id,t.thread_id,t.title,p.author_user_id,p.updated_at_utc,p.position,p.post_id,'
             . 'ROW_NUMBER() OVER (PARTITION BY t.forum_node_id '
-            . 'ORDER BY p.updated_at_utc DESC,p.position DESC,p.post_id DESC) AS row_number '
+            . 'ORDER BY p.updated_at_utc DESC,p.position DESC,p.post_id DESC) AS fx_row_number '
             . 'FROM forwext_threads t '
             . 'INNER JOIN forwext_posts p ON p.thread_id=t.thread_id '
             . "AND p.deleted=0 AND p.moderation_state='visible' "
@@ -78,7 +78,7 @@ final readonly class DatabaseForumPublicReader
             . "AND t.moderation_state='visible'"
             . ') ranked '
             . 'LEFT JOIN forwext_users u ON u.user_id=ranked.author_user_id '
-            . 'WHERE ranked.row_number=1',
+            . 'WHERE ranked.fx_row_number=1',
             $parameters,
         )) as $row) {
             $id = (string) ($row['forum_node_id'] ?? '');
