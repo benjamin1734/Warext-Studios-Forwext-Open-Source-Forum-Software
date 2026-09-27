@@ -158,6 +158,10 @@
     });
     source.addEventListener('cursor', (event) => {
       state.cursor = Math.max(state.cursor, safeInt(event.lastEventId, state.cursor));
+      try {
+        const payload = JSON.parse(event.data);
+        updateUnreadBadge(payload?.unread_count);
+      } catch (_) {}
     });
     source.onerror = () => {
       source.close();
