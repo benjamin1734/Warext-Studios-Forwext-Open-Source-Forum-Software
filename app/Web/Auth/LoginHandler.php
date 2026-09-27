@@ -107,7 +107,6 @@ final readonly class LoginHandler implements RequestHandlerInterface
     {
         $body = $request->parsedBody();
         $methodValue = $body['mfa_method'] ?? null;
-        $code = $body['mfa_code'] ?? null;
         $availableValue = $body['mfa_available'] ?? '';
 
         $available = is_string($availableValue)
@@ -116,19 +115,34 @@ final readonly class LoginHandler implements RequestHandlerInterface
 
         if ($this->mfaCompletion === null
             || !is_string($methodValue)
-            || !is_string($code)
             || ($method = MfaMethod::tryFrom($methodValue)) === null
-            || $method === MfaMethod::Passkey
         ) {
             return $this->viewMfa($request, $challengeToken, $available, false, true);
         }
 
         try {
-            $result = $this->mfaCompletion->completeCode(
-                $challengeToken,
-                $method,
-                trim($code),
-            );
+            if ($method === MfaMethod::Passkey) {
+                $ceremonyToken = $body['mfa_ceremony'] ?? null;
+                $responseJson = $body['mfa_passkey_response'] ?? null;
+                if (!is_string($ceremonyToken) || !is_string($responseJson) || trim($responseJson) === '') {
+                    return $this->viewMfa($request, $challengeToken, $available, false, true);
+                }
+                $result = $this->mfaCompletion->completePasskey(
+                    $challengeToken,
+                    $ceremonyToken,
+                    $responseJson,
+                );
+            } else {
+                $code = $body['mfa_code'] ?? null;
+                if (!is_string($code)) {
+                    return $this->viewMfa($request, $challengeToken, $available, false, true);
+                }
+                $result = $this->mfaCompletion->completeCode(
+                    $challengeToken,
+                    $method,
+                    trim($code),
+                );
+            }
         } catch (MfaException|InvalidArgumentException) {
             return $this->viewMfa($request, $challengeToken, $available, false, true);
         }
@@ -208,6 +222,7 @@ final readonly class LoginHandler implements RequestHandlerInterface
                 'Doğrulama uygulaması',
                 '6 haneli doğrulama kodunu gir.',
                 'one-time-code',
+                'numeric',
                 12,
             );
         }
@@ -221,15 +236,39 @@ final readonly class LoginHandler implements RequestHandlerInterface
                 'Kurtarma kodu',
                 'Tek kullanımlık kurtarma kodlarından birini kullan.',
                 'off',
+                'text',
                 64,
             );
         }
 
-        $passkeyNotice = in_array(MfaMethod::Passkey, $methods, true)
-            ? '<div class="auth-entry-notice" role="status"><strong>Passkey hesabında etkin.</strong>'
-                . '<span>Passkey tarayıcı doğrulama akışı henüz native giriş ekranına bağlanmadı. '
-                . 'TOTP veya kurtarma kodun varsa bunlardan birini kullanabilirsin.</span></div>'
-            : '';
+        $passkeyBlock = '';
+        if (!$enrollmentRequired
+            && $this->mfaCompletion !== null
+            && in_array(MfaMethod::Passkey, $methods, true)
+        ) {
+            try {
+                $ceremony = $this->mfaCompletion->beginPasskey($challengeToken);
+                $passkeyBlock = '<form class="auth-entry-form auth-entry-mfa-form" method="post" action="' . $action
+                    . '" data-auth-passkey-form>'
+                    . '<div class="auth-entry-copy"><strong>Passkey</strong>'
+                    . '<p>Cihazındaki passkey ile güvenli tarayıcı doğrulamasını tamamla.</p></div>'
+                    . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
+                    . '<input type="hidden" name="mfa_challenge" value="' . self::e($challengeToken) . '">'
+                    . '<input type="hidden" name="mfa_available" value="' . self::e($available) . '">'
+                    . '<input type="hidden" name="mfa_method" value="' . self::e(MfaMethod::Passkey->value) . '">'
+                    . '<input type="hidden" name="mfa_ceremony" value="' . self::e($ceremony->token) . '">'
+                    . '<input type="hidden" name="mfa_passkey_response" value="" data-auth-passkey-response>'
+                    . '<input type="hidden" value="' . self::e(base64_encode($ceremony->optionsJson))
+                    . '" data-auth-passkey-options>'
+                    . '<div class="auth-entry-notice" data-auth-passkey-status hidden></div>'
+                    . '<button class="fx-btn fx-btn--primary auth-entry-submit" type="button" data-auth-passkey-button>'
+                    . 'Passkey ile doğrula</button></form>'
+                    . '<script src="' . self::e($this->basePath->prepend('/assets/auth-mfa.js')) . '" defer></script>';
+            } catch (MfaException) {
+                $passkeyBlock = '<div class="auth-entry-notice" role="status"><strong>Passkey başlatılamadı.</strong>'
+                    . '<span>Başka bir etkin MFA yöntemini kullanabilir veya giriş akışını yeniden başlatabilirsin.</span></div>';
+            }
+        }
 
         if ($enrollmentRequired) {
             $forms = '<div class="auth-entry-notice" role="alert"><strong>MFA kurulumu gerekli.</strong>'
@@ -244,9 +283,9 @@ final readonly class LoginHandler implements RequestHandlerInterface
             . '<div class="auth-entry-copy"><span class="forum-eyebrow">GÜVENLİK</span><h1>Ek doğrulama</h1>'
             . '<p>Birinci adım doğrulandı. Oturum açmayı tamamlamak için etkin MFA yöntemlerinden birini kullan.</p></div>'
             . ($invalidCode
-                ? '<div class="auth-entry-error" role="alert">Doğrulama kodu geçersiz, kullanılmış veya süresi dolmuş olabilir.</div>'
+                ? '<div class="auth-entry-error" role="alert">Doğrulama başarısız, kullanılmış veya süresi dolmuş olabilir.</div>'
                 : '')
-            . $passkeyNotice
+            . $passkeyBlock
             . $forms
             . '<div class="auth-entry-actions"><a class="fx-btn" href="'
             . self::e($this->basePath->prepend('/login')) . '">Girişe dön</a></div>'
@@ -274,6 +313,7 @@ final readonly class LoginHandler implements RequestHandlerInterface
         string $title,
         string $description,
         string $autocomplete,
+        string $inputMode,
         int $maxlength,
     ): string {
         return '<form class="auth-entry-form auth-entry-mfa-form" method="post" action="' . $action . '">'
@@ -283,8 +323,8 @@ final readonly class LoginHandler implements RequestHandlerInterface
             . '<input type="hidden" name="mfa_challenge" value="' . self::e($challengeToken) . '">'
             . '<input type="hidden" name="mfa_available" value="' . self::e($available) . '">'
             . '<input type="hidden" name="mfa_method" value="' . self::e($method->value) . '">'
-            . '<label><span>Kod</span><input type="text" name="mfa_code" inputmode="numeric" autocomplete="'
-            . self::e($autocomplete) . '" maxlength="' . $maxlength . '" required></label>'
+            . '<label><span>Kod</span><input type="text" name="mfa_code" inputmode="' . self::e($inputMode)
+            . '" autocomplete="' . self::e($autocomplete) . '" maxlength="' . $maxlength . '" required></label>'
             . '<button class="fx-btn fx-btn--primary auth-entry-submit" type="submit">Doğrula ve giriş yap</button>'
             . '</form>';
     }
