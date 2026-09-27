@@ -48,7 +48,7 @@ final class NativeAuthenticationWebSurfaceTest extends TestCase
         self::assertStringContainsString('secure: true', $handler);
         self::assertStringContainsString('httpOnly: true', $handler);
         self::assertStringContainsString('sameSite: SameSite::Lax', $handler);
-        self::assertStringContainsString("name="_csrf"", $handler);
+        self::assertStringContainsString('name="_csrf"', $handler);
     }
 
     public function testLogoutRevokesServerSessionAndExpiresCookie(): void
@@ -60,7 +60,7 @@ final class NativeAuthenticationWebSurfaceTest extends TestCase
         self::assertStringContainsString('maxAge: 0', $handler);
         self::assertStringContainsString('secure: true', $handler);
         self::assertStringContainsString('httpOnly: true', $handler);
-        self::assertStringContainsString("name="_csrf"", $handler);
+        self::assertStringContainsString('name="_csrf"', $handler);
     }
 
     public function testMfaGroupProviderUsesPrimaryAndSecondaryGroupsWithoutTreatingRolesAsGroups(): void
