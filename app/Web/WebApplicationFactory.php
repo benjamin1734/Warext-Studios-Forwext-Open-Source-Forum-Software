@@ -103,6 +103,7 @@ use Forwext\App\Web\Profile\MemberDirectoryHandler;
 use Forwext\App\Web\Profile\ProfileActivityCsrfTokenHandler;
 use Forwext\App\Web\Profile\ProfileActivityDeleteHandler;
 use Forwext\App\Web\Profile\ProfileActivitySettingsHandler;
+use Forwext\App\Web\Profile\ProfileActivityWallRenderer;
 use Forwext\App\Web\Profile\ProfileCommentsHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
 use Forwext\App\Web\Profile\ProfileMusicHandler;
@@ -1221,6 +1222,19 @@ final readonly class WebApplicationFactory
         );
         $socialRepository = new DatabaseSocialInteractionRepository($database);
         $socialRelationshipReader = new DatabaseSocialRelationshipReader($database);
+        $profileActivityRepository = new DatabaseProfileActivityRepository($database);
+        $profileActivity = new ProfileActivityService(
+            $profileActivityRepository,
+            $socialRepository,
+            $users,
+            $authorizer,
+        );
+        $profileActivityWall = new ProfileActivityWallRenderer(
+            $profileActivity,
+            $users,
+            $basePath,
+            new DateTimeZone($config->requireString('site.timezone')),
+        );
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -1232,6 +1246,7 @@ final readonly class WebApplicationFactory
             $trophies,
             $marketplace,
             $socialRepository,
+            $profileActivityWall,
         );
         $searchService = new PermissionAwareSearchService(
             $runtime->searchDriver(),
@@ -1256,13 +1271,6 @@ final readonly class WebApplicationFactory
             $socialRepository,
             $posts,
             $threads,
-            $users,
-            $authorizer,
-        );
-        $profileActivityRepository = new DatabaseProfileActivityRepository($database);
-        $profileActivity = new ProfileActivityService(
-            $profileActivityRepository,
-            $socialRepository,
             $users,
             $authorizer,
         );
@@ -2148,7 +2156,7 @@ final readonly class WebApplicationFactory
             new ProfileCommentsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
-            'profile.reactions', [HttpMethod::Get, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}/reactions'),
+            'profile.reactions', [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}/reactions'),
             new ProfilePostReactionHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
         ));
         $routes->add(new Route(

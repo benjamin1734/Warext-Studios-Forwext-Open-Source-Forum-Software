@@ -60,6 +60,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private ?TrophyService $trophies = null,
         private ?MarketplaceService $marketplace = null,
         private ?SocialInteractionRepository $relationships = null,
+        private ?ProfileActivityWallRenderer $activityWall = null,
     ) {
     }
 
@@ -97,6 +98,9 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             : '<div class="banner" aria-hidden="true"></div>';
 
         $visibleTabs = $this->visibleSupportedTabs($profile, $viewerId);
+        $activityWall = $viewerId !== null && $this->activityWall !== null
+            ? $this->activityWall->render($viewerId, $profile->userId)
+            : '';
         $tabNav = '';
         foreach ($visibleTabs as $tab) {
             $label = match ($tab->key) {
@@ -107,6 +111,9 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 default => 'Hakkımda',
             };
             $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
+        }
+        if ($activityWall !== '') {
+            $tabNav .= '<a href="#activity">Profil Akışı</a>';
         }
         $tabNav = $tabNav === ''
             ? ''
@@ -148,7 +155,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             . $avatar . '<div class="identity"><h1>' . $safeName
             . '</h1><div class="muted">Forwext üyesi</div>' . $profileSettings . '</div>'
             . $relationshipControls . '</div>'
-            . $music . $tabNav . $sections . '</div></article>';
+            . $music . $tabNav . $activityWall . $sections . '</div></article>';
 
         return Response::html(ProfileHtml::page(
             $displayName,

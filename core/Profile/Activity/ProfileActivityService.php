@@ -35,6 +35,25 @@ final readonly class ProfileActivityService
         $this->profiles->saveSettings($actorId, $settings);
     }
 
+    public function canPost(EntityId $actorId, EntityId $profileOwnerId): bool
+    {
+        try {
+            $this->requireActiveUser($actorId);
+            $this->requireActiveUser($profileOwnerId);
+            if (!$this->gate($actorId)->allows(ProfileActivityPermission::Create->key())) {
+                return false;
+            }
+
+            return $this->canWriteToProfile($actorId, $profileOwnerId);
+        } catch (
+            ProfileActivityException
+            | \Forwext\Core\Domain\Access\Permission\PermissionDeniedException
+            | \Forwext\Core\Social\Interaction\SocialInteractionException
+        ) {
+            return false;
+        }
+    }
+
     /** @return list<ProfilePost> */
     public function posts(EntityId $viewerId, EntityId $profileOwnerId, int $limit = 50, int $offset = 0): array
     {
