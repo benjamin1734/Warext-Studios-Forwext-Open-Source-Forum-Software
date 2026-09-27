@@ -53,6 +53,8 @@ final class ProfileActivityServiceTest extends TestCase
 
         self::assertTrue($service->canViewProfile($follower, $owner));
         self::assertFalse($service->canViewProfile($stranger, $owner));
+        self::assertTrue($service->canPost($follower, $owner));
+        self::assertFalse($service->canPost($stranger, $owner));
         self::assertSame($follower->value(), $service->createPost($follower, $owner, ProfileActivityBody::fromString('Hello'), $this->now())->authorUserId?->value());
 
         $this->expectException(ProfileActivityException::class);
@@ -66,6 +68,8 @@ final class ProfileActivityServiceTest extends TestCase
         $social = new ProfileSocialMemoryRepository();
         $social->ignored[$owner->value()][$visitor->value()] = true;
         $service = $this->service($profiles, $social, [$this->user($owner, 'Owner'), $this->user($visitor, 'Visitor')]);
+
+        self::assertFalse($service->canPost($visitor, $owner));
 
         $this->expectException(ProfileActivityException::class);
         $service->createPost($visitor, $owner, ProfileActivityBody::fromString('Blocked'), $this->now());
