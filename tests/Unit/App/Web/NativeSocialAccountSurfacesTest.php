@@ -112,7 +112,7 @@ final class NativeSocialAccountSurfacesTest extends TestCase
 
         self::assertStringContainsString('INNER JOIN `forwext_posts` p', $repository);
         self::assertStringContainsString('INNER JOIN `forwext_threads` t', $repository);
-        self::assertStringContainsString("t.\`title\` AS \`thread_title\`", $repository);
+        self::assertStringContainsString('t.`title` AS `thread_title`', $repository);
         self::assertStringContainsString('postPosition', (string) file_get_contents($root . '/core/Social/Interaction/BookmarkEntry.php'));
     }
 }
