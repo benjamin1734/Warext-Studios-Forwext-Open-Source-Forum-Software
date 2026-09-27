@@ -28,6 +28,8 @@ use Forwext\Core\Profile\SocialLink;
 use Forwext\Core\Profile\UserProfile;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
+use Forwext\Core\Social\Interaction\SocialInteractionException;
+use Forwext\Core\Social\Interaction\SocialInteractionRepository;
 use Forwext\Core\Trophy\TrophyHistoryAction;
 use Forwext\Core\Trophy\TrophyService;
 use InvalidArgumentException;
@@ -57,6 +59,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         private ?PortfolioService $portfolio = null,
         private ?TrophyService $trophies = null,
         private ?MarketplaceService $marketplace = null,
+        private ?SocialInteractionRepository $relationships = null,
     ) {
     }
 
@@ -137,15 +140,23 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . ProfileHtml::escape($this->basePath->prepend('/account/profile-url'))
                 . '">Özel profil URL’si</a>'
             : '';
+        $relationshipControls = $this->relationshipControls($viewerId, $user->id());
         $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
         $body = '<article class="profile" data-forwext-background-scope="profile" data-forwext-background-id="'
             . ProfileHtml::escape($profile->userId->value()) . '">' . $banner
             . '<div class="profilebody"><div class="profilehead">'
             . $avatar . '<div class="identity"><h1>' . $safeName
-            . '</h1><div class="muted">Forwext üyesi</div>' . $profileSettings . '</div></div>'
+            . '</h1><div class="muted">Forwext üyesi</div>' . $profileSettings . '</div>'
+            . $relationshipControls . '</div>'
             . $music . $tabNav . $sections . '</div></article>';
 
-        return Response::html(ProfileHtml::page($displayName, $body, $this->basePath));
+        return Response::html(ProfileHtml::page(
+            $displayName,
+            $body,
+            $this->basePath,
+            authenticated: $viewerId !== null,
+            viewerId: $viewerId?->value(),
+        ));
     }
 
     private function routeUsername(Request $request): ?Username
@@ -320,6 +331,28 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . ProfileHtml::escape($label) . '</a>';
         }
         return $links;
+    }
+
+    private function relationshipControls(?EntityId $viewerId, EntityId $profileUserId): string
+    {
+        if ($viewerId === null || $this->relationships === null || $viewerId->value() === $profileUserId->value()) {
+            return '';
+        }
+
+        try {
+            $following = $this->relationships->isFollowing($viewerId, $profileUserId);
+            $ignoring = $this->relationships->isIgnoring($viewerId, $profileUserId);
+        } catch (SocialInteractionException|InvalidArgumentException) {
+            return '';
+        }
+
+        return '<div class="profile-relationship-actions" data-user-relationship data-user-id="'
+            . ProfileHtml::escape($profileUserId->value()) . '" data-following="' . ($following ? '1' : '0')
+            . '" data-ignoring="' . ($ignoring ? '1' : '0') . '">'
+            . '<button class="fx-btn" type="button" data-follow-toggle></button>'
+            . '<button class="fx-btn" type="button" data-ignore-toggle></button>'
+            . '<span class="relationship-status" data-relationship-status role="status" aria-live="polite"></span>'
+            . '</div>';
     }
 
     private function musicPlayer(

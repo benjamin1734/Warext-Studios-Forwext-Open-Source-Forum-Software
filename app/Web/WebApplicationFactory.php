@@ -123,6 +123,7 @@ use Forwext\App\Web\Referral\ReferralRedirectHandler;
 use Forwext\App\Web\Social\BookmarkListHandler;
 use Forwext\App\Web\Social\InteractionCsrfTokenHandler;
 use Forwext\App\Web\Social\PostBookmarkHandler;
+use Forwext\App\Web\Social\RelationshipAccountHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
 use Forwext\App\Web\Search\SearchHandler;
@@ -424,6 +425,7 @@ use Forwext\Core\Session\DatabaseSessionStore;
 use Forwext\Core\Session\FileSessionStore;
 use Forwext\Core\Session\SessionStore;
 use Forwext\Core\Social\Interaction\DatabaseSocialInteractionRepository;
+use Forwext\Core\Social\Interaction\DatabaseSocialRelationshipReader;
 use Forwext\Core\Social\Interaction\SocialInteractionService;
 use Forwext\Core\Storage\LocalStorageDriver;
 use Forwext\Core\Support\Conversation\DatabaseSupportConversationRepository;
@@ -1217,6 +1219,8 @@ final readonly class WebApplicationFactory
             )),
             $rewards,
         );
+        $socialRepository = new DatabaseSocialInteractionRepository($database);
+        $socialRelationshipReader = new DatabaseSocialRelationshipReader($database);
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -1227,6 +1231,7 @@ final readonly class WebApplicationFactory
             $portfolio,
             $trophies,
             $marketplace,
+            $socialRepository,
         );
         $searchService = new PermissionAwareSearchService(
             $runtime->searchDriver(),
@@ -1247,7 +1252,6 @@ final readonly class WebApplicationFactory
             new PinnedHttpsLinkPreviewTransport(),
         );
 
-        $socialRepository = new DatabaseSocialInteractionRepository($database);
         $socialInteractions = new SocialInteractionService(
             $socialRepository,
             $posts,
@@ -2114,11 +2118,20 @@ final readonly class WebApplicationFactory
             new BookmarkListHandler($socialInteractions, $viewerResolver, $basePath), [$interactionCsrf],
         ));
         $routes->add(new Route(
-            'user.follow', [HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/follow'),
+            'account.relationships', [HttpMethod::Get], new PathTemplate('/account/relationships'),
+            new RelationshipAccountHandler(
+                $socialRelationshipReader,
+                $viewerResolver,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+            ),
+        ));
+        $routes->add(new Route(
+            'user.follow', [HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/follow'),
             new UserRelationshipHandler($socialInteractions, $viewerResolver, false), [$interactionCsrf],
         ));
         $routes->add(new Route(
-            'user.ignore', [HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/ignore'),
+            'user.ignore', [HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/users/{userId}/ignore'),
             new UserRelationshipHandler($socialInteractions, $viewerResolver, true), [$interactionCsrf],
         ));
 

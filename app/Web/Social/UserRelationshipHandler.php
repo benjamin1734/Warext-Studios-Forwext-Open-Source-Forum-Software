@@ -38,6 +38,7 @@ final readonly class UserRelationshipHandler implements RequestHandlerInterface
             $enabled = match ($request->method()) {
                 HttpMethod::Put => $this->enable($actor, $target),
                 HttpMethod::Delete => $this->disable($actor, $target),
+                HttpMethod::Post => $this->postAction($actor, $target, $request),
                 default => throw new InvalidArgumentException('Unsupported relationship method.'),
             };
         } catch (PermissionDeniedException) {
@@ -49,6 +50,31 @@ final readonly class UserRelationshipHandler implements RequestHandlerInterface
         }
 
         return $this->json([$this->ignoreMode ? 'ignoring' : 'following' => $enabled]);
+    }
+
+    private function postAction(
+        \Forwext\Core\Domain\Entity\EntityId $actor,
+        \Forwext\Core\Domain\Entity\EntityId $target,
+        Request $request,
+    ): bool {
+        $action = $request->parsedBody()['action'] ?? null;
+        if (!is_string($action)) {
+            throw new InvalidArgumentException('Relationship action is invalid.');
+        }
+
+        if ($this->ignoreMode) {
+            return match ($action) {
+                'ignore' => $this->enable($actor, $target),
+                'unignore' => $this->disable($actor, $target),
+                default => throw new InvalidArgumentException('Ignore action is invalid.'),
+            };
+        }
+
+        return match ($action) {
+            'follow' => $this->enable($actor, $target),
+            'unfollow' => $this->disable($actor, $target),
+            default => throw new InvalidArgumentException('Follow action is invalid.'),
+        };
     }
 
     private function enable(\Forwext\Core\Domain\Entity\EntityId $actor, \Forwext\Core\Domain\Entity\EntityId $target): bool
