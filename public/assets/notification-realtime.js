@@ -24,6 +24,26 @@
 
   const safeInt = (value, fallback = 0) => Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : fallback;
 
+  const updateUnreadBadge = (value) => {
+    const link = document.querySelector('[data-nav-key="notifications.own"]');
+    if (!(link instanceof HTMLElement)) return;
+    const count = safeInt(value, 0);
+    let badge = link.querySelector('.nav-notification-badge');
+    if (count < 1) {
+      badge?.remove();
+      link.removeAttribute('aria-label');
+      return;
+    }
+    if (!(badge instanceof HTMLElement)) {
+      badge = document.createElement('span');
+      badge.className = 'nav-notification-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      link.appendChild(badge);
+    }
+    badge.textContent = count > 99 ? '99+' : String(count);
+    link.setAttribute('aria-label', `Bildirimler, ${count} okunmamış`);
+  };
+
   const ensureLiveRegion = () => {
     let region = document.getElementById('forwext-notification-live');
     if (region) return region;
@@ -80,6 +100,7 @@
     state.websocketPath = typeof transport.websocket_path === 'string' ? transport.websocket_path : null;
     state.pollIntervalMs = Math.max(1000, safeInt(transport.poll_interval_ms, 3000));
     state.hiddenPollIntervalMs = Math.max(state.pollIntervalMs, safeInt(transport.hidden_poll_interval_ms, 15000));
+    updateUnreadBadge(payload?.unread_count);
     return true;
   };
 
