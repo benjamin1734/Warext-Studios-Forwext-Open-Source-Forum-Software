@@ -83,16 +83,16 @@
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") return;
+    if (event.key === "Escape") {
+      if (navigation.dataset.mobileOpen === "1") {
+        setOpen(false);
+        closeAccountMenus();
+        button.focus();
+        return;
+      }
 
-    if (navigation.dataset.mobileOpen === "1") {
-      setOpen(false);
       closeAccountMenus();
-      button.focus();
-      return;
     }
-
-    closeAccountMenus();
   });
 
   document.addEventListener("click", (event) => {
