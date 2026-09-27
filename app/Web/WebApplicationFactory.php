@@ -520,9 +520,14 @@ final readonly class WebApplicationFactory
         $rpId = is_string($configuredRpId) && trim($configuredRpId) !== ''
             ? trim($configuredRpId)
             : $canonicalHost;
-        $webAuthnHost = is_string($configuredWebAuthnHost) && trim($configuredWebAuthnHost) !== ''
-            ? trim($configuredWebAuthnHost)
-            : $canonicalHost;
+        $webAuthnHost = $canonicalHost;
+        if (is_string($configuredWebAuthnHost) && trim($configuredWebAuthnHost) !== '') {
+            $configuredWebAuthnHost = trim($configuredWebAuthnHost);
+            $parsedWebAuthnHost = parse_url($configuredWebAuthnHost, PHP_URL_HOST);
+            $webAuthnHost = is_string($parsedWebAuthnHost) && $parsedWebAuthnHost !== ''
+                ? $parsedWebAuthnHost
+                : $configuredWebAuthnHost;
+        }
         $totp = new DatabaseTotpService(
             $database,
             new SecretCipher($masterKey),
