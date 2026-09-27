@@ -32,7 +32,7 @@ final class NavigationPresenceStatsTest extends TestCase
         ));
 
         self::assertSame(
-            ['forums', 'search', 'members', 'members.online', 'portfolio', 'marketplace', 'faq', 'forum.stats'],
+            ['forums', 'search', 'members', 'members.online', 'portfolio', 'marketplace', 'faq'],
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
         );
         self::assertContains(
@@ -46,6 +46,14 @@ final class NavigationPresenceStatsTest extends TestCase
         self::assertNotContains(
             'giveaways',
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
+        );
+        self::assertNotContains(
+            'forum.stats',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
+        );
+        self::assertContains(
+            'forum.stats',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
         );
     }
 
