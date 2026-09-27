@@ -38,6 +38,7 @@ use Forwext\Core\Routing\RuntimeCanonicalUrlResolver;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
+use Forwext\Core\Security\Secret\RuntimeSecretBootstrapper;
 use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Session\DatabaseSessionStore;
@@ -196,10 +197,19 @@ final class CommunityApplicationFactory
 
     private function secretStore(): EncryptedFileSecretStore
     {
-        return $this->secretStore ??= new EncryptedFileSecretStore(
+        if ($this->secretStore instanceof EncryptedFileSecretStore) {
+            return $this->secretStore;
+        }
+
+        $masterKey = $this->masterKey();
+        $store = new EncryptedFileSecretStore(
             $this->projectPath($this->config->requireString('security.secret_store_path')),
-            new SecretCipher($this->masterKey()),
+            new SecretCipher($masterKey),
         );
+        (new RuntimeSecretBootstrapper($store, $masterKey))->ensure();
+        $this->secretStore = $store;
+
+        return $store;
     }
 
     private function analyticsPrivacyKey(): SecretKey
