@@ -78,8 +78,18 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '</div><h1>' . self::e($thread->title()->value()) . '</h1><p>'
             . number_format(max(0, $posts['total'] - 1), 0, ',', '.') . ' yanıt · '
             . number_format($posts['total'], 0, ',', '.') . ' mesaj</p></div>'
-            . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
-            . '">Foruma dön</a></section>';
+            . '<div class="thread-view-actions">';
+        if ($this->canReply($actor, $thread, $forum)) {
+            $body .= '<a class="fx-btn fx-btn--primary" href="'
+                . self::e($this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/reply'))
+                . '">Yanıtla</a>';
+        }
+        $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
+            . '">Foruma dön</a></div></section>';
+
+        if (($request->query()['reply_pending'] ?? null) === '1') {
+            $body .= '<div class="forum-notice">Yanıtınız gönderildi ve moderasyon onayı bekliyor.</div>';
+        }
 
         if ($posts['rows'] === []) {
             $body .= '<section class="card forum-empty-state"><h2>Görüntülenebilir mesaj yok</h2></section>';
@@ -99,6 +109,16 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
+    }
+
+    private function canReply(?EntityId $actor, Thread $thread, ForumNode $forum): bool
+    {
+        $settings = $forum->forumSettings();
+        return $actor !== null
+            && !$thread->isLocked()
+            && $settings !== null
+            && $settings->allowReplies()
+            && $this->authorizer->allows($actor, PostPermission::Create->key(), $forum->id());
     }
 
     private function canView(?EntityId $actor, ForumNodeHierarchy $hierarchy, ForumNode $forum): bool
