@@ -57,6 +57,8 @@ final readonly class RuntimeFailureReporter
             }
         }
 
+        @error_log('Forwext runtime failure: ' . implode(' | ', $lines));
+
         return $reference;
     }
 
