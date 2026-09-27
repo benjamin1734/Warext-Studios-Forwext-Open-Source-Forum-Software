@@ -69,8 +69,13 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         if ($node->description() !== '') {
             $body .= '<p>' . self::e($node->description()) . '</p>';
         }
-        $body .= '</div><div class="forum-view-actions">'
-            . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Bu toplulukta ara</a>'
+        $body .= '</div><div class="forum-view-actions">';
+        if ($this->canCreateThread($actor, $node)) {
+            $body .= '<a class="fx-btn fx-btn--primary" href="'
+                . self::e($this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()) . '/new-thread'))
+                . '">Yeni konu</a>';
+        }
+        $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Bu toplulukta ara</a>'
             . '</div></section>';
 
         $children = array_values(array_filter(
@@ -112,6 +117,15 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
+    }
+
+    private function canCreateThread(?EntityId $actor, ForumNode $node): bool
+    {
+        $settings = $node->forumSettings();
+        return $actor !== null
+            && $settings !== null
+            && $settings->allowNewThreads()
+            && $this->authorizer->allows($actor, ThreadPermission::Create->key(), $node->id());
     }
 
     private function canView(?EntityId $actor, ForumNodeHierarchy $hierarchy, ForumNode $node): bool
