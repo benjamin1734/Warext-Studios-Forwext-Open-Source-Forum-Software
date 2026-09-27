@@ -5,14 +5,27 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.4
+CURRENT_VERSION = 1.0.5
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-2
-LAST_COMMIT = 46e1cadad2858fa6f35b564e8ced22e789e0446c
+CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-3
+LAST_COMMIT = 4ddb8363a27efae6bd9690c6ac74c21c86a1e87b
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = native authentication/account entry UI pass, then notifications/social/ACP/module UI parity
+NEXT_STEP = native MFA completion + registration/account recovery UI, then notifications/social/ACP/module UI parity
 ```
+
+## Production acceptance remediation — 1.0.5
+
+- Native PHP account entry now includes production-routed **Giriş yap** and **Çıkış** surfaces.
+- Login delegates to the existing AuthenticationService and therefore keeps password verification/rehash, DB rate limiting, login history, device tracking, discipline availability and MFA policy enforcement in one authoritative backend.
+- Client IP handling uses the configured trusted-proxy/Cloudflare CIDR model rather than blindly consuming forwarded headers.
+- Authentication forms use a dedicated CSRF scope; successful sessions use the configured secure HttpOnly SameSite=Lax session cookie.
+- Logout revokes the server-side session and expires the browser cookie.
+- MFA-required accounts fail closed: correct primary credentials alone do not create a session while a second factor is still required.
+- Shared navigation now exposes guest/member login/logout entry actions and the account-entry screens use the native theme/design-token system.
+- PHP 8.4/8.5 qualification, security qualification, MySQL/MariaDB migration smoke, performance/observability and full package validation all passed before release packaging.
+- No database migration is required.
+- Remaining authentication acceptance work is native MFA challenge completion, registration, email verification/password recovery and broader account UX before notification/social/ACP/module parity is closed.
 
 ## Production acceptance remediation — 1.0.4
 
@@ -54,7 +67,7 @@ NEXT_STEP = native authentication/account entry UI pass, then notifications/soci
 
 ## Current position
 
-- Target: **Forwext 1.0.4 Production acceptance remediation**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.5 Production acceptance remediation**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
