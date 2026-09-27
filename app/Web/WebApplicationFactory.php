@@ -49,6 +49,9 @@ use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
 use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
+use Forwext\App\Web\Forum\ForumIndexHandler;
+use Forwext\App\Web\Forum\ForumViewHandler;
+use Forwext\App\Web\Forum\ThreadViewHandler;
 use Forwext\App\Web\Forum\ThreadFreshnessHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
 use Forwext\App\Web\Notification\NotificationRealtimeHandler;
@@ -231,6 +234,7 @@ use Forwext\Core\Forum\Editor\PinnedHttpsLinkPreviewTransport;
 use Forwext\Core\Forum\Editor\SafeEditorLinkPolicy;
 use Forwext\Core\Forum\Editor\SafeLinkEmbedResolver;
 use Forwext\Core\Forum\Editor\UserMentionResolver;
+use Forwext\Core\Forum\Discovery\DatabaseForumPublicReader;
 use Forwext\Core\Forum\Freshness\DatabaseThreadFreshnessRepository;
 use Forwext\Core\Forum\Freshness\ThreadFreshnessNotifier;
 use Forwext\Core\Forum\Freshness\ThreadFreshnessService;
@@ -631,6 +635,30 @@ final readonly class WebApplicationFactory
             $this->advertisingFrequencyKey($config),
         );
         $nodes = new DatabaseForumNodeRepository($database);
+        $forumPublicReader = new DatabaseForumPublicReader($database);
+        $forumIndexHandler = new ForumIndexHandler(
+            $nodes,
+            $forumPublicReader,
+            $viewerResolver,
+            $authorizer,
+            $basePath,
+        );
+        $forumViewHandler = new ForumViewHandler(
+            $nodes,
+            $forumPublicReader,
+            $viewerResolver,
+            $authorizer,
+            $basePath,
+        );
+        $threadViewHandler = new ThreadViewHandler(
+            $threads,
+            $nodes,
+            $forumPublicReader,
+            $editorPreview,
+            $viewerResolver,
+            $authorizer,
+            $basePath,
+        );
         $adminCommunity = new AdminCommunityService(
             $database,
             $users,
@@ -1099,7 +1127,20 @@ final readonly class WebApplicationFactory
             $runtime->rateLimitStore(),
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
-        $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), new HomeHandler($version, $basePath)));
+        $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
+        $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
+        $routes->add(new Route(
+            'forum.view',
+            [HttpMethod::Get],
+            new PathTemplate('/forums/{slug}', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            $forumViewHandler,
+        ));
+        $routes->add(new Route(
+            'thread.view',
+            [HttpMethod::Get],
+            new PathTemplate('/threads/{threadId}', ['threadId'=>'[a-f0-9]{32}']),
+            $threadViewHandler,
+        ));
         $routes->add(new Route(
             'bug.report.create',
             [HttpMethod::Get, HttpMethod::Post],
