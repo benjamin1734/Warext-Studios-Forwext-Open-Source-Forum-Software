@@ -2185,6 +2185,7 @@ final readonly class WebApplicationFactory
                 $viewerResolver,
                 min(100, $config->requireInt('realtime.poll_limit')),
                 $config->requireInt('realtime.sse_retry_ms'),
+                $notificationInbox,
             ),
         ));
 
