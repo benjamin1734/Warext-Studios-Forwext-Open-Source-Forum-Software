@@ -150,7 +150,13 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             . $relationshipControls . '</div>'
             . $music . $tabNav . $sections . '</div></article>';
 
-        return Response::html(ProfileHtml::page($displayName, $body, $this->basePath));
+        return Response::html(ProfileHtml::page(
+            $displayName,
+            $body,
+            $this->basePath,
+            authenticated: $viewerId !== null,
+            viewerId: $viewerId?->value(),
+        ));
     }
 
     private function routeUsername(Request $request): ?Username
