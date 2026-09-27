@@ -73,6 +73,7 @@ final readonly class SystemIntegrationCatalog
         $add('integration.mail.smtp_port', IntegrationSection::Mail, 'mail.smtp.port', 'SMTP port', 'SMTP TCP port.', IntegrationSettingType::Integer, false, [], 1, 65535);
         $add('integration.mail.smtp_encryption', IntegrationSection::Mail, 'mail.smtp.encryption', 'SMTP encryption', 'SMTP transport security mode.', IntegrationSettingType::Enum, false, ['none','starttls','tls']);
         $add('integration.mail.smtp_username', IntegrationSection::Mail, 'mail.smtp.username', 'SMTP username', 'Optional SMTP authentication username.', IntegrationSettingType::String, true, [], null, null, 254);
+        $add('integration.mail.smtp_timeout', IntegrationSection::Mail, 'mail.smtp.timeout_seconds', 'SMTP timeout', 'Connection/read timeout in seconds.', IntegrationSettingType::Integer, false, [], 1, 30);
 
         foreach (['google','discord'] as $provider) {
             $label = ucfirst($provider);
