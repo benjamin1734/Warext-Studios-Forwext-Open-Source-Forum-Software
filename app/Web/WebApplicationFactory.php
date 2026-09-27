@@ -2156,7 +2156,7 @@ final readonly class WebApplicationFactory
             new ProfileCommentsHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
-            'profile.reactions', [HttpMethod::Get, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}/reactions'),
+            'profile.reactions', [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/profile-posts/{profilePostId}/reactions'),
             new ProfilePostReactionHandler($profileActivity, $viewerResolver), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
