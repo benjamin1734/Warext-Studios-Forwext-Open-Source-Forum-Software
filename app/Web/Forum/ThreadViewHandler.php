@@ -96,7 +96,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         } else {
             $body .= '<div class="thread-post-list">';
             foreach ($posts['rows'] as $post) {
-                $body .= $this->renderPost($post);
+                $body .= $this->renderPost($post, $actor);
             }
             $body .= '</div>' . $this->pagination($thread, $posts['page'], $posts['pages']);
         }
@@ -138,7 +138,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
-    private function renderPost(array $post): string
+    private function renderPost(array $post, ?EntityId $actor): string
     {
         $username = $post['author_username'] ?? 'Silinmiş üye';
         $profileUrl = $post['author_username'] === null
@@ -163,8 +163,52 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . number_format($post['position'], 0, ',', '.') . '</a><time>'
             . self::e(self::date($post['created_at'])) . '</time></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
-            . '<footer><span class="muted">Son düzenleme: ' . self::e(self::date($post['updated_at'])) . '</span></footer>'
+            . '<footer><span class="muted">Son düzenleme: ' . self::e(self::date($post['updated_at'])) . '</span>'
+            . $this->interactionControls($post, $actor) . '</footer>'
             . '</div></article>';
+    }
+
+    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
+    private function interactionControls(array $post, ?EntityId $actor): string
+    {
+        if ($actor === null) {
+            return '';
+        }
+
+        $postId = self::e($post['post_id']);
+        $ownPost = $post['author_user_id'] !== null && hash_equals($actor->value(), $post['author_user_id']);
+        $reactions = '';
+        if (!$ownPost) {
+            foreach ([
+                'like' => ['👍', 'Beğen'],
+                'love' => ['❤️', 'Sevgi'],
+                'haha' => ['😄', 'Haha'],
+                'wow' => ['😮', 'Vay'],
+                'sad' => ['😢', 'Üzgün'],
+                'angry' => ['😠', 'Kızgın'],
+            ] as $key => [$icon, $label]) {
+                $reactions .= '<button type="button" class="thread-reaction-option" data-reaction-key="'
+                    . self::e($key) . '" aria-label="' . self::e($label) . '">'
+                    . self::e($icon) . '<span>' . self::e($label) . '</span></button>';
+            }
+            $reactions .= '<button type="button" class="thread-reaction-remove" data-remove-reaction>Tepkiyi kaldır</button>';
+        } else {
+            $reactions = '<span class="muted thread-own-reaction-note">Kendi mesajına tepki veremezsin.</span>';
+        }
+
+        return '<div class="thread-post-interactions" data-thread-interactions data-post-id="' . $postId . '">'
+            . '<details class="thread-reaction-menu" data-reaction-menu><summary class="fx-btn">'
+            . 'Tepkiler <span class="thread-reaction-total" data-reaction-total></span></summary>'
+            . '<div class="thread-reaction-popover"><div class="thread-reaction-counts" data-reaction-counts></div>'
+            . '<div class="thread-reaction-options">' . $reactions . '</div></div></details>'
+            . '<details class="thread-bookmark-menu"><summary class="fx-btn">Yer imi</summary>'
+            . '<form class="thread-bookmark-form" data-bookmark-form>'
+            . '<label><span>Özel not</span><input name="note" maxlength="1000" autocomplete="off" '
+            . 'placeholder="Yalnızca sen görürsün"></label>'
+            . '<div><button class="fx-btn fx-btn--primary" type="submit">Kaydet</button>'
+            . '<button class="fx-btn" type="button" data-remove-bookmark>Yer imini sil</button></div></form></details>'
+            . '<span class="thread-interaction-status" data-interaction-status role="status" aria-live="polite"></span>'
+            . '</div>';
     }
 
     private function pagination(Thread $thread, int $page, int $pages): string
