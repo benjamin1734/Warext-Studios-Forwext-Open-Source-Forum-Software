@@ -123,7 +123,6 @@ final class CoreMigrationRegistry
             new CreateRoleAppearanceTable(),
             new RegisterFirstPartyPermissionNamespaces(),
             new CreateForumNodeTables(),
-            new SeedStarterForumStructure(),
             new CreateThreadDomainTables(),
             new CreatePostDomainTables(),
             new CreateForumMetadataTables(),
@@ -200,6 +199,7 @@ final class CoreMigrationRegistry
             new CreateAddonBackendCapabilities(),
             new CreateApiV1CredentialSecurity(),
             new CreateWebhookPlatform(),
+            new SeedStarterForumStructure(),
         ];
     }
 }
