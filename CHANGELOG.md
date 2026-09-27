@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+## 1.0.4 — Native forum authoring
+
+- Added first-class native PHP thread creation and reply workflows with permission-aware actions on forum/thread pages.
+- Wired authoring through the existing thread/post domain services and shared content pipeline instead of duplicating persistence logic.
+- Added dedicated CSRF protection, validation feedback and moderation-aware redirect behavior for public forum writes.
+- Added responsive composer styling and regression coverage for route/security/domain-service wiring.
+- No database migration is required.
+
+
 ## 1.0.0 — Production release
 
 - Completed roadmap 20.08 production documentation and stable-release acceptance work.
