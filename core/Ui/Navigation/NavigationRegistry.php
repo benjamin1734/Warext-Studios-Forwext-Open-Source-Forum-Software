@@ -64,7 +64,13 @@ final class NavigationRegistry
             270,
             NavigationAudience::Member,
         ));
-        $registry->register(new NavigationItem('forum.stats', 'İstatistikler', '/stats', 300));
+        $registry->register(new NavigationItem(
+            'forum.stats',
+            'İstatistikler',
+            '/stats',
+            300,
+            NavigationAudience::Member,
+        ));
 
         foreach ($contributors as $contributor) {
             $contributor->registerNavigation($registry);
