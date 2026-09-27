@@ -348,6 +348,7 @@ use Forwext\Core\Routing\RouteCollection;
 use Forwext\Core\Routing\Router;
 use Forwext\Core\Security\Secret\EncryptedFileSecretStore;
 use Forwext\Core\Security\Secret\EnvironmentOrFileSecretKeyProvider;
+use Forwext\Core\Security\Secret\RuntimeSecretBootstrapper;
 use Forwext\Core\Security\Secret\SecretCipher;
 use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
@@ -418,10 +419,12 @@ final readonly class WebApplicationFactory
     {
         $config = $this->config();
         $database = $this->database($config);
+        $masterKey = $this->masterKey($config);
         $secretStore = new EncryptedFileSecretStore(
             $this->projectPath($config->requireString('security.secret_store_path')),
-            new SecretCipher($this->masterKey($config)),
+            new SecretCipher($masterKey),
         );
+        (new RuntimeSecretBootstrapper($secretStore, $masterKey))->ensure();
         $runtime = new AdvancedRuntimeFactory($config, $database, $secretStore, $this->projectRoot);
         $authorizer = $this->permissionAuthorizer($database);
         $users = new DatabaseUserRepository($database);
