@@ -40,8 +40,9 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('$this->renderPost($post, $actor)', $thread);
         self::assertStringContainsString('data-thread-interactions', $thread);
-        self::assertStringContainsString('data-reaction-key="like"', $thread);
-        self::assertStringContainsString('data-reaction-key="angry"', $thread);
+        self::assertStringContainsString("'like' => ['👍', 'Beğen']", $thread);
+        self::assertStringContainsString("'angry' => ['😠', 'Kızgın']", $thread);
+        self::assertStringContainsString('data-reaction-key="', $thread);
         self::assertStringContainsString('data-bookmark-form', $thread);
         self::assertStringContainsString('maxlength="1000"', $thread);
         self::assertStringContainsString('hash_equals($actor->value(), $post[\'author_user_id\'])', $thread);
