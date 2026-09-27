@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.1
+CURRENT_VERSION = 1.0.2
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = complete
@@ -13,6 +13,13 @@ LAST_COMMIT = c34dbffa9e7d3a39f937fdb44faad83d4bdcace1
 BLOCKERS = none
 NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
 ```
+
+## Maintenance hotfix 1.0.2
+
+- Fixed the real-browser post-install 500 caused by missing authentication/registration fingerprint secrets.
+- Fresh installs provision the required secrets; existing installs self-heal them from the site master key without data reset.
+- Added browser-fingerprint regression coverage and sanitized cPanel/PHP error-log mirroring for future runtime failures.
+- No database migration is required.
 
 ## Maintenance hotfix 1.0.1
 
@@ -23,7 +30,7 @@ NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
 
 ## Current position
 
-- Target: **Forwext 1.0.1 Production — maintenance hotfix**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.2 Production — maintenance hotfix**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
