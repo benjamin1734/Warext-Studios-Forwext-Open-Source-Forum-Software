@@ -49,16 +49,31 @@ final class NativeAuthenticationWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('catch (SecondFactorRequiredException $exception)', $handler);
         self::assertStringContainsString('$this->mfaCompletion->completeCode(', $handler);
+        self::assertStringContainsString('$this->mfaCompletion->beginPasskey(', $handler);
+        self::assertStringContainsString('$this->mfaCompletion->completePasskey(', $handler);
         self::assertStringContainsString('MfaMethod::Totp', $handler);
         self::assertStringContainsString('MfaMethod::RecoveryCode', $handler);
+        self::assertStringContainsString('MfaMethod::Passkey', $handler);
         self::assertStringContainsString('mfa_challenge', $handler);
         self::assertStringContainsString('MFA kurulumu gerekli.', $handler);
-        self::assertStringContainsString('Passkey tarayıcı doğrulama akışı henüz native giriş ekranına bağlanmadı.', $handler);
+        self::assertStringContainsString('/assets/auth-mfa.js', $handler);
         self::assertStringContainsString('withCookie(new ResponseCookie(', $handler);
         self::assertStringContainsString('secure: true', $handler);
         self::assertStringContainsString('httpOnly: true', $handler);
         self::assertStringContainsString('sameSite: SameSite::Lax', $handler);
         self::assertStringContainsString('name="_csrf"', $handler);
+    }
+
+    public function testPasskeyBrowserClientUsesNativeCredentialApiAndPostsAssertion(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/auth-mfa.js');
+
+        self::assertStringContainsString('navigator.credentials.get', $asset);
+        self::assertStringContainsString('parseRequestOptionsFromJSON', $asset);
+        self::assertStringContainsString('mfa_passkey_response', (string) file_get_contents($root . '/app/Web/Auth/LoginHandler.php'));
+        self::assertStringContainsString('credentialJson', $asset);
+        self::assertStringContainsString('form.submit()', $asset);
     }
 
     public function testLogoutRevokesServerSessionAndExpiresCookie(): void
