@@ -310,7 +310,7 @@ function h(string $value): string
 <p class="hint">İlk kurulum durumunu seçin. Bağımlı bir modülü açık bırakırken ihtiyaç duyduğu modülü kapatırsanız installer işlemi güvenli biçimde reddeder.</p>
 <div class="check-grid">
 <?php foreach ($modules as $module): ?>
-<label class="check"><input type="checkbox" name="enabled_modules[]" value="<?= h($module->key) ?>"<?= in_array($module->key, $selectedModules, true) ? ' checked' : '' ?>><span><strong><?= h($module->name) ?></strong><?= h($module->description) ?></span></label>
+<label class="check"><input type="checkbox" name="enabled_modules[]" value="<?= h($module->key) ?>"<?= in_array($module->key, $selectedModules, true) ? ' checked' : '' ?>><span><strong><?= h($module->label) ?></strong><?= h($module->description) ?></span></label>
 <?php endforeach; ?>
 </div>
 </div>
