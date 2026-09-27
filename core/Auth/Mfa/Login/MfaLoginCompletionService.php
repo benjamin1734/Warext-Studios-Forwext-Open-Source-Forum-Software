@@ -48,7 +48,7 @@ final readonly class MfaLoginCompletionService
             MfaMethod::Passkey => false,
         };
         if (!$verified) {
-            throw new MfaException('Multi-factor verification failed.');
+            $this->rejectChallenge($challengeToken, 'Multi-factor verification failed.');
         }
         return $this->finalize($challengeToken, $grant, $trustDevice);
     }
@@ -61,8 +61,14 @@ final readonly class MfaLoginCompletionService
     public function completePasskey(string $challengeToken, string $ceremonyToken, string $responseJson, bool $trustDevice = false): MfaLoginCompletionResult
     {
         $grant = $this->requireLoginGrant($challengeToken);
-        if (!$this->passkeys->completeAuthentication($grant->userId, $ceremonyToken, $responseJson)) {
-            throw new MfaException('Passkey verification failed.');
+        try {
+            $verified = $this->passkeys->completeAuthentication($grant->userId, $ceremonyToken, $responseJson);
+        } catch (MfaException $exception) {
+            $this->challenges->consume($challengeToken);
+            throw $exception;
+        }
+        if (!$verified) {
+            $this->rejectChallenge($challengeToken, 'Passkey verification failed.');
         }
         return $this->finalize($challengeToken, $grant, $trustDevice);
     }
@@ -97,6 +103,12 @@ final readonly class MfaLoginCompletionService
             new LoginResult($grant->userId, $sessionId, $grant->deviceId, $remember),
             $trusted,
         );
+    }
+
+    private function rejectChallenge(string $challengeToken, string $message): never
+    {
+        $this->challenges->consume($challengeToken);
+        throw new MfaException($message);
     }
 
     private function requireLoginGrant(string $token): MfaChallengeGrant
