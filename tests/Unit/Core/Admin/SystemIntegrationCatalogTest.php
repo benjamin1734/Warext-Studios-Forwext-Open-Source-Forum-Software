@@ -31,6 +31,16 @@ final class SystemIntegrationCatalogTest extends TestCase
         self::assertNotEmpty($catalog->secrets());
     }
 
+    public function testMailCatalogExposesNativeSmtpRuntimeSettings(): void
+    {
+        $catalog = SystemIntegrationCatalog::coreDefaults();
+
+        self::assertSame('mail.smtp.timeout_seconds', $catalog->setting('integration.mail.smtp_timeout')->configPath);
+        self::assertSame(1, $catalog->setting('integration.mail.smtp_timeout')->minimum);
+        self::assertSame(30, $catalog->setting('integration.mail.smtp_timeout')->maximum);
+        self::assertSame('mail.smtp.password', $catalog->secret('integration.mail.smtp_password')->secretName);
+    }
+
     public function testApiAndWebhookSwitchesStayReadOnlyUntilRoadmapStepNineteen(): void
     {
         $catalog = SystemIntegrationCatalog::coreDefaults();
