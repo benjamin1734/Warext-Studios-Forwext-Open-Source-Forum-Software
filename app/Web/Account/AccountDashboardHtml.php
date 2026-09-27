@@ -16,6 +16,7 @@ final class AccountDashboardHtml
             ['Bildirim Ayarları', 'Bildirim sesini, ses seviyesini ve varsayılan sesi yönet.', '/account/notification-settings', 'Ayarları aç'],
             ['Profil URL', 'Profiline ait özel URL ayarlarını yönet.', '/account/profile-url', 'Profil URL ayarları'],
             ['Profil Etkinliği', 'Profil gönderileri ve etkinlik tercihlerini yönet.', '/account/profile-activity', 'Etkinlik ayarları'],
+            ['Etkinlik Akışı', 'Erişebildiğin forum ve profil hareketlerini takip et.', '/activity', 'Akışı aç'],
             ['Yer İmleri', 'Kaydettiğin forum içeriklerini görüntüle.', '/account/bookmarks', 'Yer imlerini aç'],
             ['Davetlerim', 'Referans bağlantılarını ve davet kazanımlarını takip et.', '/account/referrals', 'Davetleri aç'],
             ['Upgrades', 'Hesabına uygun planları ve üyelik yükseltmelerini görüntüle.', '/account/upgrades', 'Planları aç'],
