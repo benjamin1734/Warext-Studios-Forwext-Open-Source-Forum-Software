@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\Core\Security\Secret;
 
+use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Security\Secret\RuntimeSecretBootstrapper;
 use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Security\Secret\SecretStore;
@@ -60,6 +61,12 @@ final class RuntimeSecretBootstrapperTest extends TestCase
         self::assertGreaterThanOrEqual(32, strlen($authentication));
         self::assertGreaterThanOrEqual(32, strlen($registration));
         self::assertNotSame($authentication, $registration);
+
+        $browserFingerprint = (new AuthenticationFingerprint(
+            $store,
+            RuntimeSecretBootstrapper::AUTHENTICATION_FINGERPRINT,
+        ))->userAgent('Forwext browser regression agent/1.0');
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/D', $browserFingerprint);
 
         $bootstrapper->ensure();
 
