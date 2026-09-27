@@ -43,6 +43,11 @@ use Forwext\App\Web\Bug\BugStaffExportHandler;
 use Forwext\App\Web\Bug\MyBugReportsHandler;
 use Forwext\App\Web\ContentManager\ContentManagerHandler;
 use Forwext\App\Web\ContentManager\ContentManagerOperationHandler;
+use Forwext\App\Web\Community\ForumStatsHandler;
+use Forwext\App\Web\Community\OnlineUsersHandler;
+use Forwext\App\Web\Community\PresenceHeartbeatHandler;
+use Forwext\App\Web\Community\PresencePreferenceHandler;
+use Forwext\App\Web\Community\PresenceRequestGuard;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
@@ -279,6 +284,7 @@ use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
+use Forwext\Core\Forum\Stats\ForumStatsService;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
 use Forwext\Core\Giveaway\DatabaseGiveawayDrawRepository;
@@ -302,6 +308,7 @@ use Forwext\Core\Migration\FileInstalledVersionStore;
 use Forwext\Core\Migration\InstallUpgradeEngine;
 use Forwext\Core\Migration\MigrationEngine;
 use Forwext\Core\Migration\MySqlMigrationHistoryStore;
+use Forwext\Core\Http\Canonical\CanonicalUrl;
 use Forwext\Core\Http\Health\HealthHandler;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\RateLimit\FileRateLimitStore;
@@ -354,6 +361,8 @@ use Forwext\Core\Portfolio\DatabasePortfolioRepository;
 use Forwext\Core\Portfolio\PortfolioMediaService;
 use Forwext\Core\Portfolio\PortfolioService;
 use Forwext\Core\Portfolio\Search\PortfolioSearchAccessScopeProvider;
+use Forwext\Core\Presence\DatabasePresenceRepository;
+use Forwext\Core\Presence\PresenceService;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
 use Forwext\Core\Realtime\DatabaseRealtimeMessageStore;
 use Forwext\Core\Realtime\PollingRealtimeTransport;
@@ -896,6 +905,12 @@ final readonly class WebApplicationFactory
             $this->advertisingFrequencyKey($config),
         );
         $nodes = new DatabaseForumNodeRepository($database);
+        $forumScopeProvider = new ForumSearchAccessScopeProvider($nodes, $authorizer);
+        $presence = new PresenceService(new DatabasePresenceRepository($database));
+        $presenceGuard = new PresenceRequestGuard(new CanonicalUrl(
+            RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
+        ));
+        $forumStats = new ForumStatsService($database, $forumScopeProvider);
         $forumPublicReader = new DatabaseForumPublicReader($database);
         $forumIndexHandler = new ForumIndexHandler(
             $nodes,
@@ -1253,7 +1268,7 @@ final readonly class WebApplicationFactory
             $authorizer,
             [
                 new PublicSearchAccessScopeProvider(),
-                new ForumSearchAccessScopeProvider($nodes, $authorizer),
+                $forumScopeProvider,
                 new FaqSearchAccessScopeProvider($authorizer),
                 new PortfolioSearchAccessScopeProvider($authorizer),
                 new GiveawaySearchAccessScopeProvider($authorizer),
@@ -2242,6 +2257,31 @@ final readonly class WebApplicationFactory
             'account.notification-sound.category', [HttpMethod::Put, HttpMethod::Delete],
             new PathTemplate('/account/notification-sound/categories/{categoryKey}', ['categoryKey' => '[a-z][a-z0-9_.-]{1,95}']),
             new NotificationSoundCategoryHandler($notificationSound, $viewerResolver), [$notificationSoundCsrf],
+        ));
+
+        $routes->add(new Route(
+            'members.online',
+            [HttpMethod::Get],
+            new PathTemplate('/members/online'),
+            new OnlineUsersHandler($presence, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'forum.stats',
+            [HttpMethod::Get],
+            new PathTemplate('/stats'),
+            new ForumStatsHandler($forumStats, $presence, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'account.presence.heartbeat',
+            [HttpMethod::Post],
+            new PathTemplate('/account/presence/heartbeat'),
+            new PresenceHeartbeatHandler($viewerResolver, $presence, $presenceGuard),
+        ));
+        $routes->add(new Route(
+            'account.presence',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/presence'),
+            new PresencePreferenceHandler($viewerResolver, $presence, $presenceGuard),
         ));
 
         $routes->add(new Route('members.index', [HttpMethod::Get], new PathTemplate('/members'), new MemberDirectoryHandler(new ProfileDirectoryReader($database), $basePath)));

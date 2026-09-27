@@ -14,7 +14,10 @@ final class ProfileShellUiTest extends TestCase
         $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('.top[data-scrolled="1"]', $css);
-        self::assertStringContainsString('.nav a[aria-current="page"]', $css);
+        self::assertStringContainsString('.nav-primary>a[aria-current="page"]', $css);
+        self::assertStringContainsString('.nav-secondary>a', $css);
+        self::assertStringContainsString('.nav-account-popover', $css);
+        self::assertStringContainsString('.nav-user-tools', $css);
         self::assertStringContainsString('.forum-node:hover', $css);
         self::assertStringContainsString('.forum-thread-row:hover', $css);
         self::assertStringContainsString('.profile-wall-post:hover', $css);
@@ -27,7 +30,7 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.trophy-card:hover', $css);
         self::assertStringContainsString('.portfolio-media figure:hover', $css);
         self::assertStringContainsString('@media(max-width:920px)', $css);
-        self::assertStringContainsString('.nav[data-mobile-open="1"]', $css);
+        self::assertStringContainsString('.nav-shell[data-mobile-open="1"]', $css);
         self::assertStringContainsString('@media(prefers-reduced-motion:reduce)', $css);
     }
 
@@ -40,6 +43,8 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('window.matchMedia("(min-width: 921px)")', $asset);
         self::assertStringContainsString('navigation.contains(target)', $asset);
         self::assertStringContainsString('header.dataset.scrolled', $asset);
+        self::assertStringContainsString('header.querySelectorAll', $asset);
+        self::assertStringContainsString('.nav-account-menu', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
     }
 }

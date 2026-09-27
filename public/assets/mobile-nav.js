@@ -21,8 +21,10 @@
   };
 
   const markCurrentNavigation = () => {
+    if (!(header instanceof HTMLElement)) return;
+
     const currentPath = normalizePath(window.location.pathname);
-    const anchors = [...navigation.querySelectorAll("a[href]")];
+    const anchors = [...header.querySelectorAll("[data-nav-key][href]")];
     let current = null;
     let currentLength = -1;
 
@@ -44,11 +46,15 @@
     }
 
     if (current === null && currentPath.includes("/threads/")) {
-      current = navigation.querySelector('[data-nav-key="forums"]');
+      current = header.querySelector('[data-nav-key="forums"]');
     }
 
     if (current instanceof HTMLAnchorElement) {
       current.setAttribute("aria-current", "page");
+      const accountMenu = current.closest(".nav-account-menu");
+      if (accountMenu instanceof HTMLElement) {
+        accountMenu.dataset.active = "1";
+      }
     }
   };
 
@@ -57,31 +63,55 @@
     header.dataset.scrolled = window.scrollY > 8 ? "1" : "0";
   };
 
+  const closeAccountMenus = (except = null) => {
+    if (!(header instanceof HTMLElement)) return;
+    for (const details of header.querySelectorAll("details[open]")) {
+      if (details !== except && details instanceof HTMLDetailsElement) {
+        details.open = false;
+      }
+    }
+  };
+
   setOpen(false);
   markCurrentNavigation();
   syncHeader();
 
   button.addEventListener("click", () => {
-    setOpen(navigation.dataset.mobileOpen !== "1");
+    const open = navigation.dataset.mobileOpen !== "1";
+    setOpen(open);
+    if (!open) closeAccountMenus();
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && navigation.dataset.mobileOpen === "1") {
+    if (event.key !== "Escape") return;
+
+    if (navigation.dataset.mobileOpen === "1") {
       setOpen(false);
+      closeAccountMenus();
       button.focus();
+      return;
     }
+
+    closeAccountMenus();
   });
 
   document.addEventListener("click", (event) => {
-    if (navigation.dataset.mobileOpen !== "1") return;
     const target = event.target;
     if (!(target instanceof Node)) return;
+
+    const accountMenu = target instanceof Element ? target.closest(".nav-account-menu") : null;
+    closeAccountMenus(accountMenu instanceof HTMLDetailsElement ? accountMenu : null);
+
+    if (navigation.dataset.mobileOpen !== "1") return;
     if (navigation.contains(target) || button.contains(target)) return;
     setOpen(false);
   });
 
   navigation.addEventListener("click", (event) => {
-    if (event.target instanceof HTMLAnchorElement) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest("a");
+    if (link instanceof HTMLAnchorElement) {
       setOpen(false);
     }
   });
