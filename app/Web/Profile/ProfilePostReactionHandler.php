@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Forwext\App\Web\Profile;
 
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
+use Forwext\Core\Http\HttpException;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
@@ -32,6 +33,7 @@ final readonly class ProfilePostReactionHandler implements RequestHandlerInterfa
                 HttpMethod::Get => $this->service->reactionSummary($actor, $postId),
                 HttpMethod::Put => $this->service->react($actor, $postId, $this->reactionKey($request)),
                 HttpMethod::Delete => $this->service->removeReaction($actor, $postId),
+                HttpMethod::Post => $this->postAction($actor, $postId, $request),
                 default => throw new InvalidArgumentException('Unsupported profile reaction method.'),
             };
             return $this->json(['total' => $summary->total, 'score' => $summary->score, 'counts' => $summary->counts]);
@@ -44,11 +46,45 @@ final readonly class ProfilePostReactionHandler implements RequestHandlerInterfa
         }
     }
 
+    private function postAction(
+        \Forwext\Core\Domain\Entity\EntityId $actor,
+        \Forwext\Core\Domain\Entity\EntityId $postId,
+        Request $request,
+    ): \Forwext\Core\Social\Interaction\ReactionSummary {
+        $body = $this->body($request);
+
+        return match ($body['action'] ?? null) {
+            'react' => $this->service->react($actor, $postId, $this->reactionKey($request)),
+            'remove_reaction' => $this->service->removeReaction($actor, $postId),
+            default => throw new InvalidArgumentException('Profile reaction action is invalid.'),
+        };
+    }
+
     private function reactionKey(Request $request): string
     {
-        $key = $request->parsedBody()['reaction_key'] ?? null;
+        $key = $this->body($request)['reaction_key'] ?? null;
         if (!is_string($key) || preg_match('/^[a-z][a-z0-9_-]{0,31}$/D', $key) !== 1) throw new InvalidArgumentException('Reaction key is invalid.');
         return $key;
     }
+    /** @return array<string,mixed> */
+    private function body(Request $request): array
+    {
+        $body = $request->parsedBody();
+        if ($body !== [] || !$request->isJson()) {
+            return $body;
+        }
+
+        try {
+            $decoded = $request->json();
+        } catch (HttpException $exception) {
+            throw new InvalidArgumentException('Profile reaction request body is invalid.', previous: $exception);
+        }
+        if (!is_array($decoded)) {
+            throw new InvalidArgumentException('Profile reaction request body is invalid.');
+        }
+
+        return $decoded;
+    }
+
     /** @param array<string,mixed> $p */ private function json(array $p, int $s = 200): Response { return Response::json($p, $s)->withHeader('Cache-Control', 'private, no-store'); }
 }
