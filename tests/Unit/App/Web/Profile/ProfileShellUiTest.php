@@ -19,6 +19,10 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.forum-thread-row:hover', $css);
         self::assertStringContainsString('.profile-wall-post:hover', $css);
         self::assertStringContainsString('.acp-card:hover', $css);
+        self::assertStringContainsString('.search-hit:hover', $css);
+        self::assertStringContainsString('.account-center-card:hover', $css);
+        self::assertStringContainsString('.notification-item.is-unread', $css);
+        self::assertStringContainsString('.auth-entry-card::before', $css);
         self::assertStringContainsString('@media(max-width:920px)', $css);
         self::assertStringContainsString('.nav[data-mobile-open="1"]', $css);
         self::assertStringContainsString('@media(prefers-reduced-motion:reduce)', $css);
