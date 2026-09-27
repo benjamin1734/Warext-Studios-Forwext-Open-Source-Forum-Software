@@ -27,6 +27,8 @@ use Forwext\App\Web\Analytics\OperationsAnalyticsHandler;
 use Forwext\App\Web\Analytics\CommerceAnalyticsHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportBuilderHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportExportHandler;
+use Forwext\App\Web\Auth\LoginHandler;
+use Forwext\App\Web\Auth\LogoutHandler;
 use Forwext\App\Web\Bug\BugAttachmentDownloadHandler;
 use Forwext\App\Web\Bug\BugReportDetailHandler;
 use Forwext\App\Web\Bug\BugReportFormHandler;
@@ -180,6 +182,19 @@ use Forwext\Core\Capability\CapabilityResolver;
 use Forwext\Core\Capability\DatabaseServerCapabilityProbe;
 use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
+use Forwext\Core\Auth\Device\DatabaseDeviceRepository;
+use Forwext\Core\Auth\Login\AuthenticationService;
+use Forwext\Core\Auth\Login\DatabaseAuthenticationRateLimiter;
+use Forwext\Core\Auth\Login\DatabaseLoginHistoryRecorder;
+use Forwext\Core\Auth\Mfa\Challenge\MfaChallengeStore;
+use Forwext\Core\Auth\Mfa\MfaFactorAvailability;
+use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaPolicyResolver;
+use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaUserGroupProvider;
+use Forwext\Core\Auth\Mfa\Login\DatabaseMfaLoginGate;
+use Forwext\Core\Auth\Mfa\TrustedDevice\TrustedDeviceService;
+use Forwext\Core\Auth\Password\NativePasswordHasher;
+use Forwext\Core\Auth\Password\PasswordHashPolicy;
+use Forwext\Core\Auth\Remember\RememberTokenService;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Bug\Conversation\DatabaseBugReportConversationRepository;
 use Forwext\Core\Bug\Conversation\NotificationBugReportNotifier;
@@ -271,6 +286,8 @@ use Forwext\Core\Http\Health\HealthHandler;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Security\RateLimit\FileRateLimitStore;
 use Forwext\Core\Http\Middleware\CallableRequestHandler;
+use Forwext\Core\Http\Proxy\CidrSet;
+use Forwext\Core\Http\Proxy\TrustedProxyResolver;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
@@ -438,9 +455,10 @@ final readonly class WebApplicationFactory
         $profileStore = new DatabaseProfileStore($database);
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
         $profileService = new ProfileService($profileStore, $accessPolicy);
+        $credentials = new DatabaseCredentialStore($database);
         $sessions = new AuthSessionManager(
             $runtime->sessionStore(),
-            new DatabaseCredentialStore($database),
+            $credentials,
             $config->requireInt('authentication.session.ttl_seconds'),
         );
         $disciplineAccountViewerResolver = new AuthSessionProfileViewerResolver(
@@ -453,6 +471,68 @@ final readonly class WebApplicationFactory
             $users,
             $config->requireString('authentication.session.cookie_name'),
             new DatabaseDisciplineAuthenticationAvailability($database),
+        );
+        $passwordHasher = new NativePasswordHasher(new PasswordHashPolicy(
+            $config->requireInt('authentication.password.minimum_characters'),
+            $config->requireInt('authentication.password.maximum_bytes'),
+            $config->requireInt('authentication.password.argon_memory_cost'),
+            $config->requireInt('authentication.password.argon_time_cost'),
+            $config->requireInt('authentication.password.argon_threads'),
+            $config->requireInt('authentication.password.bcrypt_fallback_cost'),
+        ));
+        $rememberTokens = new RememberTokenService(
+            $database,
+            $credentials,
+            $config->requireInt('authentication.remember.ttl_seconds'),
+        );
+        $trustedDevices = new TrustedDeviceService(
+            $database,
+            $config->requireInt('mfa.trusted_device_ttl_seconds'),
+        );
+        $mfaChallenges = new MfaChallengeStore(
+            $database,
+            $config->requireInt('mfa.challenge_ttl_seconds'),
+        );
+        $mfaLoginGate = new DatabaseMfaLoginGate(
+            new DatabaseMfaPolicyResolver(
+                $database,
+                new DatabaseMfaUserGroupProvider(new DatabaseUserAccessAssignmentProvider($database)),
+            ),
+            new MfaFactorAvailability($database),
+            $trustedDevices,
+            $mfaChallenges,
+        );
+        $authentication = new AuthenticationService(
+            $users,
+            $credentials,
+            $passwordHasher,
+            new AuthenticationFingerprint(
+                $secretStore,
+                $config->requireString('authentication.fingerprint_secret_name'),
+            ),
+            new DatabaseAuthenticationRateLimiter($database),
+            new DatabaseDeviceRepository($database),
+            $sessions,
+            $rememberTokens,
+            new DatabaseLoginHistoryRecorder($database),
+            $mfaLoginGate,
+            $config->requireInt('authentication.login_rate_limit.identity_attempts'),
+            $config->requireInt('authentication.login_rate_limit.network_attempts'),
+            $config->requireInt('authentication.login_rate_limit.window_seconds'),
+            availability: new DatabaseDisciplineAuthenticationAvailability($database),
+        );
+        $loginHandler = new LoginHandler(
+            $authentication,
+            $viewerResolver,
+            $this->trustedProxyResolver($config),
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
+            $config->requireInt('authentication.session.ttl_seconds'),
+        );
+        $logoutHandler = new LogoutHandler(
+            $sessions,
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
         );
         $storage = $runtime->storageDriver();
         $firstPartyModuleRegistry = FirstPartyModuleRegistry::withCoreDefaults();
@@ -1133,6 +1213,7 @@ final readonly class WebApplicationFactory
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
         $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
+        $authCsrf = $this->authCsrfMiddleware($config);
         $forumCsrf = $this->forumCsrfMiddleware($config);
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
@@ -1152,6 +1233,20 @@ final readonly class WebApplicationFactory
             $runtime->rateLimitStore(),
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
         );
+        $routes->add(new Route(
+            'auth.login',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/login'),
+            $loginHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.logout',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/logout'),
+            $logoutHandler,
+            [$authCsrf],
+        ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
         $routes->add(new Route(
@@ -2173,6 +2268,33 @@ final readonly class WebApplicationFactory
         );
     }
 
+    private function trustedProxyResolver(ConfigRepository $config): TrustedProxyResolver
+    {
+        return new TrustedProxyResolver(
+            new CidrSet($this->configStringList($config, 'routing.trusted_proxies')),
+            new CidrSet($this->configStringList($config, 'routing.cloudflare_proxies')),
+        );
+    }
+
+    /** @return list<string> */
+    private function configStringList(ConfigRepository $config, string $key): array
+    {
+        $value = $config->get($key, []);
+        if (!is_array($value)) {
+            throw new RuntimeException('Configuration "' . $key . '" must be a string list.');
+        }
+
+        $items = [];
+        foreach ($value as $item) {
+            if (!is_string($item) || trim($item) === '') {
+                throw new RuntimeException('Configuration "' . $key . '" contains an invalid list item.');
+            }
+            $items[] = trim($item);
+        }
+
+        return $items;
+    }
+
     private function config(): ConfigRepository
     {
         return (new ConfigLoader())->load($this->projectRoot . '/config/defaults.php', $this->projectRoot . '/config/generated.php');
@@ -2216,6 +2338,11 @@ final readonly class WebApplicationFactory
             if ($segment === '' || $segment === '.' || $segment === '..') throw new RuntimeException('Realtime websocket path contains an ambiguous segment.');
         }
         return $path;
+    }
+
+    private function authCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'auth-entry', 'forwext.csrf.auth-entry.v1');
     }
 
     private function forumCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
