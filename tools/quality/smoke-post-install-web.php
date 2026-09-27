@@ -11,6 +11,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\PdoConnectionFactory;
 use Forwext\Core\Health\HealthStatus;
+use Forwext\Core\Http\HeaderBag;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Install\InstallationInput;
@@ -146,7 +147,11 @@ if (!is_array($generated)
 }
 
 $handle = static function (string $requestPath) use ($root, $version) {
-    $request = new Request(HttpMethod::Get, $requestPath);
+    $request = new Request(
+        HttpMethod::Get,
+        $requestPath,
+        new HeaderBag(['User-Agent' => 'ForwextPostInstallSmoke/1.0']),
+    );
 
     $seo = new SeoApplicationFactory($root);
     $response = $seo->handle($request);
@@ -178,14 +183,15 @@ if ($rootResponse->status() !== 200) {
         $rootResponse->status(),
     ));
 }
-if (!str_contains($rootResponse->body(), 'Forwext Forum Platform')) {
-    throw new RuntimeException('Post-install home response did not contain the expected Forwext marker.');
+if (!str_contains($rootResponse->body(), '<h1>Forumlar</h1>')) {
+    throw new RuntimeException('Post-install home response did not render the native forum index surface.');
 }
 if ($rootResponse->headers()->first('Content-Security-Policy') === null) {
     throw new RuntimeException('Post-install home response is missing Content-Security-Policy.');
 }
 
 $navigationRoutes = [
+    '/forums',
     '/search',
     '/members',
     '/members/online',
