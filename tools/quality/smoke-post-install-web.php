@@ -135,6 +135,16 @@ if ($theme === null || !is_string($theme['published_revision_id'] ?? null) || $t
     throw new RuntimeException('Installer did not publish the selected initial theme.');
 }
 
+$starterForum = (int) $database->fetchValue(new CompiledQuery(
+    "SELECT COUNT(*) FROM forwext_nodes n "
+    . "LEFT JOIN forwext_forum_settings s ON s.node_id=n.node_id "
+    . "WHERE (n.slug='genel' AND n.node_type='category') "
+    . "OR (n.slug='genel-sohbet' AND n.node_type='forum' AND s.node_id IS NOT NULL)",
+));
+if ($starterForum !== 2) {
+    throw new RuntimeException('Installer did not seed the default usable forum/category structure.');
+}
+
 $generated = require $root . '/config/generated.php';
 if (!is_array($generated)
     || ($generated['site']['name'] ?? null) !== 'Forwext CI Forum'
