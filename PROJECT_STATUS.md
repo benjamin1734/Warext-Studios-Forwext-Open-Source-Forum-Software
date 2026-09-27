@@ -5,14 +5,26 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.3
+CURRENT_VERSION = 1.0.4
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-1
-LAST_COMMIT = 77f7f8be8d75634f2a4b0c1aad7e12301e18c990
+CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-2
+LAST_COMMIT = 46e1cadad2858fa6f35b564e8ced22e789e0446c
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = native PHP authoring/auth/account UI pass, then notifications/social/ACP/module UI parity
+NEXT_STEP = native authentication/account entry UI pass, then notifications/social/ACP/module UI parity
 ```
+
+## Production acceptance remediation — 1.0.4
+
+- Native PHP forum authoring is now wired end-to-end instead of stopping at read-only forum/thread surfaces.
+- Authenticated users with `forum.thread.create` can create discussion threads from the target forum through a CSRF-protected composer.
+- Authenticated users with `forum.post.create` can reply to eligible unlocked threads through a CSRF-protected composer.
+- Both flows reuse the existing forum domain services and shared content pipeline, preserving forum settings, permission enforcement, moderation state, abuse/content policy processing and search-index change tracking.
+- Forum/thread pages expose **Yeni konu** and **Yanıtla** actions only when the viewer is eligible.
+- Composer surfaces are responsive and integrated into the existing native theme/design-token system.
+- Regression coverage now treats native forum writing routes, CSRF integration and domain-service wiring as production acceptance requirements.
+- No database migration is required.
+- Remaining production-acceptance work begins with authentication/account entry UX, followed by notifications/social UX, ACP completeness and first-party module UI parity.
 
 ## Production acceptance correction — 1.0.3
 
@@ -42,7 +54,7 @@ NEXT_STEP = native PHP authoring/auth/account UI pass, then notifications/social
 
 ## Current position
 
-- Target: **Forwext 1.0.3 Production acceptance remediation**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.4 Production acceptance remediation**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
