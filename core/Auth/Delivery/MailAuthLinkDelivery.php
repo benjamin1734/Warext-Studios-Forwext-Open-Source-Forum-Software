@@ -58,9 +58,6 @@ final readonly class MailAuthLinkDelivery implements AuthLinkDelivery
         string $path,
         string $lead,
     ): bool {
-        if (preg_match('/^[A-Za-z0-9_-]{43}$/D', basename(parse_url($path, PHP_URL_QUERY) ?? '')) === 1) {
-            // no-op; token shape is validated by the receiving endpoint.
-        }
         $url = rtrim($this->canonicalUrl, '/') . $path;
         $safeUrl = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeSite = htmlspecialchars($this->siteName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
