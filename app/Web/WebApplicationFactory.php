@@ -623,6 +623,13 @@ final readonly class WebApplicationFactory
         if (!is_array($disposableDomains)) {
             throw new RuntimeException('Registration disposable-email domain list must be an array.');
         }
+        $normalizedDisposableDomains = [];
+        foreach ($disposableDomains as $domain) {
+            if (!is_string($domain)) {
+                throw new RuntimeException('Registration disposable-email domains must be strings.');
+            }
+            $normalizedDisposableDomains[] = $domain;
+        }
         $verificationTokens = new DatabaseEmailVerificationTokenStore($database);
         $registration = new RegistrationService(
             $database,
@@ -635,7 +642,7 @@ final readonly class WebApplicationFactory
                 $turnstileHostname,
                 $config->requireString('registration.captcha.expected_action'),
             ),
-            new DomainSetDisposableEmailChecker($disposableDomains),
+            new DomainSetDisposableEmailChecker($normalizedDisposableDomains),
             new DatabaseRegistrationRateLimiter($database),
             new RegistrationFingerprint(
                 $secretStore,
