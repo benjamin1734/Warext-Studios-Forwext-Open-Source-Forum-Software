@@ -44,6 +44,13 @@ final class NavigationRegistry
             NavigationAudience::Member,
         ));
         $registry->register(new NavigationItem(
+            'notifications.own',
+            'Bildirimler',
+            '/account/notifications',
+            268,
+            NavigationAudience::Member,
+        ));
+        $registry->register(new NavigationItem(
             'bugs.mine',
             'Hata Bildirimlerim',
             '/bugs',
