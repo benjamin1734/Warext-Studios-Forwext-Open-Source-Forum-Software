@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web;
 
+use DateTimeZone;
 use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
@@ -62,6 +63,7 @@ use Forwext\App\Web\Forum\ThreadCreateHandler;
 use Forwext\App\Web\Forum\ThreadReplyHandler;
 use Forwext\App\Web\Forum\ThreadFreshnessHandler;
 use Forwext\App\Web\Forum\VerifiedUploadedAttachmentReader;
+use Forwext\App\Web\Notification\NotificationInboxHandler;
 use Forwext\App\Web\Notification\NotificationRealtimeHandler;
 use Forwext\App\Web\Notification\NotificationRealtimeSseHandler;
 use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
@@ -331,6 +333,7 @@ use Forwext\Core\Marketplace\MarketplaceMediaService;
 use Forwext\Core\Marketplace\Search\MarketplaceSearchAccessScopeProvider;
 use Forwext\Core\Notification\DatabaseNotificationRepository;
 use Forwext\Core\Notification\NotificationDispatcher;
+use Forwext\Core\Notification\NotificationInboxService;
 use Forwext\Core\Notification\NotificationRegistry;
 use Forwext\Core\Notification\Realtime\DatabaseNotificationRealtimeReader;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeService;
@@ -1265,6 +1268,10 @@ final readonly class WebApplicationFactory
             $authorizer,
         );
 
+        $notificationInbox = new NotificationInboxService(
+            new DatabaseNotificationRepository($database),
+            $authorizer,
+        );
         $notificationSound = new NotificationSoundService(
             new DatabaseNotificationSoundRepository($database),
             new EngineNotificationSoundPermissionResolver($authorizer),
@@ -1380,6 +1387,7 @@ final readonly class WebApplicationFactory
         $themeCsrf = $this->themeCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
+        $notificationInboxCsrf = $this->notificationInboxCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
         $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
@@ -2145,6 +2153,18 @@ final readonly class WebApplicationFactory
         ));
 
         $routes->add(new Route(
+            'account.notifications',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/notifications'),
+            new NotificationInboxHandler(
+                $notificationInbox,
+                $viewerResolver,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+            ),
+            [$notificationInboxCsrf],
+        ));
+        $routes->add(new Route(
             'account.notifications.realtime', [HttpMethod::Get], new PathTemplate('/account/notifications/realtime'),
             new NotificationRealtimeHandler(
                 $notificationRealtime,
@@ -2155,6 +2175,7 @@ final readonly class WebApplicationFactory
                 $config->requireInt('realtime.hidden_poll_interval_ms'),
                 min(100, $config->requireInt('realtime.poll_limit')),
                 $websocketPath,
+                $notificationInbox,
             ),
         ));
         $routes->add(new Route(
@@ -2164,6 +2185,7 @@ final readonly class WebApplicationFactory
                 $viewerResolver,
                 min(100, $config->requireInt('realtime.poll_limit')),
                 $config->requireInt('realtime.sse_retry_ms'),
+                $notificationInbox,
             ),
         ));
 
@@ -2794,6 +2816,11 @@ final readonly class WebApplicationFactory
     private function profileActivityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'profile-activity', 'forwext.csrf.profile-activity.v1');
+    }
+
+    private function notificationInboxCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'notification-inbox', 'forwext.csrf.notification-inbox.v1');
     }
 
     private function notificationSoundCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

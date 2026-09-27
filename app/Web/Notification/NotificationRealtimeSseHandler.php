@@ -9,6 +9,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Notification\NotificationInboxService;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeException;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeService;
 use InvalidArgumentException;
@@ -21,6 +22,7 @@ final readonly class NotificationRealtimeSseHandler implements RequestHandlerInt
         private ProfileViewerResolver $viewers,
         private int $limit,
         private int $retryMs,
+        private ?NotificationInboxService $inbox = null,
     ) {
         if ($limit < 1 || $limit > 100 || $retryMs < 1000 || $retryMs > 60000) {
             throw new InvalidArgumentException('Notification SSE configuration is invalid.');
@@ -44,7 +46,11 @@ final readonly class NotificationRealtimeSseHandler implements RequestHandlerInt
             // Advance over stale/invalid wake records too, preventing an endless replay loop.
             $body .= 'id: ' . $batch->cursor . "\n";
             $body .= "event: cursor\n";
-            $body .= 'data: ' . $this->json(['cursor' => $batch->cursor]) . "\n\n";
+            $cursorPayload = ['cursor' => $batch->cursor];
+            if ($this->inbox !== null) {
+                $cursorPayload['unread_count'] = $this->inbox->unreadCount($actor);
+            }
+            $body .= 'data: ' . $this->json($cursorPayload) . "\n\n";
 
             return Response::text($body)
                 ->withHeader('Content-Type', 'text/event-stream; charset=utf-8')

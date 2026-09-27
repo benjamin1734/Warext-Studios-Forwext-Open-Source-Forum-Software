@@ -9,6 +9,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Notification\NotificationInboxService;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeException;
 use Forwext\Core\Notification\Realtime\NotificationRealtimeService;
 use Forwext\Core\Realtime\RealtimeMode;
@@ -26,6 +27,7 @@ final readonly class NotificationRealtimeHandler implements RequestHandlerInterf
         private int $hiddenPollIntervalMs,
         private int $pollLimit,
         private ?string $websocketPath,
+        private ?NotificationInboxService $inbox = null,
     ) {
         if ($pollIntervalMs < 1000 || $pollIntervalMs > 60000 || $hiddenPollIntervalMs < $pollIntervalMs || $hiddenPollIntervalMs > 300000) {
             throw new InvalidArgumentException('Notification realtime polling intervals are invalid.');
@@ -45,6 +47,9 @@ final readonly class NotificationRealtimeHandler implements RequestHandlerInterf
                 : $this->service->read($actor, $after, $this->pollLimit);
 
             $payload = $batch->toArray();
+            if ($this->inbox !== null) {
+                $payload['unread_count'] = $this->inbox->unreadCount($actor);
+            }
             $payload['transport'] = [
                 'mode' => $this->mode->value,
                 'poll_url' => $this->basePath->prepend('/account/notifications/realtime'),
