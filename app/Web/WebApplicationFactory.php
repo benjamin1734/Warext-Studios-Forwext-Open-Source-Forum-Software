@@ -2102,11 +2102,11 @@ final readonly class WebApplicationFactory
             new InteractionCsrfTokenHandler($viewerResolver), [$interactionCsrf],
         ));
         $routes->add(new Route(
-            'post.reactions', [HttpMethod::Get, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/posts/{postId}/reactions'),
+            'post.reactions', [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/posts/{postId}/reactions'),
             new PostReactionHandler($socialInteractions, $viewerResolver), [$interactionCsrf],
         ));
         $routes->add(new Route(
-            'post.bookmark', [HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/posts/{postId}/bookmark'),
+            'post.bookmark', [HttpMethod::Post, HttpMethod::Put, HttpMethod::Delete], new PathTemplate('/posts/{postId}/bookmark'),
             new PostBookmarkHandler($socialInteractions, $viewerResolver), [$interactionCsrf],
         ));
         $routes->add(new Route(
