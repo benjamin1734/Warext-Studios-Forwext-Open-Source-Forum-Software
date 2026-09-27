@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.0
+CURRENT_VERSION = 1.0.1
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = complete
@@ -14,9 +14,16 @@ BLOCKERS = none
 NEXT_STEP = none - v2.0 roadmap complete; Forwext 1.0.0 production
 ```
 
+## Maintenance hotfix 1.0.1
+
+- Fixed the browser installer module-stage render failure caused by using the non-existent `FirstPartyModuleDefinition::name` property instead of `label`.
+- The failure previously cut off the installer before the theme and final submit stages, producing a blank module area and no **Forwext’i Kur** button.
+- Added `WebInstallerMarkupTest` regression coverage.
+- No roadmap sub-step was reopened and no database migration is required.
+
 ## Current position
 
-- Target: **Forwext 1.0.0 Production — released**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.1 Production — maintenance hotfix**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
