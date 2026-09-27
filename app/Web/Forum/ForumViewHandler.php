@@ -15,6 +15,7 @@ use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeSlug;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\Thread\ThreadPermission;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;

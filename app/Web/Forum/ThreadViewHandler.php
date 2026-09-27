@@ -15,6 +15,7 @@ use Forwext\Core\Forum\Node\ForumNode;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\Post\PostPermission;
 use Forwext\Core\Forum\Thread\Thread;
 use Forwext\Core\Forum\Thread\ThreadModerationState;
 use Forwext\Core\Forum\Thread\ThreadRepository;

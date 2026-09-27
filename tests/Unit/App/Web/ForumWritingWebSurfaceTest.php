@@ -59,9 +59,11 @@ final class ForumWritingWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('canCreateThread($actor, $node)', $forum);
         self::assertStringContainsString('ThreadPermission::Create->key()', $forum);
+        self::assertStringContainsString('use Forwext\\\\Core\\\\Forum\\\\Thread\\\\ThreadPermission;', $forum);
         self::assertStringContainsString('>Yeni konu</a>', $forum);
         self::assertStringContainsString('canReply($actor, $thread, $forum)', $thread);
         self::assertStringContainsString('PostPermission::Create->key()', $thread);
+        self::assertStringContainsString('use Forwext\\\\Core\\\\Forum\\\\Post\\\\PostPermission;', $thread);
         self::assertStringContainsString('>Yanıtla</a>', $thread);
         self::assertStringContainsString('.forum-compose-form', $html);
         self::assertStringContainsString('.thread-view-actions', $html);
