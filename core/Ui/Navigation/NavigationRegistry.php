@@ -15,6 +15,7 @@ final class NavigationRegistry
     public static function withCoreDefaults(iterable $contributors = []): self
     {
         $registry = new self();
+        $registry->register(new NavigationItem('forums', 'Forumlar', '/forums', 50));
         $registry->register(new NavigationItem('search', 'Ara', '/search', 100));
         $registry->register(new NavigationItem('members', 'Üyeler', '/members', 200));
         $registry->register(new NavigationItem('members.online', 'Çevrimiçi', '/members/online', 210));
