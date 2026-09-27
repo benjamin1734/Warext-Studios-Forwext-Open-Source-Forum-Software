@@ -69,6 +69,7 @@ use Forwext\App\Web\Notification\NotificationRealtimeSseHandler;
 use Forwext\App\Web\Notification\NotificationSoundCategoryHandler;
 use Forwext\App\Web\Notification\NotificationSoundCsrfTokenHandler;
 use Forwext\App\Web\Notification\NotificationSoundSettingsHandler;
+use Forwext\App\Web\Notification\NotificationSettingsHandler;
 use Forwext\App\Web\Moderation\DisciplineAccountHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessPolicyHandler;
 use Forwext\App\Web\Moderation\ThreadFreshnessReviewHandler;
@@ -2189,6 +2190,13 @@ final readonly class WebApplicationFactory
             ),
         ));
 
+        $routes->add(new Route(
+            'account.notification-settings',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/notification-settings'),
+            new NotificationSettingsHandler($notificationSound, $viewerResolver, $basePath),
+            [$notificationSoundCsrf],
+        ));
         $routes->add(new Route(
             'notification-sound.csrf', [HttpMethod::Get], new PathTemplate('/account/notification-sound/csrf'),
             new NotificationSoundCsrfTokenHandler($viewerResolver), [$notificationSoundCsrf],
