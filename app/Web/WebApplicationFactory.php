@@ -9,6 +9,7 @@ use Forwext\App\Web\Advertising\AdvertisingClickHandler;
 use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
+use Forwext\App\Web\Account\AccountDashboardHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Admin\AdminModuleManagerHandler;
@@ -1453,6 +1454,12 @@ final readonly class WebApplicationFactory
             new PathTemplate('/reset-password'),
             $passwordResetHandler,
             [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'account.index',
+            [HttpMethod::Get],
+            new PathTemplate('/account'),
+            new AccountDashboardHandler($viewerResolver, $basePath),
         ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
