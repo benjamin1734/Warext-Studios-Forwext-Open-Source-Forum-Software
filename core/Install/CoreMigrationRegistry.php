@@ -98,6 +98,7 @@ use Forwext\Database\Migrations\Core\CreateUserDomainTables;
 use Forwext\Database\Migrations\Core\CreateUserPresenceTables;
 use Forwext\Database\Migrations\Core\CreateUserProfileMediaTables;
 use Forwext\Database\Migrations\Core\RegisterFirstPartyPermissionNamespaces;
+use Forwext\Database\Migrations\Core\SeedStarterForumStructure;
 
 final class CoreMigrationRegistry
 {
@@ -122,6 +123,7 @@ final class CoreMigrationRegistry
             new CreateRoleAppearanceTable(),
             new RegisterFirstPartyPermissionNamespaces(),
             new CreateForumNodeTables(),
+            new SeedStarterForumStructure(),
             new CreateThreadDomainTables(),
             new CreatePostDomainTables(),
             new CreateForumMetadataTables(),
