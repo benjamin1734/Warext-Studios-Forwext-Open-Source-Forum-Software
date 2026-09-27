@@ -191,6 +191,11 @@ use Forwext\Core\Auth\Mfa\MfaFactorAvailability;
 use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaPolicyResolver;
 use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaUserGroupProvider;
 use Forwext\Core\Auth\Mfa\Login\DatabaseMfaLoginGate;
+use Forwext\Core\Auth\Mfa\Login\MfaLoginCompletionService;
+use Forwext\Core\Auth\Mfa\Passkey\DatabasePasskeyService;
+use Forwext\Core\Auth\Mfa\Passkey\WebAuthnLibEngine;
+use Forwext\Core\Auth\Mfa\Recovery\RecoveryCodeService;
+use Forwext\Core\Auth\Mfa\Totp\DatabaseTotpService;
 use Forwext\Core\Auth\Mfa\TrustedDevice\TrustedDeviceService;
 use Forwext\Core\Auth\Password\NativePasswordHasher;
 use Forwext\Core\Auth\Password\PasswordHashPolicy;
@@ -502,6 +507,53 @@ final readonly class WebApplicationFactory
             $trustedDevices,
             $mfaChallenges,
         );
+        $loginHistory = new DatabaseLoginHistoryRecorder($database);
+        $canonicalHost = parse_url(
+            RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
+            PHP_URL_HOST,
+        );
+        if (!is_string($canonicalHost) || trim($canonicalHost) === '') {
+            throw new RuntimeException('Canonical URL host is required for WebAuthn composition.');
+        }
+        $configuredRpId = $config->get('mfa.webauthn.rp_id');
+        $configuredWebAuthnHost = $config->get('mfa.webauthn.host');
+        $rpId = is_string($configuredRpId) && trim($configuredRpId) !== ''
+            ? trim($configuredRpId)
+            : $canonicalHost;
+        $webAuthnHost = is_string($configuredWebAuthnHost) && trim($configuredWebAuthnHost) !== ''
+            ? trim($configuredWebAuthnHost)
+            : $canonicalHost;
+        $totp = new DatabaseTotpService(
+            $database,
+            new SecretCipher($masterKey),
+            $config->requireString('mfa.totp.issuer'),
+            $config->requireInt('mfa.totp.period_seconds'),
+            $config->requireInt('mfa.totp.window'),
+        );
+        $recoveryCodes = new RecoveryCodeService(
+            $database,
+            $config->requireInt('mfa.recovery_code_count'),
+        );
+        $passkeys = new DatabasePasskeyService(
+            $database,
+            new WebAuthnLibEngine(
+                $config->requireString('mfa.webauthn.rp_name'),
+                $rpId,
+                $webAuthnHost,
+            ),
+            $config->requireInt('mfa.webauthn.ceremony_ttl_seconds'),
+        );
+        $mfaCompletion = new MfaLoginCompletionService(
+            $mfaChallenges,
+            $credentials,
+            $totp,
+            $recoveryCodes,
+            $passkeys,
+            $sessions,
+            $rememberTokens,
+            $trustedDevices,
+            $loginHistory,
+        );
         $authentication = new AuthenticationService(
             $users,
             $credentials,
@@ -514,7 +566,7 @@ final readonly class WebApplicationFactory
             new DatabaseDeviceRepository($database),
             $sessions,
             $rememberTokens,
-            new DatabaseLoginHistoryRecorder($database),
+            $loginHistory,
             $mfaLoginGate,
             $config->requireInt('authentication.login_rate_limit.identity_attempts'),
             $config->requireInt('authentication.login_rate_limit.network_attempts'),
@@ -564,6 +616,7 @@ final readonly class WebApplicationFactory
             $basePath,
             $config->requireString('authentication.session.cookie_name'),
             $config->requireInt('authentication.session.ttl_seconds'),
+            $mfaCompletion,
         );
         $logoutHandler = new LogoutHandler(
             $sessions,
