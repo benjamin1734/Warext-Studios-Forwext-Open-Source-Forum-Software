@@ -74,7 +74,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             . $this->renderRecent($recent)
             . '<section class="card forum-side-card"><h2>Hızlı bağlantılar</h2>'
             . '<a href="' . self::e($this->basePath->prepend('/members/online')) . '">Çevrimiçi üyeler <span>→</span></a>'
-            . '<a href="' . self::e($this->basePath->prepend('/stats')) . '">Forum istatistikleri <span>→</span></a>'
+            . ($actor === null ? '' : '<a href="' . self::e($this->basePath->prepend('/stats')) . '">Forum istatistikleri <span>→</span></a>')
             . '<a href="' . self::e($this->basePath->prepend('/faq')) . '">SSS <span>→</span></a>'
             . '</section></aside></div>';
 
