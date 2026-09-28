@@ -21,6 +21,8 @@ final class ResponsiveWebSurfaceTest extends TestCase
         self::assertStringContainsString('aria-expanded="false"', $html);
         self::assertStringContainsString('aria-controls="forwext-primary-navigation"', $html);
         self::assertStringContainsString('data-forwext-primary-navigation', $html);
+        self::assertStringContainsString('data-forwext-subnav', $html);
+        self::assertStringContainsString('data-nav-section-link="forums"', $html);
         self::assertStringContainsString('id="main-content"', $html);
         self::assertStringContainsString('/assets/mobile-nav.js', $html);
         self::assertStringContainsString('<html lang="tr" dir="ltr">', $html);

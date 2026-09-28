@@ -15,7 +15,10 @@ final class ProfileShellUiTest extends TestCase
 
         self::assertStringContainsString('.top[data-scrolled="1"]', $css);
         self::assertStringContainsString('.nav-primary>a[aria-current="page"]', $css);
-        self::assertStringContainsString('.nav-secondary>a', $css);
+        self::assertStringContainsString('.site-masthead', $css);
+        self::assertStringContainsString('.nav-primary-menu', $css);
+        self::assertStringContainsString('.nav-secondary-group[hidden]', $css);
+        self::assertStringContainsString('.nav-secondary-group>a', $css);
         self::assertStringContainsString('.nav-account-popover', $css);
         self::assertStringContainsString('.nav-user-tools', $css);
         self::assertStringContainsString('.forum-node:hover', $css);
@@ -44,6 +47,9 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('navigation.contains(target)', $asset);
         self::assertStringContainsString('header.dataset.scrolled', $asset);
         self::assertStringContainsString('header.querySelectorAll', $asset);
+        self::assertStringContainsString('sectionForPath', $asset);
+        self::assertStringContainsString('data-nav-section', $asset);
+        self::assertStringContainsString('activeNavSection', $asset);
         self::assertStringContainsString('.nav-account-menu', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
     }

@@ -4,33 +4,85 @@
   const button = document.querySelector("[data-forwext-nav-toggle]");
   const navigation = document.querySelector("[data-forwext-primary-navigation]");
   const header = document.querySelector(".top");
-  if (!(button instanceof HTMLButtonElement) || !(navigation instanceof HTMLElement)) {
+  const subnav = document.querySelector("[data-forwext-subnav]");
+  const subnavShell = document.querySelector("[data-forwext-subnav-shell]");
+  if (!(button instanceof HTMLButtonElement) || !(navigation instanceof HTMLElement) || !(header instanceof HTMLElement)) {
     return;
   }
 
   document.documentElement.dataset.forwextMobileNav = "enhanced";
-
-  const setOpen = (open) => {
-    navigation.dataset.mobileOpen = open ? "1" : "0";
-    button.setAttribute("aria-expanded", open ? "true" : "false");
-  };
 
   const normalizePath = (value) => {
     const collapsed = value.replace(/\/{2,}/g, "/");
     return collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : collapsed;
   };
 
+  const sectionForPath = (path) => {
+    if (path === "/") return "home";
+    if (path === "/activity" || path.startsWith("/activity/")) return "whatsnew";
+    if (
+      path === "/marketplace" || path.startsWith("/marketplace/") ||
+      path === "/portfolio" || path.startsWith("/portfolio/") ||
+      path === "/giveaways" || path.startsWith("/giveaways/")
+    ) return "marketplace";
+    if (
+      path === "/members" || path.startsWith("/members/") ||
+      path === "/stats"
+    ) return "members";
+    if (
+      path === "/account" || path.startsWith("/account/") ||
+      path === "/bugs" || path.startsWith("/bugs/")
+    ) return "account";
+    if (path === "/faq" || path.startsWith("/faq/")) return "more";
+    if (
+      path === "/forums" || path.startsWith("/forums/") ||
+      path.startsWith("/threads/") || path === "/search"
+    ) return "forums";
+    return "home";
+  };
+
+  const setOpen = (open) => {
+    navigation.dataset.mobileOpen = open ? "1" : "0";
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  const closeMenus = (except = null) => {
+    for (const details of header.querySelectorAll("details[open]")) {
+      if (details !== except && details instanceof HTMLDetailsElement) {
+        details.open = false;
+      }
+    }
+  };
+
   const markCurrentNavigation = () => {
-    if (!(header instanceof HTMLElement)) return;
-
     const currentPath = normalizePath(window.location.pathname);
-    const anchors = [...header.querySelectorAll("[data-nav-key][href]")];
-    let current = null;
-    let currentLength = -1;
+    const activeSection = sectionForPath(currentPath);
+    header.dataset.activeNavSection = activeSection;
 
+    for (const anchor of header.querySelectorAll("[aria-current]")) {
+      anchor.removeAttribute("aria-current");
+    }
+    for (const details of header.querySelectorAll("[data-active]")) {
+      delete details.dataset.active;
+    }
+
+    const primary = header.querySelector('[data-nav-section-link="' + activeSection + '"]');
+    if (primary instanceof HTMLAnchorElement) {
+      primary.setAttribute("aria-current", "page");
+    } else if (primary instanceof HTMLDetailsElement) {
+      primary.dataset.active = "1";
+    }
+
+    if (activeSection === "account") {
+      const accountMenu = header.querySelector(".nav-account-menu");
+      if (accountMenu instanceof HTMLElement) accountMenu.dataset.active = "1";
+    }
+
+    const anchors = [...header.querySelectorAll("[data-nav-key][href]")];
+    let exact = null;
+    let exactLength = -1;
     for (const anchor of anchors) {
       if (!(anchor instanceof HTMLAnchorElement)) continue;
-
       const url = new URL(anchor.href, window.location.href);
       if (url.origin !== window.location.origin) continue;
 
@@ -39,37 +91,31 @@
         ? currentPath === "/"
         : currentPath === path || currentPath.startsWith(path + "/");
 
-      if (matches && path.length > currentLength) {
-        current = anchor;
-        currentLength = path.length;
+      if (matches && path.length > exactLength) {
+        exact = anchor;
+        exactLength = path.length;
       }
     }
-
-    if (current === null && currentPath.includes("/threads/")) {
-      current = header.querySelector('[data-nav-key="forums"]');
+    if (exact instanceof HTMLAnchorElement && !exact.hasAttribute("data-nav-section-link")) {
+      exact.setAttribute("aria-current", "page");
     }
 
-    if (current instanceof HTMLAnchorElement) {
-      current.setAttribute("aria-current", "page");
-      const accountMenu = current.closest(".nav-account-menu");
-      if (accountMenu instanceof HTMLElement) {
-        accountMenu.dataset.active = "1";
+    let visibleSubnav = false;
+    if (subnav instanceof HTMLElement) {
+      for (const group of subnav.querySelectorAll("[data-nav-section]")) {
+        if (!(group instanceof HTMLElement)) continue;
+        const visible = group.dataset.navSection === activeSection && group.children.length > 0;
+        group.hidden = !visible;
+        visibleSubnav ||= visible;
       }
+    }
+    if (subnavShell instanceof HTMLElement) {
+      subnavShell.hidden = !visibleSubnav;
     }
   };
 
   const syncHeader = () => {
-    if (!(header instanceof HTMLElement)) return;
     header.dataset.scrolled = window.scrollY > 8 ? "1" : "0";
-  };
-
-  const closeAccountMenus = (except = null) => {
-    if (!(header instanceof HTMLElement)) return;
-    for (const details of header.querySelectorAll("details[open]")) {
-      if (details !== except && details instanceof HTMLDetailsElement) {
-        details.open = false;
-      }
-    }
   };
 
   setOpen(false);
@@ -79,19 +125,18 @@
   button.addEventListener("click", () => {
     const open = navigation.dataset.mobileOpen !== "1";
     setOpen(open);
-    if (!open) closeAccountMenus();
+    if (!open) closeMenus();
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       if (navigation.dataset.mobileOpen === "1") {
         setOpen(false);
-        closeAccountMenus();
+        closeMenus();
         button.focus();
         return;
       }
-
-      closeAccountMenus();
+      closeMenus();
     }
   });
 
@@ -99,8 +144,8 @@
     const target = event.target;
     if (!(target instanceof Node)) return;
 
-    const accountMenu = target instanceof Element ? target.closest(".nav-account-menu") : null;
-    closeAccountMenus(accountMenu instanceof HTMLDetailsElement ? accountMenu : null);
+    const details = target instanceof Element ? target.closest("details") : null;
+    closeMenus(details instanceof HTMLDetailsElement ? details : null);
 
     if (navigation.dataset.mobileOpen !== "1") return;
     if (navigation.contains(target) || button.contains(target)) return;
@@ -111,9 +156,7 @@
     const target = event.target;
     if (!(target instanceof Element)) return;
     const link = target.closest("a");
-    if (link instanceof HTMLAnchorElement) {
-      setOpen(false);
-    }
+    if (link instanceof HTMLAnchorElement) setOpen(false);
   });
 
   const desktop = window.matchMedia("(min-width: 921px)");
