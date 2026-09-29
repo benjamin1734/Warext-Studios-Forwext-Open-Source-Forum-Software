@@ -63,7 +63,7 @@ final readonly class ProfileUrlSettingsHandler implements RequestHandlerInterfac
             . '</header>' . $notice
             . '<section class="surface-panel profile-url-panel"><div class="current-url"><strong>Mevcut adres</strong><span>'
             . $currentUrl . '</span></div>'
-            . '<form class="profile-url-form" method="post" action="' . $action . '">
+            . '<form class="profile-url-form" method="post" action="' . $action . '">'
             . '<input type="hidden" name="_csrf" value="' . ProfileHtml::escape($token) . '">'
             . '<label for="profile-slug">Adres</label>'
             . '<div class="slugrow"><span>/u/</span><input id="profile-slug" name="slug" required minlength="3" maxlength="32" '
