@@ -37,6 +37,8 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringNotContainsString('/* xf-navigation-layout */', $css);
         self::assertStringNotContainsString('/* xf-navigation-v3 */', $css);
         self::assertStringContainsString('.profile-wall-post:hover', $css);
+        self::assertStringContainsString('.profile-tabs', $css);
+        self::assertStringContainsString('.profile-content', $css);
         self::assertStringContainsString('.acp-card:hover', $css);
         self::assertStringContainsString('.search-hit:hover', $css);
         self::assertStringContainsString('.account-center-card:hover', $css);

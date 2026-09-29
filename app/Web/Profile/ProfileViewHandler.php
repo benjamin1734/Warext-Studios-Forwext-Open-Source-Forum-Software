@@ -117,7 +117,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
         $tabNav = $tabNav === ''
             ? ''
-            : '<nav class="tabs" aria-label="Profil sekmeleri">' . $tabNav . '</nav>';
+            : '<nav class="tabs profile-tabs" aria-label="Profil sekmeleri">' . $tabNav . '</nav>';
 
         $sections = '';
         foreach ($visibleTabs as $tab) {
@@ -152,10 +152,12 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $body = '<article class="profile" data-forwext-background-scope="profile" data-forwext-background-id="'
             . ProfileHtml::escape($profile->userId->value()) . '">' . $banner
             . '<div class="profilebody"><div class="profilehead">'
-            . $avatar . '<div class="identity"><h1>' . $safeName
-            . '</h1><div class="muted">Forwext üyesi</div>' . $profileSettings . '</div>'
+            . $avatar . '<div class="identity profile-identity"><h1>' . $safeName
+            . '</h1><div class="profile-identity-meta"><span>Forwext üyesi</span><span>Katılım · '
+            . ProfileHtml::escape($user->createdAt()->format('d.m.Y')) . '</span></div>' . $profileSettings . '</div>'
             . $relationshipControls . '</div>'
-            . $music . $tabNav . $activityWall . $sections . '</div></article>';
+            . $music . $tabNav . '<div class="profile-content">' . $activityWall . $sections . '</div>'
+            . '</div></article>';
 
         return Response::html(ProfileHtml::page(
             $displayName,
