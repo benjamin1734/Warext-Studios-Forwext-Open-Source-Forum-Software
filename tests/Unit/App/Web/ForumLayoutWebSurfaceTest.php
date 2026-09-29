@@ -19,6 +19,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('<svg viewBox="0 0 24 24"', $index);
         self::assertStringContainsString('class="forum-node-counts"', $index);
         self::assertStringContainsString('class="forum-node-last"', $index);
+        self::assertStringContainsString('class="forum-last-activity"', $index);
+        self::assertStringContainsString('class="forum-last-avatar"', $index);
     }
 
     public function testForumThreadListUsesExplicitDesktopColumns(): void
@@ -32,6 +34,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('<span>Son mesaj</span>', $forum);
         self::assertStringContainsString('class="thread-status-icon"', $forum);
         self::assertStringContainsString('<svg viewBox="0 0 24 24"', $forum);
+        self::assertStringContainsString('class="forum-last-avatar"', $forum);
+        self::assertStringContainsString('?forum=', $forum);
     }
 
     public function testThreadViewKeepsDedicatedTitleAndClassicAuthorColumnHooks(): void

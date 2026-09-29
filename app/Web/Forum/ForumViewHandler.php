@@ -76,7 +76,8 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
                 . self::e($this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()) . '/new-thread'))
                 . '">Yeni konu</a>';
         }
-        $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Bu toplulukta ara</a>'
+        $forumSearch = $this->basePath->prepend('/search') . '?forum=' . rawurlencode($node->id()->value());
+        $body .= '<a class="fx-btn" href="' . self::e($forumSearch) . '">Bu forumda ara</a>'
             . '</div></section>';
 
         $children = array_values(array_filter(
@@ -162,9 +163,18 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         }
 
         $author = $thread['author_username'] ?? 'Silinmiş üye';
-        $lastUser = $thread['last_post_username'] ?? $author;
+        $lastUsername = $thread['last_post_username'] ?? $thread['author_username'];
+        $lastUser = $lastUsername ?? 'Silinmiş üye';
         $lastAt = $thread['last_post_at'] ?? $thread['created_at'];
         $replyCount = max(0, $thread['post_count'] - 1);
+        $lastAvatar = $lastUsername === null
+            ? '<span class="forum-last-avatar" aria-hidden="true">?</span>'
+            : '<a class="forum-last-avatar" href="' . self::e(ProfileHtml::memberPath($this->basePath, $lastUsername))
+                . '" aria-label="' . self::e($lastUsername) . ' profili">' . ProfileHtml::initial($lastUsername) . '</a>';
+        $lastUserHtml = $lastUsername === null
+            ? '<strong>' . self::e($lastUser) . '</strong>'
+            : '<a class="forum-last-user" href="' . self::e(ProfileHtml::memberPath($this->basePath, $lastUsername))
+                . '">' . self::e($lastUser) . '</a>';
 
         return '<article class="forum-thread-row"><div class="thread-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Zm2 2v7.2L8.2 13H17V7H7Z"/></svg></div>'
             . '<div class="forum-thread-main">' . ($badges === '' ? '' : '<div class="thread-badges">' . $badges . '</div>')
@@ -172,8 +182,8 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             . '<p>' . self::e($author) . ' · ' . self::e(self::date($thread['created_at'])) . '</p></div>'
             . '<div class="forum-thread-count"><strong>' . number_format($replyCount, 0, ',', '.')
             . '</strong><span>Yanıt</span></div>'
-            . '<div class="forum-thread-last"><strong>' . self::e($lastUser) . '</strong><span>'
-            . self::e(self::date($lastAt)) . '</span></div></article>';
+            . '<div class="forum-thread-last">' . $lastAvatar . '<div>' . $lastUserHtml . '<span>'
+            . self::e(self::date($lastAt)) . '</span></div></div></article>';
     }
 
     private function pagination(ForumNode $node, int $page, int $pages): string

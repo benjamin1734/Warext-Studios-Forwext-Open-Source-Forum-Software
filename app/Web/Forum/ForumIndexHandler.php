@@ -56,6 +56,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             . '<h1>Forumlar</h1><p>Kategorileri keşfet, güncel tartışmalara katıl ve toplulukta neler olduğunu takip et.</p></div>'
             . '<div class="forum-hero-actions">'
             . '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/search')) . '">İçerik ara</a>'
+            . ($actor === null ? '' : '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/activity')) . '">Neler yeni?</a>')
             . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/members')) . '">Üyeler</a>'
             . '</div></section>';
 
@@ -215,9 +216,25 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             $meta[] = self::date($summary['latest_at']);
         }
 
-        return '<a class="forum-last-title" href="' . self::e($url) . '">'
-            . self::e($summary['latest_thread_title']) . '</a>'
-            . ($meta === [] ? '' : '<span>' . self::e(implode(' · ', $meta)) . '</span>');
+        $username = $summary['latest_username'];
+        $avatar = $username === null
+            ? '<span class="forum-last-avatar" aria-hidden="true">?</span>'
+            : '<a class="forum-last-avatar" href="' . self::e(ProfileHtml::memberPath($this->basePath, $username))
+                . '" aria-label="' . self::e($username) . ' profili">' . ProfileHtml::initial($username) . '</a>';
+        $user = $username === null
+            ? ''
+            : '<a class="forum-last-user" href="' . self::e(ProfileHtml::memberPath($this->basePath, $username))
+                . '">' . self::e($username) . '</a>';
+        $time = $summary['latest_at'] === null ? '' : self::e(self::date($summary['latest_at']));
+        $metaHtml = $user === '' && $time === ''
+            ? ''
+            : '<span class="forum-last-meta">' . $user
+                . ($user !== '' && $time !== '' ? '<span aria-hidden="true"> · </span>' : '')
+                . $time . '</span>';
+
+        return '<div class="forum-last-activity">' . $avatar . '<div class="forum-last-content">'
+            . '<a class="forum-last-title" href="' . self::e($url) . '">'
+            . self::e($summary['latest_thread_title']) . '</a>' . $metaHtml . '</div></div>';
     }
 
     /**

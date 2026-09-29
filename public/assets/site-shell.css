@@ -1745,6 +1745,28 @@ body.forwext-nav-open{overflow:hidden}
   padding-left:12px;
   border-left:1px solid var(--line);
 }
+.forum-last-activity{
+  min-width:0;
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+}
+.forum-last-avatar{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  flex:0 0 30px;
+  border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));
+  border-radius:50%;
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel2));
+  color:var(--accent);
+  text-decoration:none;
+  font-size:11px;
+  font-weight:850;
+}
+.forum-last-content{min-width:0}
 .forum-last-title{
   display:block;
   overflow:hidden;
@@ -1755,7 +1777,7 @@ body.forwext-nav-open{overflow:hidden}
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.forum-node-last>span{
+.forum-last-meta{
   display:block;
   margin-top:2px;
   overflow:hidden;
@@ -1764,6 +1786,12 @@ body.forwext-nav-open{overflow:hidden}
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+.forum-last-user{
+  color:inherit;
+  font-weight:700;
+  text-decoration:none;
+}
+.forum-last-user:hover{color:var(--text)}
 .forum-side-card{
   border-radius:8px;
   box-shadow:none;
@@ -1914,18 +1942,31 @@ body.forwext-nav-open{overflow:hidden}
 }
 .forum-thread-last{
   min-width:0;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
   padding-left:10px;
   border-left:1px solid var(--line);
 }
+.forum-thread-last .forum-last-avatar{
+  width:28px;
+  height:28px;
+  flex-basis:28px;
+  font-size:10px;
+}
+.forum-thread-last>div{min-width:0}
 .forum-thread-last strong,
-.forum-thread-last span{
+.forum-thread-last .forum-last-user,
+.forum-thread-last>div>span{
   overflow:hidden;
   display:block;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.forum-thread-last strong{font-size:11px}
-.forum-thread-last span{color:var(--muted);font-size:10px}
+.forum-thread-last strong,
+.forum-thread-last .forum-last-user{font-size:11px}
+.forum-thread-last>div>span{color:var(--muted);font-size:10px}
 
 .thread-view-head{
   align-items:flex-start;
