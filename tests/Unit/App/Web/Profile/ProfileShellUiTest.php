@@ -31,7 +31,7 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.forum-node:hover', $css);
         self::assertStringContainsString('.forum-thread-row:hover', $css);
         self::assertStringContainsString('.forum-thread-list-head', $css);
-        self::assertStringContainsString('grid-template-columns:155px minmax(0,1fr)', $css);
+        self::assertStringContainsString('grid-template-columns:168px minmax(0,1fr)', $css);
         self::assertStringContainsString('/* navigation-shell-v1 */', $css);
         self::assertStringContainsString('/* forum-surfaces-v1 */', $css);
         self::assertStringNotContainsString('/* xf-navigation-layout */', $css);
