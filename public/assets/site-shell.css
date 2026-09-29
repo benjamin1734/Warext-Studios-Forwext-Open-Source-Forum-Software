@@ -2743,3 +2743,30 @@ a.forum-thread-author:hover{color:var(--text)}
 .profile-content .trophy-grid{padding:0}
 .profile-content .trophy-card{border-radius:8px;box-shadow:none}
 .profile-content .trophy-history{margin-bottom:0}
+
+.faq-head>.fx-btn,.faq-article-head>.fx-btn,.support-tickets-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.faq-category{padding:0;overflow:hidden}
+.faq-category>h2{margin:0;padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2);font-size:13.5px}
+.faq-category>p{margin:0;padding:8px 13px;border-bottom:1px solid var(--line);font-size:10.5px}
+.faq-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border-bottom:1px solid var(--line);color:var(--text);text-decoration:none}
+.faq-row:last-child{border-bottom:0}
+.faq-row:hover,.faq-row:focus-visible{background:color-mix(in srgb,var(--accent) 3%,var(--panel));outline:none}
+.faq-row>div{min-width:0;display:grid;gap:3px}
+.faq-row strong{font-size:12.5px;overflow-wrap:anywhere}
+.faq-row small{color:var(--muted);font-size:9.5px}
+.faq-row-language{color:var(--accent);font-size:8.5px;font-weight:820;text-transform:uppercase;letter-spacing:.06em}
+.faq-row-arrow{color:var(--muted)}
+.faq-answer{font-size:13px;line-height:1.7}
+.faq-answer>p.muted{font-size:10.5px}
+.faq-answer hr{border:0;border-top:1px solid var(--line)}
+.faq-feedback{margin-top:12px}
+.support-ticket-panel{padding:0}
+.support-ticket-list{display:grid}
+.support-ticket-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);color:var(--text);text-decoration:none}
+.support-ticket-row:last-child{border-bottom:0}
+.support-ticket-row:hover,.support-ticket-row:focus-visible{background:color-mix(in srgb,var(--accent) 3%,var(--panel));outline:none}
+.support-ticket-row>div{min-width:0;display:grid;gap:3px}
+.support-ticket-row strong{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.support-ticket-row small,.support-ticket-meta{color:var(--muted);font-size:9.5px}
+.support-ticket-meta{color:var(--accent);font-weight:760}
+@media(max-width:700px){.faq-row,.support-ticket-row{align-items:flex-start}.support-ticket-row strong{white-space:normal}}

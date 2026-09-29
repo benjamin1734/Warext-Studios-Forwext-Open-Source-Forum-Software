@@ -60,5 +60,7 @@ final class FaqHtmlTest extends TestCase
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         self::assertStringContainsString('name="_csrf" value="csrf-token"', $html);
         self::assertStringContainsString('/community/faq/tr/guvenli-soru', $html);
+        self::assertStringContainsString('surface-head faq-article-head', $html);
+        self::assertStringContainsString('surface-panel faq-answer', $html);
     }
 }

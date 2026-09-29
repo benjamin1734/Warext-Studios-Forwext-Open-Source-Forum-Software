@@ -13,25 +13,26 @@ final class MyTicketsHtml
     /** @param list<SupportTicket> $tickets */
     public static function page(array $tickets, BasePath $basePath): string
     {
-        $body='<section class="card settings"><h1>Taleplerim</h1>'
-            .'<p><a href="'.self::e($basePath->prepend('/support/new')).'">Yeni destek talebi aç</a></p>'
-            .'<p class="muted">Yalnız kendi hesabınızla oluşturduğunuz destek talepleri listelenir.</p></section>';
-
-        $body.='<section class="card section"><h2>Destek geçmişi</h2>';
+        $body='<section class="support-tickets discovery-page"><header class="surface-head support-tickets-head"><div>'
+            .'<span class="forum-eyebrow">DESTEK</span><h1>Taleplerim</h1>'
+            .'<p>Yalnız kendi hesabınla oluşturduğun destek talepleri listelenir.</p></div>'
+            .'<a class="fx-btn fx-btn--primary" href="'.self::e($basePath->prepend('/support/new')).'">Yeni talep</a>'
+            .'</header><section class="surface-panel support-ticket-panel"><div class="support-ticket-list">';
         if($tickets===[]){
-            $body.='<div class="empty">Henüz destek talebiniz yok.</div></section>';
+            $body.='<div class="surface-empty">Henüz destek talebin yok.</div></div></section></section>';
             return ProfileHtml::page('Taleplerim',$body,$basePath,authenticated:true);
         }
 
         foreach($tickets as $ticket){
             $href=$basePath->prepend('/support/tickets/'.rawurlencode($ticket->ticketId->value()));
-            $body.='<article class="search-hit"><div class="search-hit-type">'
-                .self::e($ticket->categoryKey).' · '.self::e($ticket->status->label())
-                .' · '.self::e($ticket->priority->label()).'</div>'
-                .'<h3><a href="'.self::e($href).'">'.self::e($ticket->subject).'</a></h3>'
-                .'<p class="muted">Güncellendi: '.self::e($ticket->updatedAt->format('Y-m-d H:i')).'</p></article>';
+            $body.='<a class="support-ticket-row" href="'.self::e($href).'"><div>'
+                .'<span class="support-ticket-meta">'.self::e($ticket->categoryKey).' · '.self::e($ticket->status->label())
+                .' · '.self::e($ticket->priority->label()).'</span>'
+                .'<strong>'.self::e($ticket->subject).'</strong>'
+                .'<small>Güncellendi · '.self::e($ticket->updatedAt->format('Y-m-d H:i')).'</small></div>'
+                .'<span aria-hidden="true">→</span></a>';
         }
-        $body.='</section>';
+        $body.='</div></section></section>';
 
         return ProfileHtml::page('Taleplerim',$body,$basePath,authenticated:true);
     }

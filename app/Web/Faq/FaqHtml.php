@@ -24,7 +24,7 @@ final class FaqHtml
         ?string $language,
         bool $authenticated,
     ): string {
-        $tabs = '<div class="tabs"><a href="' . self::e($basePath->prepend('/faq')) . '">Tümü</a>';
+        $tabs = '<nav class="tabs surface-tabs faq-tabs" aria-label="SSS dilleri"><a href="' . self::e($basePath->prepend('/faq')) . '">Tümü</a>';
         $languages = [];
         foreach ($categories as $category) {
             $languages[$category->language] = true;
@@ -33,15 +33,16 @@ final class FaqHtml
             $tabs .= '<a href="' . self::e($basePath->prepend('/faq?lang=' . rawurlencode($lang))) . '">'
                 . self::e($lang) . '</a>';
         }
-        $tabs .= '</div>';
+        $tabs .= '</nav>';
 
-        $body = '<section class="card"><h1>Sık Sorulan Sorular</h1>'
-            . '<p class="muted">Kategoriye göre sık sorulan sorular ve çözümler.</p>' . $tabs;
+        $body = '<section class="faq-index discovery-page"><header class="surface-head faq-head"><div>'
+            . '<span class="forum-eyebrow">YARDIM</span><h1>Sık Sorulan Sorular</h1>'
+            . '<p>Kategoriye göre sık sorulan sorular ve çözümler.</p></div></header>' . $tabs;
         if ($categories === []) {
             $body .= '<div class="empty">Bu görünürlük ve dil için SSS içeriği bulunmuyor.</div>';
         }
         foreach ($categories as $category) {
-            $body .= '<section class="section"><h2>' . self::e($category->label) . '</h2>';
+            $body .= '<section class="surface-panel faq-category"><h2>' . self::e($category->label) . '</h2>';
             if ($category->description !== '') {
                 $body .= '<p class="muted">' . self::e($category->description) . '</p>';
             }
@@ -53,13 +54,13 @@ final class FaqHtml
                     $href = $basePath->prepend(
                         '/faq/' . rawurlencode($article->language) . '/' . rawurlencode($article->slug),
                     );
-                    $body .= '<article class="search-hit"><div class="search-hit-type">'
-                        . self::e($article->language) . '</div><h3><a href="' . self::e($href) . '">'
-                        . self::e($article->question) . '</a></h3>';
+                    $body .= '<a class="faq-row" href="' . self::e($href) . '"><div>'
+                        . '<span class="faq-row-language">' . self::e($article->language) . '</span>'
+                        . '<strong>' . self::e($article->question) . '</strong>';
                     if ($article->tags !== []) {
-                        $body .= '<div class="muted">' . self::e(implode(' · ', $article->tags)) . '</div>';
+                        $body .= '<small>' . self::e(implode(' · ', $article->tags)) . '</small>';
                     }
-                    $body .= '</article>';
+                    $body .= '</div><span class="faq-row-arrow" aria-hidden="true">→</span></a>';
                 }
             }
             $body .= '</section>';
@@ -91,9 +92,12 @@ final class FaqHtml
                 ($ratio ?? 0.0) * 100,
             );
 
-        $body = '<article class="card"><div class="search-hit-type">' . self::e($view->category->label)
-            . ' · ' . self::e($article->language) . '</div><h1>' . self::e($article->question) . '</h1>'
-            . '<div class="about">' . nl2br(self::e($article->answer), false) . '</div>';
+        $body = '<article class="faq-article discovery-page"><header class="surface-head faq-article-head"><div>'
+            . '<span class="forum-eyebrow">' . self::e($view->category->label) . ' · ' . self::e($article->language)
+            . '</span><h1>' . self::e($article->question) . '</h1></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/faq')) . '">SSS’ye dön</a></header>'
+            . '<section class="surface-panel faq-answer"><div class="about">'
+            . nl2br(self::e($article->answer), false) . '</div>';
         if ($article->tags !== []) {
             $body .= '<p class="muted">Etiketler: ' . self::e(implode(', ', $article->tags)) . '</p>';
         }
@@ -113,7 +117,7 @@ final class FaqHtml
         } else {
             $body .= '<p class="muted">Faydalı değerlendirmesi yapmak için oturum açın.</p>';
         }
-        $body .= '</article>';
+        $body .= '</section></article>';
 
         return ProfileHtml::page(
             $article->seoTitle ?? $article->question,
@@ -187,7 +191,7 @@ final class FaqHtml
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="import">'
             . '<label class="search-wide"><span>Forwext FAQ JSON</span><textarea name="json" maxlength="5000000" rows="12" required></textarea></label>'
             . '<div class="search-actions"><button type="submit">İçe aktar</button></div></form></details>'
-            . '<section class="section"><h2>Mevcut içerik</h2><p class="muted">'
+            . '<section class="surface-panel faq-category"><h2>Mevcut içerik</h2><p class="muted">'
             . count($categories) . ' kategori · ' . count($articles) . ' makale</p><ul>';
         foreach ($articles as $article) {
             $summary = $helpful[$article->articleId->value()] ?? null;

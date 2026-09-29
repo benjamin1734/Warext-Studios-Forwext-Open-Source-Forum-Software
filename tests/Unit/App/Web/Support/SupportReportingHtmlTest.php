@@ -30,6 +30,8 @@ final class SupportReportingHtmlTest extends TestCase
         self::assertStringNotContainsString('<script>alert(1)</script>',$html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;',$html);
         self::assertStringContainsString('/community/support/tickets/'.$ticket->ticketId->value(),$html);
+        self::assertStringContainsString('surface-head support-tickets-head',$html);
+        self::assertStringContainsString('support-ticket-row',$html);
     }
 
     public function testStaffDashboardEscapesCategoryAndAuditFields():void
