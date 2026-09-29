@@ -17,6 +17,8 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString("'/forums/{slug}/new-thread'", $factory);
         self::assertStringContainsString("'thread.reply'", $factory);
         self::assertStringContainsString("'/threads/{threadId}/reply'", $factory);
+        self::assertStringContainsString("'thread.view'", $factory);
+        self::assertStringContainsString("$threadViewHandler,\n            [$forumCsrf]", $factory);
         self::assertStringContainsString('$forumCsrf', $factory);
         self::assertStringContainsString("'forum-write'", $factory);
         self::assertStringContainsString('new ThreadCreateHandler(', $factory);
@@ -74,6 +76,10 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('PostPermission::Create->key()', $thread);
         self::assertStringContainsString('use Forwext\\Core\\Forum\\Post\\PostPermission;', $thread);
         self::assertStringContainsString('>Yanıtla</a>', $thread);
+        self::assertStringContainsString('id="quick-reply"', $thread);
+        self::assertStringContainsString('RichEditorView::render(', $thread);
+        self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $thread);
+        self::assertStringContainsString("headAssets: $canReply ? RichEditorView::assets", $thread);
         self::assertStringContainsString('.forum-compose-form', $css);
         self::assertStringContainsString('.thread-view-actions', $css);
     }

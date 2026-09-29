@@ -1508,6 +1508,7 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/threads/{threadId}', ['threadId'=>'[a-f0-9]{32}']),
             $threadViewHandler,
+            [$forumCsrf],
         ));
         $routes->add(new Route(
             'thread.reply',

@@ -6,11 +6,14 @@ namespace Forwext\App\Web\Forum;
 
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\App\Web\Editor\RichEditorView;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Forum\Discovery\DatabaseForumPublicReader;
 use Forwext\Core\Forum\Editor\EditorPreviewService;
+use Forwext\Core\Forum\Editor\EditorLimits;
+use Forwext\Core\Forum\Editor\EditorSurface;
 use Forwext\Core\Forum\Node\ForumNode;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
@@ -22,6 +25,7 @@ use Forwext\Core\Forum\Thread\ThreadRepository;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbItem;
@@ -80,10 +84,9 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . number_format(max(0, $posts['total'] - 1), 0, ',', '.') . ' yanıt · '
             . number_format($posts['total'], 0, ',', '.') . ' mesaj</p></div>'
             . '<div class="thread-view-actions">';
-        if ($this->canReply($actor, $thread, $forum)) {
-            $body .= '<a class="fx-btn fx-btn--primary" href="'
-                . self::e($this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/reply'))
-                . '">Yanıtla</a>';
+        $canReply = $this->canReply($actor, $thread, $forum);
+        if ($canReply) {
+            $body .= '<a class="fx-btn fx-btn--primary" href="#quick-reply">Yanıtla</a>';
         }
         $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
             . '">Foruma dön</a></div></section>';
@@ -95,11 +98,25 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         if ($posts['rows'] === []) {
             $body .= '<section class="card forum-empty-state"><h2>Görüntülenebilir mesaj yok</h2></section>';
         } else {
+            $pagination = $this->pagination($thread, $posts['page'], $posts['pages']);
+            if ($pagination !== '') {
+                $body .= '<div class="thread-pagination thread-pagination--top">' . $pagination . '</div>';
+            }
             $body .= '<div class="thread-post-list">';
             foreach ($posts['rows'] as $post) {
                 $body .= $this->renderPost($post, $actor);
             }
-            $body .= '</div>' . $this->pagination($thread, $posts['page'], $posts['pages']);
+            $body .= '</div>';
+            if ($pagination !== '') {
+                $body .= '<div class="thread-pagination thread-pagination--bottom">' . $pagination . '</div>';
+            }
+        }
+
+        if ($canReply) {
+            $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
+            if (is_string($token) && $token !== '') {
+                $body .= $this->quickReply($thread, $token);
+            }
         }
 
         return Response::html(ProfileHtml::page(
@@ -109,6 +126,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             breadcrumbs: $this->breadcrumbs($hierarchy, $forum, $thread),
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
+            headAssets: $canReply ? RichEditorView::assets($this->basePath) : '',
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
     }
 
@@ -136,6 +154,30 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             PermissionKey::fromString(self::VIEW_PERMISSION),
             $forum->id(),
         );
+    }
+
+    private function quickReply(Thread $thread, string $token): string
+    {
+        $threadUrl = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()));
+        $action = $threadUrl . '/reply';
+
+        return '<section class="thread-quick-reply card" id="quick-reply">'
+            . '<header class="thread-quick-reply-head"><div><span class="forum-eyebrow">HIZLI YANIT</span>'
+            . '<h2>Yanıtını yaz</h2><p>Konu sayfasından ayrılmadan yanıt gönderebilirsin.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($action) . '">Tam editörü aç</a></header>'
+            . '<form class="thread-quick-reply-form" method="post" action="' . self::e($action) . '">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
+            . RichEditorView::render(
+                'body',
+                '',
+                EditorSurface::Post,
+                new EditorLimits(),
+                $this->basePath,
+                'thread-quick-reply-editor',
+            )
+            . '<div class="thread-quick-reply-actions"><a class="fx-btn" href="' . self::e($threadUrl)
+            . '">Vazgeç</a><button class="fx-btn fx-btn--primary" type="submit">Yanıtı gönder</button></div>'
+            . '</form></section>';
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
