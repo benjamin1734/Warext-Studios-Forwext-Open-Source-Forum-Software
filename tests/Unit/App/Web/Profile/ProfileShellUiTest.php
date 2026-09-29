@@ -12,6 +12,13 @@ final class ProfileShellUiTest extends TestCase
     {
         $root = dirname(__DIR__, 5);
         $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $baseCss = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+
+        self::assertStringContainsString("/assets/site-base.css", $profile);
+        self::assertStringNotContainsString(".forum-home-layout{display:grid", $profile);
+        self::assertStringContainsString('.forum-home-layout', $baseCss);
+        self::assertStringContainsString('.thread-post', $baseCss);
 
         self::assertStringContainsString('.top[data-scrolled="1"]', $css);
         self::assertStringContainsString('.nav-primary>a[aria-current="page"]', $css);
