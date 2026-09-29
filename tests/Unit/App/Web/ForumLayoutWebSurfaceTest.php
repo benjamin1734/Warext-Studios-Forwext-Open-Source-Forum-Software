@@ -35,6 +35,10 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="thread-status-icon"', $forum);
         self::assertStringContainsString('<svg viewBox="0 0 24 24"', $forum);
         self::assertStringContainsString('class="forum-last-avatar"', $forum);
+        self::assertStringContainsString('class="forum-thread-author"', $forum);
+        self::assertStringContainsString('forum-thread-pagination--top', $forum);
+        self::assertStringContainsString('forum-thread-pagination--bottom', $forum);
+        self::assertStringContainsString("is-sticky", $forum);
         self::assertStringContainsString('?forum=', $forum);
     }
 

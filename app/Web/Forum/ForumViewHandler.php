@@ -103,12 +103,19 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             $body .= '<div class="card forum-empty-state"><div class="forum-node-icon">◇</div>'
                 . '<h3>Henüz konu yok</h3><p class="muted">Bu forumdaki ilk konu oluşturulduğunda burada listelenecek.</p></div>';
         } else {
+            $pagination = $this->pagination($node, $threads['page'], $threads['pages']);
+            if ($pagination !== '') {
+                $body .= '<div class="forum-thread-pagination forum-thread-pagination--top">' . $pagination . '</div>';
+            }
             $body .= '<div class="forum-thread-list"><div class="forum-thread-list-head" aria-hidden="true">'
                 . '<span></span><span>Konu</span><span>Yanıt</span><span>Son mesaj</span></div>';
             foreach ($threads['rows'] as $thread) {
                 $body .= $this->renderThread($thread);
             }
-            $body .= '</div>' . $this->pagination($node, $threads['page'], $threads['pages']);
+            $body .= '</div>';
+            if ($pagination !== '') {
+                $body .= '<div class="forum-thread-pagination forum-thread-pagination--bottom">' . $pagination . '</div>';
+            }
         }
         $body .= '</section>';
 
@@ -162,7 +169,15 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             $badges .= '<span class="thread-badge">Kilitli</span>';
         }
 
-        $author = $thread['author_username'] ?? 'Silinmiş üye';
+        $authorUsername = $thread['author_username'];
+        $author = $authorUsername === null
+            ? '<strong class="forum-thread-author">Silinmiş üye</strong>'
+            : '<a class="forum-thread-author" href="' . self::e(ProfileHtml::memberPath($this->basePath, $authorUsername))
+                . '">' . self::e($authorUsername) . '</a>';
+        $rowClass = 'forum-thread-row'
+            . ($thread['sticky'] ? ' is-sticky' : '')
+            . ($thread['featured'] ? ' is-featured' : '')
+            . ($thread['locked'] ? ' is-locked' : '');
         $lastUsername = $thread['last_post_username'] ?? $thread['author_username'];
         $lastUser = $lastUsername ?? 'Silinmiş üye';
         $lastAt = $thread['last_post_at'] ?? $thread['created_at'];
@@ -176,10 +191,11 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             : '<a class="forum-last-user" href="' . self::e(ProfileHtml::memberPath($this->basePath, $lastUsername))
                 . '">' . self::e($lastUser) . '</a>';
 
-        return '<article class="forum-thread-row"><div class="thread-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Zm2 2v7.2L8.2 13H17V7H7Z"/></svg></div>'
+        return '<article class="' . $rowClass . '"><div class="thread-status-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Zm2 2v7.2L8.2 13H17V7H7Z"/></svg></div>'
             . '<div class="forum-thread-main">' . ($badges === '' ? '' : '<div class="thread-badges">' . $badges . '</div>')
             . '<h3><a href="' . self::e($url) . '">' . self::e($thread['title']) . '</a></h3>'
-            . '<p>' . self::e($author) . ' · ' . self::e(self::date($thread['created_at'])) . '</p></div>'
+            . '<p>' . $author . '<span aria-hidden="true"> · </span>'
+            . '<time datetime="' . self::e($thread['created_at']) . '">' . self::e(self::date($thread['created_at'])) . '</time></p></div>'
             . '<div class="forum-thread-count"><strong>' . number_format($replyCount, 0, ',', '.')
             . '</strong><span>Yanıt</span></div>'
             . '<div class="forum-thread-last">' . $lastAvatar . '<div>' . $lastUserHtml . '<span>'
