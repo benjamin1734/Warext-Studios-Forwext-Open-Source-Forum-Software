@@ -53,7 +53,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         $groups = $this->groups($hierarchy, $forums);
         $body = '<div class="forum-home-layout"><div class="forum-home-main">'
             . '<section class="forum-hero"><div><span class="forum-eyebrow">TOPLULUK</span>'
-            . '<h1>Forumlar</h1><p>Kategorileri keşfet, güncel tartışmalara katıl ve toplulukta neler olduğunu takip et.</p></div>'
+            . '<h1>Forumlar</h1><p>Tüm forumlar, konu sayıları ve son topluluk hareketliliği.</p></div>'
             . '<div class="forum-hero-actions">'
             . '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/search')) . '">İçerik ara</a>'
             . ($actor === null ? '' : '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/activity')) . '">Neler yeni?</a>')
@@ -208,14 +208,6 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         }
 
         $url = $this->basePath->prepend('/threads/' . rawurlencode($summary['latest_thread_id']));
-        $meta = [];
-        if ($summary['latest_username'] !== null) {
-            $meta[] = $summary['latest_username'];
-        }
-        if ($summary['latest_at'] !== null) {
-            $meta[] = self::date($summary['latest_at']);
-        }
-
         $username = $summary['latest_username'];
         $avatar = $username === null
             ? '<span class="forum-last-avatar" aria-hidden="true">?</span>'
@@ -269,11 +261,23 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         $html .= '<div class="forum-recent-list">';
         foreach ($recent as $thread) {
             $url = $this->basePath->prepend('/threads/' . rawurlencode($thread['thread_id']));
-            $meta = $thread['author_username'] === null
-                ? self::date($thread['activity_at'])
-                : $thread['author_username'] . ' · ' . self::date($thread['activity_at']);
-            $html .= '<a href="' . self::e($url) . '"><strong>' . self::e($thread['title'])
-                . '</strong><span>' . self::e($meta) . '</span></a>';
+            $username = $thread['author_username'];
+            $avatar = $username === null
+                ? '<span class="forum-recent-avatar" aria-hidden="true">?</span>'
+                : '<a class="forum-recent-avatar" href="' . self::e(ProfileHtml::memberPath($this->basePath, $username))
+                    . '" aria-label="' . self::e($username) . ' profili">' . ProfileHtml::initial($username) . '</a>';
+            $author = $username === null
+                ? ''
+                : '<a class="forum-recent-user" href="' . self::e(ProfileHtml::memberPath($this->basePath, $username))
+                    . '">' . self::e($username) . '</a>';
+            $time = '<time datetime="' . self::e($thread['activity_at']) . '">'
+                . self::e(self::date($thread['activity_at'])) . '</time>';
+
+            $html .= '<div class="forum-recent-item">' . $avatar . '<div class="forum-recent-content">'
+                . '<a class="forum-recent-title" href="' . self::e($url) . '">' . self::e($thread['title']) . '</a>'
+                . '<span class="forum-recent-meta">' . $author
+                . ($author === '' ? '' : '<span aria-hidden="true"> · </span>') . $time
+                . '</span></div></div>';
         }
 
         return $html . '</div></section>';

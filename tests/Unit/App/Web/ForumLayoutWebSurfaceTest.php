@@ -21,6 +21,9 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="forum-node-last"', $index);
         self::assertStringContainsString('class="forum-last-activity"', $index);
         self::assertStringContainsString('class="forum-last-avatar"', $index);
+        self::assertStringContainsString('class="forum-recent-item"', $index);
+        self::assertStringContainsString('class="forum-recent-avatar"', $index);
+        self::assertStringContainsString('class="forum-recent-user"', $index);
     }
 
     public function testForumThreadListUsesExplicitDesktopColumns(): void
