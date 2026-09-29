@@ -14,6 +14,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Added mobile background scroll locking and regression assertions for the new CSS architecture.
 - Added the binding native frontend rebuild plan at `docs/frontend/frontend-rebuild-plan-v1.md`.
 
+### Forum core and profile shell
+
+- Added CSRF-protected rich quick reply directly on thread pages while preserving the standalone reply route.
+- Added one-click post quoting into the inline RichEditor, top/bottom thread pagination and a clearer author/content/post metadata hierarchy.
+- Improved forum topic rows with linked authors, explicit sticky/featured/locked presentation, top/bottom pagination and responsive latest-activity identity.
+- Rebuilt forum-index recent activity as avatar/user/topic/time rows and tightened category focus behavior.
+- Added a compact profile identity shell with smaller banner/avatar proportions, profile-specific tabs and structured profile content surfaces.
+- Updated native web-surface regression tests for the new thread/profile layout contracts.
+
 
 ## 1.0.5 — Native authentication entry
 

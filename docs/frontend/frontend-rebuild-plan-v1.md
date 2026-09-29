@@ -30,10 +30,11 @@ Acceptance:
 
 ## Phase F1 — Forum core surfaces
 
-- [ ] Forum index: compact page toolbar, category headers, readable forum rows, latest activity identity and optional widget sidebar.
-- [ ] Forum view: sticky/featured/locked states, clear topic metadata, last activity, pagination and permission-aware actions.
-- [ ] Thread view: stronger author/content hierarchy, stable post anchors, compact action bar and mobile author header.
+- [x] Forum index: compact page toolbar, category headers, readable forum rows, latest activity identity and optional widget sidebar.
+- [x] Forum view: sticky/featured/locked states, clear topic metadata, last activity, pagination and permission-aware actions.
+- [x] Thread view: stronger author/content hierarchy, stable post anchors, compact action bar and mobile author header.
 - [ ] Reply/create flows: consistent composer shell, validation, attachment states and quick-reply path where domain services allow it.
+  - Rich editor and CSRF-protected inline quick reply are wired; attachment-state UX remains open.
 - [ ] Shared unread/read/status presentation hooks without inventing state not supplied by the backend.
 
 Acceptance:

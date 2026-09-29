@@ -8,20 +8,25 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F0
-LAST_COMMIT = 6987c2b050e82b247770960355bfaf2f0761aed2
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F1-F2
+LAST_COMMIT = 36d8ff7c170fe1cd67227e2c99cc90b177af3a94
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = finish frontend foundation cleanup, then rebuild forum index/forum view/thread view against docs/frontend/frontend-rebuild-plan-v1.md
+NEXT_STEP = close remaining F1 composer/attachment and unread-state UX, then continue F2 discovery/profile/account surfaces
 ```
 
-## Frontend rebuild — F0 in progress
+## Frontend rebuild — F1 core + F2 profile pass in progress
 
 - Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
 - Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
 - Historical navbar override generations were replaced by a single maintained navigation shell.
 - The oversized separate masthead was removed; brand, primary navigation and account tools now share one compact primary bar.
 - Mobile navigation now locks background document scrolling while open.
-- Forum/core surface rebuild remains open and follows F1 after foundation cleanup.
+- Forum index now uses identity-aware latest/recent activity rows and stronger keyboard focus states.
+- Forum view now exposes author identity links, explicit sticky/featured/locked row states, top/bottom pagination and responsive last-activity details.
+- Thread view now has a rebuilt author/content hierarchy, top/bottom pagination, CSRF-protected rich quick reply and one-click post quoting into the inline editor.
+- Native thread/create and reply composers use the shared RichEditor rather than plain textareas.
+- Profile identity/banner/tab/content shell received its first compact F2 redesign pass.
+- Remaining F1 work is composer attachment-state UX and backend-backed unread/read presentation; F2 discovery/account surfaces remain open.
 
 ## Production acceptance remediation — 1.0.5
 
