@@ -72,7 +72,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             return Response::text('Not Found', 404);
         }
 
-        $body = '<section class="thread-view-head"><div><div class="thread-badges">'
+        $body = '<section class="thread-view-head"><div class="thread-view-title"><div class="thread-badges">'
             . ($thread->isSticky() ? '<span class="thread-badge">Sabit</span>' : '')
             . ($thread->isFeatured() ? '<span class="thread-badge thread-badge--accent">Öne çıkan</span>' : '')
             . ($thread->isLocked() ? '<span class="thread-badge">Kilitli</span>' : '')

@@ -52,8 +52,8 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $groups = $this->groups($hierarchy, $forums);
         $body = '<div class="forum-home-layout"><div class="forum-home-main">'
-            . '<section class="forum-hero"><div><span class="forum-eyebrow">FORWEXT TOPLULUĞU</span>'
-            . '<h1>Forumlar</h1><p>Topluluk kategorilerini keşfet, güncel konulara katıl ve yeni içerikleri takip et.</p></div>'
+            . '<section class="forum-hero"><div><span class="forum-eyebrow">TOPLULUK</span>'
+            . '<h1>Forumlar</h1><p>Kategorileri keşfet, güncel tartışmalara katıl ve toplulukta neler olduğunu takip et.</p></div>'
             . '<div class="forum-hero-actions">'
             . '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/search')) . '">İçerik ara</a>'
             . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/members')) . '">Üyeler</a>'
@@ -176,7 +176,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
                 : implode(' › ', array_map(static fn (ForumNode $node): string => $node->title(), $parents));
 
             $html .= '<article class="forum-node"><a class="forum-node-icon" href="' . self::e($forumUrl)
-                . '" aria-label="' . self::e($forum->title()) . '">◆</a>'
+                . '" aria-label="' . self::e($forum->title()) . '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H8.6L4 20V4Zm2 2v9.8l1.9-1.8H18V6H6Z"/></svg></a>'
                 . '<div class="forum-node-main"><h3><a href="' . self::e($forumUrl) . '">'
                 . self::e($forum->title()) . '</a></h3>';
             if ($forum->description() !== '') {
