@@ -43,7 +43,10 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             self::assertStringContainsString($path, $html);
         }
         self::assertStringContainsString('Hesabım', $html);
-        self::assertStringContainsString('account-center-grid', $html);
+        self::assertStringContainsString('account-center-layout', $html);
+        self::assertStringContainsString('account-center-nav', $html);
+        self::assertStringContainsString('account-settings-group', $html);
+        self::assertStringContainsString('account-setting-row', $html);
     }
 
     public function testMemberNavigationExposesAccountCenterWithoutChangingAnonymousNavigation(): void
@@ -56,6 +59,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
         self::assertStringContainsString("'account.own'", $navigation);
         self::assertStringContainsString("'Hesabım'", $navigation);
         self::assertStringContainsString("NavigationAudience::Member", $navigation);
-        self::assertStringContainsString('.account-center-grid', $css);
+        self::assertStringContainsString('.account-center-layout', $css);
+        self::assertStringContainsString('.account-center-nav', $css);
     }
 }
