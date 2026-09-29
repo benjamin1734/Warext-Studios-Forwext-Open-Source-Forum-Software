@@ -71,13 +71,14 @@ final class NotificationInboxWebSurfaceTest extends TestCase
         $navigation = (string) file_get_contents($root . '/core/Ui/Navigation/NavigationRegistry.php');
         $handler = (string) file_get_contents($root . '/app/Web/Notification/NotificationRealtimeHandler.php');
         $asset = (string) file_get_contents($root . '/public/assets/notification-realtime.js');
-        $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString("'notifications.own'", $navigation);
         self::assertStringContainsString("'/account/notifications'", $navigation);
         self::assertStringContainsString("\$payload['unread_count']", $handler);
         self::assertStringContainsString('nav-notification-badge', $asset);
         self::assertStringContainsString('data-nav-key="notifications.own"', $asset);
-        self::assertStringContainsString('.nav-notification-badge', $profile);
+        self::assertStringContainsString('.nav-notification-badge', $css);
     }
 }

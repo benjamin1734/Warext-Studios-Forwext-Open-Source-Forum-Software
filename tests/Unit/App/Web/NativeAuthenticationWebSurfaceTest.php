@@ -113,9 +113,11 @@ final class NativeAuthenticationWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('data-nav-key="auth.login"', $html);
         self::assertStringContainsString('data-nav-key="auth.logout"', $html);
-        self::assertStringContainsString('.auth-entry-form', $html);
+        self::assertStringContainsString('.auth-entry-form', $css);
     }
 }

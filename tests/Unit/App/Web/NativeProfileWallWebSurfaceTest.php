@@ -53,6 +53,8 @@ final class NativeProfileWallWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $asset = (string) file_get_contents($root . '/public/assets/profile-activity-wall.js');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('/account/profile-activity/csrf', $asset);
         self::assertStringContainsString("'X-CSRF-Token': token", $asset);
@@ -65,7 +67,7 @@ final class NativeProfileWallWebSurfaceTest extends TestCase
         self::assertStringContainsString('replaceChildren', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/profile-activity-wall.js', $profile);
-        self::assertStringContainsString('.profile-wall-reaction-popover', $profile);
+        self::assertStringContainsString('.profile-wall-reaction-popover', $css);
     }
 
     public function testProfileReactionHandlerKeepsLegacyMethodsAndAddsPostAction(): void
