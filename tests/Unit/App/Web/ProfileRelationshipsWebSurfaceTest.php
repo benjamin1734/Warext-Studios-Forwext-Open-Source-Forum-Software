@@ -54,6 +54,8 @@ final class ProfileRelationshipsWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $asset = (string) file_get_contents($root . '/public/assets/profile-relationships.js');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('/account/interactions/csrf', $asset);
         self::assertStringContainsString("'X-CSRF-Token': token", $asset);
@@ -66,8 +68,8 @@ final class ProfileRelationshipsWebSurfaceTest extends TestCase
         self::assertStringContainsString('textContent =', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/profile-relationships.js', $profile);
-        self::assertStringContainsString('.profile-relationship-actions', $profile);
-        self::assertStringContainsString('.relationship-panel', $profile);
+        self::assertStringContainsString('.profile-relationship-actions', $css);
+        self::assertStringContainsString('.relationship-panel', $css);
     }
 
     public function testRelationshipAccountHtmlRendersListsAndMutationControls(): void

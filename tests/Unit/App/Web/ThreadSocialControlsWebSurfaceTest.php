@@ -54,6 +54,8 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $asset = (string) file_get_contents($root . '/public/assets/thread-interactions.js');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('/account/interactions/csrf', $asset);
         self::assertStringContainsString("'X-CSRF-Token': token", $asset);
@@ -64,8 +66,8 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString('replaceChildren', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/thread-interactions.js', $profile);
-        self::assertStringContainsString('.thread-reaction-popover', $profile);
-        self::assertStringContainsString('.thread-bookmark-form', $profile);
+        self::assertStringContainsString('.thread-reaction-popover', $css);
+        self::assertStringContainsString('.thread-bookmark-form', $css);
     }
 
     public function testClientLoadsReactionSummaryLazilyInsteadOfOnPageBootstrap(): void
