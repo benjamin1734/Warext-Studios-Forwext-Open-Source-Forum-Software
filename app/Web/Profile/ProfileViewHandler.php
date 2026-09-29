@@ -205,12 +205,12 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         if ($this->accessPolicy->canViewSection($profile, $profile->socialVisibility, $viewerId)) {
             $links = $this->socialLinks($profile, $viewerId);
             if ($links !== '') {
-                $content .= '<div class="section"><h2>Sosyal bağlantılar</h2><div class="social">'
+                $content .= '<div class="profile-subsection"><h3>Sosyal bağlantılar</h3><div class="social">'
                     . $links . '</div></div>';
             }
         }
 
-        return '<section class="section" id="overview"><h2>Genel Bakış</h2>' . $content . '</section>';
+        return '<section class="profile-section" id="overview"><header><h2>Genel Bakış</h2></header><div class="profile-section-body">' . $content . '</div></section>';
     }
 
     private function portfolioSection(UserProfile $profile, ?EntityId $viewerId): string
@@ -228,7 +228,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $content = '';
         foreach ($projects as $project) {
             $href = $this->basePath->prepend('/portfolio/' . rawurlencode($project->projectId->value()));
-            $content .= '<article class="search-hit"><div class="search-hit-type">'
+            $content .= '<article class="profile-content-row"><div class="profile-content-kicker">'
                 . ProfileHtml::escape($project->categoryKey)
                 . ($project->featured ? ' · Öne Çıkan' : '')
                 . '</div><h3><a href="' . ProfileHtml::escape($href) . '">'
@@ -241,7 +241,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             $content = '<p class="muted">Henüz yayımlanmış portfolyo projesi yok.</p>';
         }
 
-        return '<section class="section" id="portfolio"><h2>Portfolyo</h2>' . $content . '</section>';
+        return '<section class="profile-section" id="portfolio"><header><h2>Portfolyo</h2></header><div class="profile-content-list">' . $content . '</div></section>';
     }
 
     private function trophySection(EntityId $userId, ?EntityId $viewerId): string
@@ -280,10 +280,10 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             $timeline.='<li><strong>'.ProfileHtml::escape($definition->name).'</strong> · '
                 .$action.' · '.ProfileHtml::escape($event->occurredAt->format('Y-m-d H:i')).' UTC</li>';
         }
-        if($timeline!=='')$timeline='<div class="section"><h3>Başarım geçmişi</h3><ul class="trophy-history">'.$timeline.'</ul></div>';
+        if($timeline!=='')$timeline='<div class="profile-subsection"><h3>Başarım geçmişi</h3><ul class="trophy-history">'.$timeline.'</ul></div>';
 
-        return '<section class="section" id="achievements"><h2>Kupa, Rozet ve Başarımlar</h2>'
-            .'<div class="trophy-grid">'.$cards.'</div>'.$timeline.'</section>';
+        return '<section class="profile-section" id="achievements"><header><h2>Kupa, Rozet ve Başarımlar</h2></header>'
+            .'<div class="profile-section-body"><div class="trophy-grid">'.$cards.'</div>'.$timeline.'</div></section>';
     }
 
     private function marketplaceSection(EntityId $userId,?EntityId $viewerId):string
@@ -300,7 +300,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         }
         $content='';
         foreach($cards as $card){
-            $content.='<article class="search-hit"><div class="search-hit-type">'
+            $content.='<article class="profile-content-row"><div class="profile-content-kicker">'
                 .ProfileHtml::escape($card->categoryName).($card->featured?' · Öne Çıkan':'')
                 .'</div><h3><a href="'.ProfileHtml::escape($this->basePath->prepend('/marketplace/listings/'.$card->listingId->value())).'">'
                 .ProfileHtml::escape($card->title).'</a></h3><p class="muted">'
@@ -308,7 +308,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 .'</p></article>';
         }
         if($content==='')$content='<p class="muted">Henüz herkese açık Marketplace ilanı yok.</p>';
-        return '<section class="section" id="marketplace"><h2>Marketplace</h2>'.$content.'</section>';
+        return '<section class="profile-section" id="marketplace"><header><h2>Marketplace</h2></header>'
+            .'<div class="profile-content-list">'.$content.'</div></section>';
     }
 
     private function aboutSection(UserProfile $profile, ?EntityId $viewerId): string
@@ -321,8 +322,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             ? '<span class="muted">Henüz bir hakkımda metni eklenmemiş.</span>'
             : ProfileHtml::escape($profile->about);
 
-        return '<section class="section" id="about"><h2>Hakkımda</h2><div class="about">'
-            . $about . '</div></section>';
+        return '<section class="profile-section" id="about"><header><h2>Hakkımda</h2></header>'
+            . '<div class="profile-section-body"><div class="about">' . $about . '</div></div></section>';
     }
 
     private function socialLinks(UserProfile $profile, ?EntityId $viewerId): string

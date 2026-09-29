@@ -2723,3 +2723,23 @@ a.forum-thread-author:hover{color:var(--text)}
 .profile-url-form>p{margin:0;font-size:10.5px;line-height:1.5}
 .profile-url-actions{display:flex;justify-content:flex-end;padding-top:3px}
 @media(max-width:520px){.profile-url-actions{display:grid}.profile-url-actions .fx-btn{justify-content:center}}
+
+.profile-section{overflow:hidden;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.profile-section>header{padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.profile-section>header h2{margin:0;font-size:14px}
+.profile-section-body{padding:13px}
+.profile-subsection{margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}
+.profile-subsection:first-child{margin-top:0;padding-top:0;border-top:0}
+.profile-subsection h3{margin:0 0 8px;font-size:12.5px}
+.profile-content-list{display:grid}
+.profile-content-row{padding:11px 13px;border-bottom:1px solid var(--line);background:transparent}
+.profile-content-row:last-child{border-bottom:0}
+.profile-content-row:hover{background:color-mix(in srgb,var(--accent) 2.5%,var(--panel))}
+.profile-content-row h3{margin:3px 0;font-size:13.5px}
+.profile-content-row h3 a{color:var(--text);text-decoration:none}
+.profile-content-row h3 a:hover{color:var(--accent)}
+.profile-content-row p{margin:4px 0 0;color:var(--muted);font-size:10.5px;line-height:1.5}
+.profile-content-kicker{display:inline-flex;min-height:19px;align-items:center;padding:1px 6px;border-radius:4px;background:color-mix(in srgb,var(--accent) 7%,var(--panel2));color:var(--accent);font-size:8.75px;font-weight:820;text-transform:uppercase;letter-spacing:.05em}
+.profile-content .trophy-grid{padding:0}
+.profile-content .trophy-card{border-radius:8px;box-shadow:none}
+.profile-content .trophy-history{margin-bottom:0}
