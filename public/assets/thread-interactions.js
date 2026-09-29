@@ -116,6 +116,34 @@
     const postId = root.dataset.postId;
     if (!postId || !/^[a-f0-9]{32}$/.test(postId)) continue;
 
+    const quoteButton = root.querySelector('[data-quote-post]');
+    if (quoteButton instanceof HTMLButtonElement) {
+      quoteButton.addEventListener('click', async () => {
+        const editorRoot = document.getElementById('thread-quick-reply-editor');
+        const editorApi = window.ForwextRichEditor;
+        if (!(editorRoot instanceof HTMLElement) || !editorApi || typeof editorApi.quotePost !== 'function') {
+          setStatus(root, 'Hızlı yanıt editörü kullanılamıyor.', true);
+          return;
+        }
+        quoteButton.disabled = true;
+        try {
+          const inserted = await editorApi.quotePost(editorRoot, postId);
+          if (!inserted) {
+            setStatus(root, 'Mesaj alıntılanamadı.', true);
+            return;
+          }
+          editorRoot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const source = editorRoot.querySelector('[data-fx-editor-source]');
+          if (source instanceof HTMLTextAreaElement) source.focus({ preventScroll: true });
+          setStatus(root, 'Alıntı hızlı yanıta eklendi.');
+        } catch (_) {
+          setStatus(root, 'Mesaj alıntılanamadı.', true);
+        } finally {
+          quoteButton.disabled = false;
+        }
+      });
+    }
+
     const reactionMenu = root.querySelector('[data-reaction-menu]');
     let summaryLoaded = false;
     if (reactionMenu instanceof HTMLDetailsElement) {

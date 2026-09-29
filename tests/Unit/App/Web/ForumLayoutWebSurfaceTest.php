@@ -48,7 +48,9 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="thread-post-author"', $thread);
         self::assertStringContainsString('class="thread-post-body"', $thread);
         self::assertStringContainsString('.thread-post-author{', $css);
-        self::assertStringContainsString('.thread-post-body>header', $css);
+        self::assertStringContainsString('.thread-post-meta{', $css);
+        self::assertStringContainsString('.thread-post-author-copy', $css);
+        self::assertStringContainsString('.thread-quick-reply{', $css);
         self::assertStringContainsString('thread-pagination--top', $thread);
         self::assertStringContainsString('thread-pagination--bottom', $thread);
     }

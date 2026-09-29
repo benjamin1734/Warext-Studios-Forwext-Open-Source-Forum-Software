@@ -44,6 +44,7 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString("'angry' => ['😠', 'Kızgın']", $thread);
         self::assertStringContainsString('data-reaction-key="', $thread);
         self::assertStringContainsString('data-bookmark-form', $thread);
+        self::assertStringContainsString('data-quote-post', $thread);
         self::assertStringContainsString('maxlength="1000"', $thread);
         self::assertStringContainsString('hash_equals($actor->value(), $post[\'author_user_id\'])', $thread);
         self::assertStringContainsString('Kendi mesajına tepki veremezsin.', $thread);
@@ -64,6 +65,8 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString("action: 'save_bookmark'", $asset);
         self::assertStringContainsString('textContent =', $asset);
         self::assertStringContainsString('replaceChildren', $asset);
+        self::assertStringContainsString('ForwextRichEditor', $asset);
+        self::assertStringContainsString("quotePost(editorRoot, postId)", $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/thread-interactions.js', $profile);
         self::assertStringContainsString('.thread-reaction-popover', $css);

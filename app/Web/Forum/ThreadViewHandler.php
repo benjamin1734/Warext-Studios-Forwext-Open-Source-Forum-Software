@@ -104,7 +104,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
             $body .= '<div class="thread-post-list">';
             foreach ($posts['rows'] as $post) {
-                $body .= $this->renderPost($post, $actor);
+                $body .= $this->renderPost($post, $actor, $canReply);
             }
             $body .= '</div>';
             if ($pagination !== '') {
@@ -181,7 +181,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
-    private function renderPost(array $post, ?EntityId $actor): string
+    private function renderPost(array $post, ?EntityId $actor, bool $canReply): string
     {
         $username = $post['author_username'] ?? 'Silinmiş üye';
         $profileUrl = $post['author_username'] === null
@@ -196,23 +196,34 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         }
 
         $author = $profileUrl === null
-            ? '<strong>' . self::e($username) . '</strong>'
+            ? '<strong class="thread-post-author-name">' . self::e($username) . '</strong>'
             : '<a class="thread-post-author-name" href="' . self::e($profileUrl) . '">' . self::e($username) . '</a>';
+        $avatar = $profileUrl === null
+            ? '<span class="thread-post-avatar" aria-hidden="true">' . self::e($initial) . '</span>'
+            : '<a class="thread-post-avatar" href="' . self::e($profileUrl) . '" aria-label="'
+                . self::e($username) . ' profili">' . self::e($initial) . '</a>';
+        $edited = $post['updated_at'] !== $post['created_at']
+            ? '<span class="thread-post-edited">Düzenlendi · ' . self::e(self::date($post['updated_at'])) . '</span>'
+            : '';
 
         return '<article class="thread-post" id="post-' . self::e($post['post_id']) . '">'
-            . '<aside class="thread-post-author"><div class="thread-post-avatar">' . self::e($initial) . '</div>'
-            . $author . '<span class="muted">Üye</span></aside>'
-            . '<div class="thread-post-body"><header><a href="#post-' . self::e($post['post_id']) . '">#'
-            . number_format($post['position'], 0, ',', '.') . '</a><time>'
-            . self::e(self::date($post['created_at'])) . '</time></header>'
+            . '<aside class="thread-post-author">' . $avatar
+            . '<div class="thread-post-author-copy">' . $author
+            . '<span class="thread-post-author-role">' . ($profileUrl === null ? 'Silinmiş hesap' : 'Topluluk üyesi')
+            . '</span></div></aside>'
+            . '<div class="thread-post-body"><header class="thread-post-meta">'
+            . '<time datetime="' . self::e($post['created_at']) . '">' . self::e(self::date($post['created_at'])) . '</time>'
+            . '<a class="thread-post-permalink" href="#post-' . self::e($post['post_id']) . '" aria-label="Mesaj '
+            . number_format($post['position'], 0, ',', '.') . ' bağlantısı">#'
+            . number_format($post['position'], 0, ',', '.') . '</a></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
-            . '<footer><span class="muted">Son düzenleme: ' . self::e(self::date($post['updated_at'])) . '</span>'
-            . $this->interactionControls($post, $actor) . '</footer>'
+            . '<footer>' . $edited
+            . $this->interactionControls($post, $actor, $canReply) . '</footer>'
             . '</div></article>';
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
-    private function interactionControls(array $post, ?EntityId $actor): string
+    private function interactionControls(array $post, ?EntityId $actor, bool $canReply): string
     {
         if ($actor === null) {
             return '';
@@ -240,6 +251,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         }
 
         return '<div class="thread-post-interactions" data-thread-interactions data-post-id="' . $postId . '">'
+            . ($canReply ? '<button type="button" class="fx-btn thread-quote-button" data-quote-post>Alıntıla</button>' : '')
             . '<details class="thread-reaction-menu" data-reaction-menu><summary class="fx-btn">'
             . 'Tepkiler <span class="thread-reaction-total" data-reaction-total></span></summary>'
             . '<div class="thread-reaction-popover"><div class="thread-reaction-counts" data-reaction-counts></div>'
