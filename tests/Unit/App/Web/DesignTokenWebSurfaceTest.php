@@ -12,18 +12,20 @@ final class DesignTokenWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $profileHtml = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
 
         self::assertStringContainsString('DesignTokenCatalog::coreDefaults()', $profileHtml);
         self::assertStringContainsString('new DesignTokenCssCompiler()', $profileHtml);
         self::assertStringContainsString(
             '--bg:var(--forwext-semantic-page-background)',
-            $profileHtml,
+            $css,
         );
         self::assertStringContainsString(
             'var(--forwext-typography-font-family-sans)',
-            $profileHtml,
+            $css,
         );
-        self::assertStringNotContainsString('--bg:#0d1117', $profileHtml);
+        self::assertStringNotContainsString('--bg:#0d1117', $profileHtml . $css);
     }
 
     public function testCanonicalManifestIsSharedWithTheTypescriptBoundary(): void

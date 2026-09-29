@@ -63,7 +63,8 @@ final class ForumWritingWebSurfaceTest extends TestCase
         $root = dirname(__DIR__,4);
         $forum = (string) file_get_contents($root.'/app/Web/Forum/ForumViewHandler.php');
         $thread = (string) file_get_contents($root.'/app/Web/Forum/ThreadViewHandler.php');
-        $html = (string) file_get_contents($root.'/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root.'/public/assets/site-base.css')
+            . (string) file_get_contents($root.'/public/assets/site-shell.css');
 
         self::assertStringContainsString('canCreateThread($actor, $node)', $forum);
         self::assertStringContainsString('ThreadPermission::Create->key()', $forum);
@@ -73,7 +74,7 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('PostPermission::Create->key()', $thread);
         self::assertStringContainsString('use Forwext\\Core\\Forum\\Post\\PostPermission;', $thread);
         self::assertStringContainsString('>Yanıtla</a>', $thread);
-        self::assertStringContainsString('.forum-compose-form', $html);
-        self::assertStringContainsString('.thread-view-actions', $html);
+        self::assertStringContainsString('.forum-compose-form', $css);
+        self::assertStringContainsString('.thread-view-actions', $css);
     }
 }

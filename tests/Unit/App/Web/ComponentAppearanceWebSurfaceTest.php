@@ -12,14 +12,16 @@ final class ComponentAppearanceWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
         $roleCss = (string) file_get_contents($root . '/resources/css/role-appearance.css');
 
         self::assertStringContainsString('ComponentAppearanceRegistry::coreDefaults($catalog)', $profile);
         self::assertStringContainsString('new ComponentAppearanceCssCompiler()', $profile);
-        self::assertStringContainsString('--forwext-component-header-background', $profile);
-        self::assertStringContainsString('--forwext-component-input-background', $profile);
-        self::assertStringContainsString('--forwext-component-badge-background', $profile);
-        self::assertStringContainsString('--forwext-component-alert-background', $profile);
+        self::assertStringContainsString('--forwext-component-header-background', $css);
+        self::assertStringContainsString('--forwext-component-input-background', $css);
+        self::assertStringContainsString('--forwext-component-badge-background', $css);
+        self::assertStringContainsString('--forwext-component-alert-background', $css);
         self::assertStringContainsString('--forwext-component-role-banner-background', $roleCss);
     }
 
