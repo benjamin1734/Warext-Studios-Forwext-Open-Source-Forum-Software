@@ -35,6 +35,10 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('PostBody::fromString($message)', $handler);
         self::assertStringContainsString('pipeline: $this->pipeline', $handler);
         self::assertStringContainsString('name="_csrf"', $handler);
+        self::assertStringContainsString('RichEditorView::render(', $handler);
+        self::assertStringContainsString('EditorSurface::Thread', $handler);
+        self::assertStringContainsString("headAssets: RichEditorView::assets", $handler);
+        self::assertStringNotContainsString('<textarea name="body"', $handler);
     }
 
     public function testReplyComposerUsesDomainServicePermissionAndModerationAwareRedirect(): void
@@ -48,6 +52,10 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('PostModerationState::Visible', $handler);
         self::assertStringContainsString('?reply_pending=1', $handler);
         self::assertStringContainsString('name="_csrf"', $handler);
+        self::assertStringContainsString('RichEditorView::render(', $handler);
+        self::assertStringContainsString('EditorSurface::Post', $handler);
+        self::assertStringContainsString("headAssets: RichEditorView::assets", $handler);
+        self::assertStringNotContainsString('<textarea name="body"', $handler);
     }
 
     public function testBrowseSurfacesExposeWriteActionsOnlyThroughPermissionChecks(): void

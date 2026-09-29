@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\App\Web\Editor\RichEditorView;
 use Forwext\Core\Content\Pipeline\ContentPipeline;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -18,6 +19,8 @@ use Forwext\Core\Forum\Node\ForumNodeAuthorization;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\Editor\EditorLimits;
+use Forwext\Core\Forum\Editor\EditorSurface;
 use Forwext\Core\Forum\Post\PostBody;
 use Forwext\Core\Forum\Post\PostModerationState;
 use Forwext\Core\Forum\Post\PostOperationException;
@@ -160,8 +163,14 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
             . ($error ? '<div class="forum-compose-error">Yanıt gönderilemedi. Mesaj alanını kontrol edip tekrar deneyin.</div>' : '')
             . '<form class="forum-compose-form card" method="post" action="' . self::e($action) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
-            . '<label><span>Mesaj</span><textarea name="body" rows="12" maxlength="100000" required>'
-            . self::e($message) . '</textarea></label>'
+            . RichEditorView::render(
+                'body',
+                $message,
+                EditorSurface::Post,
+                new EditorLimits(),
+                $this->basePath,
+                'thread-reply-editor',
+            )
             . '<div class="forum-compose-actions"><a class="fx-btn" href="' . self::e($threadUrl) . '">İptal</a>'
             . '<button class="fx-btn fx-btn--primary" type="submit">Yanıtı gönder</button></div></form></section>';
 
@@ -178,6 +187,7 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
             ]),
             authenticated: true,
             viewerId: $actor->value(),
+            headAssets: RichEditorView::assets($this->basePath),
         ), $error ? 422 : 200)->withHeader('Cache-Control', 'private, no-store');
     }
 

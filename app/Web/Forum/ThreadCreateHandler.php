@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
+use Forwext\App\Web\Editor\RichEditorView;
 use Forwext\Core\Content\Pipeline\ContentPipeline;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
@@ -20,6 +21,8 @@ use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeSlug;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\Editor\EditorLimits;
+use Forwext\Core\Forum\Editor\EditorSurface;
 use Forwext\Core\Forum\Post\PostBody;
 use Forwext\Core\Forum\Post\PostOperationException;
 use Forwext\Core\Forum\Post\PostRepository;
@@ -177,8 +180,14 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
             . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
             . '<label><span>Konu başlığı</span><input type="text" name="title" maxlength="200" required autocomplete="off" value="'
             . self::e($title) . '"></label>'
-            . '<label><span>Mesaj</span><textarea name="body" rows="12" maxlength="100000" required>'
-            . self::e($message) . '</textarea></label>'
+            . RichEditorView::render(
+                'body',
+                $message,
+                EditorSurface::Thread,
+                new EditorLimits(),
+                $this->basePath,
+                'thread-create-editor',
+            )
             . '<div class="forum-compose-actions"><a class="fx-btn" href="' . self::e($forumUrl) . '">İptal</a>'
             . '<button class="fx-btn fx-btn--primary" type="submit">Konuyu oluştur</button></div></form></section>';
 
@@ -194,6 +203,7 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
             ]),
             authenticated: true,
             viewerId: $actor->value(),
+            headAssets: RichEditorView::assets($this->basePath),
         ), $error ? 422 : 200)->withHeader('Cache-Control', 'private, no-store');
     }
 

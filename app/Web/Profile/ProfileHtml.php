@@ -30,6 +30,7 @@ final class ProfileHtml
         bool $authenticated = false,
         ?WidgetRenderService $widgetRenderer = null,
         ?string $viewerId = null,
+        string $headAssets = '',
     ): string {
         $safeTitle = self::escape($title);
         $home = self::escape($basePath->prepend('/'));
@@ -231,7 +232,8 @@ final class ProfileHtml
             . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::appearanceCss($basePath)
             . '</style>'
             . '<link rel="stylesheet" href="' . $siteBaseStylesheet . '">'
-            . '<link rel="stylesheet" href="' . $siteShellStylesheet . '"></head><body data-forwext-background-scope="site">'
+            . '<link rel="stylesheet" href="' . $siteShellStylesheet . '">' . $headAssets
+            . '</head><body data-forwext-background-scope="site">'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
             . '<div class="top-main"><div class="topin">'
