@@ -38,6 +38,9 @@ final class ProfileActivityWebSurfaceTest extends TestCase
         self::assertStringContainsString('member-directory-grid', $members);
         self::assertStringContainsString('surface-head online-users-head', $online);
         self::assertStringNotContainsString('style="margin-top:', $members . $online);
+        $settings = (string) file_get_contents($root . '/app/Web/Profile/ProfileActivitySettingsHtml.php');
+        self::assertStringContainsString('surface-head profile-activity-head', $settings);
+        self::assertStringContainsString('profile-activity-form', $settings);
     }
 
 }

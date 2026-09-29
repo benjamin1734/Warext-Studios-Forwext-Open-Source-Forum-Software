@@ -20,12 +20,12 @@ final class ProfileActivitySettingsHtml
             ? '<div class="notification-settings-notice" role="status">Profil etkinliği ayarları kaydedildi.</div>'
             : '';
 
-        $content = '<section class="profile-activity-settings"><header class="notification-settings-hero card">'
-            . '<div><span class="forum-eyebrow">HESAP</span><h1>Profil Etkinliği</h1>'
+        $content = '<section class="profile-activity-settings discovery-page"><header class="surface-head profile-activity-head">'
+            . '<div><span class="forum-eyebrow">GİZLİLİK</span><h1>Profil Etkinliği</h1>'
             . '<p>Profil hareketlerini kimlerin görebileceğini ve profiline kimlerin yazabileceğini belirle.</p></div>'
-            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/activity')) . '">Etkinlik akışı</a></header>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/activity')) . '">Neler yeni?</a></header>'
             . $notice
-            . '<form class="notification-settings-form card" method="post" action="'
+            . '<form class="notification-settings-form surface-panel profile-activity-form" method="post" action="'
             . self::e($basePath->prepend('/account/profile-activity')) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save_activity_settings">'

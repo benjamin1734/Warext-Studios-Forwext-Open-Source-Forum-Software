@@ -2705,3 +2705,21 @@ a.forum-thread-author:hover{color:var(--text)}
   .bookmark-card{align-items:flex-start;display:grid}
   .bookmark-card>.fx-btn{justify-self:start}
 }
+
+.profile-activity-head>.fx-btn,.profile-url-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.profile-activity-form{padding:15px}
+.profile-url-panel{display:grid;gap:14px}
+.current-url{display:grid;gap:4px;padding:10px 11px;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
+.current-url strong{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.current-url span{min-width:0;overflow-wrap:anywhere;font-size:11.5px}
+.current-url a{color:var(--text);font-weight:720;text-decoration:none}
+.current-url a:hover{color:var(--accent)}
+.profile-url-form{display:grid;gap:8px}
+.profile-url-form>label{font-size:11px;font-weight:760;color:var(--muted)}
+.slugrow{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
+.slugrow>span{align-self:stretch;display:grid;place-items:center;padding:0 10px;border-right:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:760}
+.slugrow input{width:100%;min-height:42px;border:0;background:transparent;color:var(--text);padding:9px 10px;font:inherit;outline:none}
+.slugrow:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 11%,transparent)}
+.profile-url-form>p{margin:0;font-size:10.5px;line-height:1.5}
+.profile-url-actions{display:flex;justify-content:flex-end;padding-top:3px}
+@media(max-width:520px){.profile-url-actions{display:grid}.profile-url-actions .fx-btn{justify-content:center}}

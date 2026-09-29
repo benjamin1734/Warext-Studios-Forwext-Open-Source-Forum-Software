@@ -147,6 +147,8 @@ final class ProfileUrlHttpTest extends TestCase
         $get = $router->handle(new Request(HttpMethod::Get, '/account/profile-url'));
         self::assertSame(200, $get->status());
         self::assertStringContainsString('Özel profil URL', $get->body());
+        self::assertStringContainsString('surface-head profile-url-head', $get->body());
+        self::assertStringContainsString('surface-panel profile-url-panel', $get->body());
         $setCookie = $get->headers()->first('set-cookie');
         self::assertNotNull($setCookie);
         self::assertMatchesRegularExpression('/^forwext_csrf_test=[a-f0-9]{64};/', $setCookie);

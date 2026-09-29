@@ -50,26 +50,36 @@ final readonly class ProfileUrlSettingsHandler implements RequestHandlerInterfac
 
         $notice = '';
         if (($request->query()['updated'] ?? null) === '1') {
-            $notice = '<div class="notice success">Özel profil adresin güncellendi.</div>';
+            $notice = '<div class="notification-settings-notice" role="status">Özel profil adresin güncellendi.</div>';
         } elseif (($request->query()['error'] ?? null) === '1') {
-            $notice = '<div class="notice error">Bu adres kullanılamıyor veya değiştirme sınırına takıldı.</div>';
+            $notice = '<div class="auth-entry-error" role="alert">Bu adres kullanılamıyor veya değiştirme sınırına takıldı.</div>';
         }
 
         $action = ProfileHtml::escape($this->basePath->prepend('/account/profile-url'));
-        $body = '<section class="card settings"><h1>Özel profil URL’si</h1>'
-            . '<p class="muted">Kısa ve paylaşılabilir profil adresini seç. Eski adreslerin başka hesaba verilmez.</p>'
-            . $notice
-            . '<div class="current-url"><strong>Mevcut adres:</strong> ' . $currentUrl . '</div>'
-            . '<form method="post" action="' . $action . '">'
+        $body = '<section class="profile-url-settings discovery-page"><header class="surface-head profile-url-head">'
+            . '<div><span class="forum-eyebrow">PROFİL</span><h1>Özel profil URL’si</h1>'
+            . '<p>Kısa ve paylaşılabilir profil adresini seç. Eski adreslerin başka hesaba verilmez.</p></div>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/account')) . '">Hesabıma dön</a>'
+            . '</header>' . $notice
+            . '<section class="surface-panel profile-url-panel"><div class="current-url"><strong>Mevcut adres</strong><span>'
+            . $currentUrl . '</span></div>'
+            . '<form class="profile-url-form" method="post" action="' . $action . '">
             . '<input type="hidden" name="_csrf" value="' . ProfileHtml::escape($token) . '">'
             . '<label for="profile-slug">Adres</label>'
             . '<div class="slugrow"><span>/u/</span><input id="profile-slug" name="slug" required minlength="3" maxlength="32" '
             . 'pattern="[A-Za-z0-9](?:[A-Za-z0-9-]{1,30}[A-Za-z0-9])" autocomplete="off" spellcheck="false" '
             . 'value="' . ProfileHtml::escape($current?->slug->value() ?? '') . '"></div>'
             . '<p class="muted">3–32 karakter; harf, rakam ve tek tire kullanılabilir. Sistem adları ve daha önce alınmış adresler kullanılamaz.</p>'
-            . '<button type="submit">Adresi kaydet</button></form></section>';
+            . '<div class="profile-url-actions"><button class="fx-btn fx-btn--primary" type="submit">Adresi kaydet</button></div>'
+            . '</form></section></section>';
 
-        return Response::html(ProfileHtml::page('Özel profil URL’si', $body, $this->basePath))
+        return Response::html(ProfileHtml::page(
+            'Özel profil URL’si',
+            $body,
+            $this->basePath,
+            authenticated: true,
+            viewerId: $viewerId->value(),
+        ))
             ->withHeader('Cache-Control', 'private, no-store');
     }
 
