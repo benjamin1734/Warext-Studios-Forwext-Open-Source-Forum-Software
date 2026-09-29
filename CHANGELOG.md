@@ -6,6 +6,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 
 ## Unreleased
 
+### Frontend foundation
+
+- Extracted static native public UI CSS out of `ProfileHtml::page()` into `public/assets/site-base.css`, leaving only dynamic appearance/design-token output inline.
+- Replaced layered historical navigation CSS with one maintained navigation shell and removed the separate oversized masthead.
+- Moved Forwext branding, primary navigation, account controls, alerts and search into one compact desktop bar while preserving contextual secondary navigation.
+- Added mobile background scroll locking and regression assertions for the new CSS architecture.
+- Added the binding native frontend rebuild plan at `docs/frontend/frontend-rebuild-plan-v1.md`.
+
+
 ## 1.0.5 — Native authentication entry
 
 - Added native PHP login and logout routes with dedicated CSRF protection and responsive account-entry UI.

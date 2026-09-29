@@ -5,14 +5,23 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.5
+CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / native-php-ui-pass-3
-LAST_COMMIT = 4ddb8363a27efae6bd9690c6ac74c21c86a1e87b
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F0
+LAST_COMMIT = 6987c2b050e82b247770960355bfaf2f0761aed2
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = native MFA completion + registration/account recovery UI, then notifications/social/ACP/module UI parity
+NEXT_STEP = finish frontend foundation cleanup, then rebuild forum index/forum view/thread view against docs/frontend/frontend-rebuild-plan-v1.md
 ```
+
+## Frontend rebuild — F0 in progress
+
+- Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
+- Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
+- Historical navbar override generations were replaced by a single maintained navigation shell.
+- The oversized separate masthead was removed; brand, primary navigation and account tools now share one compact primary bar.
+- Mobile navigation now locks background document scrolling while open.
+- Forum/core surface rebuild remains open and follows F1 after foundation cleanup.
 
 ## Production acceptance remediation — 1.0.5
 
@@ -67,7 +76,7 @@ NEXT_STEP = native MFA completion + registration/account recovery UI, then notif
 
 ## Current position
 
-- Target: **Forwext 1.0.5 Production acceptance remediation**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.10+ Production acceptance remediation / frontend rebuild**, not an MVP/demo/prototype.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
