@@ -28,6 +28,7 @@ final class SearchHtml
         ?GlobalDiscoveryRegistry $discovery = null,
         string $selectedTab = GlobalDiscoveryRegistry::ALL,
         bool $authenticated = false,
+        bool $hasMore = false,
     ): string {
         $discovery ??= GlobalDiscoveryRegistry::withCoreDefaults();
         $action = ProfileHtml::escape($basePath->prepend('/search'));
@@ -36,10 +37,11 @@ final class SearchHtml
         );
         $advancedOpen = self::hasAdvancedFilters($query) ? ' open' : '';
 
-        $content = '<section class="card"><div class="search-head"><div><h1>Keşfet ve Ara</h1>'
-            . '<p class="muted">Erişebildiğiniz içerikleri türüne göre tek yerden arayın.</p></div></div>'
+        $content = '<section class="discovery-page"><header class="surface-head search-head"><div>'
+            . '<span class="forum-eyebrow">KEŞİF</span><h1>Keşfet ve Ara</h1>'
+            . '<p>Erişebildiğin forum, üye ve modül içeriklerini tek yerden ara.</p></div></header>'
             . self::tabs($basePath, $query, $discovery, $selectedTab)
-            . '<form class="search-form" method="get" action="' . $action . '">'
+            . '<section class="surface-panel search-panel"><form class="search-form" method="get" action="' . $action . '">'
             . '<input type="hidden" name="tab" value="' . ProfileHtml::escape($selectedTab) . '">'
             . '<label class="search-wide"><span>Arama</span><input name="q" maxlength="500" required value="'
             . ProfileHtml::escape($text) . '" placeholder="Ne arıyorsunuz?"></label>'
@@ -75,15 +77,17 @@ final class SearchHtml
 
         $content .= '</div></details>'
             . '<div class="search-actions"><button type="submit">Ara</button><a href="' . $action
-            . '">Filtreleri temizle</a></div></form>';
+            . '">Filtreleri temizle</a></div></form></section>';
 
         if ($error !== null) {
             $content .= '<div class="search-alert" role="alert">' . ProfileHtml::escape($error) . '</div>';
         } elseif ($text !== '') {
-            $content .= '<div class="search-results"><div class="search-result-head"><h2>Sonuçlar</h2>'
+            $content .= '<section class="search-results"><div class="search-result-head"><div>'
+                . '<span class="forum-eyebrow">SONUÇLAR</span><h2>Arama sonuçları</h2></div>'
                 . '<span class="muted">Sayfa ' . $page . '</span></div>'
                 . self::results($basePath, $hits, $discovery, $selectedTab)
-                . '</div>';
+                . self::pagination($basePath, $query, $page, $hasMore)
+                . '</section>';
         }
 
         $content .= '</section>';
@@ -102,7 +106,7 @@ final class SearchHtml
         GlobalDiscoveryRegistry $registry,
         string $selectedTab,
     ): string {
-        $tabs = '<nav class="tabs" aria-label="İçerik türleri">'
+        $tabs = '<nav class="tabs surface-tabs search-tabs" aria-label="İçerik türleri">'
             . self::tabLink($basePath, $query, GlobalDiscoveryRegistry::ALL, 'Tümü', $selectedTab);
         foreach ($registry->categories() as $category) {
             $tabs .= self::tabLink($basePath, $query, $category->key, $category->label, $selectedTab);
@@ -143,7 +147,7 @@ final class SearchHtml
         if ($selectedTab !== GlobalDiscoveryRegistry::ALL) {
             $category = $registry->find($selectedTab);
             $label = $category?->label ?? 'Sonuçlar';
-            $body = '<section class="section"><h2>' . ProfileHtml::escape($label) . '</h2>';
+            $body = '<section class="search-result-group"><h2>' . ProfileHtml::escape($label) . '</h2>';
             foreach ($hits as $hit) {
                 $body .= self::hit($basePath, $hit, $registry);
             }
@@ -163,7 +167,7 @@ final class SearchHtml
         foreach ($registry->categories() as $category) {
             $group = $groups[$category->key] ?? [];
             if ($group === []) continue;
-            $body .= '<section class="section"><h2>' . ProfileHtml::escape($category->label)
+            $body .= '<section class="search-result-group"><h2>' . ProfileHtml::escape($category->label)
                 . ' <small class="muted">(' . count($group) . ')</small></h2>';
             foreach ($group as $hit) {
                 $body .= self::hit($basePath, $hit, $registry);
@@ -205,6 +209,31 @@ final class SearchHtml
         }
         return '<article class="search-hit"><div class="search-hit-type">' . $type . '</div><h3>'
             . $heading . '</h3><div class="muted search-hit-id">' . $id . '</div></article>';
+    }
+
+    /** @param array<string,mixed> $query */
+    private static function pagination(BasePath $basePath, array $query, int $page, bool $hasMore): string
+    {
+        if ($page <= 1 && !$hasMore) {
+            return '';
+        }
+
+        $links = '';
+        if ($page > 1) {
+            $previous = $query;
+            $previous['page'] = $page - 1;
+            $href = $basePath->prepend('/search') . '?' . http_build_query($previous, '', '&', PHP_QUERY_RFC3986);
+            $links .= '<a class="fx-btn" href="' . ProfileHtml::escape($href) . '">Önceki</a>';
+        }
+        if ($hasMore) {
+            $next = $query;
+            $next['page'] = $page + 1;
+            $href = $basePath->prepend('/search') . '?' . http_build_query($next, '', '&', PHP_QUERY_RFC3986);
+            $links .= '<a class="fx-btn fx-btn--primary" href="' . ProfileHtml::escape($href) . '">Sonraki</a>';
+        }
+
+        return '<nav class="surface-pagination search-pagination" aria-label="Arama sonucu sayfaları">'
+            . $links . '</nav>';
     }
 
     private static function typeLabel(string $type, GlobalDiscoveryRegistry $registry): string

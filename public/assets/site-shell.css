@@ -2485,3 +2485,26 @@ a.forum-thread-author:hover{color:var(--text)}
     grid-template-columns:1fr 1fr;
   }
 }
+
+/* discovery-and-account-surfaces-v1 */
+.discovery-page{display:grid;gap:14px}
+.surface-head{min-height:0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:2px 2px 14px;border-bottom:1px solid var(--line)}
+.surface-head h1{margin:2px 0 3px;font-size:clamp(24px,3vw,31px);line-height:1.15;letter-spacing:-.03em}
+.surface-head p{max-width:760px;margin:0;color:var(--muted);font-size:12.5px}
+.surface-panel{padding:14px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.surface-tabs{gap:2px;margin:0;padding:4px;overflow-x:auto;flex-wrap:nowrap;border:1px solid var(--line);border-radius:8px;background:var(--panel2);scrollbar-width:none}
+.surface-tabs::-webkit-scrollbar{display:none}
+.surface-tabs a{min-height:32px;display:inline-flex;align-items:center;flex:0 0 auto;padding:5px 9px;border:0;border-radius:5px;font-size:11.5px;white-space:nowrap}
+.surface-tabs a[aria-current="page"]{background:var(--panel);color:var(--text);box-shadow:0 0 0 1px var(--line)}
+.search-panel .search-form{margin-top:0}
+.search-result-head{min-height:42px;display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.search-result-head h2{margin:1px 0 0;font-size:16px}
+.search-result-group{padding:6px 0 4px}
+.search-result-group>h2{margin:8px 0 2px;font-size:13px;color:var(--muted)}
+.search-hit{margin:0;padding:11px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;transform:none}
+.search-hit:hover{transform:none;border-color:var(--line);background:color-mix(in srgb,var(--accent) 2.5%,transparent)}
+.search-hit h3{margin:3px 0;font-size:14px}
+.search-hit-type{min-height:19px;padding:1px 6px;border-radius:4px;font-size:9px;letter-spacing:.05em}
+.surface-pagination{display:flex;justify-content:flex-end;gap:7px;padding-top:12px}
+.surface-pagination .fx-btn{min-height:34px;padding:7px 10px;font-size:11px}
+@media(max-width:700px){.surface-head{display:grid}.surface-panel{padding:11px}.search-result-head{align-items:start}}

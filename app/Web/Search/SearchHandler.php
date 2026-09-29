@@ -34,6 +34,7 @@ final readonly class SearchHandler implements RequestHandlerInterface
         $query = $request->query();
         $text = '';
         $tab = GlobalDiscoveryRegistry::ALL;
+        $actor = $this->viewers->resolve($request);
 
         try {
             $text = self::scalar($query, 'q') ?? '';
@@ -50,10 +51,10 @@ final readonly class SearchHandler implements RequestHandlerInterface
                     $this->search->savedQueryKeys(),
                     discovery: $registry,
                     selectedTab: $tab,
+                    authenticated: $actor !== null,
                 ));
             }
 
-            $actor = $this->viewers->resolve($request);
             if ($actor === null) {
                 return Response::html(SearchHtml::page(
                     $this->basePath,
@@ -79,8 +80,9 @@ final readonly class SearchHandler implements RequestHandlerInterface
                 updatedBefore: self::date(self::scalar($query, 'before'), true),
             );
             $page = self::page($query);
-            $limit = 20;
-            $offset = ($page - 1) * $limit;
+            $pageSize = 20;
+            $fetchLimit = $pageSize + 1;
+            $offset = ($page - 1) * $pageSize;
             $saved = self::scalar($query, 'saved');
 
             if ($saved !== null && $saved !== '') {
@@ -89,7 +91,7 @@ final readonly class SearchHandler implements RequestHandlerInterface
                         'Saved searches cannot be combined with a discovery tab or explicit type filter.',
                     );
                 }
-                $hits = $this->search->searchSaved($actor, $saved, $text, $limit, $offset);
+                $hits = $this->search->searchSaved($actor, $saved, $text, $fetchLimit, $offset);
             } else {
                 $documentTypes = $registry->resolveDocumentTypes($tab, $requestedTypes);
                 $hits = $this->search->search(
@@ -97,10 +99,15 @@ final readonly class SearchHandler implements RequestHandlerInterface
                     $text,
                     $documentTypes,
                     null,
-                    $limit,
+                    $fetchLimit,
                     $offset,
                     $filters,
                 );
+            }
+
+            $hasMore = count($hits) > $pageSize;
+            if ($hasMore) {
+                array_pop($hits);
             }
 
             if ($this->analytics !== null) {
@@ -123,6 +130,7 @@ final readonly class SearchHandler implements RequestHandlerInterface
                 $registry,
                 $tab,
                 true,
+                $hasMore,
             ))->withHeader('Cache-Control', 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::html(SearchHtml::page(
