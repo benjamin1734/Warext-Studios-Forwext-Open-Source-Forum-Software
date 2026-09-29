@@ -191,7 +191,7 @@ final class FaqHtml
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="import">'
             . '<label class="search-wide"><span>Forwext FAQ JSON</span><textarea name="json" maxlength="5000000" rows="12" required></textarea></label>'
             . '<div class="search-actions"><button type="submit">İçe aktar</button></div></form></details>'
-            . '<section class="surface-panel faq-category"><h2>Mevcut içerik</h2><p class="muted">'
+            . '<section class="section"><h2>Mevcut içerik</h2><p class="muted">'
             . count($categories) . ' kategori · ' . count($articles) . ' makale</p><ul>';
         foreach ($articles as $article) {
             $summary = $helpful[$article->articleId->value()] ?? null;
