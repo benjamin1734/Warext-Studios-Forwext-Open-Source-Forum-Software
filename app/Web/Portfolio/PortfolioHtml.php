@@ -71,83 +71,92 @@ final class PortfolioHtml
         bool $canManage,
         ?string $notice = null,
     ): string {
-        $body = '<article class="card"><div class="search-hit-type">'
-            . self::e($project->categoryKey)
-            . ($project->featured ? ' · Öne Çıkan' : '')
-            . '</div><h1>' . self::e($project->title) . '</h1>';
+        $manage = $canManage
+            ? '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/portfolio/manage?project=' . rawurlencode($project->projectId->value()),
+            )) . '">Projeyi düzenle</a>'
+            : '';
 
-        if ($project->summary !== '') {
-            $body .= '<p class="muted">' . self::e($project->summary) . '</p>';
-        }
+        $body = '<article class="portfolio-project discovery-page"><header class="surface-head portfolio-project-head"><div>'
+            . '<span class="forum-eyebrow">' . self::e($project->categoryKey)
+            . ($project->featured ? ' · ÖNE ÇIKAN' : '') . '</span><h1>' . self::e($project->title) . '</h1>'
+            . ($project->summary === '' ? '' : '<p>' . self::e($project->summary) . '</p>')
+            . '</div>' . $manage . '</header>';
+
         if ($notice !== null) {
-            $body .= '<div class="notice success">' . self::e($notice) . '</div>';
+            $body .= '<div class="notification-settings-notice" role="status">' . self::e($notice) . '</div>';
         }
 
         if ($project->media !== []) {
-            $body .= '<div class="portfolio-media">';
+            $body .= '<section class="surface-panel portfolio-project-media"><div class="portfolio-media">';
             foreach ($project->media as $media) {
                 $body .= '<figure><img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'
                     . self::e($basePath->prepend($media->path)) . '" alt="' . self::e($media->alt) . '"></figure>';
             }
+            $body .= '</div></section>';
+        }
+
+        $body .= '<section class="surface-panel portfolio-project-content"><h2>Proje hakkında</h2>'
+            . '<div class="about">' . nl2br(self::e($project->description), false) . '</div>';
+        if ($project->tags !== []) {
+            $body .= '<div class="portfolio-project-tags">';
+            foreach ($project->tags as $tag) {
+                $body .= '<span>#' . self::e($tag) . '</span>';
+            }
             $body .= '</div>';
         }
+        $body .= '<div class="portfolio-project-meta"><span>Durum · ' . self::e($project->state->value) . '</span>'
+            . '<span>Güncellendi · ' . self::e($project->updatedAt->format('Y-m-d H:i')) . ' UTC</span></div></section>';
 
-        $body .= '<div class="about">' . nl2br(self::e($project->description), false) . '</div>';
-        if ($project->tags !== []) {
-            $body .= '<p class="muted">Etiketler: ' . self::e(implode(', ', $project->tags)) . '</p>';
-        }
-        $body .= '<p class="muted">Durum: ' . self::e($project->state->value)
-            . ' · Güncelleme: ' . self::e($project->updatedAt->format('Y-m-d H:i')) . ' UTC</p>';
-
-        if ($canManage) {
-            $body .= '<p><a href="' . self::e($basePath->prepend('/portfolio/manage?project=' . rawurlencode($project->projectId->value())))
-                . '">Projeyi düzenle</a></p>';
-        }
-
-        $body .= '<section class="section"><h2>Tepkiler</h2><p class="muted">'
-            . $reactions->total . ' tepki · skor ' . $reactions->score . '</p>';
+        $body .= '<section class="surface-panel portfolio-engagement"><header><div><h2>Tepkiler</h2>'
+            . '<p>' . $reactions->total . ' tepki · skor ' . $reactions->score . '</p></div></header>';
         if ($reactions->counts !== []) {
-            $parts = [];
+            $body .= '<div class="portfolio-reaction-summary">';
             foreach ($reactions->counts as $key => $count) {
-                $parts[] = self::e($key) . ': ' . (int) $count;
+                $body .= '<span><strong>' . (int) $count . '</strong>' . self::e($key) . '</span>';
             }
-            $body .= '<p>' . implode(' · ', $parts) . '</p>';
+            $body .= '</div>';
         }
         if ($authenticated && $csrfToken !== null) {
             $action = self::e($basePath->prepend('/portfolio/' . rawurlencode($project->projectId->value())));
-            $body .= '<form method="post" action="' . $action . '" class="presence-settings">'
+            $body .= '<div class="portfolio-reaction-actions"><form method="post" action="' . $action . '">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="react">'
                 . '<label><span>Tepki</span><select name="reaction">'
                 . '<option value="like">Like</option><option value="love">Love</option>'
                 . '<option value="haha">Haha</option><option value="wow">Wow</option>'
                 . '<option value="sad">Sad</option><option value="angry">Angry</option></select></label>'
-                . '<button type="submit">Tepki ver</button></form>'
-                . '<form method="post" action="' . $action . '" class="presence-settings">'
-                . self::csrf($csrfToken)
-                . '<input type="hidden" name="action" value="unreact"><button type="submit">Tepkiyi kaldır</button></form>';
+                . '<button class="fx-btn fx-btn--primary" type="submit">Tepki ver</button></form>'
+                . '<form method="post" action="' . $action . '">' . self::csrf($csrfToken)
+                . '<input type="hidden" name="action" value="unreact">'
+                . '<button class="fx-btn" type="submit">Tepkiyi kaldır</button></form></div>';
+        } else {
+            $body .= '<p class="muted portfolio-engagement-login">Tepki vermek için oturum aç.</p>';
         }
         $body .= '</section>';
 
-        $body .= '<section class="section"><h2>Yorumlar</h2>';
+        $body .= '<section class="surface-panel portfolio-comments"><header><div><h2>Yorumlar</h2>'
+            . '<p>' . count($comments) . ' yorum</p></div></header><div class="portfolio-comment-list">';
         if ($comments === []) {
-            $body .= '<p class="muted">Henüz yorum yapılmamış.</p>';
+            $body .= '<div class="surface-empty"><strong>Henüz yorum yok.</strong>'
+                . '<span>İlk yorumu topluluktan biri eklediğinde burada görünecek.</span></div>';
         } else {
             foreach ($comments as $comment) {
-                $body .= '<article class="search-hit"><div class="about">'
-                    . nl2br(self::e($comment->body), false) . '</div><div class="muted">'
-                    . self::e($comment->createdAt->format('Y-m-d H:i')) . ' UTC</div></article>';
+                $body .= '<article class="portfolio-comment"><div class="about">'
+                    . nl2br(self::e($comment->body), false) . '</div><time>'
+                    . self::e($comment->createdAt->format('Y-m-d H:i')) . ' UTC</time></article>';
             }
         }
+        $body .= '</div>';
         if ($authenticated && $csrfToken !== null) {
             $action = self::e($basePath->prepend('/portfolio/' . rawurlencode($project->projectId->value())));
-            $body .= '<form method="post" action="' . $action . '" class="search-form">'
+            $body .= '<form method="post" action="' . $action . '" class="search-form portfolio-comment-form">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="comment">'
                 . '<label class="search-wide"><span>Yorum</span><textarea name="body" maxlength="10000" rows="5" required></textarea></label>'
                 . '<div class="search-actions"><button type="submit">Yorumu gönder</button></div></form>';
         } else {
-            $body .= '<p class="muted">Yorum ve tepki için oturum açın.</p>';
+            $body .= '<p class="muted portfolio-engagement-login">Yorum yapmak için oturum aç.</p>';
         }
         $body .= '</section></article>';
 

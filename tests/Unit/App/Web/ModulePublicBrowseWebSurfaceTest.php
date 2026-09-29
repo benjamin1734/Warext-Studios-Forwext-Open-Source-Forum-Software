@@ -36,5 +36,9 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="portfolio-card-body"', $html);
         self::assertStringContainsString('.portfolio-grid', $css);
         self::assertStringContainsString('.portfolio-card-media', $css);
+        self::assertStringContainsString('portfolio-project discovery-page', $html);
+        self::assertStringContainsString('surface-head portfolio-project-head', $html);
+        self::assertStringContainsString('surface-panel portfolio-project-content', $html);
+        self::assertStringContainsString('class="portfolio-comment"', $html);
     }
 }

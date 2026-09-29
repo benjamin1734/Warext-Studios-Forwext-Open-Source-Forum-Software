@@ -2828,3 +2828,32 @@ a.forum-thread-author:hover{color:var(--text)}
   .marketplace-results .market-card,.marketplace-results .market-list .market-card{display:grid;grid-template-columns:112px minmax(0,1fr);border-right:0}
   .marketplace-results .market-card .market-cover{height:100%;aspect-ratio:auto;border-right:1px solid var(--line);border-bottom:0}
 }
+
+/* portfolio-detail-v1 */
+.portfolio-project-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.portfolio-project-media{padding:0;overflow:hidden}
+.portfolio-project-media .portfolio-media{margin:0;padding:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.portfolio-project-media .portfolio-media figure{border-radius:7px}
+.portfolio-project-content{display:grid;gap:11px}
+.portfolio-project-content h2,.portfolio-engagement h2,.portfolio-comments h2{margin:0;font-size:14px}
+.portfolio-project-content .about{font-size:12.5px;line-height:1.7}
+.portfolio-project-tags{display:flex;gap:5px;flex-wrap:wrap}
+.portfolio-project-tags span{padding:3px 6px;border:1px solid var(--line);border-radius:5px;background:var(--panel2);color:var(--muted);font-size:9.5px}
+.portfolio-project-meta{display:flex;gap:6px 14px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:9.5px}
+.portfolio-engagement,.portfolio-comments{padding:0;overflow:hidden}
+.portfolio-engagement>header,.portfolio-comments>header{padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.portfolio-engagement>header p,.portfolio-comments>header p{margin:3px 0 0;color:var(--muted);font-size:9.5px}
+.portfolio-reaction-summary{display:flex;gap:6px;flex-wrap:wrap;padding:11px 13px}
+.portfolio-reaction-summary span{display:flex;align-items:center;gap:4px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:9.5px}
+.portfolio-reaction-summary strong{color:var(--text)}
+.portfolio-reaction-actions{display:flex;align-items:end;gap:7px;flex-wrap:wrap;padding:11px 13px;border-top:1px solid var(--line)}
+.portfolio-reaction-actions form{display:flex;align-items:end;gap:7px;margin:0}
+.portfolio-reaction-actions label{display:grid;gap:4px;color:var(--muted);font-size:9.5px}
+.portfolio-reaction-actions select{min-height:34px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);padding:6px 8px}
+.portfolio-comment-list{display:grid}
+.portfolio-comment{padding:11px 13px;border-bottom:1px solid var(--line)}
+.portfolio-comment .about{font-size:11.5px;line-height:1.6}
+.portfolio-comment time{display:block;margin-top:6px;color:var(--muted);font-size:9px}
+.portfolio-comment-form{margin:0;padding:12px 13px}
+.portfolio-engagement-login{margin:0;padding:11px 13px;border-top:1px solid var(--line);font-size:10px}
+@media(max-width:700px){.portfolio-reaction-actions,.portfolio-reaction-actions form{display:grid;width:100%}.portfolio-reaction-actions .fx-btn{justify-content:center}.portfolio-project-media .portfolio-media{grid-template-columns:1fr}}
