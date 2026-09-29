@@ -8,6 +8,21 @@ use PHPUnit\Framework\TestCase;
 
 final class ModulePublicBrowseWebSurfaceTest extends TestCase
 {
+    public function testMarketplacePublicBrowseUsesSharedSurfaceWithoutSearchHitCards(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $html = (string) file_get_contents($root . '/app/Web/Marketplace/MarketplaceHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+
+        self::assertStringContainsString('marketplace-page discovery-page', $html);
+        self::assertStringContainsString('surface-head marketplace-head', $html);
+        self::assertStringContainsString('surface-panel marketplace-filter', $html);
+        self::assertStringContainsString('surface-panel marketplace-results', $html);
+        self::assertStringContainsString('market-card-category', $html);
+        self::assertStringContainsString('surface-pagination market-pagination', $html);
+        self::assertStringContainsString('.marketplace-results .market-card', $css);
+    }
+
     public function testPortfolioPublicIndexUsesModuleSpecificSharedSurface(): void
     {
         $root = dirname(__DIR__, 4);

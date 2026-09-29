@@ -30,11 +30,14 @@ final class MarketplaceHtml
             $selected=$query->categoryId?->equals($c->categoryId)===true?' selected':'';
             $category.='<option value="'.self::e($c->slug).'"'.$selected.'>'.self::e($c->name).'</option>';
         }
-        $body='<section class="card market-head"><div><h1>Marketplace</h1><p class="muted">Topluluk ilanlarını keşfedin, filtreleyin ve satıcı profillerini inceleyin.</p></div>'
-            .($authenticated?'<div class="market-actions"><a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/manage')).'">İlanlarımı yönet</a>'
-                .'<a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/cart')).'">Sepet</a>'
-                .'<a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/orders')).'">Siparişler</a></div>':'')
-            .'<form method="get" action="'.$action.'" class="search-form">'
+        $body='<section class="marketplace-page discovery-page"><header class="surface-head marketplace-head"><div>'
+            .'<span class="forum-eyebrow">PAZARYERİ</span><h1>Marketplace</h1>'
+            .'<p>Topluluk ilanlarını keşfet, filtrele ve satıcı profillerini incele.</p></div>'
+            .($authenticated?'<div class="marketplace-head-actions">'
+                .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/manage')).'">İlanlarım</a>'
+                .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/cart')).'">Sepet</a>'
+                .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/orders')).'">Siparişler</a></div>':'')
+            .'</header><section class="surface-panel marketplace-filter"><form method="get" action="'.$action.'" class="search-form marketplace-filter-form">'
             .'<label class="search-wide"><span>Ara</span><input name="q" maxlength="200" value="'.self::e($query->text??'').'" placeholder="İlan başlığı veya açıklama"></label>'
             .'<label><span>Kategori</span><select name="category"><option value="">Tümü</option>'.$category.'</select></label>'
             .'<label><span>Etiket</span><input name="tag" maxlength="64" value="'.self::e($query->tag??'').'"></label>'
@@ -46,12 +49,14 @@ final class MarketplaceHtml
             .self::option('price_asc','Fiyat artan',$query->sort->value).self::option('price_desc','Fiyat azalan',$query->sort->value)
             .self::option('rating','Puan',$query->sort->value).'</select></label>'
             .'<label><span>Görünüm</span><select name="view">'.self::option('grid','Grid',$view).self::option('list','Liste',$view).'</select></label>'
-            .'<label><input type="checkbox" name="featured" value="1"'.($query->featuredOnly?' checked':'').'> Sadece öne çıkanlar</label>'
+            .'<label class="marketplace-featured-filter"><input type="checkbox" name="featured" value="1"'.($query->featuredOnly?' checked':'').'>'
+            .'<span>Sadece öne çıkanlar</span></label>'
             .'<div class="search-actions"><button type="submit">Filtrele</button><a href="'.$action.'">Temizle</a></div></form></section>'
-            .'<section class="section"><div class="market-result-head"><h2>İlanlar</h2><span class="muted">'.$total.' sonuç</span></div>'
+            .'<section class="surface-panel marketplace-results"><div class="market-result-head"><div>'
+            .'<span class="forum-eyebrow">İLANLAR</span><h2>Sonuçlar</h2></div><span class="muted">'.number_format($total,0,',','.').' sonuç</span></div>'
             .self::cards($cards,$basePath,$view).self::pagination(
                 $basePath,$query,self::selectedCategorySlug($categories,$query->categoryId),$view,$page,$total
-            ).'</section>';
+            ).'</section></section>';
         return ProfileHtml::page('Marketplace',$body,$basePath,authenticated:$authenticated);
     }
 
@@ -232,20 +237,27 @@ final class MarketplaceHtml
     /** @param list<MarketplaceListingCard> $cards */
     public static function cards(array $cards,BasePath $basePath,string $view='grid'):string
     {
-        if($cards===[])return '<div class="card empty">Bu filtrelerle ilan bulunamadı.</div>';
+        if($cards===[])return '<div class="surface-empty"><strong>İlan bulunamadı.</strong>'
+            .'<span>Filtreleri değiştirerek tekrar deneyebilirsin.</span></div>';
         $body='<div class="market-cards '.($view==='list'?'market-list':'market-grid').'">';
         foreach($cards as $card){
             $badges='';
             if($card->pinned)$badges.='<span class="market-badge">Sabit</span>';
             if($card->featured)$badges.='<span class="market-badge">Öne Çıkan</span>';
             if($card->state->value==='sold')$badges.='<span class="market-badge">Satıldı</span>';
-            $cover=$card->coverMediaId===null?'':'<a class="market-cover" href="'.self::e($basePath->prepend('/marketplace/listings/'.$card->listingId->value()))
-                .'"><img loading="lazy" src="'.self::e($basePath->prepend('/marketplace/media/'.$card->coverMediaId->value())).'" alt=""></a>';
-            $body.='<article class="market-card">'.$cover.'<div>'.$badges.'<div class="search-hit-type">'.self::e($card->categoryName).'</div>'
-                .'<h3><a href="'.self::e($basePath->prepend('/marketplace/listings/'.$card->listingId->value())).'">'.self::e($card->title).'</a></h3>'
+            $listingHref=self::e($basePath->prepend('/marketplace/listings/'.$card->listingId->value()));
+            $cover=$card->coverMediaId===null
+                ?'<a class="market-cover market-cover--empty" href="'.$listingHref.'" aria-label="'.self::e($card->title).'"><span aria-hidden="true">◇</span></a>'
+                :'<a class="market-cover" href="'.$listingHref.'"><img loading="lazy" src="'
+                    .self::e($basePath->prepend('/marketplace/media/'.$card->coverMediaId->value())).'" alt=""></a>';
+            $body.='<article class="market-card">'.$cover.'<div class="market-card-body">'
+                .($badges===''?'':'<div class="market-card-badges">'.$badges.'</div>')
+                .'<div class="market-card-category">'.self::e($card->categoryName).'</div>'
+                .'<h3><a href="'.$listingHref.'">'.self::e($card->title).'</a></h3>'
                 .'<p class="market-price">'.self::e(self::money($card->price->minorUnits,$card->price->currency)).'</p>'
-                .'<p class="muted">Satıcı: <a href="'.self::e($basePath->prepend('/marketplace/sellers/'.rawurlencode($card->sellerUsername))).'">'
-                .self::e($card->sellerUsername).'</a> · '.self::e(self::rating($card->averageRating(),$card->reviewCount)).'</p></div></article>';
+                .'<p class="market-card-meta">Satıcı <a href="'.self::e($basePath->prepend('/marketplace/sellers/'.rawurlencode($card->sellerUsername))).'">'
+                .self::e($card->sellerUsername).'</a><span aria-hidden="true"> · </span>'
+                .self::e(self::rating($card->averageRating(),$card->reviewCount)).'</p></div></article>';
         }
         return $body.'</div>';
     }
@@ -283,9 +295,9 @@ final class MarketplaceHtml
             if($query->tag!==null)$params['tag']=$query->tag;
             if($query->featuredOnly)$params['featured']='1';
             $href=$basePath->prepend('/marketplace').'?'.http_build_query($params,'','&',PHP_QUERY_RFC3986);
-            $links.='<a'.($p===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$p.'</a>';
+            $links.='<a class="fx-btn"'.($p===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$p.'</a>';
         }
-        return '<nav class="pagination" aria-label="Marketplace sayfaları">'.$links.'</nav>';
+        return '<nav class="surface-pagination market-pagination" aria-label="Marketplace sayfaları">'.$links.'</nav>';
     }
 
     private static function sellerPagination(BasePath $basePath,string $username,int $page,int $total):string
