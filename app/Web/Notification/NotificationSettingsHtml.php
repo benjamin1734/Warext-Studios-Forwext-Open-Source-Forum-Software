@@ -35,7 +35,7 @@ final class NotificationSettingsHtml
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/notifications')) . '">Bildirimlere dön</a></header>'
             . $notice
             . '<form class="notification-settings-form surface-panel" method="post" action="'
-            . self::e($basePath->prepend('/account/notification-settings')) . '">';
+            . self::e($basePath->prepend('/account/notification-settings')) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save_sound">'
             . '<label class="notification-settings-switch"><input type="checkbox" name="muted" value="1"'
