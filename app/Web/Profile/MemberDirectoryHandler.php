@@ -47,26 +47,29 @@ final readonly class MemberDirectoryHandler implements RequestHandlerInterface
             $avatar = $member['has_avatar']
                 ? '<img class="avatar" src="' . $safePath . '/avatar" alt="">'
                 : '<span class="avatar" aria-hidden="true">' . ProfileHtml::initial($username) . '</span>';
-            $cards .= '<a class="card member" href="' . $safePath . '">' . $avatar
-                . '<span><strong>' . $safeUsername . '</strong><br><small class="muted">Katılım: '
-                . $joined . '</small></span></a>';
+            $cards .= '<a class="member-directory-card" href="' . $safePath . '">' . $avatar
+                . '<span class="member-directory-copy"><strong>' . $safeUsername
+                . '</strong><small>Katılım · ' . $joined . '</small></span></a>';
         }
         $cards = $cards === ''
-            ? '<div class="card empty">Bu filtrelerle gösterilebilecek herkese açık üye bulunmuyor.</div>'
-            : '<div class="grid">' . $cards . '</div>';
+            ? '<div class="surface-empty">Bu filtrelerle gösterilebilecek herkese açık üye bulunmuyor.</div>'
+            : '<div class="member-directory-grid">' . $cards . '</div>';
 
         $action = ProfileHtml::escape($this->basePath->prepend('/members'));
-        $body = '<section class="card member-directory-head"><h1>Üyeler</h1>'
-            . '<p class="muted">Herkese açık ve aktif üye profilleri. Toplam: ' . $total . '</p>'
-            . '<form class="member-directory-form" method="get" action="' . $action . '">'
+        $body = '<section class="member-directory-page discovery-page"><header class="surface-head member-directory-head">'
+            . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Üyeler</h1>'
+            . '<p>Herkese açık aktif profiller · ' . number_format($total, 0, ',', '.') . ' üye</p></div>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members/online'))
+            . '">Çevrimiçi üyeler</a></header>'
+            . '<section class="surface-panel member-directory-filter"><form class="member-directory-form" method="get" action="' . $action . '">'
             . '<label><span>Kullanıcı ara</span><input name="q" maxlength="64" value="'
             . ProfileHtml::escape($query) . '" placeholder="Kullanıcı adı"></label>'
             . '<label><span>Sıralama</span><select name="sort">'
             . '<option value="newest"' . ($sort === 'newest' ? ' selected' : '') . '>En yeni</option>'
             . '<option value="username"' . ($sort === 'username' ? ' selected' : '') . '>Kullanıcı adı</option>'
             . '</select></label><button type="submit">Filtrele</button></form></section>'
-            . '<div style="margin-top:16px">' . $cards . '</div>'
-            . self::pagination($this->basePath, $query, $sort, $page, $total);
+            . '<section class="surface-panel member-directory-results">' . $cards
+            . self::pagination($this->basePath, $query, $sort, $page, $total) . '</section></section>';
 
         return Response::html(ProfileHtml::page('Üyeler', $body, $this->basePath));
     }
@@ -118,6 +121,6 @@ final readonly class MemberDirectoryHandler implements RequestHandlerInterface
             $links .= '<a' . ($target === $page ? ' aria-current="page"' : '') . ' href="'
                 . ProfileHtml::escape($href) . '">' . $target . '</a>';
         }
-        return '<nav class="pagination" aria-label="Üye sayfaları">' . $links . '</nav>';
+        return '<nav class="surface-pagination member-pagination" aria-label="Üye sayfaları">' . $links . '</nav>';
     }
 }

@@ -25,4 +25,19 @@ final class ProfileActivityWebSurfaceTest extends TestCase
         self::assertTrue(class_exists(ProfileActivityCsrfTokenHandler::class));
         self::assertTrue(class_exists(ActivityFeedHandler::class));
     }
+    public function testDiscoverySurfacesUseSharedResponsiveShell(): void
+    {
+        $root = dirname(__DIR__, 5);
+        $activity = (string) file_get_contents($root . '/app/Web/Profile/ActivityFeedHtml.php');
+        $members = (string) file_get_contents($root . '/app/Web/Profile/MemberDirectoryHandler.php');
+        $online = (string) file_get_contents($root . '/app/Web/Community/OnlineUsersHandler.php');
+
+        self::assertStringContainsString('surface-head activity-feed-head', $activity);
+        self::assertStringContainsString('surface-pagination activity-pagination', $activity);
+        self::assertStringContainsString('surface-head member-directory-head', $members);
+        self::assertStringContainsString('member-directory-grid', $members);
+        self::assertStringContainsString('surface-head online-users-head', $online);
+        self::assertStringNotContainsString('style="margin-top:', $members . $online);
+    }
+
 }

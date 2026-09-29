@@ -25,7 +25,7 @@ final class ActivityFeedHtml
             $time = $entry->occurredAt->setTimezone($timezone);
             $action = self::action($entry, $basePath);
 
-            $rows .= '<article class="activity-feed-item card"><div class="activity-feed-icon" aria-hidden="true">•</div>'
+            $rows .= '<article class="activity-feed-item"><div class="activity-feed-icon" aria-hidden="true">•</div>'
                 . '<div class="activity-feed-main"><div class="activity-feed-meta"><span>' . self::e($label)
                 . '</span><time datetime="' . self::e($entry->occurredAt->format(DATE_ATOM)) . '">'
                 . self::e($time->format('d.m.Y H:i')) . '</time></div>'
@@ -35,11 +35,11 @@ final class ActivityFeedHtml
         }
 
         if ($rows === '') {
-            $rows = '<div class="bookmark-empty card"><strong>Görüntülenebilir etkinlik yok.</strong>'
+            $rows = '<div class="surface-empty"><strong>Görüntülenebilir etkinlik yok.</strong>'
                 . '<span>Takip ettiğin ve erişebildiğin içerik hareketleri burada görünecek.</span></div>';
         }
 
-        $pager = '<nav class="notification-pagination" aria-label="Etkinlik sayfaları">';
+        $pager = '<nav class="surface-pagination activity-pagination" aria-label="Etkinlik sayfaları">';
         if ($page > 1) {
             $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend('/activity?page=' . ($page - 1)))
                 . '">Önceki</a>';
@@ -50,13 +50,14 @@ final class ActivityFeedHtml
         }
         $pager .= '</nav>';
 
-        $content = '<section class="activity-feed"><header class="account-center-hero card">'
-            . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Etkinlik Akışı</h1>'
+        $content = '<section class="activity-feed discovery-page"><header class="surface-head activity-feed-head">'
+            . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Neler yeni?</h1>'
             . '<p>Erişebildiğin forum ve profil hareketlerini kronolojik olarak takip et.</p></div>'
-            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/profile-activity')) . '">Gizlilik ayarları</a>'
-            . '</header><div class="activity-feed-list">' . $rows . '</div>' . $pager . '</section>';
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/profile-activity')) . '">Akış ayarları</a>'
+            . '</header><section class="surface-panel activity-feed-panel"><div class="activity-feed-list">'
+            . $rows . '</div>' . $pager . '</section></section>';
 
-        return ProfileHtml::page('Etkinlik Akışı', $content, $basePath, authenticated: true);
+        return ProfileHtml::page('Neler yeni?', $content, $basePath, authenticated: true);
     }
 
     private static function label(ActivityFeedType $type): string

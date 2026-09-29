@@ -34,20 +34,20 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
         $cards = '';
         foreach ($users as $online) {
             $path = ProfileHtml::memberPath($this->basePath, $online->username);
-            $cards .= '<a class="card member" href="' . ProfileHtml::escape($path) . '">'
+            $cards .= '<a class="member-directory-card is-online" href="' . ProfileHtml::escape($path) . '">'
                 . '<span class="avatar" aria-hidden="true">' . ProfileHtml::initial($online->username) . '</span>'
-                . '<span><strong>' . ProfileHtml::escape($online->username) . '</strong>'
-                . '<br><small class="muted">Şu anda çevrimiçi</small></span></a>';
+                . '<span class="member-directory-copy"><strong>' . ProfileHtml::escape($online->username) . '</strong>'
+                . '<small><span class="online-dot" aria-hidden="true"></span>Şu anda çevrimiçi</small></span></a>';
         }
         $cards = $cards === ''
-            ? '<div class="card empty">Görünür çevrimiçi kullanıcı bulunmuyor.</div>'
-            : '<div class="grid">' . $cards . '</div>';
+            ? '<div class="surface-empty">Görünür çevrimiçi kullanıcı bulunmuyor.</div>'
+            : '<div class="member-directory-grid">' . $cards . '</div>';
 
         $settings = '';
         if ($actor !== null) {
             $current = $this->presence->visibility($actor);
             $action = ProfileHtml::escape($this->basePath->prepend('/account/presence'));
-            $settings = '<form class="card presence-settings" data-presence-settings method="post" action="' . $action . '">'
+            $settings = '<form class="surface-panel presence-settings" data-presence-settings method="post" action="' . $action . '">'
                 . '<label><span>Çevrimiçi görünürlüğüm</span><select name="visibility">'
                 . self::option(PresenceVisibility::Hidden, $current, 'Gizli')
                 . self::option(PresenceVisibility::Members, $current, 'Yalnız üyeler')
@@ -56,9 +56,12 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
                 . '<span class="muted" data-presence-status aria-live="polite"></span></form>';
         }
 
-        $body = '<section class="card"><h1 style="margin-top:0">Çevrimiçi Kullanıcılar</h1>'
-            . '<p class="muted">Son 5 dakika içinde aktif olan ve görünürlüğünü paylaşan herkese açık profiller.</p></section>'
-            . $settings . '<div style="margin-top:16px">' . $cards . '</div>';
+        $body = '<section class="online-users-page discovery-page"><header class="surface-head online-users-head">'
+            . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Çevrimiçi Kullanıcılar</h1>'
+            . '<p>Son 5 dakika içinde aktif olan ve görünürlüğünü paylaşan profiller.</p></div>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members')) . '">Tüm üyeler</a>'
+            . '</header>' . $settings . '<section class="surface-panel online-users-results">' . $cards
+            . '</section></section>';
         $breadcrumbs = new BreadcrumbTrail([
             new BreadcrumbItem('Ana Sayfa', '/'),
             new BreadcrumbItem('Üyeler', '/members'),
