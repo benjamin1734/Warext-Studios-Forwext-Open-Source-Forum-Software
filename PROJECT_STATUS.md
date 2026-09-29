@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F1-F2
-LAST_COMMIT = 36d8ff7c170fe1cd67227e2c99cc90b177af3a94
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F2
+LAST_COMMIT = 373b7695a455edf39d3c0d049663e7e4c482e465
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = close remaining F1 composer/attachment and unread-state UX, then continue F2 discovery/profile/account surfaces
+NEXT_STEP = finish remaining F2 profile/account/session/privacy surfaces, then close F1 attachment/unread-state UX and begin F4 browser regression
 ```
 
 ## Frontend rebuild — F1 core + F2 profile pass in progress
@@ -26,6 +26,12 @@ NEXT_STEP = close remaining F1 composer/attachment and unread-state UX, then con
 - Thread view now has a rebuilt author/content hierarchy, top/bottom pagination, CSRF-protected rich quick reply and one-click post quoting into the inline editor.
 - Native thread/create and reply composers use the shared RichEditor rather than plain textareas.
 - Profile identity/banner/tab/content shell received its first compact F2 redesign pass.
+- Search now has an authenticated-aware discovery shell plus real previous/next pagination instead of a hidden backend-only offset.
+- Activity feed is presented as a compact “Neler yeni?” surface using the common discovery shell.
+- Member directory and online users now share responsive member cards, filters and common page controls.
+- Account center was replaced with grouped settings sections and responsive section navigation instead of a flat card grid.
+- Notifications, notification settings, relationships and bookmarks now consume the common F2 surface-head/panel/pagination language.
+- Login, registration, MFA, email verification and password recovery retain existing security flows but use the compact shared authentication presentation layer.
 - Remaining F1 work is composer attachment-state UX and backend-backed unread/read presentation; F2 discovery/account surfaces remain open.
 
 ## Production acceptance remediation — 1.0.5

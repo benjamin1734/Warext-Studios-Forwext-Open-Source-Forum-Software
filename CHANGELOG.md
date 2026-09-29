@@ -14,6 +14,16 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Added mobile background scroll locking and regression assertions for the new CSS architecture.
 - Added the binding native frontend rebuild plan at `docs/frontend/frontend-rebuild-plan-v1.md`.
 
+### Discovery and account surfaces
+
+- Rebuilt native search around the shared discovery shell and added real previous/next search pagination using a bounded one-extra-result fetch.
+- Fixed empty-search rendering so authenticated users retain the authenticated navigation shell before entering a query.
+- Reworked the activity feed into the compact “Neler yeni?” surface.
+- Unified member directory and online-user presentation with shared responsive member rows, filters, pagination and presence controls.
+- Replaced the flat account card grid with grouped settings sections and responsive section navigation.
+- Unified notifications, notification settings, bookmarks and relationship management with the common account/discovery surface system.
+- Restyled login, registration, MFA, email verification and password recovery through the compact shared auth shell without changing security/domain behavior.
+
 ### Forum core and profile shell
 
 - Added CSRF-protected rich quick reply directly on thread pages while preserving the standalone reply route.

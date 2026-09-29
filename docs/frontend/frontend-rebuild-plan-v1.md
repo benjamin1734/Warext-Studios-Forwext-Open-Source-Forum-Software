@@ -44,11 +44,13 @@ Acceptance:
 
 ## Phase F2 — Discovery and identity
 
-- [ ] Search and results.
-- [ ] What's New / activity discovery.
-- [ ] Member directory and online users.
+- [x] Search and results.
+- [x] What's New / activity discovery.
+- [x] Member directory and online users.
 - [ ] Profile layout, tabs, relationship actions, trophies/badges and profile media.
+  - Compact profile identity/tabs and relationship account surfaces are migrated; trophy/media detail parity remains open.
 - [ ] Account center, authentication, MFA, sessions, privacy and notification settings.
+  - Grouped account center, notifications, notification settings, bookmarks and shared auth/MFA/recovery presentation are migrated; remaining account/session/privacy surfaces remain open.
 
 ## Phase F3 — First-party module parity
 
