@@ -2857,3 +2857,46 @@ a.forum-thread-author:hover{color:var(--text)}
 .portfolio-comment-form{margin:0;padding:12px 13px}
 .portfolio-engagement-login{margin:0;padding:11px 13px;border-top:1px solid var(--line);font-size:10px}
 @media(max-width:700px){.portfolio-reaction-actions,.portfolio-reaction-actions form{display:grid;width:100%}.portfolio-reaction-actions .fx-btn{justify-content:center}.portfolio-project-media .portfolio-media{grid-template-columns:1fr}}
+
+/* marketplace-detail-v1 */
+.market-detail-head{align-items:center}
+.market-detail-badges{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
+.market-detail-badges .market-badge{margin:0;min-height:20px;padding:1px 6px;border-radius:4px;font-size:8.5px}
+.market-detail-price{flex:0 0 auto;font-size:20px;letter-spacing:-.025em;color:var(--text)}
+.market-detail-summary{display:grid;gap:10px}
+.market-detail-seller{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;font-size:10.5px}
+.market-detail-seller>span{color:var(--muted)}
+.market-detail-seller>a{color:var(--text);font-weight:760;text-decoration:none}
+.market-detail-seller>a:hover{color:var(--accent)}
+.market-detail-seller>strong{margin-left:auto}
+.market-detail-gallery{padding:0;overflow:hidden}
+.market-detail-gallery .market-media{margin:0;padding:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.market-detail-gallery .market-media figure{border-radius:7px}
+.market-detail-section{display:grid;gap:10px}
+.market-detail-section h2,.market-purchase-panel h2,.market-detail-reviews h2{margin:0;font-size:14px}
+.market-detail-section .about{font-size:12.5px;line-height:1.7}
+.market-detail-section .market-specs{margin:0;border:0;border-radius:0;padding:0;background:transparent}
+.market-purchase-panel{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.market-purchase-panel p{margin:3px 0 0;color:var(--muted);font-size:10px}
+.market-purchase-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.market-purchase-actions form{margin:0}
+.market-purchase-actions .fx-btn{min-height:35px;padding:7px 10px;font-size:10.5px}
+.market-detail-reviews{padding:0;overflow:hidden}
+.market-detail-reviews>header{padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.market-detail-reviews>header p{margin:3px 0 0;color:var(--muted);font-size:9.5px}
+.market-review-list{display:grid}
+.market-review-list .market-review{padding:11px 13px;border-top:0;border-bottom:1px solid var(--line);border-radius:0}
+.market-review-list .market-review:last-child{border-bottom:0}
+.market-review-list .surface-empty{border-bottom:1px solid var(--line)}
+.market-review-form{margin:0;padding:12px 13px;border-top:1px solid var(--line)}
+.market-seller-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.market-seller-page>.marketplace-results{padding:0}
+@media(max-width:700px){
+  .market-detail-price{font-size:17px}
+  .market-detail-seller>strong{width:100%;margin-left:0}
+  .market-purchase-panel{display:grid}
+  .market-purchase-actions{justify-content:flex-start}
+  .market-purchase-actions .fx-btn,.market-purchase-actions form{width:100%}
+  .market-purchase-actions form .fx-btn{width:100%}
+  .market-detail-gallery .market-media{grid-template-columns:1fr}
+}

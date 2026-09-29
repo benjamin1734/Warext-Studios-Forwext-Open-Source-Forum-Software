@@ -21,6 +21,11 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('market-card-category', $html);
         self::assertStringContainsString('surface-pagination market-pagination', $html);
         self::assertStringContainsString('.marketplace-results .market-card', $css);
+        self::assertStringContainsString('market-detail-page discovery-page', $html);
+        self::assertStringContainsString('surface-head market-detail-head', $html);
+        self::assertStringContainsString('surface-panel market-detail-summary', $html);
+        self::assertStringContainsString('surface-panel market-detail-reviews', $html);
+        self::assertStringContainsString('market-seller-page discovery-page', $html);
     }
 
     public function testPortfolioPublicIndexUsesModuleSpecificSharedSurface(): void

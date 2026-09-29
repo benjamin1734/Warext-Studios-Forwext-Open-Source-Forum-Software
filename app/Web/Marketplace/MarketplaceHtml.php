@@ -76,22 +76,31 @@ final class MarketplaceHtml
         if($promotion?->pinnedAt($now))$badges.='<span class="market-badge">Sabit</span>';
         if($promotion?->featuredAt($now))$badges.='<span class="market-badge">Öne Çıkan</span>';
         if($listing->state->value==='sold')$badges.='<span class="market-badge">Satıldı</span>';
+
         $gallery='';
         foreach($listing->media as $media){
             $gallery.='<figure><img loading="lazy" src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value()))
                 .'" alt="'.self::e($media->altText).'"></figure>';
         }
-        if($gallery!=='')$gallery='<div class="market-media">'.$gallery.'</div>';
+        if($gallery!==''){
+            $gallery='<section class="surface-panel market-detail-gallery"><div class="market-media">'.$gallery.'</div></section>';
+        }
+
         $sellerProfile=ProfileHtml::memberPath($basePath,$sellerUsername);
         $sellerMarket=$basePath->prepend('/marketplace/sellers/'.rawurlencode($sellerUsername));
+
         $custom='';
         $byKey=[];foreach($fields as $f)$byKey[$f->key]=$f;
         foreach($listing->customValues as $key=>$value){
             $label=$byKey[$key]->label??$key;
             $custom.='<dt>'.self::e($label).'</dt><dd>'.self::e(self::value($value)).'</dd>';
         }
+
         $tags='';
-        foreach($listing->tags as $tag)$tags.='<a href="'.self::e($basePath->prepend('/marketplace?tag='.rawurlencode($tag))).'">#'.self::e($tag).'</a>';
+        foreach($listing->tags as $tag){
+            $tags.='<a href="'.self::e($basePath->prepend('/marketplace?tag='.rawurlencode($tag))).'">#'.self::e($tag).'</a>';
+        }
+
         $reviewHtml='';
         foreach($reviews as $review){
             $author=$reviewAuthors[$review->reviewerUserId->value()]??'Silinmiş kullanıcı';
@@ -99,42 +108,80 @@ final class MarketplaceHtml
                 .self::e(self::stars($review->rating)).'</span></div><p>'.nl2br(self::e($review->body),false).'</p>'
                 .'<small class="muted">'.self::e($review->updatedAt->format('Y-m-d H:i')).' UTC</small></article>';
         }
-        if($reviewHtml==='')$reviewHtml='<p class="muted">Henüz görünür değerlendirme yok.</p>';
+        if($reviewHtml===''){
+            $reviewHtml='<div class="surface-empty"><strong>Henüz değerlendirme yok.</strong>'
+                .'<span>İlk değerlendirme geldiğinde burada görünecek.</span></div>';
+        }
+
         $reviewForm='';
         if($canReview&&$csrf!==null){
-            $reviewForm='<form method="post" action="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/review')).'" class="search-form">'
-                .self::csrf($csrf).'<label><span>Puan</span><select name="rating">';
-            for($i=5;$i>=1;--$i)$reviewForm.='<option value="'.$i.'"'.(($ownReview?->rating??5)===$i?' selected':'').'>'.$i.'/5</option>';
-            $reviewForm.='</select></label><label class="search-wide"><span>Yorum</span><textarea name="body" maxlength="5000" rows="5" required>'
-                .self::e($ownReview?->body??'').'</textarea></label><div class="search-actions"><button type="submit">'
+            $reviewForm='<form method="post" action="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/review'))
+                .'" class="search-form market-review-form">'.self::csrf($csrf)
+                .'<label><span>Puan</span><select name="rating">';
+            for($i=5;$i>=1;--$i){
+                $reviewForm.='<option value="'.$i.'"'.(($ownReview?->rating??5)===$i?' selected':'').'>'.$i.'/5</option>';
+            }
+            $reviewForm.='</select></label><label class="search-wide"><span>Yorum</span>'
+                .'<textarea name="body" maxlength="5000" rows="5" required>'.self::e($ownReview?->body??'').'</textarea></label>'
+                .'<div class="search-actions"><button type="submit">'
                 .($ownReview===null?'Değerlendir':'Değerlendirmeyi güncelle').'</button></div></form>';
         }
 
-        $body='<article class="card market-detail"><div class="market-detail-top"><div>'.$badges.'<div class="search-hit-type">'.self::e($category->name).'</div>'
-            .'<h1>'.self::e($listing->title).'</h1></div><strong class="market-price">'.self::e(self::money($listing->price->minorUnits,$listing->price->currency)).'</strong></div>'
-            .($reviewed?'<div class="search-alert market-success">Değerlendirmeniz kaydedildi.</div>':'')
-            .'<p class="muted">Satıcı: <a href="'.self::e($sellerProfile).'">'.self::e($sellerUsername).'</a> · '
-            .'<a href="'.self::e($sellerMarket).'">Satıcının ilanları</a> · '
-            .self::e(self::rating($summary->average(),$summary->count)).'</p>'
-            .($tags===''?'':'<div class="market-tags">'.$tags.'</div>')
-            .$gallery.'<section class="section"><h2>Açıklama</h2><div class="about">'.nl2br(self::e($listing->description),false).'</div></section>'
-            .($custom===''?'':'<section class="section"><h2>Özellikler</h2><dl class="market-specs">'.$custom.'</dl></section>')
-            .($hasExternalSale?'<p class="market-actions"><a class="market-manage-link" href="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/external')).'">Haricî siteden satın al</a></p>':'')
-            .($hasInternalPurchase&&$csrf!==null?'<form method="post" action="'.self::e($basePath->prepend('/marketplace/cart/'.$listing->listingId->value())).'" class="market-actions">'
-                .self::csrf($csrf).'<input type="hidden" name="action" value="add"><button type="submit">Sepete ekle</button></form>':'')
-            .($canManage?'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">Bu ilanı yönet</a></p>':'')
-            .'<section class="section"><h2>Değerlendirmeler</h2>'.$reviewHtml.$reviewForm.'</section></article>';
+        $purchaseActions='';
+        if($hasExternalSale){
+            $purchaseActions.='<a class="fx-btn" href="'.self::e($basePath->prepend(
+                '/marketplace/listings/'.$listing->listingId->value().'/external',
+            )).'">Haricî siteden satın al</a>';
+        }
+        if($hasInternalPurchase&&$csrf!==null){
+            $purchaseActions.='<form method="post" action="'.self::e($basePath->prepend(
+                '/marketplace/cart/'.$listing->listingId->value(),
+            )).'">'.self::csrf($csrf).'<input type="hidden" name="action" value="add">'
+                .'<button class="fx-btn fx-btn--primary" type="submit">Sepete ekle</button></form>';
+        }
+        if($canManage){
+            $purchaseActions.='<a class="fx-btn" href="'.self::e($basePath->prepend(
+                '/marketplace/manage?listing='.$listing->listingId->value(),
+            )).'">İlanı yönet</a>';
+        }
+
+        $body='<article class="market-detail-page discovery-page"><header class="surface-head market-detail-head"><div>'
+            .($badges===''?'':'<div class="market-detail-badges">'.$badges.'</div>')
+            .'<span class="forum-eyebrow">'.self::e($category->name).'</span><h1>'.self::e($listing->title).'</h1></div>'
+            .'<strong class="market-detail-price">'.self::e(self::money($listing->price->minorUnits,$listing->price->currency)).'</strong>'
+            .'</header>'
+            .($reviewed?'<div class="notification-settings-notice" role="status">Değerlendirmen kaydedildi.</div>':'')
+            .'<section class="surface-panel market-detail-summary"><div class="market-detail-seller">'
+            .'<span>Satıcı</span><a href="'.self::e($sellerProfile).'">'.self::e($sellerUsername).'</a>'
+            .'<a href="'.self::e($sellerMarket).'">Tüm ilanları</a><strong>'
+            .self::e(self::rating($summary->average(),$summary->count)).'</strong></div>'
+            .($tags===''?'':'<div class="market-tags">'.$tags.'</div>').'</section>'
+            .$gallery
+            .'<section class="surface-panel market-detail-section"><h2>Açıklama</h2><div class="about">'
+            .nl2br(self::e($listing->description),false).'</div></section>'
+            .($custom===''?'':'<section class="surface-panel market-detail-section"><h2>Özellikler</h2>'
+                .'<dl class="market-specs">'.$custom.'</dl></section>')
+            .($purchaseActions===''?'':'<section class="surface-panel market-purchase-panel"><div>'
+                .'<h2>İlan işlemleri</h2><p>Bu ilan için kullanılabilir satın alma ve yönetim seçenekleri.</p></div>'
+                .'<div class="market-purchase-actions">'.$purchaseActions.'</div></section>')
+            .'<section class="surface-panel market-detail-reviews"><header><div><h2>Değerlendirmeler</h2><p>'
+            .self::e(self::rating($summary->average(),$summary->count)).'</p></div></header>'
+            .'<div class="market-review-list">'.$reviewHtml.'</div>'.$reviewForm.'</section></article>';
+
         return ProfileHtml::page($listing->title,$body,$basePath,authenticated:$authenticated);
     }
 
     /** @param list<MarketplaceListingCard> $cards */
-    public static function seller(string $username,array $cards,int $page,int $total,BasePath $basePath,bool $authenticated):string
-    {
-        $body='<section class="card"><h1>'.self::e($username).' · Marketplace</h1><p class="muted">'
-            .'<a href="'.self::e(ProfileHtml::memberPath($basePath,$username)).'">Forum profiline git</a> · '
-            .$total.' herkese açık ilan</p></section>'
-            .'<section class="section">'.self::cards($cards,$basePath,'grid')
-            .self::sellerPagination($basePath,$username,$page,$total).'</section>';
+    public static function seller(
+        string $username,array $cards,int $page,int $total,BasePath $basePath,bool $authenticated
+    ):string{
+        $body='<section class="market-seller-page discovery-page"><header class="surface-head market-seller-head"><div>'
+            .'<span class="forum-eyebrow">SATICI</span><h1>'.self::e($username).'</h1>'
+            .'<p>'.number_format($total,0,',','.').' herkese açık ilan</p></div>'
+            .'<a class="fx-btn" href="'.self::e(ProfileHtml::memberPath($basePath,$username)).'">Forum profili</a></header>'
+            .'<section class="surface-panel marketplace-results">'.self::cards($cards,$basePath,'grid')
+            .self::sellerPagination($basePath,$username,$page,$total).'</section></section>';
+
         return ProfileHtml::page($username.' Marketplace',$body,$basePath,authenticated:$authenticated);
     }
 
@@ -307,9 +354,9 @@ final class MarketplaceHtml
         $links='';
         foreach(array_unique(array_filter([$page-1,$page,$page+1],static fn(int $p):bool=>$p>=1&&$p<=$last)) as $target){
             $href=$basePath->prepend('/marketplace/sellers/'.rawurlencode($username)).'?page='.$target;
-            $links.='<a'.($target===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$target.'</a>';
+            $links.='<a class="fx-btn"'.($target===$page?' aria-current="page"':'').' href="'.self::e($href).'">'.$target.'</a>';
         }
-        return '<nav class="pagination" aria-label="Satıcı ilan sayfaları">'.$links.'</nav>';
+        return '<nav class="surface-pagination market-pagination" aria-label="Satıcı ilan sayfaları">'.$links.'</nav>';
     }
 
     /** @param list<MarketplaceCategory> $categories */
