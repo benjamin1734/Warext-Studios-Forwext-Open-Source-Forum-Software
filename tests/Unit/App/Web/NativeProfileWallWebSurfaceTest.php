@@ -31,7 +31,7 @@ final class NativeProfileWallWebSurfaceTest extends TestCase
         self::assertStringContainsString('$viewerId !== null && $this->activityWall !== null', $handler);
         self::assertStringContainsString('$this->activityWall->render($viewerId, $profile->userId)', $handler);
         self::assertStringContainsString('Profil Akışı', $handler);
-        self::assertStringContainsString("$music . $tabNav . '<div class=\"profile-content\">' . $activityWall . $sections", $handler);
+        self::assertStringContainsString('$music . $tabNav . \'<div class="profile-content">\' . $activityWall . $sections', $handler);
     }
 
     public function testRendererBoundsInitialQueriesAndEscapesUserContent(): void
