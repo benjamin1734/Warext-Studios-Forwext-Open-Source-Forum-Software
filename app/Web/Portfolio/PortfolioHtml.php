@@ -25,25 +25,33 @@ final class PortfolioHtml
         bool $canCreate,
     ): string {
         $actions = $canCreate
-            ? '<p><a href="' . self::e($basePath->prepend('/portfolio/manage')) . '">Yeni proje oluştur</a></p>'
+            ? '<a class="fx-btn fx-btn--primary" href="' . self::e($basePath->prepend('/portfolio/manage'))
+                . '">Yeni proje</a>'
             : '';
         $categoryLabels = [];
         foreach ($categories as $category) {
             $categoryLabels[$category->key] = $category->label;
         }
 
-        $body = '<section class="card"><h1>Portfolyo</h1>'
-            . '<p class="muted">Topluluk üyelerinin projeleri, çalışmaları ve öne çıkan üretimleri.</p>'
-            . $actions;
+        $body = '<section class="portfolio-index discovery-page"><header class="surface-head portfolio-head"><div>'
+            . '<span class="forum-eyebrow">TOPLULUK</span><h1>Portfolyo</h1>'
+            . '<p>Topluluk üyelerinin projelerini, çalışmalarını ve öne çıkan üretimlerini keşfet.</p></div>'
+            . $actions . '</header>';
 
         if ($projects === []) {
-            $body .= '<div class="empty">Henüz yayımlanmış portfolyo projesi bulunmuyor.</div>';
+            $body .= '<section class="surface-panel portfolio-index-panel"><div class="surface-empty">'
+                . '<strong>Henüz yayımlanmış proje yok.</strong>'
+                . '<span>Topluluk üyeleri proje yayımladığında burada görünecek.</span></div></section>';
         } else {
-            $body .= '<div class="search-results">';
+            $body .= '<section class="surface-panel portfolio-index-panel"><div class="portfolio-grid">';
             foreach ($projects as $project) {
-                $body .= self::projectCard($project, $categoryLabels[$project->categoryKey] ?? $project->categoryKey, $basePath);
+                $body .= self::projectCard(
+                    $project,
+                    $categoryLabels[$project->categoryKey] ?? $project->categoryKey,
+                    $basePath,
+                );
             }
-            $body .= '</div>';
+            $body .= '</div></section>';
         }
         $body .= '</section>';
 
@@ -257,11 +265,17 @@ final class PortfolioHtml
             ? ''
             : '<img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'
                 . self::e($basePath->prepend($media->path)) . '" alt="' . self::e($media->alt) . '">';
-        return '<article class="search-hit">' . $thumb . '<div class="search-hit-type">'
-            . self::e($category) . ($project->featured ? ' · Öne Çıkan' : '')
-            . '</div><h2><a href="' . $href . '">' . self::e($project->title) . '</a></h2>'
+        $mediaHtml = $thumb === ''
+            ? '<a class="portfolio-card-media portfolio-card-media--empty" href="' . $href
+                . '" aria-label="' . self::e($project->title) . '"><span aria-hidden="true">◇</span></a>'
+            : '<a class="portfolio-card-media" href="' . $href . '">' . $thumb . '</a>';
+
+        return '<article class="portfolio-card">' . $mediaHtml . '<div class="portfolio-card-body">'
+            . '<div class="portfolio-card-meta"><span>' . self::e($category) . '</span>'
+            . ($project->featured ? '<span class="portfolio-card-featured">Öne çıkan</span>' : '') . '</div>'
+            . '<h2><a href="' . $href . '">' . self::e($project->title) . '</a></h2>'
             . ($project->summary === '' ? '' : '<p>' . self::e($project->summary) . '</p>')
-            . '</article>';
+            . '</div></article>';
     }
 
     private static function csrf(string $token): string

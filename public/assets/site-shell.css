@@ -2770,3 +2770,22 @@ a.forum-thread-author:hover{color:var(--text)}
 .support-ticket-row small,.support-ticket-meta{color:var(--muted);font-size:9.5px}
 .support-ticket-meta{color:var(--accent);font-weight:760}
 @media(max-width:700px){.faq-row,.support-ticket-row{align-items:flex-start}.support-ticket-row strong{white-space:normal}}
+
+/* portfolio-public-v1 */
+.portfolio-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.portfolio-index-panel{padding:0;overflow:hidden}
+.portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.portfolio-card{min-width:0;overflow:hidden;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.portfolio-card:hover{background:color-mix(in srgb,var(--accent) 2.5%,var(--panel))}
+.portfolio-card-media{width:100%;aspect-ratio:16/9;display:block;overflow:hidden;border-bottom:1px solid var(--line);background:var(--panel2)}
+.portfolio-card-media img{width:100%;height:100%;display:block;object-fit:cover;transition:transform 220ms ease}
+.portfolio-card:hover .portfolio-card-media img{transform:scale(1.018)}
+.portfolio-card-media--empty{display:grid;place-items:center;color:color-mix(in srgb,var(--muted) 70%,transparent);font-size:26px;text-decoration:none}
+.portfolio-card-body{display:grid;gap:6px;padding:11px 12px 13px}
+.portfolio-card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+.portfolio-card-featured{padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--accent) 9%,var(--panel2));color:var(--accent);font-weight:800}
+.portfolio-card h2{margin:0;font-size:14px;line-height:1.25}
+.portfolio-card h2 a{color:var(--text);text-decoration:none}
+.portfolio-card h2 a:hover{color:var(--accent)}
+.portfolio-card p{margin:0;color:var(--muted);font-size:10.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:700px){.portfolio-grid{grid-template-columns:1fr}.portfolio-card{display:grid;grid-template-columns:112px minmax(0,1fr);border-right:0}.portfolio-card-media{height:100%;aspect-ratio:auto;border-right:1px solid var(--line);border-bottom:0}.portfolio-card-body{align-self:center}}
