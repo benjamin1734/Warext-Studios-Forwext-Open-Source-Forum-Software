@@ -22,7 +22,7 @@ final class ProfileShellUiTest extends TestCase
 
         self::assertStringContainsString('.top[data-scrolled="1"]', $css);
         self::assertStringContainsString('.nav-primary>a[aria-current="page"]', $css);
-        self::assertStringContainsString('.site-masthead', $css);
+        self::assertStringContainsString('.brand-mark', $css);
         self::assertStringContainsString('.nav-primary-menu', $css);
         self::assertStringContainsString('.nav-secondary-group[hidden]', $css);
         self::assertStringContainsString('.nav-secondary-group>a', $css);
@@ -32,7 +32,10 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.forum-thread-row:hover', $css);
         self::assertStringContainsString('.forum-thread-list-head', $css);
         self::assertStringContainsString('grid-template-columns:155px minmax(0,1fr)', $css);
-        self::assertStringContainsString('/* xf-forum-surfaces-v2 */', $css);
+        self::assertStringContainsString('/* navigation-shell-v1 */', $css);
+        self::assertStringContainsString('/* forum-surfaces-v1 */', $css);
+        self::assertStringNotContainsString('/* xf-navigation-layout */', $css);
+        self::assertStringNotContainsString('/* xf-navigation-v3 */', $css);
         self::assertStringContainsString('.profile-wall-post:hover', $css);
         self::assertStringContainsString('.acp-card:hover', $css);
         self::assertStringContainsString('.search-hit:hover', $css);
@@ -60,6 +63,7 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('sectionForPath', $asset);
         self::assertStringContainsString('data-nav-section', $asset);
         self::assertStringContainsString('activeNavSection', $asset);
+        self::assertStringContainsString('forwext-nav-open', $asset);
         self::assertStringContainsString('.nav-account-menu', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
     }

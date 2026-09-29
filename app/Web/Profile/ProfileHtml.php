@@ -234,11 +234,9 @@ final class ProfileHtml
             . '<link rel="stylesheet" href="' . $siteShellStylesheet . '"></head><body data-forwext-background-scope="site">'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
-            . '<div class="site-masthead"><div class="site-masthead-inner">'
-            . '<a class="brand" href="' . $home . '"><span class="brand-mark" aria-hidden="true">F</span>'
-            . '<span class="brand-copy"><strong>Forwext</strong><small>Topluluk Forumu</small></span></a>'
-            . '</div></div>'
             . '<div class="top-main"><div class="topin">'
+            . '<a class="brand" href="' . $home . '"><span class="brand-mark" aria-hidden="true">F</span>'
+            . '<span class="brand-copy"><strong>Forwext</strong></span></a>'
             . '<button class="nav-toggle" type="button" data-forwext-nav-toggle aria-expanded="false" aria-controls="forwext-primary-navigation"><span aria-hidden="true">☰</span><span>Menü</span></button>'
             . '<div id="forwext-primary-navigation" class="nav-shell" data-forwext-primary-navigation data-mobile-open="0">'
             . '<nav class="nav-primary" aria-label="Ana navigasyon">' . $primaryNav . '</nav>' . $userTools . '</div></div></div>'

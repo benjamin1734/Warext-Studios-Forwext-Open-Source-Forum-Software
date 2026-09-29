@@ -44,6 +44,7 @@
   const setOpen = (open) => {
     navigation.dataset.mobileOpen = open ? "1" : "0";
     button.setAttribute("aria-expanded", open ? "true" : "false");
+    document.body.classList.toggle("forwext-nav-open", open);
   };
 
   const closeMenus = (except = null) => {
