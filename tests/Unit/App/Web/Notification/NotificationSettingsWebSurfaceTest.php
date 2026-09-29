@@ -55,6 +55,8 @@ final class NotificationSettingsWebSurfaceTest extends TestCase
         self::assertStringContainsString('&lt;Chime&gt;', $html);
         self::assertStringContainsString('/forum/account/notifications', $html);
         self::assertStringContainsString('data-notification-preview', $html);
+        self::assertStringContainsString('surface-head notification-settings-head', $html);
+        self::assertStringContainsString('notification-settings-form surface-panel', $html);
     }
 
     public function testSettingsClientUsesExistingSoundPreviewApiWithoutHtmlInjection(): void

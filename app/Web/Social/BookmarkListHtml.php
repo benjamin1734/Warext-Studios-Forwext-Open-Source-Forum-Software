@@ -32,7 +32,7 @@ final class BookmarkListHtml
                 ? '<span class="bookmark-note muted">Not eklenmemiş.</span>'
                 : '<p class="bookmark-note">' . self::e($bookmark->note) . '</p>';
 
-            $items .= '<article class="bookmark-card card"><div class="bookmark-card-main">'
+            $items .= '<article class="bookmark-card"><div class="bookmark-card-main">'
                 . '<span class="forum-eyebrow">YER İMİ</span><h2>' . self::e($title) . '</h2>'
                 . '<div class="bookmark-meta"><span>Mesaj #' . self::e((string) ($bookmark->postPosition ?? '?')) . '</span>'
                 . '<span>ID: ' . self::e($bookmark->postId->value()) . '</span></div>'
@@ -42,11 +42,11 @@ final class BookmarkListHtml
         }
 
         if ($items === '') {
-            $items = '<div class="bookmark-empty card"><strong>Henüz yer imi yok.</strong>'
+            $items = '<div class="surface-empty bookmark-empty"><strong>Henüz yer imi yok.</strong>'
                 . '<span>Forum mesajlarını kaydettiğinde burada listelenecek.</span></div>';
         }
 
-        $pager = '<nav class="notification-pagination" aria-label="Yer imi sayfaları">';
+        $pager = '<nav class="surface-pagination bookmark-pagination" aria-label="Yer imi sayfaları">';
         if ($page > 1) {
             $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/bookmarks?page=' . ($page - 1)))
                 . '">Önceki</a>';
@@ -57,10 +57,12 @@ final class BookmarkListHtml
         }
         $pager .= '</nav>';
 
-        $content = '<section class="bookmark-center"><header class="account-center-hero card">'
+        $content = '<section class="bookmark-center discovery-page"><header class="surface-head bookmark-head">'
             . '<div><span class="forum-eyebrow">HESAP</span><h1>Yer İmleri</h1>'
             . '<p>Kaydettiğin forum mesajlarını ve kişisel notlarını tek yerde görüntüle.</p></div>'
-            . '</header><div class="bookmark-list">' . $items . '</div>' . $pager . '</section>';
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account')) . '">Hesabıma dön</a></header>'
+            . '<section class="surface-panel bookmark-panel"><div class="bookmark-list">' . $items
+            . '</div>' . $pager . '</section></section>';
 
         return ProfileHtml::page('Yer İmleri', $content, $basePath, authenticated: true);
     }

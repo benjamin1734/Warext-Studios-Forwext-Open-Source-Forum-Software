@@ -97,6 +97,8 @@ final class ProfileRelationshipsWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-following="1"', $html);
         self::assertStringContainsString('data-ignoring="1"', $html);
         self::assertStringContainsString('21:00', $html);
+        self::assertStringContainsString('surface-head relationship-center-head', $html);
+        self::assertStringContainsString('relationship-panel surface-panel', $html);
     }
 
     public function testAccountDashboardLinksRelationshipManagement(): void

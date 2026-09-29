@@ -23,7 +23,7 @@ final class RelationshipAccountHtml
         BasePath $basePath,
         DateTimeZone $timezone,
     ): string {
-        $content = '<section class="relationship-center"><header class="account-center-hero card">'
+        $content = '<section class="relationship-center discovery-page"><header class="surface-head relationship-center-head">'
             . '<div><span class="forum-eyebrow">HESAP</span><h1>Sosyal İlişkiler</h1>'
             . '<p>Takip ettiğin, seni takip eden ve yok saydığın kullanıcıları tek yerden yönet.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account')) . '">Hesabıma dön</a></header>'
@@ -70,7 +70,7 @@ final class RelationshipAccountHtml
             $rows = '<div class="relationship-empty">Bu bölümde kullanıcı bulunmuyor.</div>';
         }
 
-        return '<section class="relationship-panel card"><div class="relationship-panel-head"><h2>'
+        return '<section class="relationship-panel surface-panel"><div class="relationship-panel-head"><h2>'
             . self::e($title) . '</h2><span>' . count($entries) . '</span></div><div class="relationship-list">'
             . $rows . '</div></section>';
     }

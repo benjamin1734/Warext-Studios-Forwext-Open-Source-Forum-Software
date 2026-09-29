@@ -53,11 +53,11 @@ final class NotificationInboxHtml
         }
 
         if ($items === '') {
-            $items = '<div class="notification-empty card"><strong>Bildirim bulunmuyor.</strong>'
+            $items = '<div class="surface-empty notification-empty"><strong>Bildirim bulunmuyor.</strong>'
                 . '<span>Yeni bildirimler geldiğinde burada listelenecek.</span></div>';
         }
 
-        $pagination = '<nav class="notification-pagination" aria-label="Bildirim sayfaları">';
+        $pagination = '<nav class="surface-pagination notification-pagination" aria-label="Bildirim sayfaları">';
         if ($page > 1) {
             $pagination .= '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/notifications?page=' . ($page - 1)))
                 . '">Önceki</a>';
@@ -68,13 +68,14 @@ final class NotificationInboxHtml
         }
         $pagination .= '</nav>';
 
-        $content = '<section class="notification-center"><header class="notification-hero card">'
+        $content = '<section class="notification-center discovery-page"><header class="surface-head notification-head">'
             . '<div><span class="forum-eyebrow">HESAP</span><h1>Bildirimler</h1>'
-            . '<p>Forum, destek, Marketplace, moderasyon ve diğer sistem bildirimlerini tek yerde takip et.</p></div>'
-            . '<div class="notification-hero-side"><div class="notification-unread"><strong>' . $unreadCount
+            . '<p>Forum, destek, Marketplace, moderasyon ve diğer sistem bildirimlerini takip et.</p></div>'
+            . '<div class="notification-head-actions"><div class="notification-unread"><strong>' . $unreadCount
             . '</strong><span>okunmamış</span></div><a class="fx-btn" href="'
             . self::e($basePath->prepend('/account/notification-settings')) . '">Ayarlar</a></div></header>'
-            . '<div class="notification-list">' . $items . '</div>' . $pagination . '</section>';
+            . '<section class="surface-panel notification-panel"><div class="notification-list">' . $items
+            . '</div>' . $pagination . '</section></section>';
 
         return ProfileHtml::page(
             'Bildirimler',

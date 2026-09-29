@@ -63,6 +63,9 @@ final class NotificationInboxWebSurfaceTest extends TestCase
         self::assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $html);
         self::assertStringNotContainsString('https://evil.example/path', $html);
         self::assertStringContainsString('Okundu işaretle', $html);
+        self::assertStringContainsString('surface-head notification-head', $html);
+        self::assertStringContainsString('surface-panel notification-panel', $html);
+        self::assertStringContainsString('surface-pagination notification-pagination', $html);
     }
 
     public function testNavigationAndRealtimeBootstrapExposeUnreadBadgeContract(): void

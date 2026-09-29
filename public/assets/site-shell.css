@@ -2577,3 +2577,38 @@ a.forum-thread-author:hover{color:var(--text)}
   .account-center-nav a small{display:grid}
   .account-setting-row{align-items:flex-start}
 }
+
+.notification-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.notification-head-actions .notification-unread{min-width:76px;padding:6px 9px;border-radius:7px}
+.notification-head-actions .notification-unread strong{font-size:18px}
+.notification-panel{padding:0}
+.notification-list{gap:0}
+.notification-item{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:13px 14px}
+.notification-item:last-child{border-bottom:0}
+.notification-item.is-unread{border-color:var(--line);background:color-mix(in srgb,var(--accent) 4%,var(--panel));box-shadow:inset 3px 0 0 var(--accent)}
+.notification-pagination{padding:11px 14px;border-top:1px solid var(--line)}
+.notification-settings-form{padding:15px}
+.notification-settings-info{padding:14px}
+.notification-settings-notice{margin:0}
+.notification-settings-head>.fx-btn,.relationship-center-head>.fx-btn,.bookmark-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:11px}
+.relationship-panel{padding:0}
+.relationship-panel-head{padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.relationship-row{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 13px}
+.relationship-row:last-child{border-bottom:0}
+.relationship-empty{padding:20px;text-align:center;color:var(--muted)}
+.bookmark-panel{padding:0}
+.bookmark-list{display:grid}
+.bookmark-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);background:transparent}
+.bookmark-card:last-child{border-bottom:0}
+.bookmark-card:hover{background:color-mix(in srgb,var(--accent) 2.5%,var(--panel))}
+.bookmark-card h2{margin:3px 0 5px;font-size:14px}
+.bookmark-meta{font-size:9.75px}
+.bookmark-note{margin-top:6px;font-size:11px}
+.bookmark-pagination{padding:11px 14px;border-top:1px solid var(--line)}
+@media(max-width:700px){
+  .notification-head-actions{justify-content:flex-start}
+  .notification-item{display:grid}
+  .notification-actions{min-width:0;justify-content:flex-start}
+  .bookmark-card{align-items:flex-start;display:grid}
+  .bookmark-card>.fx-btn{justify-self:start}
+}

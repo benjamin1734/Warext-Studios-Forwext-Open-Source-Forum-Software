@@ -29,13 +29,13 @@ final class NotificationSettingsHtml
             ? '<div class="notification-settings-notice" role="status">Bildirim ayarları kaydedildi.</div>'
             : '';
 
-        $content = '<section class="notification-settings">'
-            . '<header class="notification-settings-hero card"><div><span class="forum-eyebrow">HESAP</span>'
+        $content = '<section class="notification-settings discovery-page">'
+            . '<header class="surface-head notification-settings-head"><div><span class="forum-eyebrow">HESAP</span>'
             . '<h1>Bildirim Ayarları</h1><p>Yeni bildirimlerin ses davranışını ve varsayılan bildirim sesini yönet.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/notifications')) . '">Bildirimlere dön</a></header>'
             . $notice
-            . '<form class="notification-settings-form card" method="post" action="'
-            . self::e($basePath->prepend('/account/notification-settings')) . '">'
+            . '<form class="notification-settings-form surface-panel" method="post" action="'
+            . self::e($basePath->prepend('/account/notification-settings')) . '">';
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save_sound">'
             . '<label class="notification-settings-switch"><input type="checkbox" name="muted" value="1"'
@@ -49,7 +49,7 @@ final class NotificationSettingsHtml
             . '<div class="notification-settings-actions"><button class="fx-btn" type="button" data-notification-preview>'
             . 'Sesi önizle</button><button class="fx-btn fx-btn--primary" type="submit">Ayarları kaydet</button></div>'
             . '</form>'
-            . '<section class="notification-settings-info card"><h2>Nasıl çalışır?</h2>'
+            . '<section class="notification-settings-info surface-panel"><h2>Nasıl çalışır?</h2>'
             . '<p>Ses çalma, tarayıcıların otomatik oynatma kurallarına tabidir. İlk kullanıcı etkileşiminden önce tarayıcı sesi engelleyebilir.</p>'
             . '<p>Kategoriye özel ses tercihleri mevcut altyapıda korunur; bu ekran varsayılan hesap ayarını yönetir.</p></section>'
             . '</section>';
