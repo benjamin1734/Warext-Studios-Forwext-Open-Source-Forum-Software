@@ -141,6 +141,17 @@ $fixtures['moderator'] = ProfileHtml::page(
 );
 
 foreach ($fixtures as $name => $html) {
+    $html = preg_replace_callback(
+        '/<script src="([^"]+)" defer><\/script>/',
+        static function (array $match): string {
+            return str_ends_with($match[1], '/assets/mobile-nav.js') ? $match[0] : '';
+        },
+        $html,
+    );
+    if (!is_string($html)) {
+        throw new RuntimeException('Browser fixture script isolation failed.');
+    }
+
     $written = file_put_contents($target . '/' . $name . '.html', $html);
     if ($written === false) {
         throw new RuntimeException('Could not write browser fixture: ' . $name);
