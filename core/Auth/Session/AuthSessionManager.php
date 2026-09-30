@@ -157,15 +157,9 @@ final readonly class AuthSessionManager
                     return null;
                 }
             } else {
-                $this->index->register(new AuthSessionIndexRecord(
-                    $sessionHash,
-                    $userId,
-                    $data['device_id'],
-                    $data['credential_version'],
-                    $issuedAt,
-                    $record->expiresAt,
-                    $this->clock->now(),
-                ));
+                // Once session indexing is enabled, unindexed legacy tokens fail closed.
+                $this->sessions->delete($sessionId);
+                return null;
             }
             $this->index->touch($sessionHash, $this->clock->now());
         }
