@@ -505,6 +505,175 @@
         if (command === 'emoji') toggleEmoji(root, button);
     };
 
+    let attachmentCsrfPromise = null;
+
+    const attachmentStatus = (root, message, state = '') => {
+        const target = root.querySelector('[data-fx-editor-attachment-status]');
+        if (!(target instanceof HTMLElement)) return;
+        target.textContent = message;
+        target.dataset.state = state;
+    };
+
+    const attachmentToken = async (root, force = false) => {
+        const endpoint = root.dataset.attachmentCsrfUrl;
+        if (!endpoint) throw new Error('attachment_csrf_unavailable');
+        if (force) attachmentCsrfPromise = null;
+        if (attachmentCsrfPromise === null) {
+            attachmentCsrfPromise = fetch(endpoint, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' },
+            }).then(async (response) => {
+                const payload = await response.json();
+                if (!response.ok || typeof payload.csrf_token !== 'string' || payload.csrf_token === '') {
+                    throw new Error('attachment_csrf_unavailable');
+                }
+                return payload.csrf_token;
+            }).catch((error) => {
+                attachmentCsrfPromise = null;
+                throw error;
+            });
+        }
+        return attachmentCsrfPromise;
+    };
+
+    const formatAttachmentBytes = (bytes) => {
+        if (!Number.isFinite(bytes) || bytes < 0) return '';
+        if (bytes < 1024) return Math.round(bytes) + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    const bindAttachmentRemove = (root, item) => {
+        const button = item.querySelector('[data-fx-editor-attachment-remove]');
+        if (!(button instanceof HTMLButtonElement) || button.dataset.fxBound === '1') return;
+        button.dataset.fxBound = '1';
+        button.addEventListener('click', () => {
+            item.remove();
+            attachmentStatus(root, 'Dosya formdan çıkarıldı; geçici yükleme otomatik temizlenecek.');
+        });
+    };
+
+    const appendAttachmentItem = (root, payload) => {
+        const id = typeof payload.attachment_id === 'string' ? payload.attachment_id : '';
+        if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('invalid_attachment_response');
+        const list = root.querySelector('[data-fx-editor-attachment-list]');
+        if (!(list instanceof HTMLElement)) throw new Error('attachment_list_unavailable');
+        if (list.querySelector('[data-attachment-id="' + CSS.escape(id) + '"]')) return;
+
+        const item = document.createElement('div');
+        item.className = 'fx-editor__attachment-item';
+        item.dataset.fxEditorAttachmentItem = '';
+        item.dataset.attachmentId = id;
+
+        const copy = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = typeof payload.filename === 'string' && payload.filename !== ''
+            ? payload.filename
+            : 'Hazırlanmış dosya';
+        const meta = document.createElement('small');
+        const bits = [];
+        const size = Number(payload.size_bytes);
+        const formatted = formatAttachmentBytes(size);
+        if (formatted !== '') bits.push(formatted);
+        if (payload.thumbnail_available === true) bits.push('önizleme hazır');
+        meta.textContent = bits.join(' · ');
+        copy.append(name, meta);
+
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'attachment_ids[]';
+        hidden.value = id;
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.dataset.fxEditorAttachmentRemove = '';
+        remove.textContent = 'Çıkar';
+
+        item.append(copy, hidden, remove);
+        list.append(item);
+        bindAttachmentRemove(root, item);
+    };
+
+    const uploadAttachment = async (root, file, retry = true) => {
+        const endpoint = root.dataset.attachmentStageUrl;
+        if (!endpoint) throw new Error('attachment_stage_unavailable');
+        const token = await attachmentToken(root);
+        const form = new FormData();
+        form.append('file', file, file.name);
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': token, Accept: 'application/json' },
+            body: form,
+        });
+        if (response.status === 403 && retry) {
+            await attachmentToken(root, true);
+            return uploadAttachment(root, file, false);
+        }
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const code = typeof payload.error === 'string' ? payload.error : 'attachment_upload_failed';
+            throw new Error(code);
+        }
+        appendAttachmentItem(root, payload);
+    };
+
+    const initAttachments = (root) => {
+        const input = root.querySelector('[data-fx-editor-attachment-input]');
+        if (!(input instanceof HTMLInputElement)) return;
+
+        root.querySelectorAll('[data-fx-editor-attachment-item]').forEach((item) => {
+            if (item instanceof HTMLElement) bindAttachmentRemove(root, item);
+        });
+
+        const form = root.closest('form');
+        if (form instanceof HTMLFormElement && form.dataset.fxAttachmentGuard !== '1') {
+            form.dataset.fxAttachmentGuard = '1';
+            form.addEventListener('submit', (event) => {
+                const busyEditor = form.querySelector('[data-fx-editor][data-attachment-busy="1"]');
+                if (busyEditor) {
+                    event.preventDefault();
+                    attachmentStatus(busyEditor, 'Dosya yüklemesi tamamlanmadan form gönderilemez.', 'error');
+                }
+            });
+        }
+
+        input.addEventListener('change', async () => {
+            const files = [...(input.files ?? [])];
+            input.value = '';
+            if (files.length === 0) return;
+
+            root.dataset.attachmentBusy = '1';
+            input.disabled = true;
+            let completed = 0;
+            attachmentStatus(root, files.length + ' dosya yükleniyor…', 'loading');
+            try {
+                for (const file of files) {
+                    try {
+                        await uploadAttachment(root, file);
+                        completed += 1;
+                        attachmentStatus(root, completed + '/' + files.length + ' dosya hazır.', 'loading');
+                    } catch (error) {
+                        const code = error instanceof Error ? error.message : '';
+                        const message = code === 'attachment_rejected'
+                            ? 'Dosya türü, boyutu veya kota sınırı nedeniyle reddedildi.'
+                            : code === 'forbidden'
+                                ? 'Bu forumda dosya yükleme iznin yok.'
+                                : 'Dosya yüklenemedi. Tekrar deneyebilirsin.';
+                        attachmentStatus(root, message, 'error');
+                    }
+                }
+            } finally {
+                delete root.dataset.attachmentBusy;
+                input.disabled = false;
+                if (completed === files.length) {
+                    attachmentStatus(root, completed + ' dosya gönderime hazır.', 'success');
+                }
+            }
+        });
+    };
+
     const init = (root) => {
         if (!(root instanceof HTMLElement) || root.dataset.fxEditorReady === '1') return;
         const source = root.querySelector('[data-fx-editor-source]');
@@ -533,6 +702,7 @@
         if (previewButton) previewButton.addEventListener('click', () => void requestPreview(root, source));
         const spellcheckButton = root.querySelector('[data-fx-editor-spellcheck-button]');
         if (spellcheckButton) spellcheckButton.addEventListener('click', () => void requestSpellcheck(root, source));
+        initAttachments(root);
         updateMetrics(root, source);
     };
 
