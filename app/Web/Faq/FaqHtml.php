@@ -142,9 +142,11 @@ final class FaqHtml
         ?string $error = null,
     ): string {
         $action = self::e($basePath->prepend('/faq/manage'));
-        $notice = $updated ? '<div class="notice success">SSS içeriği güncellendi.</div>' : '';
+        $notice = $updated
+            ? '<div class="notification-settings-notice" role="status">SSS içeriği güncellendi.</div>'
+            : '';
         if ($error !== null) {
-            $notice .= '<div class="notice error">' . self::e($error) . '</div>';
+            $notice .= '<div class="auth-entry-error" role="alert">' . self::e($error) . '</div>';
         }
 
         $categoryOptions = '';
@@ -152,17 +154,24 @@ final class FaqHtml
             $categoryOptions .= '<option value="' . self::e($category->key) . '">'
                 . self::e($category->label . ' (' . $category->language . ')') . '</option>';
         }
+
         $visibility = '';
         foreach (FaqVisibility::cases() as $case) {
             $visibility .= '<option value="' . self::e($case->value) . '">' . self::e($case->value) . '</option>';
         }
 
-        $body = '<section class="card"><h1>SSS Yönetimi</h1><p class="muted">'
-            . 'Kategori, içerik, görünürlük, dil, sıralama, SEO ve import/export yönetimi.</p>'
-            . $notice
-            . '<p><a href="' . self::e($basePath->prepend('/faq/manage?export=1')) . '">JSON dışa aktar</a>'
-            . ' · <a href="' . self::e($basePath->prepend('/faq/manage/support-drafts')) . '">Destekten gelen SSS taslakları</a></p>'
-            . '<details open><summary>Kategori kaydet</summary><form method="post" action="' . $action . '" class="search-form">'
+        $body = '<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            . '<span class="forum-eyebrow">SSS YÖNETİMİ</span><h1>SSS Yönetimi</h1>'
+            . '<p>Kategori, içerik, görünürlük, dil, sıralama, SEO ve import/export işlemlerini yönet.</p></div>'
+            . '<div class="module-manage-head-actions">'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/faq/manage?export=1')) . '">JSON dışa aktar</a>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/faq/manage/support-drafts')) . '">Destek taslakları</a>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/faq')) . '">SSS’ye dön</a>'
+            . '</div></header>' . $notice
+
+            . '<details class="surface-panel module-manage-details" open><summary><strong>Kategori kaydet</strong>'
+            . '<span>Yeni kategori oluştur veya mevcut yapılandırmayı güncelle.</span></summary>'
+            . '<form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="category_save">'
             . '<label><span>Anahtar</span><input name="key" maxlength="64" required></label>'
             . '<label><span>Başlık</span><input name="label" maxlength="120" required></label>'
@@ -172,7 +181,10 @@ final class FaqHtml
             . '<label><span>Sıra</span><input type="number" name="sort_order" min="0" max="65535" value="100"></label>'
             . '<label><input type="checkbox" name="active" value="1" checked> Aktif</label>'
             . '<div class="search-actions"><button type="submit">Kategoriyi kaydet</button></div></form></details>'
-            . '<details><summary>Makale kaydet</summary><form method="post" action="' . $action . '" class="search-form">'
+
+            . '<details class="surface-panel module-manage-details"><summary><strong>Makale kaydet</strong>'
+            . '<span>SSS makalesi oluştur veya ID ile düzenle.</span></summary>'
+            . '<form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="article_save">'
             . '<label><span>Makale ID (düzenleme için; boşsa yeni)</span><input name="article_id" maxlength="32"></label>'
             . '<label><span>Kategori</span><select name="category" required>' . $categoryOptions . '</select></label>'
@@ -187,23 +199,37 @@ final class FaqHtml
             . '<label class="search-wide"><span>SEO açıklama</span><textarea name="seo_description" maxlength="320"></textarea></label>'
             . '<label><input type="checkbox" name="active" value="1" checked> Aktif</label>'
             . '<div class="search-actions"><button type="submit">Makaleyi kaydet</button></div></form></details>'
-            . '<details><summary>JSON içe aktar</summary><form method="post" action="' . $action . '" class="search-form">'
+
+            . '<details class="surface-panel module-manage-details"><summary><strong>JSON içe aktar</strong>'
+            . '<span>Forwext FAQ JSON içeriğini içe aktar.</span></summary>'
+            . '<form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="import">'
             . '<label class="search-wide"><span>Forwext FAQ JSON</span><textarea name="json" maxlength="5000000" rows="12" required></textarea></label>'
             . '<div class="search-actions"><button type="submit">İçe aktar</button></div></form></details>'
-            . '<section class="section"><h2>Mevcut içerik</h2><p class="muted">'
-            . count($categories) . ' kategori · ' . count($articles) . ' makale</p><ul>';
-        foreach ($articles as $article) {
-            $summary = $helpful[$article->articleId->value()] ?? null;
-            $metric = $summary === null || $summary->total() === 0
-                ? '0 değerlendirme'
-                : $summary->total() . ' değerlendirme / %'
-                    . number_format(($summary->ratio() ?? 0.0) * 100, 0) . ' faydalı';
-            $body .= '<li><code>' . self::e($article->articleId->value()) . '</code> — '
-                . self::e($article->question) . ' [' . self::e($article->language . '/' . $article->visibility->value)
-                . '] — ' . self::e($metric) . '</li>';
+
+            . '<section class="surface-panel module-manage-section"><header><div><h2>Mevcut içerik</h2><p>'
+            . count($categories) . ' kategori · ' . count($articles) . ' makale</p></div>'
+            . '<span>' . count($articles) . '</span></header><div class="faq-manage-list">';
+
+        if ($articles === []) {
+            $body .= '<div class="surface-empty"><strong>Makale bulunmuyor.</strong>'
+                . '<span>Yeni SSS makaleleri burada listelenecek.</span></div>';
+        } else {
+            foreach ($articles as $article) {
+                $summary = $helpful[$article->articleId->value()] ?? null;
+                $metric = $summary === null || $summary->total() === 0
+                    ? '0 değerlendirme'
+                    : $summary->total() . ' değerlendirme / %'
+                        . number_format(($summary->ratio() ?? 0.0) * 100, 0) . ' faydalı';
+
+                $body .= '<article class="faq-manage-row"><div><span>'
+                    . self::e($article->language . ' · ' . $article->visibility->value) . '</span><strong>'
+                    . self::e($article->question) . '</strong><small>' . self::e($metric)
+                    . ' · ID ' . self::e($article->articleId->value()) . '</small></div></article>';
+            }
         }
-        $body .= '</ul></section></section>';
+
+        $body .= '</div></section></section>';
 
         return ProfileHtml::page('SSS Yönetimi', $body, $basePath, authenticated:true);
     }

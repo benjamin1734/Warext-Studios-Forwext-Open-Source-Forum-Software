@@ -62,5 +62,9 @@ final class FaqHtmlTest extends TestCase
         self::assertStringContainsString('/community/faq/tr/guvenli-soru', $html);
         self::assertStringContainsString('surface-head faq-article-head', $html);
         self::assertStringContainsString('surface-panel faq-answer', $html);
+        $manage=(string)file_get_contents(dirname(__DIR__,5).'/app/Web/Faq/FaqHtml.php');
+        self::assertStringContainsString('module-manage-page discovery-page',$manage);
+        self::assertStringContainsString('module-manage-head-actions',$manage);
+        self::assertStringContainsString('class="faq-manage-row"',$manage);
     }
 }
