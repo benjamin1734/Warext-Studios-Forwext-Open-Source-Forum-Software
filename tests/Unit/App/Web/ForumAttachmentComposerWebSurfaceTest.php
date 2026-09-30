@@ -75,7 +75,7 @@ final class ForumAttachmentComposerWebSurfaceTest extends TestCase
         $reply = (string) file_get_contents($root . '/app/Web/Forum/ThreadReplyHandler.php');
         $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
 
-        self::assertStringContainsString("($attachmentWarning ? '?attachment_warning=1' : '')", $create);
+        self::assertStringContainsString("(\$attachmentWarning ? '?attachment_warning=1' : '')", $create);
         self::assertStringContainsString("'Forwext attachment finalize failed after thread publish.'", $create);
         self::assertStringContainsString("'Forwext attachment finalize failed after reply publish.'", $reply);
         self::assertStringContainsString("['attachment_warning']", $thread);
