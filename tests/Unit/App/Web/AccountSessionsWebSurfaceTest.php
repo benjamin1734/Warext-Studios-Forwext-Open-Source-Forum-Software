@@ -28,15 +28,15 @@ final class AccountSessionsWebSurfaceTest extends TestCase
         self::assertStringContainsString('$accountSessionCsrf', $factory);
         self::assertStringContainsString("'forwext.csrf.account-session.v1'", $factory);
 
-        self::assertStringContainsString("hash('sha256', $sessionId)", $handler);
+        self::assertStringContainsString("hash('sha256', \$sessionId)", $handler);
         self::assertStringContainsString('revokeOthers($actor, $currentHash, $now)', $handler);
         self::assertStringContainsString('revokeForUser($actor, $hash, $now)', $handler);
         self::assertStringContainsString('hash_equals($currentHash, $hash)', $handler);
         self::assertStringContainsString('X-Robots-Tag', $handler);
 
         self::assertStringContainsString('$indexed->activeAt($this->clock->now())', $manager);
-        self::assertStringContainsString("hash('sha256', $sessionId)", $manager);
-        self::assertStringNotContainsString("'session_id' => $sessionId", $manager);
+        self::assertStringContainsString("hash('sha256', \$sessionId)", $manager);
+        self::assertStringNotContainsString("'session_id' => \$sessionId", $manager);
     }
 
     public function testSessionPageLabelsCurrentSessionWithoutExposingRawToken(): void
