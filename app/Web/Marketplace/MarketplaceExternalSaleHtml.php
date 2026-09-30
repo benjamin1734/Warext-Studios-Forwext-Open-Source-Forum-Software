@@ -27,7 +27,8 @@ final class MarketplaceExternalSaleHtml
             .'<span class="forum-eyebrow">HARİCÎ SATIŞ</span><h1>Haricî Satış Bağlantısı</h1><p>'.self::e($listing->title).'</p></div>'
             .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimi</a></header>'
             .($updated?'<div class="notification-settings-notice" role="status">Haricî satış ayarı kaydedildi.</div>':'')
-            .'<section class="surface-panel marketplace-setting-panel">'\n            .'<p>Satış bağlantıları yalnız yönetici tarafından izin verilen HTTPS domainlerine gidebilir. '
+            .'<section class="surface-panel marketplace-setting-panel">'
+            .'<p>Satış bağlantıları yalnız yönetici tarafından izin verilen HTTPS domainlerine gidebilir. '
             .'Ziyaretçi dış siteye gönderilmeden önce Forwext güvenlik uyarısını görür.</p>'
             .'<p class="muted">İzinli domainler: '.self::e($hosts).'</p>'
             .'<p class="muted">Kaydedilmiş yönlendirme tıklaması: '.$clickCount.'</p>'
