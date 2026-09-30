@@ -22,7 +22,7 @@ final class AbuseHtml
             $rules .= self::rule($rule);
         }
         if ($rules === '') {
-            $rules = '<div class="empty">Aktif anti-abuse kuralı yok.</div>';
+            $rules = '<div class="surface-empty"><strong>Aktif anti-abuse kuralı yok.</strong><span>Yeni kurallar burada görünecek.</span></div>';
         }
 
         $events = '';
@@ -30,12 +30,13 @@ final class AbuseHtml
             $events .= self::event($event, $capabilities->canCleanup);
         }
         if ($events === '') {
-            $events = '<div class="empty">İnceleme bekleyen abuse olayı yok.</div>';
+            $events = '<div class="surface-empty"><strong>İnceleme bekleyen olay yok.</strong><span>Kuyruk şu anda temiz.</span></div>';
         }
 
         $ruleEditor = '';
         if ($capabilities->canManageRules) {
-            $ruleEditor = '<details class="card section"><summary><strong>Gelişmiş: otomatik kural oluştur/güncelle</strong></summary>'
+            $ruleEditor = '<details class="surface-panel moderation-create"><summary><strong>Otomatik kural oluştur / güncelle</strong>'
+                . '<span>Anti-abuse davranışını gelişmiş kurallarla yönet.</span></summary>'
                 . '<form method="post" action="' . self::e($basePath->prepend('/moderation/abuse/rules')) . '" '
                 . 'data-moderation-form class="search-form">'
                 . '<label><span>Anahtar</span><input name="rule_key" maxlength="64" required></label>'
@@ -60,33 +61,34 @@ final class AbuseHtml
             : '';
         $eventClose = '';
         if ($capabilities->canCleanup) {
-            $eventClose = '<div class="card section"><label><span>Neden kodu</span>'
+            $eventClose = '<section class="surface-panel moderation-bulk"><label><span>Neden kodu</span>'
                 . '<input name="reason_code" maxlength="64" value="abuse.spam_cleanup" required></label>'
                 . '<div class="search-actions"><button name="action" value="cleanup" type="submit">Seçili içeriği temizle</button>'
-                . '<button name="action" value="dismiss" type="submit">Seçilileri kapat</button></div></div></form>';
+                . '<button name="action" value="dismiss" type="submit">Seçilileri kapat</button></div></section></form>';
         }
 
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
-        $content = '<div class="card"><h1 style="margin:0">Anti-spam / Abuse</h1>'
-            . '<p class="muted">Flood ve abuse kararları IP, cihaz, kullanıcı, kimlik ve içerik fingerprint sinyallerini '
-            . 'ham hassas veri saklamadan değerlendirir. Cleanup mevcut content-moderation permission ve audit zincirini kullanır.</p></div>'
-            . '<section class="card section"><h2>Aktif kurallar</h2>' . $rules . '</section>'
+        $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+            . '<span class="forum-eyebrow">MODERASYON</span><h1>Anti-spam / Abuse</h1>'
+            . '<p>Flood ve abuse sinyallerini ham hassas veri saklamadan incele ve yönet.</p></div></header>'
+            . '<section class="surface-panel moderation-report-panel"><header><h2>Aktif kurallar</h2><span>'
+            . count($overview->rules) . '</span></header><div class="moderation-list">' . $rules . '</div></section>'
             . $ruleEditor
-            . '<section class="card section"><h2>İnceleme olayları</h2></section>'
-            . $eventOpen . '<section class="card section">' . $events . '</section>' . $eventClose
-            . $script;
+            . $eventOpen . '<section class="surface-panel moderation-report-panel"><header><h2>İnceleme olayları</h2><span>'
+            . count($overview->events) . '</span></header><div class="moderation-list">' . $events . '</div></section>'
+            . $eventClose . $script . '</section>';
 
         return ProfileHtml::page('Anti-spam / Abuse', $content, $basePath, authenticated: true);
     }
 
     private static function rule(AbuseRule $rule): string
     {
-        return '<article class="search-hit"><span class="search-hit-type">' . self::e($rule->eventType->label()) . '</span>'
-            . '<h3>' . self::e($rule->label) . '</h3>'
-            . '<div class="muted">' . self::e($rule->key) . ' · ' . self::e($rule->signal->label())
+        return '<article class="moderation-list-row"><div class="moderation-list-row-main"><span class="moderation-row-type">'
+            . self::e($rule->eventType->label()) . '</span><h3>' . self::e($rule->label) . '</h3>'
+            . '<div class="moderation-row-meta">' . self::e($rule->key) . ' · ' . self::e($rule->signal->label())
             . ' · limit ' . $rule->limit . ' / ' . $rule->windowSeconds . ' sn · '
             . self::e($rule->action->value) . ' · öncelik ' . $rule->priority
-            . ' · ' . ($rule->active ? 'aktif' : 'pasif') . '</div></article>';
+            . ' · ' . ($rule->active ? 'aktif' : 'pasif') . '</div></div></article>';
     }
 
     private static function event(AbuseEvent $event, bool $selectable): string
@@ -100,12 +102,11 @@ final class AbuseHtml
             : self::e($event->targetType . ':' . $event->targetId?->value());
         $actor = $event->actorUserId?->value() ?? 'anonim/kayıt öncesi';
 
-        return '<article class="search-hit"><span class="search-hit-type">' . self::e($event->eventType->label()) . '</span>'
-            . '<h3>' . self::e($event->decision->value) . '</h3>'
-            . '<div class="muted">Kurallar: ' . self::e(implode(', ', $event->matchedRuleKeys)) . '</div>'
-            . '<div class="muted">Aktör: ' . self::e($actor) . ' · Hedef: ' . $target . '</div>'
-            . '<div class="muted">' . self::e($event->occurredAt->format('Y-m-d H:i')) . ' UTC</div>'
-            . $check . '</article>';
+        return '<article class="moderation-list-row"><div class="moderation-list-row-main"><span class="moderation-row-type">'
+            . self::e($event->eventType->label()) . '</span><h3>' . self::e($event->decision->value) . '</h3>'
+            . '<div class="moderation-row-meta">Kurallar · ' . self::e(implode(', ', $event->matchedRuleKeys))
+            . ' · Aktör · ' . self::e($actor) . ' · Hedef · ' . $target . ' · '
+            . self::e($event->occurredAt->format('Y-m-d H:i')) . ' UTC</div></div>' . $check . '</article>';
     }
 
     private static function e(string $value): string

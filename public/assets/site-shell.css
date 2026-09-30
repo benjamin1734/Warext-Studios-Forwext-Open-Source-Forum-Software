@@ -2988,3 +2988,13 @@ a.forum-thread-author:hover{color:var(--text)}
 .moderation-control-card h2,.moderation-note-form h2{margin:0 0 8px;font-size:13px}
 .moderation-control-card .search-form,.moderation-note-form .search-form{margin:0}
 @media(max-width:700px){.moderation-control-grid{grid-template-columns:1fr}.moderation-list-row{display:grid;align-items:start}}
+
+.moderation-verification{padding:11px 13px;font-size:10.5px}
+.moderation-verification p{margin:0}
+.moderation-verification a{font-weight:760}
+.moderation-definition-editor{padding:11px 13px;border-top:1px solid var(--line)}
+.moderation-definition-editor details{margin:0}
+.moderation-note h3{margin:2px 0;font-size:12.5px}
+.moderation-note p{margin:4px 0 0;font-size:10.5px;line-height:1.5}
+.moderation-note details{margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.moderation-note .moderation-row-action{margin-top:8px}

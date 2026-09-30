@@ -28,12 +28,13 @@ final class DisciplineHtml
         $actions = self::actions($overview, $usernames, $basePath, $capabilities);
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
 
-        $content = '<div class="card"><h1 style="margin:0">Uyarı ve disiplin yönetimi</h1>'
-            . '<p class="muted">Uyarı puanları, süreli/kalıcı kısıtlamalar, askıya alma ve ban işlemleri '
-            . 'ortak permission ve audit altyapısına bağlıdır.</p></div>'
+        $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+            . '<span class="forum-eyebrow">DİSİPLİN</span><h1>Uyarı ve disiplin yönetimi</h1>'
+            . '<p>Uyarı, kısıtlama, askıya alma ve ban işlemlerini permission ve audit zinciri üzerinden yönet.</p></div></header>'
             . $forms . $definitions
-            . '<section class="card section"><h2>Disiplin geçmişi</h2>' . $actions . '</section>'
-            . $script;
+            . '<section class="surface-panel moderation-report-panel"><header><h2>Disiplin geçmişi</h2><span>'
+            . count($overview->actions) . '</span></header><div class="moderation-list">' . $actions . '</div></section>'
+            . $script . '</section>';
 
         return ProfileHtml::page('Disiplin', $content, $basePath, authenticated: true);
     }
@@ -53,7 +54,7 @@ final class DisciplineHtml
                 $options .= '<option value="' . self::e($definition->key) . '">'
                     . self::e($definition->label) . ' (' . $definition->points . ' puan)</option>';
             }
-            $forms .= '<details class="card section"><summary><strong>Uyarı ver</strong></summary>'
+            $forms .= '<details class="surface-panel moderation-create"><summary><strong>Uyarı ver</strong><span>İşlem formunu aç.</span></summary>'
                 . '<form method="post" action="' . $action . '" data-moderation-form class="search-form">'
                 . '<input type="hidden" name="action_type" value="warning">'
                 . self::usernameAndReasonFields()
@@ -62,7 +63,7 @@ final class DisciplineHtml
         }
 
         if ($capabilities->canRestrict) {
-            $forms .= '<details class="card section"><summary><strong>Posting / içerik kısıtlaması</strong></summary>'
+            $forms .= '<details class="surface-panel moderation-create"><summary><strong>Posting / içerik kısıtlaması</strong><span>İşlem formunu aç.</span></summary>'
                 . '<form method="post" action="' . $action . '" data-moderation-form class="search-form">'
                 . '<input type="hidden" name="action_type" value="restriction">'
                 . self::usernameAndReasonFields()
@@ -75,7 +76,7 @@ final class DisciplineHtml
         }
 
         if ($capabilities->canBan) {
-            $forms .= '<details class="card section"><summary><strong>Askıya al / banla</strong></summary>'
+            $forms .= '<details class="surface-panel moderation-create"><summary><strong>Askıya al / banla</strong><span>İşlem formunu aç.</span></summary>'
                 . '<form method="post" action="' . $action . '" data-moderation-form class="search-form">'
                 . self::usernameAndReasonFields()
                 . '<label><span>İşlem</span><select name="action_type">'
@@ -95,18 +96,18 @@ final class DisciplineHtml
     ): string {
         $rows = '';
         foreach ($overview->warningDefinitions as $definition) {
-            $rows .= '<article class="search-hit"><h3>' . self::e($definition->label) . '</h3>'
+            $rows .= '<article class="moderation-list-row"><div class="moderation-list-row-main"><h3>' . self::e($definition->label) . '</h3>'
                 . '<div class="muted">' . self::e($definition->key) . ' · ' . $definition->points . ' puan · '
                 . ($definition->expiryDays === null ? 'süresiz puan' : $definition->expiryDays . ' gün')
                 . ' · ' . ($definition->active ? 'aktif' : 'pasif') . '</div>'
                 . ($definition->description === '' ? '' : '<p>' . self::e($definition->description) . '</p>')
                 . '</article>';
         }
-        if ($rows === '') $rows = '<div class="empty">Uyarı tanımı yok.</div>';
+        if ($rows === '') $rows = '<div class="surface-empty"><strong>Uyarı tanımı yok.</strong><span>Tanımlar eklendiğinde burada görünecek.</span></div>';
 
         $editor = '';
         if ($capabilities->canManageWarningDefinitions) {
-            $editor = '<details><summary><strong>Gelişmiş: uyarı tanımı oluştur/güncelle</strong></summary>'
+            $editor = '<details><summary><strong>Gelişmiş: uyarı tanımı oluştur/güncelle</strong><span>İşlem formunu aç.</span></summary>'
                 . '<form method="post" action="' . self::e($basePath->prepend('/moderation/discipline/warning-definitions'))
                 . '" data-moderation-form class="search-form">'
                 . '<label><span>Anahtar</span><input name="definition_key" maxlength="64" required></label>'
@@ -120,7 +121,9 @@ final class DisciplineHtml
                 . '</form></details>';
         }
 
-        return '<section class="card section"><h2>Uyarı tanımları</h2>' . $rows . $editor . '</section>';
+        return '<section class="surface-panel moderation-report-panel"><header><h2>Uyarı tanımları</h2><span>'
+            . count($overview->warningDefinitions) . '</span></header><div class="moderation-list">' . $rows
+            . '</div><div class="moderation-definition-editor">' . $editor . '</div></section>';
     }
 
     /** @param array<string,string> $usernames */
@@ -130,7 +133,7 @@ final class DisciplineHtml
         BasePath $basePath,
         DisciplineCapabilities $capabilities,
     ): string {
-        if ($overview->actions === []) return '<div class="empty">Disiplin kaydı yok.</div>';
+        if ($overview->actions === []) return '<div class="surface-empty"><strong>Disiplin kaydı yok.</strong><span>Geçmiş işlem bulunmuyor.</span></div>';
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $rows = '';
 
@@ -156,12 +159,12 @@ final class DisciplineHtml
             if ($capabilities->canRevoke && $action->isActiveAt($now)) {
                 $revoke = '<form method="post" action="'
                     . self::e($basePath->prepend('/moderation/discipline/' . rawurlencode($action->actionId->value()) . '/revoke'))
-                    . '" data-moderation-form class="presence-settings">'
+                    . '" data-moderation-form class="moderation-row-action">'
                     . '<label><span class="muted">Kaldırma nedeni</span><input name="reason" maxlength="1000" required></label>'
                     . '<button type="submit">Kaldır</button></form>';
             }
 
-            $rows .= '<article class="search-hit"><span class="search-hit-type">'
+            $rows .= '<article class="moderation-list-row"><div class="moderation-list-row-main"><span class="moderation-row-type">'
                 . self::e($action->type->label()) . '</span><h3>' . self::e($username) . '</h3>'
                 . '<div class="muted">Durum: ' . self::e($action->statusAt($now)) . ' · ' . $details . '</div>'
                 . '<p>' . self::e($action->reasonText) . '</p>'

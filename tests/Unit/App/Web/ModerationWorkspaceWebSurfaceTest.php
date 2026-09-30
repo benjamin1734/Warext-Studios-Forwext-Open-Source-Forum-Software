@@ -27,5 +27,13 @@ final class ModerationWorkspaceWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="moderation-list-row"', $approval);
         self::assertStringContainsString('moderation-subpage discovery-page', $report);
         self::assertStringContainsString('class="moderation-note"', $report);
+        $abuse = (string) file_get_contents($root . '/app/Web/Moderation/AbuseHtml.php');
+        $oversight = (string) file_get_contents($root . '/app/Web/Moderation/OversightHtml.php');
+        $discipline = (string) file_get_contents($root . '/app/Web/Moderation/DisciplineHtml.php');
+        self::assertStringContainsString('moderation-subpage discovery-page', $abuse);
+        self::assertStringContainsString('class="moderation-list-row"', $abuse);
+        self::assertStringContainsString('moderation-subpage discovery-page', $oversight);
+        self::assertStringContainsString('class="moderation-note"', $oversight);
+        self::assertStringContainsString('moderation-subpage discovery-page', $discipline);
     }
 }
