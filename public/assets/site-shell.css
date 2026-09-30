@@ -2071,6 +2071,15 @@ body.forwext-nav-open{overflow:hidden}
   color:var(--muted);
   background:var(--panel2);
 }
+.forum-thread-row.is-unread .forum-thread-main h3 a{font-weight:850}
+.forum-thread-row.is-unread .thread-status-icon{
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 78%,var(--line));
+}
+.thread-badge--unread{
+  border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel2));
+  color:var(--text);
+}
 .thread-status-icon{
   width:28px;
   height:28px;
