@@ -46,6 +46,7 @@ NEXT_STEP = consolidate remaining CSS layers/breakpoints and remove dead compati
 - F3 first-party module parity is complete for native public/account/staff module surfaces. Admin-only ACP surfaces remain separate production-acceptance work.
 - F1 forum writing/attachment/unread-state acceptance and F2 profile/media/privacy/session acceptance are complete.
 - Chromium responsive/accessibility smoke, WCAG-oriented token contrast checks, reduced-motion, focus/skip-link, overflow and screenshot regression gates are green.
+- Public CSS now uses a canonical responsive scale of 1100 / 920 / 820 / 760 / 700 / 520 px, enforced by regression coverage.
 - Remaining frontend rebuild work is F0 CSS layer/breakpoint/dead-selector consolidation plus the final F4 compatibility/dead-CSS cleanup item.
 
 ## Production acceptance remediation — 1.0.5
