@@ -18,7 +18,8 @@ The current `main` implementation and automated qualification remain the source 
 - [x] Remove the separate oversized masthead and place brand/navigation/user tools in one compact primary bar.
 - [x] Lock background scrolling while the mobile navigation drawer is open.
 - [ ] Split remaining base CSS into explicit base/components/pages layers without changing runtime behavior.
-- [ ] Reduce repeated breakpoint definitions to a documented responsive scale.
+- [x] Reduce repeated breakpoint definitions to a documented responsive scale.
+  - Native CSS now uses the locked 1100 / 920 / 820 / 760 / 700 / 520 px scale; CI rejects off-scale max-width queries.
 - [ ] Normalize button, input, card, list-row, badge, dropdown, pagination and empty-state primitives.
 - [ ] Remove obsolete selectors after repository-wide usage checks.
 
