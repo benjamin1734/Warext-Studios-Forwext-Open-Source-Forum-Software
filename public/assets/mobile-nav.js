@@ -12,6 +12,17 @@
 
   document.documentElement.dataset.forwextMobileNav = "enhanced";
 
+  const desktop = window.matchMedia("(min-width: 921px)");
+  const focusableSelector = [
+    "a[href]",
+    "button:not([disabled])",
+    "summary",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])",
+  ].join(",");
+
   const normalizePath = (value) => {
     const collapsed = value.replace(/\/{2,}/g, "/");
     return collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : collapsed;
@@ -41,17 +52,51 @@
     return "home";
   };
 
-  const setOpen = (open) => {
+  const visibleFocusable = () => [...navigation.querySelectorAll(focusableSelector)].filter((element) => {
+    if (!(element instanceof HTMLElement)) return false;
+    if (element.closest("[hidden]")) return false;
+    const style = window.getComputedStyle(element);
+    return style.display !== "none"
+      && style.visibility !== "hidden"
+      && (element.offsetWidth > 0 || element.offsetHeight > 0 || element.getClientRects().length > 0);
+  });
+
+  const syncNavigationAccessibility = (open) => {
+    if (desktop.matches) {
+      navigation.removeAttribute("inert");
+      navigation.removeAttribute("aria-hidden");
+      return;
+    }
+
+    navigation.toggleAttribute("inert", !open);
+    navigation.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const setOpen = (open, moveFocus = false) => {
     navigation.dataset.mobileOpen = open ? "1" : "0";
     button.setAttribute("aria-expanded", open ? "true" : "false");
     document.body.classList.toggle("forwext-nav-open", open);
+    syncNavigationAccessibility(open);
+
+    if (open && moveFocus && !desktop.matches) {
+      window.requestAnimationFrame(() => {
+        const first = visibleFocusable()[0];
+        if (first instanceof HTMLElement) first.focus();
+      });
+    }
   };
 
-  const closeMenus = (except = null) => {
+  const closeMenus = (restoreFocus = false, except = null) => {
+    const active = document.activeElement;
     for (const details of header.querySelectorAll("details[open]")) {
-      if (details !== except && details instanceof HTMLDetailsElement) {
-        details.open = false;
-      }
+      if (details === except || !(details instanceof HTMLDetailsElement)) continue;
+      const summary = details.querySelector(":scope > summary");
+      const shouldRestore = restoreFocus
+        && active instanceof Node
+        && details.contains(active)
+        && summary instanceof HTMLElement;
+      details.open = false;
+      if (shouldRestore) summary.focus();
     }
   };
 
@@ -125,11 +170,35 @@
 
   button.addEventListener("click", () => {
     const open = navigation.dataset.mobileOpen !== "1";
-    setOpen(open);
+    setOpen(open, open);
     if (!open) closeMenus();
   });
 
   document.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Tab"
+      && !desktop.matches
+      && navigation.dataset.mobileOpen === "1"
+    ) {
+      const focusable = visibleFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        button.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+      return;
+    }
+
     if (event.key === "Escape") {
       if (navigation.dataset.mobileOpen === "1") {
         setOpen(false);
@@ -137,7 +206,7 @@
         button.focus();
         return;
       }
-      closeMenus();
+      closeMenus(true);
     }
   });
 
@@ -146,7 +215,7 @@
     if (!(target instanceof Node)) return;
 
     const details = target instanceof Element ? target.closest("details") : null;
-    closeMenus(details instanceof HTMLDetailsElement ? details : null);
+    closeMenus(false, details instanceof HTMLDetailsElement ? details : null);
 
     if (navigation.dataset.mobileOpen !== "1") return;
     if (navigation.contains(target) || button.contains(target)) return;
@@ -160,9 +229,12 @@
     if (link instanceof HTMLAnchorElement) setOpen(false);
   });
 
-  const desktop = window.matchMedia("(min-width: 921px)");
   const closeForDesktop = (event) => {
-    if (event.matches) setOpen(false);
+    if (event.matches) {
+      setOpen(false);
+      return;
+    }
+    syncNavigationAccessibility(navigation.dataset.mobileOpen === "1");
   };
   if (typeof desktop.addEventListener === "function") {
     desktop.addEventListener("change", closeForDesktop);
