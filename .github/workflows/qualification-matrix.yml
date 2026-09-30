@@ -72,6 +72,68 @@ jobs:
           vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture
           vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Security
 
+
+  browser-regression:
+    name: Chromium responsive and accessibility smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, pdo, pdo_mysql, mbstring, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Resolve PHP development dependencies
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Resolve browser tooling
+        run: npm install --no-package-lock --no-audit --no-fund --ignore-scripts
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Render representative shell fixtures
+        run: npm run browser:fixtures
+
+      - name: Start local fixture server
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -S 127.0.0.1:8123 -t . >/tmp/forwext-browser.log 2>&1 &
+          echo $! >/tmp/forwext-browser.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8123/build/browser-fixtures/guest.html >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/forwext-browser.log
+          exit 1
+
+      - name: Run responsive and accessibility browser regression
+        run: npm run browser:smoke
+        env:
+          FORWEXT_BROWSER_BASE_URL: http://127.0.0.1:8123
+
+      - name: Upload representative browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-browser-regression
+          path: build/browser-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
   release-contract:
     name: Release build contract
     runs-on: ubuntu-latest
