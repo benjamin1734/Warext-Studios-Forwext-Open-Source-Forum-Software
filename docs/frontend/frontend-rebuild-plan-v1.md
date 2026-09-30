@@ -33,9 +33,10 @@ Acceptance:
 - [x] Forum index: compact page toolbar, category headers, readable forum rows, latest activity identity and optional widget sidebar.
 - [x] Forum view: sticky/featured/locked states, clear topic metadata, last activity, pagination and permission-aware actions.
 - [x] Thread view: stronger author/content hierarchy, stable post anchors, compact action bar and mobile author header.
-- [ ] Reply/create flows: consistent composer shell, validation, attachment states and quick-reply path where domain services allow it.
-  - Rich editor and CSRF-protected inline quick reply are wired; attachment-state UX remains open.
-- [ ] Shared unread/read/status presentation hooks without inventing state not supplied by the backend.
+- [x] Reply/create flows: consistent composer shell, validation, attachment states and quick-reply path where domain services allow it.
+  - Rich editor, CSRF-protected inline quick reply, staged/finalized uploads and permission-aware thread attachment presentation are wired.
+- [x] Shared unread/read/status presentation hooks without inventing state not supplied by the backend.
+  - Forum/thread rows consume backend read-state and status data rather than synthesizing unread state in the frontend.
 
 Acceptance:
 - forum/index/thread pages remain usable at 390px, 768px, 1024px and 1440px widths;
@@ -47,10 +48,10 @@ Acceptance:
 - [x] Search and results.
 - [x] What's New / activity discovery.
 - [x] Member directory and online users.
-- [ ] Profile layout, tabs, relationship actions, trophies/badges and profile media.
-  - Compact profile identity/tabs and relationship account surfaces are migrated; trophy/media detail parity remains open.
-- [ ] Account center, authentication, MFA, sessions, privacy and notification settings.
-  - Grouped account center, notifications, notification settings, bookmarks and shared auth/MFA/recovery presentation are migrated; remaining account/session/privacy surfaces remain open.
+- [x] Profile layout, tabs, relationship actions, trophies/badges and profile media.
+  - Compact identity/tabs, relationship controls, trophy/achievement award+history presentation and native avatar/banner privacy/media management are wired.
+- [x] Account center, authentication, MFA, sessions, privacy and notification settings.
+  - Grouped account center, auth/MFA/recovery, notifications, bookmarks, profile privacy and hashed active-session inventory/revocation surfaces are wired.
 
 ## Phase F3 — First-party module parity
 
@@ -74,12 +75,12 @@ All modules must consume shared UI primitives instead of defining a separate vis
 
 ## Phase F4 — Responsive, accessibility and regression gates
 
-- [ ] Keyboard/focus traversal for navigation, details/popovers, forms and post actions.
-- [ ] WCAG-oriented contrast/focus/touch-target review.
-- [ ] Reduced-motion coverage.
-- [ ] Horizontal overflow audit.
-- [ ] Browser-level smoke/regression coverage in CI.
-- [ ] Representative screenshots for guest/member/moderator layouts where CI tooling permits.
+- [x] Keyboard/focus traversal for navigation, details/popovers, forms and post actions.
+- [x] WCAG-oriented contrast/focus/touch-target review.
+- [x] Reduced-motion coverage.
+- [x] Horizontal overflow audit.
+- [x] Browser-level smoke/regression coverage in CI.
+- [x] Representative screenshots for guest/member/moderator layouts where CI tooling permits.
 - [ ] Remove temporary compatibility rules and dead CSS after visual parity is proven.
 
 ## Implementation rules
