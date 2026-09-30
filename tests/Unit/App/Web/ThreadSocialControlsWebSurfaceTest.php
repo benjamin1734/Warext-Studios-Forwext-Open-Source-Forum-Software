@@ -38,7 +38,7 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
 
-        self::assertStringContainsString('$this->renderPost($post, $actor, $canReply, $attachmentsByPost[$post['post_id']] ?? [])', $thread);
+        self::assertStringContainsString("\$this->renderPost(\$post, \$actor, \$canReply, \$attachmentsByPost[\$post['post_id']] ?? [])", $thread);
         self::assertStringContainsString('data-thread-interactions', $thread);
         self::assertStringContainsString("'like' => ['👍', 'Beğen']", $thread);
         self::assertStringContainsString("'angry' => ['😠', 'Kızgın']", $thread);
