@@ -98,6 +98,12 @@ try {
     );
     if (!skipLinkFocused) fail(`${testCase.name}: skip link is not first in keyboard order`);
 
+    await page.waitForFunction(() => {
+      const element = document.querySelector(".skip-link");
+      if (!(element instanceof HTMLElement)) return false;
+      const style = getComputedStyle(element);
+      return Number.parseFloat(style.opacity) > 0.9 && element.getBoundingClientRect().top >= 0;
+    });
     const skipLinkVisible = await page.$eval(".skip-link", (element) => {
       const style = getComputedStyle(element);
       return Number.parseFloat(style.opacity) > 0.9 && element.getBoundingClientRect().top >= 0;
