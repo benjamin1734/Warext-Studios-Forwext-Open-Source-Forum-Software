@@ -10,6 +10,8 @@ use Forwext\Core\Auth\Credential\CredentialRecord;
 use Forwext\Core\Auth\Credential\CredentialStore;
 use Forwext\Core\Auth\Password\NativePasswordHasher;
 use Forwext\Core\Auth\Password\PasswordHashPolicy;
+use Forwext\Core\Auth\Session\AuthSessionIndex;
+use Forwext\Core\Auth\Session\AuthSessionIndexRecord;
 use Forwext\Core\Auth\Session\AuthSessionManager;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
@@ -71,6 +73,31 @@ final class PasswordSessionTest extends TestCase
             $clock->now(),
         ));
         self::assertNull($manager->resolve($second));
+    }
+
+    public function testRevokedIndexedSessionIsRejectedEvenWhenBackingSessionStillExists(): void
+    {
+        $clock = new AuthFrozenClock('2026-09-30 12:20:00');
+        $credentials = new AuthMemoryCredentialStore();
+        $userId = UserId::fromStored(str_repeat('a', 32));
+        $credentials->seed(new CredentialRecord(
+            $userId,
+            '$2y$12$placeholder',
+            1,
+            $clock->now(),
+        ));
+        $sessions = new AuthMemorySessionStore($clock);
+        $index = new AuthMemorySessionIndex();
+        $manager = new AuthSessionManager($sessions, $credentials, 7200, $clock, $index);
+
+        $sessionId = $manager->create($userId, str_repeat('b', 32), 1);
+        self::assertNotNull($manager->resolve($sessionId));
+
+        $index->revoke(hash('sha256', $sessionId), $clock->now());
+
+        self::assertNull($manager->resolve($sessionId));
+        self::assertNotNull($index->find(hash('sha256', $sessionId)));
+        self::assertNotNull($index->find(hash('sha256', $sessionId))?->revokedAt);
     }
 
     public function testDatabaseSessionStorePersistsOnlySessionHashNotRawSessionId(): void
@@ -170,6 +197,82 @@ final class AuthMemorySessionStore implements SessionStore
     public function collectGarbage(int $limit = 1000): int
     {
         return 0;
+    }
+}
+
+final class AuthMemorySessionIndex implements AuthSessionIndex
+{
+    /** @var array<string,AuthSessionIndexRecord> */
+    private array $records = [];
+
+    public function find(string $sessionHash): ?AuthSessionIndexRecord
+    {
+        return $this->records[$sessionHash] ?? null;
+    }
+
+    public function register(AuthSessionIndexRecord $record): void
+    {
+        $this->records[$record->sessionHash] = $record;
+    }
+
+    public function touch(string $sessionHash, DateTimeImmutable $at): void
+    {
+        $record = $this->records[$sessionHash] ?? null;
+        if ($record === null || $record->revokedAt !== null) return;
+        $this->records[$sessionHash] = new AuthSessionIndexRecord(
+            $record->sessionHash,
+            $record->userId,
+            $record->deviceId,
+            $record->credentialVersion,
+            $record->issuedAt,
+            $record->expiresAt,
+            $at,
+            null,
+        );
+    }
+
+    public function revoke(string $sessionHash, DateTimeImmutable $at): void
+    {
+        $record = $this->records[$sessionHash] ?? null;
+        if ($record === null) return;
+        $this->records[$sessionHash] = new AuthSessionIndexRecord(
+            $record->sessionHash,
+            $record->userId,
+            $record->deviceId,
+            $record->credentialVersion,
+            $record->issuedAt,
+            $record->expiresAt,
+            $record->lastSeenAt,
+            $record->revokedAt ?? $at,
+        );
+    }
+
+    public function revokeForUser(EntityId $userId, string $sessionHash, DateTimeImmutable $at): bool
+    {
+        $record = $this->records[$sessionHash] ?? null;
+        if ($record === null || !$record->userId->equals($userId) || $record->revokedAt !== null) return false;
+        $this->revoke($sessionHash, $at);
+        return true;
+    }
+
+    public function revokeOthers(EntityId $userId, string $exceptSessionHash, DateTimeImmutable $at): int
+    {
+        $count = 0;
+        foreach ($this->records as $hash => $record) {
+            if ($hash !== $exceptSessionHash && $record->userId->equals($userId) && $record->revokedAt === null) {
+                $this->revoke($hash, $at);
+                ++$count;
+            }
+        }
+        return $count;
+    }
+
+    public function activeForUser(EntityId $userId, DateTimeImmutable $now, int $limit = 50): array
+    {
+        return array_slice(array_values(array_filter(
+            $this->records,
+            static fn (AuthSessionIndexRecord $record): bool => $record->userId->equals($userId) && $record->activeAt($now),
+        )), 0, $limit);
     }
 }
 
