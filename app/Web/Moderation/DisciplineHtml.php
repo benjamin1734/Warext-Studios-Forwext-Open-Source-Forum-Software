@@ -101,7 +101,7 @@ final class DisciplineHtml
                 . ($definition->expiryDays === null ? 'süresiz puan' : $definition->expiryDays . ' gün')
                 . ' · ' . ($definition->active ? 'aktif' : 'pasif') . '</div>'
                 . ($definition->description === '' ? '' : '<p>' . self::e($definition->description) . '</p>')
-                . '</article>';
+                . '</div></article>';
         }
         if ($rows === '') $rows = '<div class="surface-empty"><strong>Uyarı tanımı yok.</strong><span>Tanımlar eklendiğinde burada görünecek.</span></div>';
 
@@ -169,7 +169,7 @@ final class DisciplineHtml
                 . '<div class="muted">Durum: ' . self::e($action->statusAt($now)) . ' · ' . $details . '</div>'
                 . '<p>' . self::e($action->reasonText) . '</p>'
                 . ($appeal === null ? '' : '<div class="muted">İtiraz referansı: ' . self::e($appeal) . '</div>')
-                . $revoke . '</article>';
+                . '</div>' . $revoke . '</article>';
         }
         return $rows;
     }
