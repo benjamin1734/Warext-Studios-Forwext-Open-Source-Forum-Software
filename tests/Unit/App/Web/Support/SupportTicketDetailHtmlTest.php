@@ -83,5 +83,9 @@ final class SupportTicketDetailHtmlTest extends TestCase
         self::assertStringContainsString('&lt;img src=x onerror=alert(2)&gt;', $html);
         self::assertStringContainsString('/community/support/tickets/', $html);
         self::assertStringContainsString('name="_csrf" value="csrf-token"', $html);
+        self::assertStringContainsString('ticket-detail-page discovery-page', $html);
+        self::assertStringContainsString('surface-head ticket-detail-head', $html);
+        self::assertStringContainsString('surface-panel ticket-conversation', $html);
+        self::assertStringContainsString('ticket-message', $html);
     }
 }

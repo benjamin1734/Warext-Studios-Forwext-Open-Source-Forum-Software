@@ -42,7 +42,7 @@ final class SupportTicketDetailHtml
         array $faqRecommendations = [],
     ): string {
         $ticket = $view->ticket;
-        $notice = $updated ? '<div class="notice success">Talep güncellendi.</div>' : '';
+        $notice = $updated ? '<div class="notification-settings-notice" role="status">Talep güncellendi.</div>' : '';
         $meta = '<div class="profile-stats">'
             . self::stat('Durum', $ticket->status->label())
             . self::stat('Öncelik', $ticket->priority->label())
@@ -52,7 +52,7 @@ final class SupportTicketDetailHtml
             . ($view->escalation === null ? '' : self::stat('Escalation', 'Seviye ' . $view->escalation->level))
             . '</div>';
 
-        $intake = '<section class="card section"><h2>Talep</h2>'
+        $intake = '<section class="surface-panel ticket-detail-section ticket-intake"><h2>Talep</h2>'
             . '<p>' . self::multiline($description ?? 'Açıklama bulunmuyor.') . '</p>';
         if ($fieldValues !== []) {
             $intake .= '<dl class="detail-list">';
@@ -82,7 +82,7 @@ final class SupportTicketDetailHtml
         $intake .= '</section>';
 
         $relations = self::relations($view->relations, $ticket->ticketId->value(), $basePath);
-        $messages = '<section class="card section"><h2>Konuşma</h2>';
+        $messages = '<section class="surface-panel ticket-conversation"><header><h2>Konuşma</h2></header><div class="ticket-message-list">';
         if ($view->messages === []) {
             $messages .= '<p class="muted">Henüz mesaj yok.</p>';
         } else {
@@ -90,7 +90,7 @@ final class SupportTicketDetailHtml
                 $messages .= self::message($message, $csrfToken, $basePath, $capabilities);
             }
         }
-        $messages .= '</section>';
+        $messages .= '</div></section>';
 
         $reply = '';
         if ($capabilities->canReply && $ticket->status !== SupportTicketStatus::Closed) {
@@ -103,7 +103,7 @@ final class SupportTicketDetailHtml
                 }
                 $canned .= '</select></label>';
             }
-            $reply = '<section class="card section"><h2>Yanıt yaz</h2>'
+            $reply = '<section class="surface-panel ticket-reply"><h2>Yanıt yaz</h2>'
                 . '<form method="post" action="' . self::action($ticket->ticketId->value(), $basePath) . '">'
                 . self::csrf($csrfToken) . '<input type="hidden" name="action" value="reply">'
                 . $canned
@@ -125,7 +125,7 @@ final class SupportTicketDetailHtml
                 'Bu talep için görünür bir SSS önerisi bulunamadı.',
             );
 
-        $history = '<section class="card section"><h2>Durum geçmişi</h2>';
+        $history = '<section class="surface-panel ticket-history"><h2>Durum geçmişi</h2>';
         if ($view->history === []) {
             $history .= '<p class="muted">Henüz durum değişikliği yok.</p>';
         } else {
@@ -138,11 +138,12 @@ final class SupportTicketDetailHtml
         }
         $history .= '</section>';
 
-        $body = '<section class="card settings"><h1>' . self::e($ticket->subject) . '</h1>'
-            . '<p><a href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></p>'
-            . '<p class="muted">Talep #' . self::e($ticket->ticketId->value()) . '</p>'
-            . $notice . $meta . '</section>'
-            . $relations . $intake . $messages . $faqGuidance . $reply . $staffTools . $history;
+        $body = '<section class="ticket-detail-page discovery-page"><header class="surface-head ticket-detail-head"><div>'
+            . '<span class="forum-eyebrow">DESTEK TALEBİ</span><h1>' . self::e($ticket->subject) . '</h1>'
+            . '<p>Talep #' . self::e($ticket->ticketId->value()) . '</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></header>'
+            . $notice . '<section class="surface-panel ticket-meta-panel">' . $meta . '</section>'
+            . $relations . $intake . $messages . $faqGuidance . $reply . $staffTools . $history . '</section>';
 
         return ProfileHtml::page('Destek talebi', $body, $basePath, authenticated: true);
     }
@@ -189,7 +190,7 @@ final class SupportTicketDetailHtml
                 . '<button type="submit">Yeni talep oluştur</button></form></details>';
         }
 
-        return '<article class="support-message"><header><strong>' . self::e($role) . '</strong>'
+        return '<article class="support-message ticket-message"><header><strong>' . self::e($role) . '</strong>'
             . $internal . $canned . $copy
             . '<span class="muted"> — ' . self::e($message->createdAt->format('Y-m-d H:i')) . '</span></header>'
             . '<p>' . self::multiline($message->body) . '</p>' . $faqDraft . $split . '</article>';
@@ -203,7 +204,7 @@ final class SupportTicketDetailHtml
     ): string {
         $ticketId = $view->ticket->ticketId->value();
         $action = self::action($ticketId, $basePath);
-        $body = '<section class="card section"><h2>Yetkili araçları</h2>';
+        $body = '<section class="surface-panel ticket-staff-tools"><h2>Yetkili araçları</h2>';
 
         if ($capabilities->canInternalNote) {
             $body .= '<details><summary>Internal note ekle</summary><form method="post" action="' . $action . '">'
@@ -274,7 +275,7 @@ final class SupportTicketDetailHtml
         if ($relations === []) {
             return '';
         }
-        $html = '<section class="card section"><h2>İlişkili talepler</h2><ul>';
+        $html = '<section class="surface-panel ticket-relations"><h2>İlişkili talepler</h2><ul>';
         foreach ($relations as $relation) {
             $otherId = $relation->sourceTicketId->value() === $currentTicketId
                 ? $relation->targetTicketId->value()

@@ -33,7 +33,7 @@ final class BugReportDetailHtml
         ?BugReportStaffContext $staffContext=null,
     ): string {
         $report=$view->report;
-        $notice=$updated?'<div class="notice success">Hata bildirimi güncellendi.</div>':'';
+        $notice=$updated?'<div class="notification-settings-notice" role="status">Hata bildirimi güncellendi.</div>':'';
         $links='<a href="'.self::e($basePath->prepend('/bugs')).'">Hata Bildirimlerim</a>';
         if($capabilities->canAccessStaffDashboard){
             $links.=' · <a href="'.self::e($basePath->prepend('/bugs/staff')).'">Hata yönetimi</a>';
@@ -46,7 +46,7 @@ final class BugReportDetailHtml
             .self::stat('Tarih',$report->createdAt->format('Y-m-d H:i'))
             .'</div>';
 
-        $details='<section class="card section"><h2>Bildirim ayrıntıları</h2>'
+        $details='<section class="surface-panel ticket-detail-section bug-detail-section"><h2>Bildirim ayrıntıları</h2>'
             .'<h3>Özet</h3><p>'.self::multiline($report->summary).'</p>';
         if($intake!==null){
             $details.='<h3>Tekrar üretme adımları</h3><p>'.self::multiline($intake->reproductionSteps).'</p>'
@@ -77,7 +77,7 @@ final class BugReportDetailHtml
         }
         $details.='</section>';
 
-        $conversation='<section class="card section"><h2>Yanıtlar ve ek bilgiler</h2>';
+        $conversation='<section class="surface-panel ticket-conversation"><header><h2>Yanıtlar ve ek bilgiler</h2></header><div class="ticket-message-list">';
         if($view->messages===[]){
             $conversation.='<p class="muted">Henüz ek bilgi veya yetkili yanıtı yok.</p>';
         }else{
@@ -85,11 +85,11 @@ final class BugReportDetailHtml
                 $conversation.=self::message($message);
             }
         }
-        $conversation.='</section>';
+        $conversation.='</div></section>';
 
         $reply='';
         if($capabilities->canReply){
-            $reply='<section class="card section"><h2>'
+            $reply='<section class="surface-panel ticket-reply"><h2>'
                 .($view->staffView?'Yetkili yanıtı':'Ek bilgi gönder')
                 .'</h2><form method="post" action="'.self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
                 .self::csrf($csrfToken)
@@ -101,11 +101,11 @@ final class BugReportDetailHtml
         $status='';
         if($capabilities->canManageStatus){
             if($report->status===BugReportStatus::Duplicate&&$staffContext?->duplicateLink!==null){
-                $status='<section class="card section"><h2>Durum</h2>'
+                $status='<section class="surface-panel ticket-control-panel"><h2>Durum</h2>'
                     .'<p class="muted">Canonical duplicate bağı varken durum doğrudan değiştirilemez. '
                     .'Kaydı yeniden açmak için duplicate bağını kaldırın.</p></section>';
             }else{
-                $status='<section class="card section"><h2>Durum</h2><form method="post" action="'
+                $status='<section class="surface-panel ticket-control-panel"><h2>Durum</h2><form method="post" action="'
                     .self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
                     .self::csrf($csrfToken).'<input type="hidden" name="action" value="status">'
                     .'<label><span>Yeni durum</span><select name="status">';
@@ -125,7 +125,7 @@ final class BugReportDetailHtml
         $staffControls='';
         if($staffContext!==null){
             if($capabilities->canAssign){
-                $staffControls.='<section class="card section"><h2>Atama</h2>'
+                $staffControls.='<section class="surface-panel ticket-control-panel"><h2>Atama</h2>'
                     .'<form method="post" action="'.self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
                     .self::csrf($csrfToken).'<input type="hidden" name="action" value="assign">'
                     .'<label><span>Yetkili kullanıcı adı</span><input name="assignee_username" maxlength="80" value="'
@@ -135,7 +135,7 @@ final class BugReportDetailHtml
             }
 
             if($capabilities->canManageWorkflow){
-                $staffControls.='<section class="card section"><h2>Workflow</h2>'
+                $staffControls.='<section class="surface-panel ticket-control-panel"><h2>Workflow</h2>'
                     .'<form method="post" action="'.self::action($report->reportId->value(),$basePath).'" class="presence-settings">'
                     .self::csrf($csrfToken).'<input type="hidden" name="action" value="severity">'
                     .'<label><span>Önem</span><select name="severity">';
@@ -155,7 +155,7 @@ final class BugReportDetailHtml
             }
 
             if($capabilities->canLinkDuplicate){
-                $staffControls.='<section class="card section"><h2>Duplicate tespiti</h2>'
+                $staffControls.='<section class="surface-panel ticket-control-panel"><h2>Duplicate tespiti</h2>'
                     .'<p class="muted">Benzerlik skoru yalnız öneridir; duplicate kararı yetkilinin açık işlemiyle verilir.</p>';
                 if($staffContext->duplicateLink!==null){
                     $canonical=$staffContext->duplicateLink->canonicalReportId->value();
@@ -192,7 +192,7 @@ final class BugReportDetailHtml
             }
         }
 
-        $history='<section class="card section"><h2>Durum geçmişi</h2>';
+        $history='<section class="surface-panel ticket-history"><h2>Durum geçmişi</h2>';
         if($view->history===[]){
             $history.='<p class="muted">Henüz geçmiş kaydı yok.</p>';
         }else{
@@ -205,10 +205,12 @@ final class BugReportDetailHtml
         }
         $history.='</section>';
 
-        $body='<section class="card settings"><h1>'.self::e($report->title).'</h1>'
-            .'<p>'.$links.'</p>'
-            .'<p class="muted">Kayıt #'.self::e($report->reportId->value()).'</p>'
-            .$notice.$meta.'</section>'.$details.$conversation.$reply.$status.$staffControls.$history;
+        $body='<section class="ticket-detail-page discovery-page"><header class="surface-head ticket-detail-head"><div>'
+            .'<span class="forum-eyebrow">HATA BİLDİRİMİ</span><h1>'.self::e($report->title).'</h1>'
+            .'<p>Kayıt #'.self::e($report->reportId->value()).'</p></div>'
+            .'<div class="ticket-detail-head-actions">'.$links.'</div></header>'
+            .$notice.'<section class="surface-panel ticket-meta-panel">'.$meta.'</section>'
+            .$details.$conversation.$reply.$status.$staffControls.$history.'</section>';
 
         return ProfileHtml::page('Hata bildirimi',$body,$basePath,authenticated:true);
     }
@@ -216,8 +218,8 @@ final class BugReportDetailHtml
     private static function message(BugReportMessage $message):string
     {
         $role=$message->authorRole===BugReportMessageRole::Staff?'Yetkili':'Kullanıcı';
-        return '<article class="search-hit"><div class="search-hit-type">'.self::e($role)
-            .' · '.self::e($message->createdAt->format('Y-m-d H:i')).'</div><p>'
+        return '<article class="ticket-message bug-message"><header><strong>'.self::e($role).'</strong>'
+            .'<time>'.self::e($message->createdAt->format('Y-m-d H:i')).'</time></header><p>'
             .self::multiline($message->body).'</p></article>';
     }
 

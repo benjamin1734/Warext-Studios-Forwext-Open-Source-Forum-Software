@@ -2895,3 +2895,33 @@ a.forum-thread-author:hover{color:var(--text)}
 .support-intake-actions{display:flex;justify-content:flex-end;padding-top:3px}
 .support-intake-actions .fx-btn{min-height:38px;padding:8px 12px;font-size:11px}
 @media(max-width:700px){.bug-report-row{align-items:flex-start}.bug-report-row-main strong{white-space:normal}.support-intake-actions{display:grid}.support-intake-actions .fx-btn{justify-content:center}}
+
+/* ticket-detail-v1 */
+.ticket-detail-head>.fx-btn,.ticket-detail-head-actions a{flex:0 0 auto}
+.ticket-detail-head-actions{display:flex;gap:7px;flex-wrap:wrap}
+.ticket-detail-head-actions a{min-height:34px;display:inline-flex;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);text-decoration:none;font-size:10.5px;font-weight:740}
+.ticket-meta-panel{padding:10px 12px}
+.ticket-meta-panel .profile-stats{margin:0}
+.ticket-detail-section{display:grid;gap:10px}
+.ticket-detail-section h2,.ticket-detail-section h3,.ticket-reply h2,.ticket-history h2,.ticket-control-panel h2,.ticket-staff-tools h2,.ticket-relations h2{margin:0}
+.ticket-detail-section h2,.ticket-reply h2,.ticket-history h2,.ticket-control-panel h2,.ticket-staff-tools h2,.ticket-relations h2{font-size:14px}
+.ticket-detail-section h3{font-size:11.5px;color:var(--muted)}
+.ticket-detail-section p{margin:0;font-size:11.5px;line-height:1.6}
+.ticket-conversation{padding:0;overflow:hidden}
+.ticket-conversation>header{padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.ticket-conversation>header h2{margin:0;font-size:14px}
+.ticket-message-list{display:grid}
+.ticket-message{padding:11px 13px;border-bottom:1px solid var(--line)}
+.ticket-message:last-child{border-bottom:0}
+.ticket-message>header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:9.5px}
+.ticket-message>header strong{color:var(--text);font-size:10.5px}
+.ticket-message>header time{margin-left:auto}
+.ticket-message>p{margin:7px 0 0;font-size:11.5px;line-height:1.6}
+.ticket-message details{margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+.ticket-reply,.ticket-history,.ticket-control-panel,.ticket-staff-tools,.ticket-relations{padding:13px}
+.ticket-reply form,.ticket-control-panel form,.ticket-staff-tools form{display:grid;gap:8px;margin-top:9px}
+.ticket-reply label,.ticket-control-panel label,.ticket-staff-tools label{display:grid;gap:4px}
+.ticket-reply textarea,.ticket-control-panel input,.ticket-control-panel select,.ticket-staff-tools input,.ticket-staff-tools select,.ticket-staff-tools textarea{width:100%;min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);padding:8px;font:inherit}
+.ticket-reply button,.ticket-control-panel button,.ticket-staff-tools button{justify-self:start;min-height:34px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);cursor:pointer}
+.ticket-history ul,.ticket-relations ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:10.5px}
+@media(max-width:700px){.ticket-detail-head-actions{width:100%}.ticket-detail-head-actions a{flex:1 1 auto;justify-content:center}.ticket-message>header time{width:100%;margin-left:0}}

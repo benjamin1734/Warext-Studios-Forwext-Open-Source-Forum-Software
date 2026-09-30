@@ -80,6 +80,10 @@ final class BugReportDetailHtmlTest extends TestCase
         self::assertStringContainsString('name="_csrf" value="csrf-token"',$html);
         self::assertStringContainsString('name="action" value="reply"',$html);
         self::assertStringContainsString('/community/bugs',$html);
+        self::assertStringContainsString('ticket-detail-page discovery-page',$html);
+        self::assertStringContainsString('surface-head ticket-detail-head',$html);
+        self::assertStringContainsString('surface-panel ticket-conversation',$html);
+        self::assertStringContainsString('class="ticket-message bug-message"',$html);
     }
 
     public function testMyReportsListShowsStatusDateCategoryAndEscapesTitle():void
