@@ -154,18 +154,23 @@ final class GiveawayHtml
         $starts = $giveaway?->startsAt ?? $now->modify('+1 hour');
         $ends = $giveaway?->endsAt ?? $now->modify('+1 day');
         $action = self::e($basePath->prepend('/giveaways/manage'));
-        $notice = $updated ? '<div class="notice success">Çekiliş işlemi kaydedildi.</div>' : '';
+        $notice = $updated
+            ? '<div class="notification-settings-notice" role="status">Çekiliş işlemi kaydedildi.</div>'
+            : '';
 
-        $body = '<section class="card"><h1>Çekiliş Yönetimi</h1>'
-            . '<p class="muted">Zamanlama, yaşam döngüsü ve katılım uygunluk kuralları bu ekrandan yönetilir.</p>'
+        $body = '<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            . '<span class="forum-eyebrow">ÇEKİLİŞ YÖNETİMİ</span><h1>Çekiliş Yönetimi</h1>'
+            . '<p>Zamanlama, yaşam döngüsü ve katılım uygunluk kurallarını yönet.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/giveaways')) . '">Çekilişlere dön</a></header>'
             . $notice
-            . '<form method="post" action="' . $action . '" class="presence-settings">'
+            . '<section class="surface-panel module-manage-toolbar"><form method="post" action="' . $action . '">'
             . self::csrf($csrfToken)
             . '<input type="hidden" name="action" value="sync_due">'
-            . '<button type="submit">Zamanı gelen durumları senkronize et</button></form>';
+            . '<button class="fx-btn" type="submit">Zamanı gelen durumları senkronize et</button></form></section>';
 
         if ($giveaways !== []) {
-            $body .= '<section class="section"><h2>Yönetilebilir çekilişler</h2><div class="search-results">';
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>Yönetilebilir çekilişler</h2><span>'
+                . count($giveaways) . '</span></header><div class="module-manage-list">';
             foreach ($giveaways as $item) {
                 $body .= self::card($item, $basePath, true);
             }
@@ -176,9 +181,9 @@ final class GiveawayHtml
             || in_array($giveaway->state, [GiveawayState::Draft, GiveawayState::Scheduled], true);
 
         if ($editable) {
-            $body .= '<section class="section"><h2>'
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>'
                 . ($giveaway === null ? 'Yeni çekiliş' : 'Çekilişi düzenle')
-                . '</h2><form method="post" action="' . $action . '" class="search-form">'
+                . '</h2></header><form method="post" action="' . $action . '" class="search-form module-manage-form">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="save">'
                 . '<input type="hidden" name="giveaway_id" value="' . self::e($giveaway?->giveawayId->value() ?? '') . '">'
@@ -222,7 +227,7 @@ final class GiveawayHtml
             if ($roleFields === '') {
                 $roleFields = '<p class="muted">Tanımlı rol bulunmuyor; rol koşulu uygulanmayacak.</p>';
             }
-            $body .= '<section class="section"><h2>Katılım uygunluğu</h2>'
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>Katılım uygunluğu</h2></header>'
                 . '<form method="post" action="' . $action . '" class="search-form">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="policy_save">'
@@ -250,7 +255,7 @@ final class GiveawayHtml
         }
 
         if ($giveaway !== null && $giveaway->state === GiveawayState::Closed) {
-            $body .= '<section class="section"><h2>Kazanan seçimi</h2>';
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>Kazanan seçimi</h2></header>';
             if ($drawProofs === []) {
                 $body .= '<p class="muted">Henüz kazanan seçilmedi. İlk seçim yalnız bir kez oluşturulabilir ve kalıcı audit kaydı bırakır.</p>'
                     . self::actionForm($action, $csrfToken, 'draw', $giveaway, 'Kriptografik kazanan seçimi yap');
@@ -276,7 +281,7 @@ final class GiveawayHtml
         }
 
         if ($giveaway !== null) {
-            $body .= '<section class="section"><h2>Yaşam döngüsü</h2><p class="muted">Mevcut durum: '
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>Yaşam döngüsü</h2></header><p class="muted">Mevcut durum: '
                 . self::e(self::stateLabel($giveaway->state)) . '</p>';
             if (in_array($giveaway->state, [GiveawayState::Draft, GiveawayState::Scheduled], true)) {
                 $body .= self::actionForm($action, $csrfToken, 'publish', $giveaway, 'Yayımla / zamanla');
@@ -301,20 +306,22 @@ final class GiveawayHtml
         array $winnerNames,
         BasePath $basePath,
     ): string {
-        $body = '<section class="card"><h1>Kazanan Seçim Kanıtı</h1>'
-            . '<p><a href="' . self::e($basePath->prepend(
+        $body = '<section class="giveaway-proof-page discovery-page"><header class="surface-head giveaway-proof-head"><div>'
+            . '<span class="forum-eyebrow">ÇEKİLİŞ KANITI</span><h1>Kazanan Seçim Kanıtı</h1>'
+            . '<p>Algoritma · <code>' . self::e(\Forwext\Core\Giveaway\GiveawayDraw::ALGORITHM)
+            . '</code> · immutable snapshot ve CSPRNG doğrulaması.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
                 '/giveaways/' . rawurlencode($giveaway->giveawayId->value()),
-            )) . '">← Çekilişe dön</a></p>'
-            . '<p class="muted">Algoritma: <code>' . self::e(\Forwext\Core\Giveaway\GiveawayDraw::ALGORITHM)
-            . '</code>. Her kayıt immutable population snapshot, açıklanan CSPRNG seed ve rejection-sampling bileti ile tekrar doğrulanır.</p>';
+            )) . '">Çekilişe dön</a></header>';
 
         if ($proofs === []) {
-            $body .= '<div class="empty">Bu çekiliş için henüz kazanan seçimi yapılmadı.</div>';
+            $body .= '<section class="surface-panel"><div class="surface-empty"><strong>Henüz kazanan seçimi yok.</strong>'
+                . '<span>Seçim tamamlandığında doğrulama kaydı burada görünecek.</span></div></section>';
         } else {
             foreach ($proofs as $proof) {
                 $draw = $proof->draw;
                 $winner = $winnerNames[$draw->winnerUserId->value()] ?? 'Silinmiş veya erişilemeyen kullanıcı';
-                $body .= '<article class="section"><h2>Draw #' . $draw->sequence
+                $body .= '<article class="surface-panel giveaway-proof-record"><h2>Draw #' . $draw->sequence
                     . ($proof->current ? ' · Güncel sonuç' : ' · Önceki sonuç') . '</h2>'
                     . '<p><strong>' . ($proof->verified ? 'Kanıt doğrulandı' : 'Kanıt doğrulanamadı') . '</strong></p>'
                     . '<dl>'
@@ -362,12 +369,11 @@ final class GiveawayHtml
         $href = self::e($basePath->prepend($path));
 
         if ($manage) {
-            return '<article class="search-hit"><div class="search-hit-type">'
-                . self::e(self::stateLabel($giveaway->state)) . '</div><h2><a href="' . $href . '">'
-                . self::e($giveaway->title) . '</a></h2><p>' . self::e($giveaway->prize->title)
-                . ' × ' . $giveaway->prize->quantity . '</p><p class="muted">'
-                . self::e(self::date($giveaway->startsAt)) . ' → ' . self::e(self::date($giveaway->endsAt))
-                . '</p></article>';
+            return '<a class="module-manage-row" href="' . $href . '"><div><span class="module-manage-row-type">'
+                . self::e(self::stateLabel($giveaway->state)) . '</span><strong>' . self::e($giveaway->title)
+                . '</strong><small>' . self::e($giveaway->prize->title) . ' × ' . $giveaway->prize->quantity
+                . ' · ' . self::e(self::date($giveaway->startsAt)) . ' → ' . self::e(self::date($giveaway->endsAt))
+                . '</small></div><span aria-hidden="true">→</span></a>';
         }
 
         return '<article class="giveaway-card"><div class="giveaway-card-top"><span>'

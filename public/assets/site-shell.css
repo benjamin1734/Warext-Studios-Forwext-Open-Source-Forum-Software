@@ -3166,3 +3166,22 @@ a.forum-thread-author:hover{color:var(--text)}
 .module-manage-details>summary span{color:var(--muted);font-size:9.5px}
 .module-manage-details[open]>summary{border-bottom:1px solid var(--line);background:var(--panel2)}
 .module-manage-details>.search-form{margin:0;padding:13px}
+
+.module-manage-toolbar{display:flex;justify-content:flex-end;padding:10px 12px}
+.module-manage-toolbar form{margin:0}
+.module-manage-list{display:grid}
+.module-manage-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);color:var(--text);text-decoration:none}
+.module-manage-row:last-child{border-bottom:0}
+.module-manage-row:hover,.module-manage-row:focus-visible{background:color-mix(in srgb,var(--accent) 3%,var(--panel));outline:none}
+.module-manage-row>div{min-width:0;display:grid;gap:3px}
+.module-manage-row strong{font-size:11.5px}
+.module-manage-row small{color:var(--muted);font-size:9.25px}
+.module-manage-row-type{color:var(--accent);font-size:8.5px;font-weight:820;text-transform:uppercase}
+.giveaway-proof-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.giveaway-proof-record{display:grid;gap:8px}
+.giveaway-proof-record h2{margin:0;font-size:13px}
+.giveaway-proof-record dl{display:grid;grid-template-columns:minmax(140px,.35fr) minmax(0,1fr);gap:0;margin:0}
+.giveaway-proof-record dt,.giveaway-proof-record dd{padding:7px 8px;border-bottom:1px solid var(--line);font-size:9.5px}
+.giveaway-proof-record dt{color:var(--muted);background:var(--panel2)}
+.giveaway-proof-record dd{margin:0;overflow-wrap:anywhere}
+@media(max-width:700px){.module-manage-toolbar{justify-content:stretch}.module-manage-toolbar .fx-btn{width:100%}.giveaway-proof-record dl{grid-template-columns:1fr}}
