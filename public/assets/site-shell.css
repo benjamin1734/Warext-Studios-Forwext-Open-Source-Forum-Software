@@ -2961,3 +2961,30 @@ a.forum-thread-author:hover{color:var(--text)}
 .moderation-row-action button{min-height:32px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);padding:5px 8px;cursor:pointer}
 @media(max-width:760px){.moderation-head-actions{justify-content:flex-start}.moderation-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.moderation-row{align-items:flex-start;display:grid}.moderation-row-action{width:100%;display:grid;grid-template-columns:1fr auto}}
 @media(max-width:480px){.moderation-stats{grid-template-columns:1fr}.moderation-create>summary{display:grid}}
+
+/* moderation-subpages-v1 */
+.moderation-subpage-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.moderation-head-count{flex:0 0 auto;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--muted);font-size:10px;font-weight:760}
+.moderation-bulk{padding:12px}
+.moderation-bulk .search-form{margin:0}
+.moderation-list-panel,.moderation-report-panel{padding:0;overflow:hidden}
+.moderation-list{display:grid}
+.moderation-list-row,.moderation-note{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border-bottom:1px solid var(--line)}
+.moderation-list-row:last-child,.moderation-note:last-child{border-bottom:0}
+.moderation-list-row:hover,.moderation-note:hover{background:color-mix(in srgb,var(--accent) 2.5%,var(--panel))}
+.moderation-list-row-main{min-width:0;display:grid;gap:3px}
+.moderation-list-row h3{margin:0;font-size:12.5px}
+.moderation-list-row-main>.muted,.moderation-note>.muted{font-size:10px}
+.moderation-report-meta{padding:10px 12px}
+.moderation-report-meta .profile-stats{margin:0}
+.moderation-report-panel>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.moderation-report-panel>header h2{margin:0;font-size:13.5px}
+.moderation-report-panel>header span{color:var(--muted);font-size:10px}
+.moderation-note{display:grid;gap:4px;align-items:start}
+.moderation-note.is-staff{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--accent) 68%,var(--line))}
+.moderation-note-body{margin-top:3px;font-size:11.5px;line-height:1.55}
+.moderation-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.moderation-control-card,.moderation-note-form{padding:12px}
+.moderation-control-card h2,.moderation-note-form h2{margin:0 0 8px;font-size:13px}
+.moderation-control-card .search-form,.moderation-note-form .search-form{margin:0}
+@media(max-width:700px){.moderation-control-grid{grid-template-columns:1fr}.moderation-list-row{display:grid;align-items:start}}

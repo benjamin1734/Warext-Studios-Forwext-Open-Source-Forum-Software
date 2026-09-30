@@ -21,5 +21,11 @@ final class ModerationWorkspaceWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-moderation-form', $html);
         self::assertStringContainsString('.moderation-stats', $css);
         self::assertStringContainsString('.moderation-row-action', $css);
+        $approval = (string) file_get_contents($root . '/app/Web/Moderation/ApprovalQueueHtml.php');
+        $report = (string) file_get_contents($root . '/app/Web/Moderation/ReportModerationHtml.php');
+        self::assertStringContainsString('moderation-subpage discovery-page', $approval);
+        self::assertStringContainsString('class="moderation-list-row"', $approval);
+        self::assertStringContainsString('moderation-subpage discovery-page', $report);
+        self::assertStringContainsString('class="moderation-note"', $report);
     }
 }

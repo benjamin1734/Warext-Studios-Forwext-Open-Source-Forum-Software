@@ -18,7 +18,7 @@ final class ApprovalQueueHtml
             $rows .= self::item($item, $canManage);
         }
         if ($rows === '') {
-            $rows = '<div class="empty">Onay bekleyen içerik yok.</div>';
+            $rows = '<div class="surface-empty"><strong>Onay bekleyen içerik yok.</strong><span>Kuyruk şu anda temiz.</span></div>';
         }
 
         $formOpen = $canManage
@@ -27,7 +27,7 @@ final class ApprovalQueueHtml
         $formClose = $canManage ? '</form>' : '';
         $actions = '';
         if ($canManage) {
-            $actions = '<div class="card section"><div class="search-form">'
+            $actions = '<section class="surface-panel moderation-bulk"><div class="search-form">'
                 . '<label><span>Toplu işlem</span><select name="action" required>'
                 . '<option value="approve">Onayla</option><option value="reject">Reddet</option></select></label>'
                 . '<label><span>Neden</span><select name="reason" required>'
@@ -36,15 +36,16 @@ final class ApprovalQueueHtml
                 . '<option value="approval.spam">Spam/istenmeyen içerik</option>'
                 . '<option value="approval.other">Diğer</option></select></label>'
                 . '<div class="search-actions"><button type="submit">Seçilenlere uygula</button></div>'
-                . '</div></div>';
+                . '</div></section>';
         }
 
-        $content = '<div class="card"><h1 style="margin:0">Onay kuyruğu</h1>'
-            . '<p class="muted">Yetkili olduğunuz içerik türlerindeki bekleyen kayıtlar tek kuyrukta gösterilir. '
-            . 'Görünen içerikler backend permission kontrollerinden geçer.</p>'
-            . '<p class="muted">Toplam bekleyen: ' . $snapshot->total . '</p></div>'
-            . $formOpen . $actions . '<section class="card section">' . $rows . '</section>' . $formClose
-            . '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
+        $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+            . '<span class="forum-eyebrow">MODERASYON</span><h1>Onay kuyruğu</h1>'
+            . '<p>Yetkili olduğun içerik türlerindeki bekleyen kayıtları tek kuyrukta incele.</p></div>'
+            . '<span class="moderation-head-count">' . $snapshot->total . ' bekleyen</span></header>'
+            . $formOpen . $actions . '<section class="surface-panel moderation-list-panel"><div class="moderation-list">'
+            . $rows . '</div></section>' . $formClose
+            . '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script></section>';
 
         return ProfileHtml::page('Onay kuyruğu', $content, $basePath, authenticated: true);
     }
@@ -56,9 +57,9 @@ final class ApprovalQueueHtml
                 . self::e($item->selection()->token()) . '"> Seç</label>'
             : '';
         $summary = $item->summary === null ? '' : '<div class="muted">' . self::e($item->summary) . '</div>';
-        return '<article class="search-hit"><span class="search-hit-type">' . self::e($item->sourceType) . '</span>'
-            . '<h3>' . self::e($item->title) . '</h3>' . $summary
-            . '<div class="search-hit-id muted">Güncelleme: ' . self::e($item->updatedAt->format('Y-m-d H:i')) . ' UTC</div>'
+        return '<article class="moderation-list-row"><div class="moderation-list-row-main"><span class="moderation-row-type">'
+            . self::e($item->sourceType) . '</span><h3>' . self::e($item->title) . '</h3>' . $summary
+            . '<div class="moderation-row-meta">Güncelleme · ' . self::e($item->updatedAt->format('Y-m-d H:i')) . ' UTC</div></div>'
             . $check . '</article>';
     }
 
