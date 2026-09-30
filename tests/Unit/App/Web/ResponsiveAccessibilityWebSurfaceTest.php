@@ -50,7 +50,7 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'guest' => ProfileHtml::page", $fixtureRenderer);
         self::assertStringContainsString("'member' => ProfileHtml::page", $fixtureRenderer);
-        self::assertStringContainsString("$fixtures['moderator']", $fixtureRenderer);
+        self::assertStringContainsString("\$fixtures['moderator']", $fixtureRenderer);
         self::assertStringContainsString('width: 390', $browserSmoke);
         self::assertStringContainsString('width: 768', $browserSmoke);
         self::assertStringContainsString('width: 1024', $browserSmoke);
