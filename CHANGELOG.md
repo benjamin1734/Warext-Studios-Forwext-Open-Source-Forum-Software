@@ -24,6 +24,15 @@ Forwext follows the binding project roadmap during pre-release development. Sema
 - Unified notifications, notification settings, bookmarks and relationship management with the common account/discovery surface system.
 - Restyled login, registration, MFA, email verification and password recovery through the compact shared auth shell without changing security/domain behavior.
 
+### First-party module parity
+
+- Rebuilt public Portfolio index/project-detail, Marketplace browse/listing/seller and Giveaway index/detail surfaces around shared module primitives instead of generic search-result cards.
+- Migrated FAQ public index/article and support/bug report intake, history, detail and conversation flows to common discovery/ticket surfaces.
+- Rebuilt moderation workspace, approval queue, report review, anti-abuse, independent oversight and discipline screens around shared moderation rows, panels and controls.
+- Rebuilt the authorized Content Manager filter/dry-run/queue/operation-progress UI without changing permission, CSRF or operation semantics.
+- Migrated referral/account-upgrade, user-report history and account-discipline surfaces into the common account shell.
+- Removed obsolete account, notification and Marketplace polish selectors after repository-wide usage checks; public/module parity work now focuses on remaining management/staff/audit surfaces.
+
 ### Forum core and profile shell
 
 - Added CSRF-protected rich quick reply directly on thread pages while preserving the standalone reply route.

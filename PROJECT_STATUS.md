@@ -8,13 +8,13 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F2
-LAST_COMMIT = 373b7695a455edf39d3c0d049663e7e4c482e465
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F3
+LAST_COMMIT = 19a0cbc676422ff22f4ebee16d33c2c271712ee3
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = finish remaining F2 profile/account/session/privacy surfaces, then close F1 attachment/unread-state UX and begin F4 browser regression
+NEXT_STEP = finish F3 management/staff/audit sub-surfaces, then close F1 attachment/unread-state UX and run F4 browser/accessibility regression
 ```
 
-## Frontend rebuild — F1 core + F2 profile pass in progress
+## Frontend rebuild — F3 first-party module parity in progress
 
 - Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
 - Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
@@ -32,7 +32,13 @@ NEXT_STEP = finish remaining F2 profile/account/session/privacy surfaces, then c
 - Account center was replaced with grouped settings sections and responsive section navigation instead of a flat card grid.
 - Notifications, notification settings, relationships and bookmarks now consume the common F2 surface-head/panel/pagination language.
 - Login, registration, MFA, email verification and password recovery retain existing security flows but use the compact shared authentication presentation layer.
-- Remaining F1 work is composer attachment-state UX and backend-backed unread/read presentation; F2 discovery/account surfaces remain open.
+- Public Portfolio index/detail, Marketplace browse/detail/seller and Giveaway index/detail now use module-specific shared surfaces instead of search-result cards.
+- FAQ public index/article and support/bug intake/history/detail/conversation flows now use the shared discovery/ticket system.
+- Moderation workspace, approval queue, report review, abuse, oversight and discipline areas now share one moderation dashboard language.
+- Content Manager search, dry-run, queue and operation-progress screens now use the moderation workspace primitives.
+- Referral/account upgrades, user report history and account discipline history were migrated to compact account surfaces.
+- Obsolete account/notification/market polish selectors were removed after repository-wide usage checks.
+- Remaining F1 work is composer attachment-state UX and backend-backed unread/read presentation. F3 remains open for module management/staff/audit surfaces; final F4 browser/accessibility regression has not started.
 
 ## Production acceptance remediation — 1.0.5
 

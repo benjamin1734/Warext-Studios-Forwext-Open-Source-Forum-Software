@@ -55,13 +55,20 @@ Acceptance:
 ## Phase F3 — First-party module parity
 
 - [ ] Marketplace.
+  - Public browse, listing detail and seller surfaces are migrated; manage/purchase operations parity remains open.
 - [ ] Portfolio.
+  - Public index and project detail are migrated; project management parity remains open.
 - [ ] Giveaways.
+  - Public index/detail are migrated; giveaway management/proof surfaces still require the final module pass.
 - [ ] FAQ / Wiki surfaces.
+  - Public FAQ index/article are migrated; management/Wiki-adjacent surfaces remain open.
 - [ ] Support and bug reports.
-- [ ] Notifications.
+  - User intake, history, detail and conversation surfaces are migrated; staff dashboards remain open.
+- [x] Notifications.
 - [ ] Moderation workspaces.
+  - Main workspace, approval queue, report review, abuse, oversight, discipline and content-manager surfaces are migrated; remaining audit/freshness sub-workspaces remain open.
 - [ ] Remaining first-party modules.
+  - Referral/account upgrades, user reports and account discipline history are migrated; admin-only reward/trophy/payment/promotion/advertising surfaces are tracked with ACP remediation rather than public F3 parity.
 
 All modules must consume shared UI primitives instead of defining a separate visual language.
 
