@@ -196,6 +196,73 @@ final readonly class DatabaseDiscussionStateRepository implements DiscussionStat
         return true;
     }
 
+    /**
+     * Resolve unread state for an already-authorized page of threads in one query.
+     *
+     * @param list<EntityId> $threadIds
+     * @return list<string>
+     */
+    public function unreadThreadIds(EntityId $userId, array $threadIds): array
+    {
+        UserId::assert($userId);
+        if ($threadIds === []) {
+            return [];
+        }
+
+        $parameters = [
+            'read_user_id' => $userId->value(),
+            'forum_user_id' => $userId->value(),
+        ];
+        $placeholders = [];
+        $seen = [];
+        foreach ($threadIds as $index => $threadId) {
+            ThreadId::assert($threadId);
+            if (isset($seen[$threadId->value()])) {
+                continue;
+            }
+            $seen[$threadId->value()] = true;
+            $name = 'thread_' . $index;
+            $placeholders[] = ':' . $name;
+            $parameters[$name] = $threadId->value();
+        }
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT t.thread_id '
+            . 'FROM forwext_threads t '
+            . 'LEFT JOIN ('
+            . 'SELECT p.thread_id, MAX(p.position) AS latest_position, '
+            . 'MAX(p.updated_at_utc) AS latest_activity_at '
+            . 'FROM forwext_posts p '
+            . "WHERE p.deleted = 0 AND p.moderation_state = 'visible' "
+            . 'GROUP BY p.thread_id'
+            . ') activity ON activity.thread_id = t.thread_id '
+            . 'LEFT JOIN forwext_thread_read_state r '
+            . 'ON r.thread_id = t.thread_id AND r.user_id = :read_user_id '
+            . 'LEFT JOIN forwext_forum_read_state f '
+            . 'ON f.forum_node_id = t.forum_node_id AND f.user_id = :forum_user_id '
+            . 'WHERE t.thread_id IN (' . implode(',', $placeholders) . ') '
+            . 'AND t.deleted = 0 AND t.archived = 0 '
+            . "AND t.merged_into_thread_id IS NULL AND t.moderation_state = 'visible' "
+            . 'AND COALESCE(activity.latest_position, 0) > COALESCE(r.last_read_post_position, 0) '
+            . 'AND (f.marked_read_at_utc IS NULL OR activity.latest_activity_at IS NULL '
+            . 'OR f.marked_read_at_utc < activity.latest_activity_at)',
+            $parameters,
+        ));
+
+        $unread = [];
+        foreach ($rows as $row) {
+            $threadId = $row['thread_id'] ?? null;
+            if (is_string($threadId) && isset($seen[$threadId])) {
+                $unread[] = $threadId;
+            }
+        }
+
+        return $unread;
+    }
+
     public function watchThread(EntityId $userId, EntityId $threadId, WatchNotificationMode $mode, DateTimeImmutable $at): void
     {
         UserId::assert($userId);
