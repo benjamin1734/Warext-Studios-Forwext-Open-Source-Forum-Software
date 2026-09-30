@@ -102,6 +102,37 @@ final class AttachmentServiceTest extends TestCase
         $service->download($attached->attachmentId);
     }
 
+    public function testTemporaryUploadCanBePrevalidatedBeforeContentPublishing(): void
+    {
+        [$service, , $storage, $forum] = $this->service('1', [
+            'forum.view',
+            AttachmentPermission::Upload->value,
+        ]);
+        $now = $this->time('2026-09-15 22:00:00.000000');
+        $temporary = $service->stage($forum->id(), 'validated.txt', 'safe staged file', $now);
+
+        $validated = $service->validateTemporaryForForum(
+            $temporary->attachmentId,
+            $forum->id(),
+            $now->modify('+1 minute'),
+        );
+
+        self::assertSame($temporary->attachmentId->value(), $validated->attachmentId->value());
+
+        $storage->put(
+            StoragePath::fromString($temporary->storagePath),
+            'tampered before publish',
+            StorageVisibility::Private,
+            'text/plain',
+        );
+        $this->expectException(AttachmentOperationException::class);
+        $service->validateTemporaryForForum(
+            $temporary->attachmentId,
+            $forum->id(),
+            $now->modify('+2 minutes'),
+        );
+    }
+
     public function testExpiredTemporaryCleanupRemovesObjectBeforeMetadata(): void
     {
         [$service, $attachments, $storage, $forum] = $this->service('1', [
