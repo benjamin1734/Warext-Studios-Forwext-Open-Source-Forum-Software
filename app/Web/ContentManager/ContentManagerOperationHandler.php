@@ -59,30 +59,44 @@ final readonly class ContentManagerOperationHandler implements RequestHandlerInt
                 return Response::text('Internal Server Error', 500)->withHeader('Cache-Control', 'no-store');
             }
 
-            $body = '<section class="card"><h1>İçerik yöneticisi işlemi</h1>'
-                . '<p><strong>İşlem:</strong> ' . ProfileHtml::escape($operation->action->value) . '</p>'
-                . '<p><strong>Durum:</strong> ' . ProfileHtml::escape($operation->status->value) . '</p>'
-                . '<p><strong>İlerleme:</strong> ' . $operation->processedCount . '/' . $operation->totalCount
-                . ' (' . $operation->percent() . '%)</p>'
-                . '<p>Başarılı: ' . $operation->succeededCount . ' · Atlanan: ' . $operation->skippedCount
-                . ' · Hatalı: ' . $operation->failedCount . '</p>';
+            $body = '<section class="content-operation-page discovery-page"><header class="surface-head content-operation-head"><div>'
+                . '<span class="forum-eyebrow">İÇERİK YÖNETİCİSİ</span><h1>İşlem durumu</h1>'
+                . '<p>' . ProfileHtml::escape($operation->action->value) . ' · '
+                . ProfileHtml::escape($operation->status->value) . '</p></div>'
+                . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/content-manager'))
+                . '">İçerik yöneticisine dön</a></header>'
+                . '<section class="surface-panel content-operation-summary"><div class="content-operation-progress"><div><span>İlerleme</span><strong>'
+                . $operation->processedCount . '/' . $operation->totalCount . '</strong></div>'
+                . '<div class="content-operation-bar"><span style="width:' . max(0, min(100, $operation->percent())) . '%"></span></div>'
+                . '<small>%' . $operation->percent() . '</small></div>'
+                . '<div class="content-operation-counts">'
+                . '<span><strong>' . $operation->succeededCount . '</strong>Başarılı</span>'
+                . '<span><strong>' . $operation->skippedCount . '</strong>Atlanan</span>'
+                . '<span><strong>' . $operation->failedCount . '</strong>Hatalı</span></div>';
 
             if (!$operation->status->terminal()) {
-                $body .= '<form method="post" action="' . ProfileHtml::escape($this->basePath->prepend('/content-manager/operations/' . $operationId->value())) . '">'
-                    . '<input type="hidden" name="_csrf" value="' . ProfileHtml::escape($token) . '">'
-                    . '<button type="submit">Sonraki 50 hedefi işle</button></form>';
+                $body .= '<form class="content-operation-next" method="post" action="'
+                    . ProfileHtml::escape($this->basePath->prepend(
+                        '/content-manager/operations/' . $operationId->value(),
+                    )) . '"><input type="hidden" name="_csrf" value="' . ProfileHtml::escape($token) . '">'
+                    . '<button class="fx-btn fx-btn--primary" type="submit">Sonraki 50 hedefi işle</button></form>';
             }
 
-            $body .= '<p><a href="' . ProfileHtml::escape($this->basePath->prepend('/content-manager')) . '">İçerik yöneticisine dön</a></p></section>'
-                . '<section class="card" style="margin-top:18px"><h2>Hedefler</h2>';
-            foreach ($items as $item) {
-                $body .= '<p><strong>' . ProfileHtml::escape($item->type->value) . '</strong> '
-                    . ProfileHtml::escape($item->contentId->value()) . ' · '
-                    . ProfileHtml::escape($item->status->value)
-                    . ($item->failureCode === null ? '' : ' · ' . ProfileHtml::escape($item->failureCode))
-                    . '</p>';
+            $body .= '</section><section class="surface-panel content-operation-targets"><header><h2>Hedefler</h2><span>'
+                . count($items) . '</span></header><div class="content-operation-target-list">';
+            if ($items === []) {
+                $body .= '<div class="surface-empty"><strong>Hedef yok.</strong><span>Bu işlem için kayıt bulunamadı.</span></div>';
+            } else {
+                foreach ($items as $item) {
+                    $body .= '<article class="content-operation-target"><span>'
+                        . ProfileHtml::escape($item->type->value) . '</span><strong>'
+                        . ProfileHtml::escape($item->contentId->value()) . '</strong><small>'
+                        . ProfileHtml::escape($item->status->value)
+                        . ($item->failureCode === null ? '' : ' · ' . ProfileHtml::escape($item->failureCode))
+                        . '</small></article>';
+                }
             }
-            $body .= '</section>';
+            $body .= '</div></section></section>';
 
             return Response::html(ProfileHtml::page('İçerik yöneticisi işlemi', $body, $this->basePath, authenticated:true))
                 ->withHeader('Cache-Control', 'private, no-store');

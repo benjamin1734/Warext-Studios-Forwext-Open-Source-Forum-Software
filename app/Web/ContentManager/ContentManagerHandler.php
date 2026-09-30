@@ -178,30 +178,44 @@ final readonly class ContentManagerHandler implements RequestHandlerInterface
         $targetValue = $targetUser?->username()->display() ?? $value('target_user');
         $action = ProfileHtml::escape($this->basePath->prepend('/content-manager'));
 
-        $body = '<section class="card"><h1>Kullanıcı içerik yöneticisi</h1>'
-            . '<p class="muted">Bir kullanıcının konu ve mesajlarını filtrele; işlem öncesinde dry-run ile hedef kümesini doğrula.</p>'
-            . ($error === null ? '' : '<div class="search-alert">' . ProfileHtml::escape($error) . '</div>')
-            . '<form method="get" action="' . $action . '" class="search-form">'
+        $body = '<section class="content-manager-page discovery-page"><header class="surface-head content-manager-head"><div>'
+            . '<span class="forum-eyebrow">YETKİLİ ARAÇLARI</span><h1>Kullanıcı içerik yöneticisi</h1>'
+            . '<p>Kullanıcının konu ve mesajlarını filtrele; işlem öncesinde dry-run ile hedef kümesini doğrula.</p></div>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/moderation')) . '">Moderasyona dön</a></header>';
+
+        if ($error !== null) {
+            $body .= '<div class="auth-entry-error" role="alert">' . ProfileHtml::escape($error) . '</div>';
+        }
+
+        $body .= '<section class="surface-panel content-manager-filter"><form method="get" action="' . $action
+            . '" class="search-form content-manager-filter-form">'
             . $this->filters($targetValue, $value('type'), $value('forum'), $value('state'), $value('deleted'), $value('q'))
             . '<div class="search-actions"><button type="submit">İçerikleri getir</button></div></form></section>';
 
         if ($targetUser !== null) {
-            $body .= '<section class="card" style="margin-top:18px"><h2>' . ProfileHtml::escape($targetUser->username()->display()) . ' içerikleri</h2>';
+            $username = ProfileHtml::escape($targetUser->username()->display());
+
+            $body .= '<section class="surface-panel content-manager-results"><header><div><h2>' . $username
+                . ' içerikleri</h2><p>Filtreye uyan konu ve mesajlar</p></div><span>'
+                . ($items === null ? 0 : count($items)) . '</span></header><div class="content-manager-list">';
+
             if ($items === []) {
-                $body .= '<p class="muted">Filtreye uyan içerik bulunamadı.</p>';
+                $body .= '<div class="surface-empty"><strong>İçerik bulunamadı.</strong>'
+                    . '<span>Filtreyi değiştirerek tekrar deneyebilirsin.</span></div>';
             } elseif ($items !== null) {
                 foreach ($items as $item) {
-                    $body .= '<article class="search-hit"><span class="search-hit-type">' . ProfileHtml::escape($item->type->value) . '</span>'
-                        . '<h3>' . ProfileHtml::escape($item->title) . '</h3>'
-                        . '<p>' . ProfileHtml::escape($item->excerpt) . '</p>'
-                        . '<p class="muted">' . ProfileHtml::escape($item->moderationState)
+                    $body .= '<article class="content-manager-row"><span class="content-manager-type">'
+                        . ProfileHtml::escape($item->type->value) . '</span><div class="content-manager-copy"><strong>'
+                        . ProfileHtml::escape($item->title) . '</strong><p>' . ProfileHtml::escape($item->excerpt) . '</p>'
+                        . '<small>' . ProfileHtml::escape($item->moderationState)
                         . ($item->deleted ? ' · silinmiş' : ' · aktif')
-                        . ' · forum ' . ProfileHtml::escape($item->forumNodeId->value()) . '</p></article>';
+                        . ' · forum ' . ProfileHtml::escape($item->forumNodeId->value()) . '</small></div></article>';
                 }
             }
-            $body .= '</section>';
+            $body .= '</div></section>';
 
-            $body .= '<section class="card" style="margin-top:18px"><h2>Toplu işlem</h2>'
+            $body .= '<section class="surface-panel content-manager-bulk"><header><h2>Toplu işlem</h2>'
+                . '<p>Önce dry-run ile hedef kümesini doğrula, sonra kuyruğa ekle.</p></header>'
                 . '<form method="post" action="' . $action . '" class="search-form">'
                 . '<input type="hidden" name="_csrf" value="' . ProfileHtml::escape($token) . '">'
                 . $this->filters(
@@ -213,38 +227,58 @@ final readonly class ContentManagerHandler implements RequestHandlerInterface
                     $value('q'),
                 )
                 . '<label><span>İşlem</span><select name="action">'
-                . $this->options(['delete'=>'Sil','restore'=>'Geri yükle','move'=>'Taşı','approve'=>'Onayla','reindex'=>'Yeniden indeksle','reprocess'=>'Yeniden işle'], $value('action'))
+                . $this->options([
+                    'delete'=>'Sil',
+                    'restore'=>'Geri yükle',
+                    'move'=>'Taşı',
+                    'approve'=>'Onayla',
+                    'reindex'=>'Yeniden indeksle',
+                    'reprocess'=>'Yeniden işle',
+                ], $value('action'))
                 . '</select></label>'
-                . '<label><span>Taşıma hedef forum ID</span><input name="target_forum" value="' . ProfileHtml::escape($value('target_forum')) . '" maxlength="32"></label>'
-                . '<div class="search-actions"><button type="submit" name="mode" value="preview">Dry-run</button>'
-                . '<button type="submit" name="mode" value="enqueue">Kuyruğa ekle</button></div></form>';
+                . '<label><span>Taşıma hedef forum ID</span><input name="target_forum" value="'
+                . ProfileHtml::escape($value('target_forum')) . '" maxlength="32"></label>'
+                . '<div class="content-manager-bulk-actions"><button class="fx-btn" type="submit" name="mode" value="preview">Dry-run</button>'
+                . '<button class="fx-btn fx-btn--primary" type="submit" name="mode" value="enqueue">Kuyruğa ekle</button></div></form>';
 
             if ($preview !== null) {
                 $counts = $preview->countsByType();
-                $body .= '<div class="notice"><strong>Dry-run sonucu:</strong> '
-                    . $preview->total() . ' hedef; ' . $counts['thread'] . ' konu, ' . $counts['post'] . ' mesaj.'
-                    . ($preview->truncated ? ' Güvenlik sınırı aşıldı; filtreyi daralt.' : ' Hedef kümesi çalıştırıldığında dondurulacaktır.')
-                    . '</div>';
+                $body .= '<div class="content-manager-preview"><strong>Dry-run sonucu</strong><span>'
+                    . $preview->total() . ' hedef · ' . $counts['thread'] . ' konu · ' . $counts['post'] . ' mesaj</span><small>'
+                    . ($preview->truncated
+                        ? 'Güvenlik sınırı aşıldı; filtreyi daralt.'
+                        : 'Hedef kümesi çalıştırıldığında dondurulacaktır.')
+                    . '</small></div>';
             }
             $body .= '</section>';
         }
 
         $recent = $this->manager->recent($actor, 20);
-        $body .= '<section class="card" style="margin-top:18px"><h2>Son işlemler</h2>';
+        $body .= '<section class="surface-panel content-manager-recent"><header><h2>Son işlemler</h2><span>'
+            . count($recent) . '</span></header><div class="content-manager-operation-list">';
         if ($recent === []) {
-            $body .= '<p class="muted">Henüz işlem yok.</p>';
+            $body .= '<div class="surface-empty"><strong>Henüz işlem yok.</strong>'
+                . '<span>İçerik yöneticisi operasyonları burada görünecek.</span></div>';
         } else {
             foreach ($recent as $operation) {
-                $url = ProfileHtml::escape($this->basePath->prepend('/content-manager/operations/' . $operation->operationId->value()));
-                $body .= '<p><a href="' . $url . '">' . ProfileHtml::escape($operation->action->value) . '</a> · '
-                    . ProfileHtml::escape($operation->status->value) . ' · ' . $operation->processedCount . '/' . $operation->totalCount
-                    . ' (' . $operation->percent() . '%)</p>';
+                $url = ProfileHtml::escape($this->basePath->prepend(
+                    '/content-manager/operations/' . $operation->operationId->value(),
+                ));
+                $body .= '<a class="content-manager-operation-row" href="' . $url . '"><strong>'
+                    . ProfileHtml::escape($operation->action->value) . '</strong><span>'
+                    . ProfileHtml::escape($operation->status->value) . ' · '
+                    . $operation->processedCount . '/' . $operation->totalCount . ' · ' . $operation->percent()
+                    . '%</span></a>';
             }
         }
-        $body .= '</section>';
+        $body .= '</div></section></section>';
 
-        return Response::html(ProfileHtml::page('Kullanıcı içerik yöneticisi', $body, $this->basePath, authenticated:true))
-            ->withHeader('Cache-Control', 'private, no-store');
+        return Response::html(ProfileHtml::page(
+            'Kullanıcı içerik yöneticisi',
+            $body,
+            $this->basePath,
+            authenticated:true,
+        ))->withHeader('Cache-Control', 'private, no-store');
     }
 
     private function filters(
