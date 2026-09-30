@@ -116,6 +116,10 @@ try {
         fail(`${testCase.name}: mobile nav did not expose expanded state`);
       }
 
+      await page.waitForFunction(() => {
+        const navigation = document.querySelector("[data-forwext-primary-navigation]");
+        return navigation instanceof HTMLElement && navigation.contains(document.activeElement);
+      });
       const activeInsideNav = await page.evaluate(() => {
         const navigation = document.querySelector("[data-forwext-primary-navigation]");
         return navigation instanceof HTMLElement && navigation.contains(document.activeElement);
