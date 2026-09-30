@@ -28,7 +28,9 @@
     "react-ui:build": "tsc -p packages/react-ui/tsconfig.build.json",
     "react-ui:test": "npm run react-ui:build && node packages/react-ui/test/react-ui-smoke.mjs && node packages/react-ui/test/package-smoke.mjs",
     "next-frontend:typecheck": "npm run typecheck --workspace=@forwext/next-frontend",
-    "next-frontend:build": "npm run build --workspace=@forwext/next-frontend"
+    "next-frontend:build": "npm run build --workspace=@forwext/next-frontend",
+    "browser:fixtures": "php tools/browser/render-shell-fixtures.php",
+    "browser:smoke": "node tools/browser/shell-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -40,6 +42,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "playwright": "^1.63.0"
   }
 }
