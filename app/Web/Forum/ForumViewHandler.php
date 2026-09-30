@@ -15,6 +15,7 @@ use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeSlug;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\State\DatabaseDiscussionStateRepository;
 use Forwext\Core\Forum\Thread\ThreadPermission;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
@@ -32,6 +33,7 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
     public function __construct(
         private ForumNodeRepository $nodes,
         private DatabaseForumPublicReader $reader,
+        private DatabaseDiscussionStateRepository $discussionState,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
         private BasePath $basePath,
@@ -63,6 +65,15 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         $threads = $this->reader->threads($node->id(), $page, $perPage);
         if ($page > $threads['pages'] && $threads['total'] > 0) {
             return Response::text('Not Found', 404);
+        }
+
+        $unread = [];
+        if ($actor !== null && $threads['rows'] !== []) {
+            $threadIds = [];
+            foreach ($threads['rows'] as $threadRow) {
+                $threadIds[] = EntityId::fromString($threadRow['thread_id']);
+            }
+            $unread = array_fill_keys($this->discussionState->unreadThreadIds($actor, $threadIds), true);
         }
 
         $body = '<section class="forum-view-head"><div><span class="forum-eyebrow">FORUM</span><h1>'
@@ -110,7 +121,7 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             $body .= '<div class="forum-thread-list"><div class="forum-thread-list-head" aria-hidden="true">'
                 . '<span></span><span>Konu</span><span>Yanıt</span><span>Son mesaj</span></div>';
             foreach ($threads['rows'] as $thread) {
-                $body .= $this->renderThread($thread);
+                $body .= $this->renderThread($thread, isset($unread[$thread['thread_id']]));
             }
             $body .= '</div>';
             if ($pagination !== '') {
@@ -155,7 +166,7 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
     }
 
     /** @param array{thread_id:string,title:string,sticky:bool,featured:bool,locked:bool,created_at:string,author_username:?string,post_count:int,last_post_at:?string,last_post_username:?string} $thread */
-    private function renderThread(array $thread): string
+    private function renderThread(array $thread, bool $unread): string
     {
         $url = $this->basePath->prepend('/threads/' . rawurlencode($thread['thread_id']));
         $badges = '';
@@ -168,6 +179,9 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         if ($thread['locked']) {
             $badges .= '<span class="thread-badge">Kilitli</span>';
         }
+        if ($unread) {
+            $badges .= '<span class="thread-badge thread-badge--unread">Okunmamış</span>';
+        }
 
         $authorUsername = $thread['author_username'];
         $author = $authorUsername === null
@@ -177,7 +191,8 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         $rowClass = 'forum-thread-row'
             . ($thread['sticky'] ? ' is-sticky' : '')
             . ($thread['featured'] ? ' is-featured' : '')
-            . ($thread['locked'] ? ' is-locked' : '');
+            . ($thread['locked'] ? ' is-locked' : '')
+            . ($unread ? ' is-unread' : '');
         $lastUsername = $thread['last_post_username'] ?? $thread['author_username'];
         $lastUser = $lastUsername ?? 'Silinmiş üye';
         $lastAt = $thread['last_post_at'] ?? $thread['created_at'];
