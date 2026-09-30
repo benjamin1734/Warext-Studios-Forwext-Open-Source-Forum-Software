@@ -51,5 +51,7 @@ final class FaqRecommendationHtmlTest extends TestCase
         self::assertStringNotContainsString('<b>General</b>',$html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;',$html);
         self::assertStringContainsString('/community/faq/tr/guvenli-cozum',$html);
+        self::assertStringContainsString('surface-panel support-faq-recommendations',$html);
+        self::assertStringContainsString('class="support-faq-row"',$html);
     }
 }

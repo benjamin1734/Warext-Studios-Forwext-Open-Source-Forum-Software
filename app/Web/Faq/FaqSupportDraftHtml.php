@@ -23,13 +23,20 @@ final class FaqSupportDraftHtml
         bool $updated=false,
     ):string {
         $action=self::e($basePath->prepend('/faq/manage/support-drafts'));
-        $body='<section class="card"><h1>Destekten SSS taslakları</h1>'
-            .'<p class="muted">Yetkili public ticket cevaplarından önerilen taslakları inceleyin. Uygulanan taslaklar inactive/staff görünür başlar.</p>'
-            .($updated?'<div class="notice success">Taslak güncellendi.</div>':'');
+        $body='<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            .'<span class="forum-eyebrow">SSS TASLAKLARI</span><h1>Destekten gelen taslaklar</h1>'
+            .'<p>Yetkili ticket cevaplarından önerilen SSS içeriklerini incele ve bilgi tabanına aktar.</p></div>'
+            .'<a class="fx-btn" href="'.self::e($basePath->prepend('/faq/manage')).'">SSS yönetimine dön</a></header>'
+            .($updated?'<div class="notification-settings-notice" role="status">Taslak güncellendi.</div>':'');
+
         if($drafts===[]){
-            $body.='<div class="empty">Bekleyen SSS taslağı yok.</div></section>';
+            $body.='<section class="surface-panel"><div class="surface-empty"><strong>Bekleyen SSS taslağı yok.</strong>'
+                .'<span>Destek cevaplarından önerilen yeni taslaklar burada görünecek.</span></div></section></section>';
             return ProfileHtml::page('SSS taslakları',$body,$basePath,authenticated:true);
         }
+
+        $body.='<section class="surface-panel faq-draft-panel"><header><h2>Bekleyen öneriler</h2><span>'
+            .count($drafts).'</span></header><div class="faq-draft-list">';
 
         foreach($drafts as $draft){
             $options='';
@@ -39,23 +46,25 @@ final class FaqSupportDraftHtml
                     .self::e($category->label.' ('.$category->language.')').'</option>';
             }
             $ticketHref=$basePath->prepend('/support/tickets/'.rawurlencode($draft->ticketId->value()));
-            $body.='<article class="card section"><h2>'.self::e($draft->question).'</h2>'
-                .'<p>'.nl2br(self::e($draft->answer),false).'</p>'
-                .'<p class="muted">Kaynak: <a href="'.self::e($ticketHref).'">ticket #'.self::e($draft->ticketId->value()).'</a>'
-                .' · '.self::e($draft->createdAt->format('Y-m-d H:i')).'</p>'
-                .'<form method="post" action="'.$action.'" class="search-form">'
+
+            $body.='<article class="faq-draft-row"><div class="faq-draft-copy"><span>DESTEK ÖNERİSİ</span><h3>'
+                .self::e($draft->question).'</h3><p>'.nl2br(self::e($draft->answer),false).'</p>'
+                .'<small>Kaynak · <a href="'.self::e($ticketHref).'">ticket #'.self::e($draft->ticketId->value()).'</a>'
+                .' · '.self::e($draft->createdAt->format('Y-m-d H:i')).'</small></div>'
+                .'<div class="faq-draft-actions"><form method="post" action="'.$action.'" class="search-form">'
                 .self::csrf($csrfToken)
                 .'<input type="hidden" name="action" value="apply">'
                 .'<input type="hidden" name="draft_id" value="'.self::e($draft->draftId->value()).'">'
                 .'<label><span>FAQ kategorisi</span><select name="category" required>'.$options.'</select></label>'
                 .'<label><span>Slug</span><input name="slug" maxlength="160" pattern="[a-z0-9][a-z0-9-]{1,159}" required></label>'
-                .'<div class="search-actions"><button type="submit">Inactive taslağa dönüştür</button></div></form>'
-                .'<form method="post" action="'.$action.'">'.self::csrf($csrfToken)
+                .'<div class="search-actions"><button class="fx-btn fx-btn--primary" type="submit">Taslağa dönüştür</button></div></form>'
+                .'<form method="post" action="'.$action.'" class="faq-draft-reject">'.self::csrf($csrfToken)
                 .'<input type="hidden" name="action" value="reject">'
                 .'<input type="hidden" name="draft_id" value="'.self::e($draft->draftId->value()).'">'
-                .'<button type="submit">Öneriyi reddet</button></form></article>';
+                .'<button class="fx-btn" type="submit">Öneriyi reddet</button></form></div></article>';
         }
-        $body.='</section>';
+
+        $body.='</div></section></section>';
         return ProfileHtml::page('SSS taslakları',$body,$basePath,authenticated:true);
     }
 

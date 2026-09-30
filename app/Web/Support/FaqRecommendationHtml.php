@@ -17,20 +17,25 @@ final class FaqRecommendationHtml
         string $title='İlgili SSS önerileri',
         string $empty='Bu bilgilerle eşleşen görünür bir SSS bulunamadı.',
     ):string {
-        $html='<section class="card section"><h2>'.self::e($title).'</h2>';
+        $html='<section class="surface-panel support-faq-recommendations"><header><div><h2>'.self::e($title).'</h2>'
+            .'<p>Talep oluşturmadan önce bu cevaplardan biri sorunu çözebilir.</p></div><span>'
+            .count($recommendations).'</span></header><div class="support-faq-list">';
+
         if($recommendations===[]){
-            return $html.'<p class="muted">'.self::e($empty).'</p></section>';
+            return $html.'<div class="surface-empty"><strong>Eşleşen SSS yok.</strong><span>'
+                .self::e($empty).'</span></div></div></section>';
         }
-        $html.='<p class="muted">Talep oluşturmadan önce bu cevaplardan biri sorununuzu çözebilir.</p>';
+
         foreach($recommendations as $recommendation){
             $article=$recommendation->view->article;
             $href=$basePath->prepend('/faq/'.rawurlencode($article->language).'/'.rawurlencode($article->slug));
-            $html.='<article class="search-hit"><div class="search-hit-type">'
+            $html.='<a class="support-faq-row" href="'.self::e($href).'"><div><span>'
                 .self::e($recommendation->view->category->label).' · '.self::e($article->language)
-                .'</div><h3><a href="'.self::e($href).'">'.self::e($article->question).'</a></h3>'
-                .'<p class="muted">Eşleşme puanı: '.self::e((string)$recommendation->score).'</p></article>';
+                .'</span><strong>'.self::e($article->question).'</strong><small>Eşleşme puanı · '
+                .self::e((string)$recommendation->score).'</small></div><span aria-hidden="true">→</span></a>';
         }
-        return $html.'</section>';
+
+        return $html.'</div></section>';
     }
 
     private static function e(string $v):string { return ProfileHtml::escape($v); }
