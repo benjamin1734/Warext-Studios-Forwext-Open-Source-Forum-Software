@@ -77,6 +77,30 @@ final class DatabaseDiscussionStateRepositoryTest extends TestCase
         self::assertStringContainsString('MAX(`p2`.`updated_at_utc`)', $db->fetchOneQueries[0]->sql);
     }
 
+    public function testUnreadThreadBatchUsesOneBoundQueryAndForumWatermarkRules(): void
+    {
+        $db = new DiscussionStateRecordingDatabase();
+        $db->fetchAllQueue = [[
+            ['thread_id' => str_repeat('b', 32)],
+        ]];
+
+        $repo = new DatabaseDiscussionStateRepository($db);
+        $unread = $repo->unreadThreadIds(
+            $this->id('1'),
+            [$this->id('a'), $this->id('b'), $this->id('b')],
+        );
+
+        self::assertSame([str_repeat('b', 32)], $unread);
+        self::assertCount(1, $db->fetchAllQueries);
+        self::assertStringContainsString('forwext_thread_read_state', $db->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('forwext_forum_read_state', $db->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('COALESCE(activity.latest_position, 0)', $db->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('f.marked_read_at_utc < activity.latest_activity_at', $db->fetchAllQueries[0]->sql);
+        self::assertSame(str_repeat('a', 32), $db->fetchAllQueries[0]->parameters['thread_0']);
+        self::assertSame(str_repeat('b', 32), $db->fetchAllQueries[0]->parameters['thread_1']);
+        self::assertArrayNotHasKey('thread_2', $db->fetchAllQueries[0]->parameters);
+    }
+
     public function testMissingSubscriptionPreferencesUseSafeDefaults(): void
     {
         $db = new DiscussionStateRecordingDatabase();
@@ -99,14 +123,16 @@ final class DiscussionStateRecordingDatabase implements TransactionalQueryExecut
 {
     /** @var list<CompiledQuery> */ public array $executedQueries = [];
     /** @var list<CompiledQuery> */ public array $fetchOneQueries = [];
+    /** @var list<CompiledQuery> */ public array $fetchAllQueries = [];
     /** @var list<array<string,mixed>|null> */ public array $fetchOneQueue = [];
+    /** @var list<list<array<string,mixed>>> */ public array $fetchAllQueue = [];
     /** @var list<mixed> */ public array $fetchValueQueue = [];
     public bool $transactionUsed = false;
     private bool $inside = false;
 
     public function execute(CompiledQuery $query): int { $this->executedQueries[] = $query; return 1; }
     public function fetchOne(CompiledQuery $query): ?array { $this->fetchOneQueries[] = $query; return array_shift($this->fetchOneQueue); }
-    public function fetchAll(CompiledQuery $query): array { return []; }
+    public function fetchAll(CompiledQuery $query): array { $this->fetchAllQueries[] = $query; return array_shift($this->fetchAllQueue) ?? []; }
     public function fetchValue(CompiledQuery $query): mixed { return array_shift($this->fetchValueQueue) ?? 0; }
     public function inTransaction(): bool { return $this->inside; }
     public function transaction(Closure $callback): mixed
