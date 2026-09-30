@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Forum;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\App\Web\Editor\RichEditorView;
@@ -19,6 +21,8 @@ use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
 use Forwext\Core\Forum\Post\PostPermission;
+use Forwext\Core\Forum\State\DatabaseDiscussionStateRepository;
+use Forwext\Core\Forum\State\DiscussionStateException;
 use Forwext\Core\Forum\Thread\Thread;
 use Forwext\Core\Forum\Thread\ThreadModerationState;
 use Forwext\Core\Forum\Thread\ThreadRepository;
@@ -40,6 +44,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         private ThreadRepository $threads,
         private ForumNodeRepository $nodes,
         private DatabaseForumPublicReader $reader,
+        private DatabaseDiscussionStateRepository $discussionState,
         private EditorPreviewService $preview,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
@@ -74,6 +79,20 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         $posts = $this->reader->posts($threadId, $page, 20);
         if ($page > $posts['pages'] && $posts['total'] > 0) {
             return Response::text('Not Found', 404);
+        }
+
+        if ($actor !== null && $posts['rows'] !== []) {
+            $lastVisiblePosition = max(array_column($posts['rows'], 'position'));
+            try {
+                $this->discussionState->markThreadRead(
+                    $actor,
+                    $threadId,
+                    $lastVisiblePosition,
+                    new DateTimeImmutable('now', new DateTimeZone('UTC')),
+                );
+            } catch (DiscussionStateException|InvalidArgumentException) {
+                // A concurrent moderation/read-state change must not make an otherwise viewable thread fail.
+            }
         }
 
         $body = '<section class="thread-view-head"><div class="thread-view-title"><div class="thread-badges">'
