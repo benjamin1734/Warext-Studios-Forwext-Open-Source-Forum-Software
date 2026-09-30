@@ -15,6 +15,8 @@ use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Forum\Attachment\AttachmentOperationException;
+use Forwext\Core\Forum\Attachment\AttachmentService;
 use Forwext\Core\Forum\Node\ForumNode;
 use Forwext\Core\Forum\Node\ForumNodeAuthorization;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
@@ -46,6 +48,7 @@ use Forwext\Core\Routing\Router;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbItem;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
+use Throwable;
 
 final readonly class ThreadCreateHandler implements RequestHandlerInterface
 {
@@ -58,6 +61,7 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
         private ContentPipeline $pipeline,
+        private AttachmentServiceResolver $attachmentServices,
         private BasePath $basePath,
     ) {
     }
@@ -100,10 +104,18 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
         $body = $request->parsedBody();
         $title = $body['title'] ?? null;
         $message = $body['body'] ?? null;
+        $attachmentIds = [];
 
         try {
             if (!is_string($title) || !is_string($message)) {
                 throw new InvalidArgumentException('Thread form is incomplete.');
+            }
+
+            $attachmentIds = StagedAttachmentInput::fromRequest($request);
+            $now = $this->now();
+            $attachmentService = $this->attachmentServices->forActor($actor);
+            foreach ($attachmentIds as $attachmentId) {
+                $attachmentService->validateTemporaryForForum($attachmentId, $forum->id(), $now);
             }
 
             $postService = new PostService(
@@ -130,28 +142,44 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
                 ThreadTypeKey::fromString('discussion'),
                 ThreadTitle::fromString($title),
                 PostBody::fromString($message),
-                $this->now(),
+                $now,
+            );
+
+            $attachmentWarning = !$this->finalizeAttachments(
+                $attachmentService,
+                $attachmentIds,
+                $published->firstPost->id(),
+                $now,
             );
 
             if ($published->thread->moderationState() !== ThreadModerationState::Visible) {
                 return Response::text('', 303)
                     ->withHeader(
                         'Location',
-                        $this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value()) . '?submitted=1'),
+                        $this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value()) . '?submitted=1')
+                            . ($attachmentWarning ? '&attachment_warning=1' : ''),
                     )
                     ->withHeader('Cache-Control', 'no-store');
             }
 
+            $location = $this->basePath->prepend('/threads/' . rawurlencode($published->thread->id()->value()))
+                . ($attachmentWarning ? '?attachment_warning=1' : '');
+
             return Response::text('', 303)
-                ->withHeader(
-                    'Location',
-                    $this->basePath->prepend('/threads/' . rawurlencode($published->thread->id()->value())),
-                )
+                ->withHeader('Location', $location)
                 ->withHeader('Cache-Control', 'no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
-        } catch (InvalidArgumentException|ThreadOperationException|PostOperationException) {
-            return $this->view($request, $forum, $actor, true, is_string($title) ? $title : '', is_string($message) ? $message : '');
+        } catch (InvalidArgumentException|ThreadOperationException|PostOperationException|AttachmentOperationException) {
+            return $this->view(
+                $request,
+                $forum,
+                $actor,
+                true,
+                is_string($title) ? $title : '',
+                is_string($message) ? $message : '',
+                $attachmentIds,
+            );
         }
     }
 
@@ -162,6 +190,7 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
         bool $error,
         string $title = '',
         string $message = '',
+        array $attachmentIds = [],
     ): Response {
         $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
         if (!is_string($token) || $token === '') {
@@ -187,6 +216,9 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
                 new EditorLimits(),
                 $this->basePath,
                 'thread-create-editor',
+                null,
+                $forum->id(),
+                $attachmentIds,
             )
             . '<div class="forum-compose-actions"><a class="fx-btn" href="' . self::e($forumUrl) . '">İptal</a>'
             . '<button class="fx-btn fx-btn--primary" type="submit">Konuyu oluştur</button></div></form></section>';
@@ -205,6 +237,25 @@ final readonly class ThreadCreateHandler implements RequestHandlerInterface
             viewerId: $actor->value(),
             headAssets: RichEditorView::assets($this->basePath),
         ), $error ? 422 : 200)->withHeader('Cache-Control', 'private, no-store');
+    }
+
+    /** @param list<EntityId> $attachmentIds */
+    private function finalizeAttachments(
+        AttachmentService $service,
+        array $attachmentIds,
+        EntityId $postId,
+        DateTimeImmutable $now,
+    ): bool {
+        foreach ($attachmentIds as $attachmentId) {
+            try {
+                $service->finalize($attachmentId, $postId, $now);
+            } catch (Throwable) {
+                error_log('Forwext attachment finalize failed after thread publish.');
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function forum(Request $request): ?ForumNode
