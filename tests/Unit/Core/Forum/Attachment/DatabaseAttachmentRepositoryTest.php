@@ -78,6 +78,47 @@ final class DatabaseAttachmentRepositoryTest extends TestCase
         self::assertStringContainsString('`owner_user_id` = :owner_user_id', $database->executedQueries[0]->sql);
     }
 
+    public function testAttachedFilesForVisiblePostPageUseOneBoundQuery(): void
+    {
+        $database = new AttachmentRepositoryRecordingDatabase();
+        $record = $this->record();
+        $database->fetchAllQueue[] = [[
+            'attachment_id' => $record->attachmentId->value(),
+            'owner_user_id' => $record->ownerUserId->value(),
+            'forum_node_id' => $record->forumNodeId->value(),
+            'post_id' => str_repeat('c', 32),
+            'filename' => $record->filename->value(),
+            'media_type' => $record->mediaType,
+            'extension' => $record->extension,
+            'size_bytes' => $record->sizeBytes,
+            'sha256_hex' => $record->sha256,
+            'storage_path' => 'attachments/a/c/d/final.txt',
+            'thumbnail_path' => null,
+            'image_width' => null,
+            'image_height' => null,
+            'metadata_stripped' => 0,
+            'state' => 'attached',
+            'created_at_utc' => '2026-09-15 22:00:00.000000',
+            'expires_at_utc' => '2026-09-16 22:00:00.000000',
+            'attached_at_utc' => '2026-09-15 22:01:00.000000',
+        ]];
+
+        $repository = new DatabaseAttachmentRepository($database);
+        $records = $repository->attachedForPosts([
+            $this->id('c'),
+            $this->id('e'),
+            $this->id('c'),
+        ]);
+
+        self::assertCount(1, $records);
+        self::assertCount(1, $database->fetchAllQueries);
+        self::assertStringContainsString("`state` = 'attached'", $database->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('`post_id` IN (:post_0,:post_1)', $database->fetchAllQueries[0]->sql);
+        self::assertSame(str_repeat('c', 32), $database->fetchAllQueries[0]->parameters['post_0']);
+        self::assertSame(str_repeat('e', 32), $database->fetchAllQueries[0]->parameters['post_1']);
+        self::assertArrayNotHasKey('post_2', $database->fetchAllQueries[0]->parameters);
+    }
+
     public function testUsageAndCleanupQueriesAreBoundedAndParameterized(): void
     {
         $database = new AttachmentRepositoryRecordingDatabase();
