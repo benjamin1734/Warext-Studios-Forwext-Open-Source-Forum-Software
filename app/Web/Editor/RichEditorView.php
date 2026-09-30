@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Editor;
 
+use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Forum\Editor\EditorLimits;
 use Forwext\Core\Forum\Editor\EditorSurface;
 use Forwext\Core\Forum\Editor\EditorTextMetrics;
@@ -30,6 +31,8 @@ final class RichEditorView
         BasePath $basePath,
         string $elementId = 'forwext-editor',
         ?EditorExtensionRegistry $extensions = null,
+        ?EntityId $attachmentForumId = null,
+        array $stagedAttachmentIds = [],
     ): string {
         if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $fieldName) !== 1) {
             throw new InvalidArgumentException('Editor field name is invalid.');
@@ -48,6 +51,12 @@ final class RichEditorView
         $dictionaryUrl = self::escape($basePath->prepend('/account/spellcheck-dictionary'));
         $textareaId = self::escape($elementId . '-source');
         $rootId = self::escape($elementId);
+        $attachmentAttributes = '';
+        if ($attachmentForumId !== null) {
+            $attachmentAttributes = ' data-attachment-stage-url="'
+                . self::escape($basePath->prepend('/forums/' . rawurlencode($attachmentForumId->value()) . '/attachments'))
+                . '" data-attachment-csrf-url="' . self::escape($basePath->prepend('/attachments/csrf')) . '"';
+        }
 
         return '<section id="' . $rootId . '" class="fx-editor" data-fx-editor '
             . 'data-preview-url="' . $previewUrl . '" data-mention-url="' . $mentionUrl . '" '
@@ -58,7 +67,7 @@ final class RichEditorView
             . 'data-max-bytes="' . $limits->maxBytes . '" '
             . 'data-min-words="' . $limits->minWords . '" '
             . 'data-max-words="' . self::escape($maxWords) . '" '
-            . 'data-surface="' . self::escape($surface->value) . '">'
+            . 'data-surface="' . self::escape($surface->value) . '"' . $attachmentAttributes . '>'
             . '<label class="fx-editor__label" for="' . $textareaId . '">' . self::escape($surface->label()) . '</label>'
             . '<div class="fx-editor__toolbar" role="toolbar" aria-label="Metin biçimlendirme">'
             . self::button('Kalın', 'wrap', '[b]', '[/b]')
@@ -79,6 +88,7 @@ final class RichEditorView
             . '<div class="fx-editor__emoji" data-fx-editor-emoji-palette hidden>' . self::emojiButtons() . '</div>'
             . '<textarea id="' . $textareaId . '" name="' . self::escape($fieldName) . '" rows="12" '
             . 'data-fx-editor-source spellcheck="true" autocomplete="off">' . self::escape($initialSource) . '</textarea>'
+            . self::attachmentControls($attachmentForumId, $stagedAttachmentIds)
             . '<div class="fx-editor__mention-menu" data-fx-editor-mention-menu hidden role="listbox" aria-label="Kullanıcı önerileri"></div>'
             . '<div class="fx-editor__link-preview" data-fx-editor-link-preview hidden></div>'
             . '<div class="fx-editor__spellcheck" data-fx-editor-spellcheck hidden aria-live="polite"></div>'
@@ -97,6 +107,35 @@ final class RichEditorView
             . '<span class="fx-editor__status" data-fx-editor-status aria-live="polite"></span></div>'
             . '<div class="fx-editor__preview" data-fx-editor-preview hidden></div>'
             . '</section>';
+    }
+
+    /** @param list<EntityId> $stagedAttachmentIds */
+    private static function attachmentControls(?EntityId $forumId, array $stagedAttachmentIds): string
+    {
+        if ($forumId === null) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($stagedAttachmentIds as $attachmentId) {
+            if (!$attachmentId instanceof EntityId) {
+                throw new InvalidArgumentException('Staged attachment ids must be entity ids.');
+            }
+            $value = self::escape($attachmentId->value());
+            $items .= '<div class="fx-editor__attachment-item" data-fx-editor-attachment-item data-attachment-id="' . $value . '">'
+                . '<div><strong>Hazırlanmış dosya</strong><small>' . $value . '</small></div>'
+                . '<input type="hidden" name="attachment_ids[]" value="' . $value . '">'
+                . '<button type="button" data-fx-editor-attachment-remove>Çıkar</button></div>';
+        }
+
+        return '<div class="fx-editor__attachments" data-fx-editor-attachments>'
+            . '<div class="fx-editor__attachment-head"><div><strong>Dosyalar</strong>'
+            . '<span>Dosyalar güvenli geçici alana yüklenir ve mesaj gönderilince bağlanır.</span></div>'
+            . '<label class="fx-editor__attachment-picker">Dosya ekle'
+            . '<input type="file" multiple data-fx-editor-attachment-input></label></div>'
+            . '<div class="fx-editor__attachment-list" data-fx-editor-attachment-list>' . $items . '</div>'
+            . '<span class="fx-editor__attachment-status" data-fx-editor-attachment-status aria-live="polite"></span>'
+            . '</div>';
     }
 
     private static function extensionButtons(?EditorExtensionRegistry $extensions, EditorSurface $surface): string
