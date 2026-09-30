@@ -43,6 +43,19 @@ final class SubscriptionWebSurfaceTest extends TestCase
         self::assertStringContainsString('hash(\'sha256\',$request->rawBody)', $service);
     }
 
+    public function testAccountSurfaceUsesSharedUpgradeLayout():void
+    {
+        $root=dirname(__DIR__,4);
+        $html=(string)file_get_contents($root.'/app/Web/Subscription/SubscriptionHtml.php');
+        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+
+        self::assertStringContainsString('upgrade-account discovery-page',$html);
+        self::assertStringContainsString('surface-head upgrade-head',$html);
+        self::assertStringContainsString('class="upgrade-plan',$html);
+        self::assertStringContainsString('class="upgrade-history-row"',$html);
+        self::assertStringContainsString('.upgrade-plan-grid',$css);
+    }
+
     public function testAccountAndAdminPagesAreIncludedInNativeComposition():void
     {
         $root=dirname(__DIR__,4);

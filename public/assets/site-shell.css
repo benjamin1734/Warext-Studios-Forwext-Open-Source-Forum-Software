@@ -2998,3 +2998,38 @@ a.forum-thread-author:hover{color:var(--text)}
 .moderation-note p{margin:4px 0 0;font-size:10.5px;line-height:1.5}
 .moderation-note details{margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
 .moderation-note .moderation-row-action{margin-top:8px}
+
+/* referral-and-upgrades-v1 */
+.referral-head>.fx-btn,.upgrade-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.referral-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.referral-stat{min-width:0;display:grid;gap:2px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+.referral-stat strong{font-size:18px;letter-spacing:-.03em}.referral-stat span{color:var(--muted);font-size:9px}
+.referral-panel,.upgrade-history{padding:0;overflow:hidden}
+.referral-panel>header,.upgrade-history>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.referral-panel>header h2,.upgrade-history>header h2{margin:0;font-size:13.5px}
+.referral-panel>header span,.upgrade-history>header span{color:var(--muted);font-size:9.5px}
+.referral-campaign-list,.referral-reward-list,.upgrade-history-list{display:grid}
+.referral-campaign{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.65fr);gap:12px;align-items:center;padding:12px 13px;border-bottom:1px solid var(--line)}
+.referral-campaign:last-child,.referral-reward-row:last-child,.upgrade-history-row:last-child{border-bottom:0}
+.referral-campaign-copy{min-width:0;display:grid;gap:3px}.referral-campaign-copy h3{margin:0;font-size:12.5px}
+.referral-campaign-copy p{margin:0;color:var(--muted);font-size:9.75px;line-height:1.5}
+.referral-campaign-key{color:var(--accent);font-size:8.5px;font-weight:820;text-transform:uppercase;letter-spacing:.05em}
+.referral-link{display:grid;gap:4px}.referral-link span{color:var(--muted);font-size:9.5px}
+.referral-link input{width:100%;min-height:36px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);padding:7px 8px;font-size:10px}
+.referral-link-create{display:flex;justify-content:flex-end;margin:0}
+.referral-reward-row,.upgrade-history-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border-bottom:1px solid var(--line)}
+.referral-reward-row strong,.upgrade-history-row strong{font-size:11px}.referral-reward-row span,.upgrade-history-row span{color:var(--muted);font-size:9.5px;text-align:right}
+.upgrade-plans-panel{padding:0;overflow:hidden}
+.upgrade-plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.upgrade-plan{min-width:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.upgrade-plan.is-active{box-shadow:inset 0 3px 0 var(--accent)}
+.upgrade-plan-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.upgrade-plan-top span{color:var(--accent);font-size:8.5px;font-weight:850;letter-spacing:.06em}.upgrade-plan-top strong{font-size:14px}
+.upgrade-plan-body{display:grid;gap:9px;padding:12px}.upgrade-plan-body h2{margin:0;font-size:14px}.upgrade-plan-body>p{margin:0;color:var(--muted);font-size:10.5px;line-height:1.55}
+.upgrade-plan-meta{display:flex;gap:5px 10px;flex-wrap:wrap;padding-top:7px;border-top:1px solid var(--line);color:var(--muted);font-size:9.25px}
+.upgrade-purchase-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end;margin:0;padding-top:4px}
+.upgrade-purchase-form label{display:grid;gap:4px}.upgrade-purchase-form label>span{color:var(--muted);font-size:9.5px}.upgrade-purchase-form select{min-height:35px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);padding:6px 7px}
+.upgrade-plan-note{padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2)}
+@media(max-width:900px){.referral-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.referral-campaign{grid-template-columns:1fr}.referral-link-create{justify-content:flex-start}.upgrade-plan-grid{grid-template-columns:1fr}.referral-reward-row,.upgrade-history-row{align-items:flex-start;display:grid}.referral-reward-row span,.upgrade-history-row span{text-align:left}}
+@media(max-width:480px){.referral-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.upgrade-purchase-form{grid-template-columns:1fr}.upgrade-purchase-form .fx-btn{justify-content:center}}

@@ -26,49 +26,73 @@ final class SubscriptionHtml
         BasePath $basePath,string $csrf,?string $paymentStatus=null
     ):string{
         $now=new DateTimeImmutable('now',new DateTimeZone('UTC'));
-        $byPlan=[];foreach($subscriptions as $subscription)$byPlan[$subscription->planId->value()]=$subscription;
-        $body='<section class="card"><h1>Abonelikler / User Upgrades</h1>'
-            .'<p class="muted">Süreli veya süresiz forum yükseltmelerinizi ve ödeme durumlarını buradan yönetin.</p>'
-            .($paymentStatus===null?'':'<div class="search-alert market-success">Ödeme durumu: '.self::e($paymentStatus).'</div>')
-            .'</section><section class="section"><div class="market-grid">';
-        if($plans===[])$body.='<div class="card empty">Şu anda aktif upgrade planı bulunmuyor.</div>';
+        $byPlan=[];
+        foreach($subscriptions as $subscription){
+            $byPlan[$subscription->planId->value()]=$subscription;
+        }
+
+        $body='<section class="upgrade-account discovery-page"><header class="surface-head upgrade-head"><div>'
+            .'<span class="forum-eyebrow">ÜYELİK</span><h1>Üyelik Yükseltmeleri</h1>'
+            .'<p>Süreli veya süresiz forum yükseltmelerini ve ödeme durumlarını buradan yönet.</p></div>'
+            .'<a class="fx-btn" href="'.self::e($basePath->prepend('/account')).'">Hesabıma dön</a></header>'
+            .($paymentStatus===null?'':'<div class="notification-settings-notice" role="status">Ödeme durumu · '.self::e($paymentStatus).'</div>')
+            .'<section class="surface-panel upgrade-plans-panel"><div class="upgrade-plan-grid">';
+
+        if($plans===[]){
+            $body.='<div class="surface-empty"><strong>Aktif yükseltme planı yok.</strong>'
+                .'<span>Yeni planlar açıldığında burada görünecek.</span></div>';
+        }
+
         foreach($plans as $plan){
             $subscription=$byPlan[$plan->planId->value()]??null;
             $active=$subscription?->activeAt($now)??false;
             $duration=$plan->durationDays===null?'Süresiz':$plan->durationDays.' gün';
-            $body.='<article class="card"><div class="search-hit-type">'.($active?'Aktif upgrade':'Upgrade planı').'</div>'
-                .'<h2>'.self::e($plan->name).'</h2><p>'.nl2br(self::e($plan->description),false).'</p>'
-                .'<p class="market-price">'.self::e(self::money($plan->priceMinor,$plan->currency)).'</p>'
-                .'<p class="muted">Süre: '.self::e($duration).'</p>';
+            $body.='<article class="upgrade-plan'.($active?' is-active':'').'"><div class="upgrade-plan-top">'
+                .'<span>'.($active?'AKTİF':'PLAN').'</span><strong>'.self::e(self::money($plan->priceMinor,$plan->currency)).'</strong></div>'
+                .'<div class="upgrade-plan-body"><h2>'.self::e($plan->name).'</h2>'
+                .'<p>'.nl2br(self::e($plan->description),false).'</p>'
+                .'<div class="upgrade-plan-meta"><span>Süre · '.self::e($duration).'</span>';
             if($subscription!==null){
-                $body.='<p><strong>Durum:</strong> '.self::e($subscription->state->value)
-                    .' · <strong>Bitiş:</strong> '.self::e($subscription->endsAt===null?'Süresiz':$subscription->endsAt->format('Y-m-d H:i').' UTC').'</p>';
+                $body.='<span>Durum · '.self::e($subscription->state->value).'</span>'
+                    .'<span>Bitiş · '.self::e($subscription->endsAt===null?'Süresiz':$subscription->endsAt->format('Y-m-d H:i').' UTC').'</span>';
             }
+            $body.='</div>';
+
             if($canPurchase&&$plan->priceMinor>0&&$providers!==[]){
                 $action=self::e($basePath->prepend('/account/upgrades/'.$plan->planId->value().'/purchase'));
-                $body.='<form method="post" action="'.$action.'" class="search-form">'.self::csrf($csrf)
+                $body.='<form method="post" action="'.$action.'" class="upgrade-purchase-form">'.self::csrf($csrf)
                     .'<input type="hidden" name="idempotency_key" value="'.bin2hex(random_bytes(16)).'">'
                     .'<label><span>Ödeme sağlayıcısı</span><select name="provider_key" required>';
-                foreach($providers as $provider)$body.='<option value="'.self::e($provider).'">'.self::e($provider).'</option>';
-                $body.='</select></label><div class="search-actions"><button type="submit">'
-                    .($active?'Süreyi uzat':'Satın al').'</button></div></form>';
+                foreach($providers as $provider){
+                    $body.='<option value="'.self::e($provider).'">'.self::e($provider).'</option>';
+                }
+                $body.='</select></label><button class="fx-btn fx-btn--primary" type="submit">'
+                    .($active?'Süreyi uzat':'Satın al').'</button></form>';
             }elseif($plan->priceMinor===0){
-                $body.='<p class="muted">Bu plan yalnızca yönetici atamasıyla verilir.</p>';
+                $body.='<p class="upgrade-plan-note">Bu plan yalnızca yönetici atamasıyla verilir.</p>';
             }elseif($providers===[]){
-                $body.='<p class="muted">Şu anda yapılandırılmış ödeme sağlayıcısı yok.</p>';
+                $body.='<p class="upgrade-plan-note">Şu anda yapılandırılmış ödeme sağlayıcısı yok.</p>';
             }
-            $body.='</article>';
+
+            $body.='</div></article>';
         }
-        $body.='</div></section><section class="card section"><h2>Ödeme geçmişim</h2>';
-        if($purchases===[])$body.='<p class="muted">Henüz upgrade ödemesi yok.</p>';
+
+        $body.='</div></section><section class="surface-panel upgrade-history"><header><h2>Ödeme geçmişim</h2><span>'
+            .count($purchases).'</span></header><div class="upgrade-history-list">';
+        if($purchases===[]){
+            $body.='<div class="surface-empty"><strong>Henüz ödeme yok.</strong>'
+                .'<span>Yükseltme ödemelerin burada listelenecek.</span></div>';
+        }
         foreach($purchases as $purchase){
-            $body.='<article class="search-hit"><strong>'.self::e($purchase->state->value).'</strong>'
-                .'<p>'.self::e(self::money($purchase->amountMinor,$purchase->currency))
-                .' · '.self::e($purchase->providerKey).' · '.self::e($purchase->createdAt->format('Y-m-d H:i')).' UTC</p></article>';
+            $body.='<article class="upgrade-history-row"><strong>'.self::e($purchase->state->value).'</strong>'
+                .'<span>'.self::e(self::money($purchase->amountMinor,$purchase->currency))
+                .' · '.self::e($purchase->providerKey).' · '.self::e($purchase->createdAt->format('Y-m-d H:i')).' UTC</span></article>';
         }
-        $body.='</section>';
-        return ProfileHtml::page('Abonelikler / User Upgrades',$body,$basePath,authenticated:true);
+        $body.='</div></section></section>';
+
+        return ProfileHtml::page('Üyelik Yükseltmeleri',$body,$basePath,authenticated:true);
     }
+
 
     /**
      * @param list<SubscriptionPlan> $plans

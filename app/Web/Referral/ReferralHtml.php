@@ -35,57 +35,77 @@ final class ReferralHtml
             $linkByCampaign[$link->campaignId->value()] = $link;
         }
 
-        $body = '<section class="card"><div class="search-head"><div><h1>Davetlerim ve Referanslarım</h1>'
-            . '<p class="muted">Davet bağlantılarınızı yönetin ve nitelikli referans/ödül durumunuzu takip edin.</p></div></div>';
+        $manage = $canManage
+            ? '<a class="fx-btn" href="' . self::e($basePath->prepend('/referrals/manage'))
+                . '">Referans yönetimi</a>'
+            : '';
+
+        $body = '<section class="referral-account discovery-page"><header class="surface-head referral-head"><div>'
+            . '<span class="forum-eyebrow">DAVETLER</span><h1>Davetlerim ve Referanslarım</h1>'
+            . '<p>Davet bağlantılarını yönet, nitelikli referanslarını ve ödül durumunu takip et.</p></div>'
+            . $manage . '</header>';
+
         if ($updated) {
-            $body .= '<div class="notice success">Davet bağlantınız hazır.</div>';
-        }
-        if ($canManage) {
-            $body .= '<p><a href="' . self::e($basePath->prepend('/referrals/manage'))
-                . '">Referans yönetimine git</a></p>';
+            $body .= '<div class="notification-settings-notice" role="status">Davet bağlantın hazır.</div>';
         }
 
-        $body .= self::stats($analytics)
-            . '<section class="section"><h2>Aktif kampanyalar</h2>';
+        $body .= '<section class="referral-stats" aria-label="Referans özeti">'
+            . self::accountStat('Tıklama', $analytics->clicks)
+            . self::accountStat('Attribution', $analytics->attributed)
+            . self::accountStat('Nitelikli', $analytics->qualified)
+            . self::accountStat('İnceleme', $analytics->review)
+            . self::accountStat('Reddedilen', $analytics->rejected)
+            . self::accountStat('Ödül Birimi', $analytics->rewardUnits)
+            . '</section>';
+
+        $body .= '<section class="surface-panel referral-panel"><header><h2>Aktif kampanyalar</h2><span>'
+            . count($campaigns) . '</span></header><div class="referral-campaign-list">';
         if ($campaigns === []) {
-            $body .= '<div class="empty">Şu anda aktif bir davet kampanyası bulunmuyor.</div>';
+            $body .= '<div class="surface-empty"><strong>Aktif kampanya yok.</strong>'
+                . '<span>Yeni bir davet kampanyası açıldığında burada görünecek.</span></div>';
         } else {
             foreach ($campaigns as $campaign) {
                 $link = $linkByCampaign[$campaign->campaignId->value()] ?? null;
-                $body .= '<article class="search-hit"><div class="search-hit-type">'
-                    . self::e($campaign->key) . '</div><h3>' . self::e($campaign->name) . '</h3>'
-                    . '<p class="muted">Nitelik bekleme: ' . self::e(self::duration($campaign->qualificationDelaySeconds))
-                    . ' · Attribution penceresi: ' . self::e(self::duration($campaign->attributionWindowSeconds))
-                    . ' · Ödül: ' . $campaign->rewardUnits . ' ' . self::e($campaign->rewardKey) . '</p>';
+                $body .= '<article class="referral-campaign"><div class="referral-campaign-copy">'
+                    . '<span class="referral-campaign-key">' . self::e($campaign->key) . '</span>'
+                    . '<h3>' . self::e($campaign->name) . '</h3>'
+                    . '<p>Nitelik bekleme · ' . self::e(self::duration($campaign->qualificationDelaySeconds))
+                    . ' · Attribution · ' . self::e(self::duration($campaign->attributionWindowSeconds))
+                    . ' · Ödül · ' . $campaign->rewardUnits . ' ' . self::e($campaign->rewardKey) . '</p></div>';
                 if ($link !== null && $link->isAvailable(new \DateTimeImmutable('now', new \DateTimeZone('UTC')))) {
                     $share = rtrim($canonicalUrl, '/') . '/ref/' . rawurlencode($link->code);
-                    $body .= '<label class="search-wide"><span>Davet bağlantınız</span>'
+                    $body .= '<label class="referral-link"><span>Davet bağlantın</span>'
                         . '<input readonly value="' . self::e($share) . '" aria-label="Davet bağlantısı"></label>';
                 } else {
                     $body .= '<form method="post" action="' . self::e($basePath->prepend('/account/referrals'))
-                        . '" class="presence-settings">' . self::csrf($csrfToken)
+                        . '" class="referral-link-create">' . self::csrf($csrfToken)
                         . '<input type="hidden" name="action" value="create_link">'
                         . '<input type="hidden" name="campaign_id" value="' . self::e($campaign->campaignId->value()) . '">'
-                        . '<button type="submit">Davet bağlantısı oluştur</button></form>';
+                        . '<button class="fx-btn fx-btn--primary" type="submit">Bağlantı oluştur</button></form>';
                 }
                 $body .= '</article>';
             }
         }
-        $body .= '</section><section class="section"><h2>Ödül geçmişi</h2>';
+        $body .= '</div></section>';
+
+        $body .= '<section class="surface-panel referral-panel"><header><h2>Ödül geçmişi</h2><span>'
+            . count($rewards) . '</span></header><div class="referral-reward-list">';
         if ($rewards === []) {
-            $body .= '<p class="muted">Henüz kazanılmış referans ödülü yok.</p>';
+            $body .= '<div class="surface-empty"><strong>Henüz ödül yok.</strong>'
+                . '<span>Nitelikli referans ödüllerin burada listelenecek.</span></div>';
         } else {
             foreach ($rewards as $reward) {
-                $body .= '<article class="search-hit"><strong>' . $reward->units . ' '
-                    . self::e($reward->rewardKey) . '</strong><div class="muted">'
+                $body .= '<article class="referral-reward-row"><strong>' . $reward->units . ' '
+                    . self::e($reward->rewardKey) . '</strong><span>'
                     . self::e($reward->state->value) . ' · '
-                    . self::e($reward->grantedAt->format('Y-m-d H:i')) . ' UTC</div></article>';
+                    . self::e($reward->grantedAt->format('Y-m-d H:i')) . ' UTC</span></article>';
             }
         }
-        $body .= '</section></section>';
+        $body .= '</div></section></section>';
 
         return ProfileHtml::page('Davetlerim ve Referanslarım', $body, $basePath, authenticated:true);
     }
+
 
     /**
      * @param list<ReferralCampaign> $campaigns
@@ -168,6 +188,11 @@ final class ReferralHtml
         $body .= '</section></section>';
 
         return ProfileHtml::page('Referans Yönetimi', $body, $basePath, authenticated:true);
+    }
+
+    private static function accountStat(string $label, int $value): string
+    {
+        return '<div class="referral-stat"><strong>' . $value . '</strong><span>' . self::e($label) . '</span></div>';
     }
 
     private static function stats(ReferralAnalytics $analytics): string
