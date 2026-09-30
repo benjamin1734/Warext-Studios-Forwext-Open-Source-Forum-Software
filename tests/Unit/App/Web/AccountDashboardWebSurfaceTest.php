@@ -31,6 +31,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
         foreach ([
             '/community/account/notifications',
             '/community/account/notification-settings',
+            '/community/account/profile',
             '/community/account/profile-url',
             '/community/account/profile-activity',
             '/community/account/bookmarks',
