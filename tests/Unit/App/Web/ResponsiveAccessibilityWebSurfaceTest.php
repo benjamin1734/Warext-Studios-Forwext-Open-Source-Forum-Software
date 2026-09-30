@@ -60,4 +60,22 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('horizontal overflow', $browserSmoke);
         self::assertStringContainsString('reduced-motion', $browserSmoke);
     }
+    public function testSharedStylesUseDocumentedResponsiveBreakpointScale(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $css = (string) file_get_contents($root . '/public/assets/site-base.css')
+            . "\n"
+            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+
+        preg_match_all('/@media\\s*\\(\\s*max-width:(\\d+)px\\s*\\)/', $css, $matches);
+        $actual = array_values(array_unique(array_map('intval', $matches[1] ?? [])));
+        sort($actual);
+
+        self::assertSame([520, 700, 760, 820, 920, 1100], $actual);
+        self::assertStringContainsString(
+            'Forwext responsive scale: 1100 / 920 / 820 / 760 / 700 / 520 px.',
+            $css,
+        );
+    }
+
 }
