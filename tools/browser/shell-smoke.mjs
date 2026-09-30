@@ -37,10 +37,14 @@ try {
     });
     const page = await context.newPage();
     const consoleErrors = [];
+    const failedRequests = [];
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
     });
     page.on("pageerror", (error) => consoleErrors.push(error.message));
+    page.on("requestfailed", (request) => {
+      failedRequests.push(`${request.method()} ${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`);
+    });
 
     const response = await page.goto(
       `${baseUrl}/build/browser-fixtures/${testCase.fixture}.html`,
@@ -178,6 +182,9 @@ try {
       if (!(maxDuration <= 1)) fail(`${testCase.name}: reduced-motion transition remains too long: ${maxDuration}ms`);
     }
 
+    if (failedRequests.length > 0) {
+      fail(`${testCase.name}: failed browser requests: ${failedRequests.join(" | ")}`);
+    }
     if (consoleErrors.length > 0) {
       fail(`${testCase.name}: browser console errors: ${consoleErrors.join(" | ")}`);
     }
