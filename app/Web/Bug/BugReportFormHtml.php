@@ -52,7 +52,7 @@ final class BugReportFormHtml
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/bugs')) . '">Kayıtlarıma dön</a></header>'
             . $notice
             . '<section class="surface-panel bug-form-panel"><form method="post" enctype="multipart/form-data" action="'
-            . self::e($basePath->prepend('/bugs/report')) . '" class="support-intake-form">
+            . self::e($basePath->prepend('/bugs/report')) . '" class="support-intake-form">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
             . '<input type="hidden" name="source_path" value="' . self::e($sourcePath ?? '') . '">'
             . '<label><span>Kategori</span><select name="category" required>' . $options . '</select></label>'
