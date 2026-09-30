@@ -25,8 +25,7 @@ final class MarketplacePurchaseHtml
             .'<span class="forum-eyebrow">DAHİLİ SATIŞ</span><h1>Dahili Satın Alım</h1><p>'.self::e($listing->title).'</p></div>'
             .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimi</a></header>'
             .($updated?'<div class="notification-settings-notice" role="status">Dahili satın alım ayarı kaydedildi.</div>':'')
-            .'<section class="surface-panel marketplace-setting-panel">
-            .'<p>Bu seçenek açık olduğunda uygun kullanıcılar ilanı Forwext sepetine ekleyebilir. '
+            .'<section class="surface-panel marketplace-setting-panel">'\n            .'<p>Bu seçenek açık olduğunda uygun kullanıcılar ilanı Forwext sepetine ekleyebilir. '
             .'Ödeme sağlayıcısı ve gerçek teslimat işleyicileri sonraki Marketplace adımlarında bağlanır.</p>'
             .'<form method="post" action="'.$action.'" class="search-form">'.self::csrf($csrf)
             .'<label><span>Durum</span><select name="enabled"><option value="0"'.($enabled?'':' selected').'>Kapalı</option>'
