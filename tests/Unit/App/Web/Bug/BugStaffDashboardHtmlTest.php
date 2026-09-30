@@ -74,5 +74,8 @@ final class BugStaffDashboardHtmlTest extends TestCase
         self::assertStringNotContainsString('<img src=x onerror=alert(1)>',$html);
         self::assertStringNotContainsString('<Admin>',$html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;',$html);
+        self::assertStringContainsString('staff-dashboard discovery-page',$html);
+        self::assertStringContainsString('surface-head staff-dashboard-head',$html);
+        self::assertStringContainsString('class="staff-queue-row"',$html);
     }
 }

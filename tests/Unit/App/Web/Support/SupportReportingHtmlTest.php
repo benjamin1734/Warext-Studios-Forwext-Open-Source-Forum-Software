@@ -58,6 +58,9 @@ final class SupportReportingHtmlTest extends TestCase
         self::assertStringNotContainsString('<img src=x onerror=alert(1)>',$html);
         self::assertStringContainsString('&lt;b&gt;Unsafe&lt;/b&gt;',$html);
         self::assertStringContainsString('&lt;bad&gt;',$html);
+        self::assertStringContainsString('staff-dashboard discovery-page',$html);
+        self::assertStringContainsString('surface-head staff-dashboard-head',$html);
+        self::assertStringContainsString('class="staff-queue-row"',$html);
     }
 
     private function ticket(string $subject):SupportTicket
