@@ -18,7 +18,7 @@ final class ForumReadStateWebSurfaceTest extends TestCase
         self::assertStringContainsString('unreadThreadIds($actor, $threadIds)', $forum);
         self::assertStringContainsString('isset($unread[$thread[\'thread_id\']])', $forum);
         self::assertStringContainsString('thread-badge thread-badge--unread">Okunmamış</span>', $forum);
-        self::assertStringContainsString('(\$unread ? \' is-unread\' : \'\')', $forum);
+        self::assertStringContainsString('($unread ? \' is-unread\' : \'\')', $forum);
 
         self::assertStringContainsString('public function unreadThreadIds(', $repository);
         self::assertStringContainsString('forwext_thread_read_state', $repository);
