@@ -35,7 +35,7 @@ final class DatabaseAuthSessionIndexTest extends TestCase
     public function testActiveListAndRevocationAreUserBoundAndDoNotNeedRawSessionToken(): void
     {
         $database = new AuthSessionIndexRecordingDatabase();
-        $database->fetchAllQueue = [[
+        $database->fetchAllQueue = [[[
             'session_hash' => str_repeat('a', 64),
             'user_id' => str_repeat('b', 32),
             'device_id' => str_repeat('c', 32),
@@ -44,7 +44,7 @@ final class DatabaseAuthSessionIndexTest extends TestCase
             'expires_at_utc' => '2026-09-30 14:00:00.000000',
             'last_seen_at_utc' => '2026-09-30 11:00:00.000000',
             'revoked_at_utc' => null,
-        ]];
+        ]]];
         $index = new DatabaseAuthSessionIndex($database);
         $userId = UserId::fromStored(str_repeat('b', 32));
         $now = $this->time('2026-09-30 12:00:00.000000');
