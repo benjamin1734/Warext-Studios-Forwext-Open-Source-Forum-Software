@@ -86,10 +86,10 @@ final class ProfileSettingsHtml
     ): string {
         $options = '';
         foreach ([
-            ProfileVisibility::Public => 'Herkes',
-            ProfileVisibility::Members => 'Yalnızca üyeler',
-            ProfileVisibility::Private => 'Yalnızca ben',
-        ] as $visibility => $caption) {
+            [ProfileVisibility::Public, 'Herkes'],
+            [ProfileVisibility::Members, 'Yalnızca üyeler'],
+            [ProfileVisibility::Private, 'Yalnızca ben'],
+        ] as [$visibility, $caption]) {
             $options .= '<option value="' . self::e($visibility->value) . '"'
                 . ($visibility === $selected ? ' selected' : '') . '>' . self::e($caption) . '</option>';
         }
