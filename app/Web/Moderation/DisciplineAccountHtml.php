@@ -29,29 +29,32 @@ final class DisciplineAccountHtml
                 )));
             }
             if ($action->expiresAt !== null) {
-                $extra .= ' · Bitiş: ' . self::e($action->expiresAt->format('Y-m-d H:i')) . ' UTC';
+                $extra .= ' · Bitiş · ' . self::e($action->expiresAt->format('Y-m-d H:i')) . ' UTC';
             } elseif (in_array($action->type, [DisciplineActionType::Restriction, DisciplineActionType::Ban], true)) {
                 $extra .= ' · Kalıcı';
             }
             $appeal = $action->appealReference();
 
-            $rows .= '<article class="search-hit"><span class="search-hit-type">'
-                . self::e($action->type->label()) . '</span>'
-                . '<h3>' . self::e($action->reasonCode->value()) . '</h3>'
-                . '<p>' . self::e($action->reasonText) . '</p>'
-                . '<div class="muted">Durum: ' . self::e($action->statusAt($now))
-                . ' · Başlangıç: ' . self::e($action->startsAt->format('Y-m-d H:i')) . ' UTC' . $extra . '</div>'
-                . ($appeal === null ? '' : '<div class="muted">İtiraz referansı: ' . self::e($appeal) . '</div>')
-                . '</article>';
-        }
-        if ($rows === '') {
-            $rows = '<div class="empty">Hesabınızda disiplin kaydı bulunmuyor.</div>';
+            $rows .= '<article class="discipline-account-row"><span class="discipline-account-type">'
+                . self::e($action->type->label()) . '</span><div class="discipline-account-copy"><strong>'
+                . self::e($action->reasonCode->value()) . '</strong><p>' . self::e($action->reasonText) . '</p>'
+                . '<small>Durum · ' . self::e($action->statusAt($now))
+                . ' · Başlangıç · ' . self::e($action->startsAt->format('Y-m-d H:i')) . ' UTC' . $extra . '</small>'
+                . ($appeal === null ? '' : '<small>İtiraz referansı · ' . self::e($appeal) . '</small>')
+                . '</div></article>';
         }
 
-        $content = '<div class="card"><h1 style="margin:0">Disiplin kayıtlarım</h1>'
-            . '<p class="muted">Aktif uyarı puanınız: <strong>' . $activePoints . '</strong>. '
-            . 'İtiraz referansı, destek/itiraz entegrasyonlarının bu kayıtla güvenli biçimde eşleşmesi için sabit kimliktir.</p></div>'
-            . '<section class="card section"><h2>Geçmiş</h2>' . $rows . '</section>';
+        if ($rows === '') {
+            $rows = '<div class="surface-empty"><strong>Disiplin kaydı yok.</strong>'
+                . '<span>Hesabında görünür bir disiplin işlemi bulunmuyor.</span></div>';
+        }
+
+        $content = '<section class="discipline-account-page discovery-page"><header class="surface-head discipline-account-head"><div>'
+            . '<span class="forum-eyebrow">HESAP</span><h1>Disiplin kayıtlarım</h1>'
+            . '<p>Uyarı, kısıtlama ve diğer hesap işlemlerinin geçmişini görüntüle.</p></div>'
+            . '<div class="discipline-points"><strong>' . $activePoints . '</strong><span>aktif puan</span></div></header>'
+            . '<section class="surface-panel discipline-account-panel"><div class="discipline-account-list">'
+            . $rows . '</div></section></section>';
 
         return ProfileHtml::page('Disiplin kayıtlarım', $content, $basePath, authenticated: true);
     }

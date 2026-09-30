@@ -3033,3 +3033,24 @@ a.forum-thread-author:hover{color:var(--text)}
 @media(max-width:900px){.referral-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.referral-campaign{grid-template-columns:1fr}.referral-link-create{justify-content:flex-start}.upgrade-plan-grid{grid-template-columns:1fr}.referral-reward-row,.upgrade-history-row{align-items:flex-start;display:grid}.referral-reward-row span,.upgrade-history-row span{text-align:left}}
 @media(max-width:480px){.referral-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.upgrade-purchase-form{grid-template-columns:1fr}.upgrade-purchase-form .fx-btn{justify-content:center}}
+
+/* report-and-discipline-account-v1 */
+.report-form-head>.fx-btn,.report-history-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.report-target{display:grid;gap:3px}
+.report-target>span{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+.report-target>strong{font-size:13px}.report-target>small{color:var(--muted);font-size:9.5px}
+.report-form-panel{padding:14px}
+.report-history-panel,.discipline-account-panel{padding:0;overflow:hidden}
+.report-history-list,.discipline-account-list{display:grid}
+.report-history-row,.discipline-account-row{padding:11px 13px;border-bottom:1px solid var(--line)}
+.report-history-row:last-child,.discipline-account-row:last-child{border-bottom:0}
+.report-history-row:hover,.discipline-account-row:hover{background:color-mix(in srgb,var(--accent) 2.5%,var(--panel))}
+.report-history-row>div,.discipline-account-copy{display:grid;gap:3px}
+.report-history-type,.discipline-account-type{color:var(--accent);font-size:8.5px;font-weight:820;text-transform:uppercase;letter-spacing:.05em}
+.report-history-row strong,.discipline-account-copy strong{font-size:12.5px}
+.report-history-row small,.discipline-account-copy small{color:var(--muted);font-size:9.5px}
+.discipline-account-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:start}
+.discipline-account-copy p{margin:0;font-size:11px;line-height:1.5}
+.discipline-points{flex:0 0 auto;display:grid;place-items:center;min-width:78px;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
+.discipline-points strong{font-size:19px;letter-spacing:-.03em}.discipline-points span{color:var(--muted);font-size:8.5px}
+@media(max-width:700px){.discipline-account-row{grid-template-columns:1fr}.discipline-account-type{justify-self:start}}
