@@ -284,6 +284,7 @@ use Forwext\Core\Forum\Moderation\DatabaseContentModerationRepository;
 use Forwext\Core\Forum\Moderation\DatabaseModerationAuditStore;
 use Forwext\Core\Forum\Node\DatabaseForumNodeRepository;
 use Forwext\Core\Forum\Post\DatabasePostRepository;
+use Forwext\Core\Forum\State\DatabaseDiscussionStateRepository;
 use Forwext\Core\Forum\Stats\ForumStatsService;
 use Forwext\Core\Forum\Thread\DatabaseThreadRepository;
 use Forwext\Core\Forum\Thread\ThreadTypeRegistry;
@@ -912,6 +913,7 @@ final readonly class WebApplicationFactory
         ));
         $forumStats = new ForumStatsService($database, $forumScopeProvider);
         $forumPublicReader = new DatabaseForumPublicReader($database);
+        $discussionState = new DatabaseDiscussionStateRepository($database);
         $forumIndexHandler = new ForumIndexHandler(
             $nodes,
             $forumPublicReader,
@@ -922,6 +924,7 @@ final readonly class WebApplicationFactory
         $forumViewHandler = new ForumViewHandler(
             $nodes,
             $forumPublicReader,
+            $discussionState,
             $viewerResolver,
             $authorizer,
             $basePath,
@@ -930,6 +933,7 @@ final readonly class WebApplicationFactory
             $threads,
             $nodes,
             $forumPublicReader,
+            $discussionState,
             $editorPreview,
             $viewerResolver,
             $authorizer,
