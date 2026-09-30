@@ -110,6 +110,34 @@ final readonly class AttachmentService
         }
     }
 
+    public function validateTemporaryForForum(
+        EntityId $attachmentId,
+        EntityId $forumNodeId,
+        DateTimeImmutable $now,
+    ): AttachmentRecord {
+        AttachmentId::assert($attachmentId);
+        $this->requireForum($forumNodeId, AttachmentPermission::Upload);
+        $record = $this->attachments->find($attachmentId)
+            ?? throw new AttachmentOperationException('Attachment is not available.');
+        if (!$record->isTemporary()) {
+            throw new AttachmentOperationException('Attachment is no longer temporary.');
+        }
+        if (!$record->ownerUserId->equals($this->gate->actorId())) {
+            throw new AttachmentOperationException('Temporary attachment is not owned by the current actor.');
+        }
+        if (!$record->forumNodeId->equals($forumNodeId)) {
+            throw new AttachmentOperationException('Attachment cannot cross its authorized forum boundary.');
+        }
+        if ($record->expiresAt <= $this->utc($now)) {
+            throw new AttachmentOperationException('Temporary attachment has expired.');
+        }
+
+        // Verify the staged object before publishing content that references it.
+        $this->readVerifiedOriginal($record);
+
+        return $record;
+    }
+
     public function finalize(EntityId $attachmentId, EntityId $postId, DateTimeImmutable $now): AttachmentRecord
     {
         AttachmentId::assert($attachmentId);
