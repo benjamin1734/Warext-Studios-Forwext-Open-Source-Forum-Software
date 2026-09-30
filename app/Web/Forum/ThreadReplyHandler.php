@@ -14,6 +14,8 @@ use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
 use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Forum\Attachment\AttachmentOperationException;
+use Forwext\Core\Forum\Attachment\AttachmentService;
 use Forwext\Core\Forum\Node\ForumNode;
 use Forwext\Core\Forum\Node\ForumNodeAuthorization;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
@@ -41,6 +43,7 @@ use Forwext\Core\Routing\Router;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbItem;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
+use Throwable;
 
 final readonly class ThreadReplyHandler implements RequestHandlerInterface
 {
@@ -52,6 +55,7 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
         private ContentPipeline $pipeline,
+        private AttachmentServiceResolver $attachmentServices,
         private BasePath $basePath,
     ) {
     }
@@ -104,10 +108,18 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
         PermissionGate $gate,
     ): Response {
         $message = $request->parsedBody()['body'] ?? null;
+        $attachmentIds = [];
 
         try {
             if (!is_string($message)) {
                 throw new InvalidArgumentException('Reply form is incomplete.');
+            }
+
+            $attachmentIds = StagedAttachmentInput::fromRequest($request);
+            $now = $this->now();
+            $attachmentService = $this->attachmentServices->forActor($actor);
+            foreach ($attachmentIds as $attachmentId) {
+                $attachmentService->validateTemporaryForForum($attachmentId, $forum->id(), $now);
             }
 
             $post = (new PostService(
@@ -120,12 +132,19 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
             ))->reply(
                 $thread->id(),
                 PostBody::fromString($message),
-                $this->now(),
+                $now,
+            );
+
+            $attachmentWarning = !$this->finalizeAttachments(
+                $attachmentService,
+                $attachmentIds,
+                $post->id(),
+                $now,
             );
 
             $suffix = $post->moderationState() === PostModerationState::Visible
-                ? '#post-' . rawurlencode($post->id()->value())
-                : '?reply_pending=1';
+                ? ($attachmentWarning ? '?attachment_warning=1' : '') . '#post-' . rawurlencode($post->id()->value())
+                : '?reply_pending=1' . ($attachmentWarning ? '&attachment_warning=1' : '');
 
             return Response::text('', 303)
                 ->withHeader(
@@ -135,8 +154,16 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
                 ->withHeader('Cache-Control', 'no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
-        } catch (InvalidArgumentException|PostOperationException) {
-            return $this->view($request, $forum, $thread, $actor, true, is_string($message) ? $message : '');
+        } catch (InvalidArgumentException|PostOperationException|AttachmentOperationException) {
+            return $this->view(
+                $request,
+                $forum,
+                $thread,
+                $actor,
+                true,
+                is_string($message) ? $message : '',
+                $attachmentIds,
+            );
         }
     }
 
@@ -147,6 +174,7 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
         EntityId $actor,
         bool $error,
         string $message = '',
+        array $attachmentIds = [],
     ): Response {
         $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
         if (!is_string($token) || $token === '') {
@@ -170,6 +198,9 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
                 new EditorLimits(),
                 $this->basePath,
                 'thread-reply-editor',
+                null,
+                $forum->id(),
+                $attachmentIds,
             )
             . '<div class="forum-compose-actions"><a class="fx-btn" href="' . self::e($threadUrl) . '">İptal</a>'
             . '<button class="fx-btn fx-btn--primary" type="submit">Yanıtı gönder</button></div></form></section>';
@@ -189,6 +220,25 @@ final readonly class ThreadReplyHandler implements RequestHandlerInterface
             viewerId: $actor->value(),
             headAssets: RichEditorView::assets($this->basePath),
         ), $error ? 422 : 200)->withHeader('Cache-Control', 'private, no-store');
+    }
+
+    /** @param list<EntityId> $attachmentIds */
+    private function finalizeAttachments(
+        AttachmentService $service,
+        array $attachmentIds,
+        EntityId $postId,
+        DateTimeImmutable $now,
+    ): bool {
+        foreach ($attachmentIds as $attachmentId) {
+            try {
+                $service->finalize($attachmentId, $postId, $now);
+            } catch (Throwable) {
+                error_log('Forwext attachment finalize failed after reply publish.');
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function thread(Request $request): ?Thread
