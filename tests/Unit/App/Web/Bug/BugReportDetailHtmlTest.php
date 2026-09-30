@@ -107,5 +107,7 @@ final class BugReportDetailHtmlTest extends TestCase
         self::assertStringContainsString('2026-09-18 20:00',$html);
         self::assertStringContainsString('/community/bugs/'.str_repeat('a',32),$html);
         self::assertStringNotContainsString('<script>bad</script>',$html);
+        self::assertStringContainsString('surface-head bug-list-head',$html);
+        self::assertStringContainsString('class="bug-report-row"',$html);
     }
 }

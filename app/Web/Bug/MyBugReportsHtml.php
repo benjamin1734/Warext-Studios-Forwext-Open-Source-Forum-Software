@@ -16,27 +16,29 @@ final class MyBugReportsHtml
      */
     public static function page(array $reports,array $categoryLabels,BasePath $basePath): string
     {
-        $body='<section class="card settings"><h1>Hata Bildirimlerim</h1>'
-            .'<p><a href="'.self::e($basePath->prepend('/bugs/report')).'">Yeni hata bildir</a></p>'
-            .'<p class="muted">Yalnız kendi hesabınızla oluşturduğunuz hata bildirimleri listelenir.</p></section>'
-            .'<section class="card section"><h2>Kayıt geçmişi</h2>';
+        $body='<section class="bug-list-page discovery-page"><header class="surface-head bug-list-head"><div>'
+            .'<span class="forum-eyebrow">HATA BİLDİRİMLERİ</span><h1>Hata Bildirimlerim</h1>'
+            .'<p>Gönderdiğin hata kayıtlarını, durumlarını ve güncellemelerini takip et.</p></div>'
+            .'<a class="fx-btn fx-btn--primary" href="'.self::e($basePath->prepend('/bugs/report')).'">Yeni hata bildir</a>'
+            .'</header><section class="surface-panel bug-list-panel"><div class="bug-report-list">';
 
         if($reports===[]){
-            $body.='<div class="empty">Henüz hata bildiriminiz yok.</div></section>';
+            $body.='<div class="surface-empty"><strong>Henüz hata bildirimin yok.</strong>'
+                .'<span>Yeni bir kayıt oluşturduğunda burada görünecek.</span></div></div></section></section>';
             return ProfileHtml::page('Hata Bildirimlerim',$body,$basePath,authenticated:true);
         }
 
         foreach($reports as $report){
             $href=$basePath->prepend('/bugs/'.rawurlencode($report->reportId->value()));
             $category=$categoryLabels[$report->categoryKey]??$report->categoryKey;
-            $body.='<article class="search-hit"><div class="search-hit-type">'
-                .self::e($category).' · '.self::e($report->status->label())
-                .' · '.self::e($report->severity->label()).'</div>'
-                .'<h3><a href="'.self::e($href).'">'.self::e($report->title).'</a></h3>'
-                .'<p class="muted">Oluşturuldu: '.self::e($report->createdAt->format('Y-m-d H:i'))
-                .' · Güncellendi: '.self::e($report->updatedAt->format('Y-m-d H:i')).'</p></article>';
+            $body.='<a class="bug-report-row" href="'.self::e($href).'"><div class="bug-report-row-main">'
+                .'<span class="bug-report-row-meta">'.self::e($category).' · '.self::e($report->status->label())
+                .' · '.self::e($report->severity->label()).'</span><strong>'.self::e($report->title).'</strong>'
+                .'<small>Oluşturuldu · '.self::e($report->createdAt->format('Y-m-d H:i'))
+                .' · Güncellendi · '.self::e($report->updatedAt->format('Y-m-d H:i')).'</small></div>'
+                .'<span class="bug-report-row-arrow" aria-hidden="true">→</span></a>';
         }
-        $body.='</section>';
+        $body.='</div></section></section>';
 
         return ProfileHtml::page('Hata Bildirimlerim',$body,$basePath,authenticated:true);
     }

@@ -34,15 +34,17 @@ final class SupportTicketFormHtml
     ): string {
         $notice = '';
         if ($createdTicketId !== null) {
-            $notice = '<div class="notice success">Destek talebin oluşturuldu. Talep kimliği: <code>'
+            $notice = '<div class="notification-settings-notice" role="status">Destek talebin oluşturuldu. Talep kimliği: <code>'
                 . self::e($createdTicketId) . '</code></div>';
         } elseif ($error) {
-            $notice = '<div class="notice error">Talep oluşturulamadı. Alanları, bağlantıyı ve ek dosyaları kontrol edip tekrar dene.</div>';
+            $notice = '<div class="auth-entry-error" role="alert">Talep oluşturulamadı. Alanları, bağlantıyı ve ek dosyaları kontrol edip tekrar dene.</div>';
         }
 
         if ($categories === []) {
-            $body = '<section class="card settings"><h1>Destek talebi</h1>'
-                . '<div class="notice error">Şu anda kullanılabilir destek kategorisi bulunmuyor.</div></section>';
+            $body = '<section class="support-form-page discovery-page"><header class="surface-head support-form-head"><div>'
+                . '<span class="forum-eyebrow">DESTEK</span><h1>Destek talebi</h1>'
+                . '<p>Şu anda kullanılabilir destek kategorisi bulunmuyor.</p></div>'
+                . '<a class="fx-btn" href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></header></section>';
             return ProfileHtml::page('Destek talebi', $body, $basePath, authenticated: true);
         }
 
@@ -53,12 +55,12 @@ final class SupportTicketFormHtml
                 . self::e($category->label) . '</option>';
         }
 
-        $categoryChooser = '<form method="get" action="' . self::e($basePath->prepend('/support/new'))
-            . '" class="search-form"><label><span>Kategori</span><select name="category">'
+        $categoryChooser = '<section class="surface-panel support-category-panel"><form method="get" action="'
+            . self::e($basePath->prepend('/support/new')) . '" class="search-form support-category-form"><label><span>Kategori</span><select name="category">'
             . $categoryOptions . '</select></label>'
             . '<label class="search-wide"><span>Sorununuz / anahtar kelime</span><input name="q" maxlength="300" value="'
             . self::e($recommendationQuery) . '" placeholder="Örn. giriş yapamıyorum"></label>'
-            . '<div class="search-actions"><button type="submit">SSS önerilerini göster</button></div></form>';
+            . '<div class="search-actions"><button type="submit">SSS önerilerini göster</button></div></form></section>';
 
         $form = '';
         if ($selectedCategory !== null) {
@@ -77,11 +79,11 @@ final class SupportTicketFormHtml
                     . self::e($type->label()) . '</option>';
             }
 
-            $form = '<section class="card section"><h2>' . self::e($selectedCategory->label) . '</h2>'
+            $form = '<section class="surface-panel support-intake-panel"><h2>' . self::e($selectedCategory->label) . '</h2>'
                 . ($selectedCategory->description === '' ? '' : '<p class="muted">'
                     . self::e($selectedCategory->description) . '</p>')
                 . '<form method="post" enctype="multipart/form-data" action="'
-                . self::e($basePath->prepend('/support/new')) . '" class="presence-settings">'
+                . self::e($basePath->prepend('/support/new')) . '" class="support-intake-form">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
                 . '<input type="hidden" name="category" value="' . self::e($selectedCategory->key) . '">'
                 . '<label><span>Konu</span><input name="subject" maxlength="200" value="' . self::e($recommendationQuery) . '" required></label>'
@@ -94,7 +96,8 @@ final class SupportTicketFormHtml
                 . self::e($contextId ?? '') . '"></label></details>'
                 . '<label><span>Ek dosyalar</span><input type="file" name="attachments[]" multiple></label>'
                 . '<p class="muted">En fazla 5 dosya. İzin verilen içerikler: yaygın görseller, PDF, ZIP ve düz metin; dosya başına en fazla 25 MiB.</p>'
-                . '<button type="submit">Talebi oluştur</button></form></section>';
+                . '<div class="support-intake-actions"><button class="fx-btn fx-btn--primary" type="submit">Talebi oluştur</button></div>'
+                . '</form></section>';
         }
 
         $faq = $selectedCategory === null
@@ -106,10 +109,11 @@ final class SupportTicketFormHtml
                 $recommendationQuery === '' ? 'Kategoriye göre görünür bir SSS önerisi bulunamadı.' : 'Bu soruyla eşleşen görünür bir SSS bulunamadı.',
             );
 
-        $body = '<section class="card settings"><h1>Destek talebi aç</h1>'
-            . '<p><a href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></p>'
-            . '<p class="muted">Önce doğru kategoriyi seç. Kategoriye özel alanlar yalnız gerektiğinde gösterilir.</p>'
-            . $notice . $categoryChooser . '</section>' . $faq . $form;
+        $body = '<section class="support-form-page discovery-page"><header class="surface-head support-form-head"><div>'
+            . '<span class="forum-eyebrow">DESTEK</span><h1>Destek talebi aç</h1>'
+            . '<p>Önce doğru kategoriyi seç; kategoriye özel alanlar yalnız gerektiğinde gösterilir.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/support/tickets')) . '">Taleplerim</a></header>'
+            . $notice . $categoryChooser . $faq . $form . '</section>';
 
         return ProfileHtml::page('Destek talebi aç', $body, $basePath, authenticated: true);
     }

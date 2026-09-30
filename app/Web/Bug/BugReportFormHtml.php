@@ -23,15 +23,17 @@ final class BugReportFormHtml
     ): string {
         $notice = '';
         if ($createdReportId !== null) {
-            $notice = '<div class="notice success">Hata bildirimin alındı. Kayıt kimliği: <code>'
+            $notice = '<div class="notification-settings-notice" role="status">Hata bildirimin alındı. Kayıt kimliği: <code>'
                 . self::e($createdReportId) . '</code></div>';
         } elseif ($error) {
-            $notice = '<div class="notice error">Hata bildirimi oluşturulamadı. Alanları ve ek dosyaları kontrol edip tekrar dene.</div>';
+            $notice = '<div class="auth-entry-error" role="alert">Hata bildirimi oluşturulamadı. Alanları ve ek dosyaları kontrol edip tekrar dene.</div>';
         }
 
         if ($categories === []) {
-            $body = '<section class="card settings"><h1>Hata bildir</h1>'
-                . '<div class="notice error">Şu anda kullanılabilir hata kategorisi bulunmuyor.</div></section>';
+            $body = '<section class="bug-form-page discovery-page"><header class="surface-head bug-form-head"><div>'
+                . '<span class="forum-eyebrow">HATA BİLDİRİMİ</span><h1>Hata bildir</h1>'
+                . '<p>Şu anda kullanılabilir hata kategorisi bulunmuyor.</p></div>'
+                . '<a class="fx-btn" href="' . self::e($basePath->prepend('/bugs')) . '">Kayıtlarıma dön</a></header></section>';
             return ProfileHtml::page('Hata bildir', $body, $basePath, authenticated: true);
         }
 
@@ -44,12 +46,13 @@ final class BugReportFormHtml
             ? '<span class="muted">Kaynak sayfa otomatik belirlenemedi.</span>'
             : '<code>' . self::e($sourcePath) . '</code>';
 
-        $body = '<section class="card settings"><h1>Hata bildir</h1>'
-            . '<p><a href="' . self::e($basePath->prepend('/bugs')) . '">Hata Bildirimlerim</a></p>'
-            . '<p class="muted">Sorunu mümkün olduğunca tekrar üretilebilir şekilde anlat. Teknik bağlam güvenli biçimde ayrıca toplanır.</p>'
+        $body = '<section class="bug-form-page discovery-page"><header class="surface-head bug-form-head"><div>'
+            . '<span class="forum-eyebrow">HATA BİLDİRİMİ</span><h1>Hata bildir</h1>'
+            . '<p>Sorunu tekrar üretilebilir şekilde anlat; teknik bağlam güvenli biçimde ayrıca toplanır.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/bugs')) . '">Kayıtlarıma dön</a></header>'
             . $notice
-            . '<form method="post" enctype="multipart/form-data" action="' . self::e($basePath->prepend('/bugs/report'))
-            . '" class="presence-settings" style="display:grid;align-items:stretch">'
+            . '<section class="surface-panel bug-form-panel"><form method="post" enctype="multipart/form-data" action="'
+            . self::e($basePath->prepend('/bugs/report')) . '" class="support-intake-form">
             . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
             . '<input type="hidden" name="source_path" value="' . self::e($sourcePath ?? '') . '">'
             . '<label><span>Kategori</span><select name="category" required>' . $options . '</select></label>'
@@ -63,7 +66,8 @@ final class BugReportFormHtml
             . '<label><span>Screenshot / dosya</span><input type="file" name="attachments[]" multiple '
             . 'accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/zip,text/plain"></label>'
             . '<p class="muted">En fazla 5 dosya; dosya başına 25 MiB. Görseller güvenli biçimde yeniden işlenebilir ve metadata temizlenebilir.</p>'
-            . '<button type="submit">Hata bildirimini gönder</button></form></section>';
+            . '<div class="support-intake-actions"><button class="fx-btn fx-btn--primary" type="submit">Hata bildirimini gönder</button></div>'
+            . '</form></section></section>';
 
         return ProfileHtml::page('Hata bildir', $body, $basePath, authenticated: true);
     }

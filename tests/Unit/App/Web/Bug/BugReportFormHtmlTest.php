@@ -30,5 +30,8 @@ final class BugReportFormHtmlTest extends TestCase
         self::assertStringNotContainsString('<script>alert(1)</script>',$html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;',$html);
         self::assertStringContainsString('/threads/&lt;unsafe&gt;',$html);
+        self::assertStringContainsString('surface-head bug-form-head',$html);
+        self::assertStringContainsString('surface-panel bug-form-panel',$html);
+        self::assertStringContainsString('support-intake-form',$html);
     }
 }

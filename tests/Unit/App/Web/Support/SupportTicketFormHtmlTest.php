@@ -55,5 +55,8 @@ final class SupportTicketFormHtmlTest extends TestCase
         self::assertStringNotContainsString('<svg onload=alert(1)>', $html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         self::assertStringContainsString('&lt;b&gt;General&lt;/b&gt;', $html);
+        self::assertStringContainsString('surface-head support-form-head', $html);
+        self::assertStringContainsString('surface-panel support-category-panel', $html);
+        self::assertStringContainsString('support-intake-form', $html);
     }
 }
