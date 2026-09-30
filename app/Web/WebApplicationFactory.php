@@ -109,6 +109,7 @@ use Forwext\App\Web\Profile\MemberDirectoryHandler;
 use Forwext\App\Web\Profile\ProfileActivityCsrfTokenHandler;
 use Forwext\App\Web\Profile\ProfileActivityDeleteHandler;
 use Forwext\App\Web\Profile\ProfileActivitySettingsHandler;
+use Forwext\App\Web\Profile\ProfileSettingsHandler;
 use Forwext\App\Web\Profile\ProfileActivityWallRenderer;
 use Forwext\App\Web\Profile\ProfileCommentsHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
@@ -1425,6 +1426,7 @@ final readonly class WebApplicationFactory
         $themeCsrf = $this->themeCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
+        $profileSettingsCsrf = $this->profileSettingsCsrfMiddleware($config);
         $notificationInboxCsrf = $this->notificationInboxCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
@@ -2197,6 +2199,11 @@ final readonly class WebApplicationFactory
             new ProfileActivityDeleteHandler($profileActivity, $viewerResolver, true), [$profileActivityCsrf],
         ));
         $routes->add(new Route(
+            'account.profile-settings', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/account/profile'),
+            new ProfileSettingsHandler($users, $profileService, $mediaService, $viewerResolver, $basePath),
+            [$profileSettingsCsrf],
+        ));
+        $routes->add(new Route(
             'account.profile-activity', [HttpMethod::Get, HttpMethod::Post, HttpMethod::Put], new PathTemplate('/account/profile-activity'),
             new ProfileActivitySettingsHandler($profileActivity, $viewerResolver, $basePath), [$profileActivityCsrf],
         ));
@@ -2911,6 +2918,11 @@ final readonly class WebApplicationFactory
     private function profileActivityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'profile-activity', 'forwext.csrf.profile-activity.v1');
+    }
+
+    private function profileSettingsCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'profile-settings', 'forwext.csrf.profile-settings.v1');
     }
 
     private function notificationInboxCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
