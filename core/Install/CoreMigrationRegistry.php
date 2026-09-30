@@ -113,7 +113,6 @@ final class CoreMigrationRegistry
             new CreateUserDomainTables(),
             new CreateRegistrationSecurityTables(),
             new CreateAuthenticationRuntimeTables(),
-            new CreateAuthSessionIndex(),
             new CreateMfaDeviceSecurityTables(),
             new CreateOAuthConnectedAccountTables(),
             new CreateUserProfileMediaTables(),
@@ -202,6 +201,7 @@ final class CoreMigrationRegistry
             new CreateApiV1CredentialSecurity(),
             new CreateWebhookPlatform(),
             new SeedStarterForumStructure(),
+            new CreateAuthSessionIndex(),
         ];
     }
 }
