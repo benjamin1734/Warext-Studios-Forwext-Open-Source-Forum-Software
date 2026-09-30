@@ -854,53 +854,6 @@ select:focus{
   background:var(--panel2);
 }
 
-.account-center-hero,
-.notification-hero,
-.notification-settings-hero{
-  position:relative;
-  overflow:hidden;
-  border-radius:var(--fx-radius-xl);
-  background:
-    linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,var(--panel)),var(--panel2));
-}
-.account-center-hero::after,
-.notification-hero::after,
-.notification-settings-hero::after{
-  content:"";
-  position:absolute;
-  width:170px;
-  height:170px;
-  border-radius:50%;
-  right:-75px;
-  top:-95px;
-  background:color-mix(in srgb,var(--accent) 9%,transparent);
-  pointer-events:none;
-}
-.account-center-hero>div,
-.notification-hero>div,
-.notification-settings-hero>div,
-.notification-settings-hero>a{
-  position:relative;
-  z-index:1;
-}
-.account-center-grid{
-  gap:11px;
-}
-.account-center-card{
-  min-height:126px;
-  border-radius:14px;
-}
-.account-center-card .fx-btn{
-  align-self:center;
-}
-.account-center-card h2{
-  letter-spacing:-.015em;
-}
-.account-center-card:hover{
-  transform:translateY(-1px);
-  background:color-mix(in srgb,var(--accent) 4%,var(--forwext-component-forum-background));
-}
-
 .notification-list{gap:9px}
 .notification-item{
   position:relative;
@@ -1095,20 +1048,6 @@ select:focus{
 }
 
 @media(max-width:760px){
-  .account-center-grid{grid-template-columns:1fr}
-  .account-center-card{
-    min-height:0;
-    display:grid;
-  }
-  .account-center-card .fx-btn{
-    width:100%;
-    justify-content:center;
-    text-align:center;
-  }
-  .notification-hero-side{
-    width:100%;
-    justify-content:space-between;
-  }
   .notification-unread{min-width:88px}
   .notification-actions{
     width:100%;
@@ -1143,7 +1082,6 @@ select:focus{
   .auth-entry-copy h1{font-size:21px}
   .auth-entry-actions{display:grid;grid-template-columns:1fr}
   .auth-entry-actions .fx-btn{justify-content:center}
-  .notification-hero-side{display:grid;grid-template-columns:1fr}
   .notification-unread{width:100%}
 }
 
@@ -1189,17 +1127,9 @@ select:focus{
   border:1px solid var(--line);
   background:var(--panel);
 }
-.market-head{
-  gap:12px;
-}
-.market-head h1{
-  letter-spacing:-.025em;
-}
-.market-manage-link,
 .market-category-links a{
   transition:background var(--fx-transition),border-color var(--fx-transition),color var(--fx-transition),transform var(--fx-transition);
 }
-.market-manage-link:hover,
 .market-category-links a:hover{
   background:color-mix(in srgb,var(--accent) 6%,var(--panel2));
   border-color:color-mix(in srgb,var(--accent) 32%,var(--line));
@@ -1256,14 +1186,6 @@ select:focus{
   border-color:color-mix(in srgb,var(--accent) 34%,var(--line));
   background:color-mix(in srgb,var(--accent) 5%,var(--forwext-component-button-background));
 }
-.market-detail{
-  display:grid;
-  gap:16px;
-}
-.market-detail-top{
-  padding-bottom:12px;
-  border-bottom:1px solid var(--line);
-}
 .market-review{
   border-radius:10px;
   transition:background var(--fx-transition);
@@ -1277,8 +1199,7 @@ select:focus{
 }
 
 @media(max-width:680px){
-  .market-result-head,
-  .market-detail-top{
+  .market-result-head{
     display:grid;
   }
   .market-specs{

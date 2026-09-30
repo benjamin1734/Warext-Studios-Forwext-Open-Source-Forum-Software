@@ -43,10 +43,10 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('.profile-content-row', $css);
         self::assertStringContainsString('.acp-card:hover', $css);
         self::assertStringContainsString('.search-hit:hover', $css);
-        self::assertStringContainsString('.account-center-card:hover', $css);
+        self::assertStringContainsString('.account-setting-row:hover', $css);
         self::assertStringContainsString('.notification-item.is-unread', $css);
         self::assertStringContainsString('.auth-entry-card::before', $css);
-        self::assertStringContainsString('.market-card:hover', $css);
+        self::assertStringContainsString('.marketplace-results .market-card:hover', $css);
         self::assertStringContainsString('.trophy-card:hover', $css);
         self::assertStringContainsString('.portfolio-media figure:hover', $css);
         self::assertStringContainsString('@media(max-width:920px)', $css);
