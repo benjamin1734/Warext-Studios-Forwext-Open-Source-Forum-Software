@@ -49,6 +49,8 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('frontend-browser-regression', $workflow);
 
         self::assertStringContainsString("'guest' => ProfileHtml::page", $fixtureRenderer);
+        self::assertStringContainsString("str_ends_with(\$match[1], '/assets/mobile-nav.js')", $fixtureRenderer);
+        self::assertStringContainsString('Browser fixture script isolation failed.', $fixtureRenderer);
         self::assertStringContainsString("'member' => ProfileHtml::page", $fixtureRenderer);
         self::assertStringContainsString("\$fixtures['moderator']", $fixtureRenderer);
         self::assertStringContainsString('width: 390', $browserSmoke);
