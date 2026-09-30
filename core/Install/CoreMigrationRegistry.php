@@ -16,6 +16,7 @@ use Forwext\Database\Migrations\Core\CreateAiModerationWorkflow;
 use Forwext\Database\Migrations\Core\CreateAiModerationPrivacyCostPolicy;
 use Forwext\Database\Migrations\Core\CreateAttachmentPipelineTables;
 use Forwext\Database\Migrations\Core\CreateAuthenticationRuntimeTables;
+use Forwext\Database\Migrations\Core\CreateAuthSessionIndex;
 use Forwext\Database\Migrations\Core\CreateContentModerationTables;
 use Forwext\Database\Migrations\Core\CreateContentManagerSystem;
 use Forwext\Database\Migrations\Core\CreateCoreAuditStream;
@@ -112,6 +113,7 @@ final class CoreMigrationRegistry
             new CreateUserDomainTables(),
             new CreateRegistrationSecurityTables(),
             new CreateAuthenticationRuntimeTables(),
+            new CreateAuthSessionIndex(),
             new CreateMfaDeviceSecurityTables(),
             new CreateOAuthConnectedAccountTables(),
             new CreateUserProfileMediaTables(),
