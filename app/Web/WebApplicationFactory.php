@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Account\AccountDashboardHandler;
+use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Admin\AdminModuleManagerHandler;
@@ -222,6 +223,7 @@ use Forwext\Core\Auth\Password\PasswordHashPolicy;
 use Forwext\Core\Auth\Password\PasswordResetService;
 use Forwext\Core\Auth\Remember\RememberTokenService;
 use Forwext\Core\Auth\Session\AuthSessionManager;
+use Forwext\Core\Auth\Session\DatabaseAuthSessionIndex;
 use Forwext\Core\Bug\Conversation\DatabaseBugReportConversationRepository;
 use Forwext\Core\Bug\Conversation\NotificationBugReportNotifier;
 use Forwext\Core\Bug\Diagnostic\BugBrowserDeviceClassifier;
@@ -508,10 +510,12 @@ final readonly class WebApplicationFactory
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
         $profileService = new ProfileService($profileStore, $accessPolicy);
         $credentials = new DatabaseCredentialStore($database);
+        $authSessionIndex = new DatabaseAuthSessionIndex($database);
         $sessions = new AuthSessionManager(
             $runtime->sessionStore(),
             $credentials,
             $config->requireInt('authentication.session.ttl_seconds'),
+            index: $authSessionIndex,
         );
         $disciplineAccountViewerResolver = new AuthSessionProfileViewerResolver(
             $sessions,
@@ -1432,6 +1436,7 @@ final readonly class WebApplicationFactory
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
         $contentManagerCsrf = $this->contentManagerCsrfMiddleware($config);
         $authCsrf = $this->authCsrfMiddleware($config);
+        $accountSessionCsrf = $this->accountSessionCsrfMiddleware($config);
         $forumCsrf = $this->forumCsrfMiddleware($config);
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
 
@@ -1498,6 +1503,19 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/account'),
             new AccountDashboardHandler($viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'account.sessions',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/sessions'),
+            new AccountSessionsHandler(
+                $authSessionIndex,
+                $viewerResolver,
+                $basePath,
+                $config->requireString('authentication.session.cookie_name'),
+                new DateTimeZone($config->requireString('site.timezone')),
+            ),
+            [$accountSessionCsrf],
         ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
@@ -2763,6 +2781,11 @@ final readonly class WebApplicationFactory
     private function authCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'auth-entry', 'forwext.csrf.auth-entry.v1');
+    }
+
+    private function accountSessionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'account-session', 'forwext.csrf.account-session.v1');
     }
 
     private function forumCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
