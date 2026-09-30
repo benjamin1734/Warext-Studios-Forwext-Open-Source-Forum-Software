@@ -21,15 +21,18 @@ final class MarketplacePurchaseHtml
         MarketplaceListing $listing,bool $enabled,BasePath $basePath,string $csrf,bool $updated
     ):string{
         $action=self::e($basePath->prepend('/marketplace/manage/internal/'.$listing->listingId->value()));
-        $body='<section class="card"><h1>Dahili Satın Alım</h1><p class="muted">İlan: '.self::e($listing->title).'</p>'
-            .($updated?'<div class="search-alert market-success">Dahili satın alım ayarı kaydedildi.</div>':'')
+        $body='<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            .'<span class="forum-eyebrow">DAHİLİ SATIŞ</span><h1>Dahili Satın Alım</h1><p>'.self::e($listing->title).'</p></div>'
+            .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimi</a></header>'
+            .($updated?'<div class="notification-settings-notice" role="status">Dahili satın alım ayarı kaydedildi.</div>':'')
+            .'<section class="surface-panel marketplace-setting-panel">
             .'<p>Bu seçenek açık olduğunda uygun kullanıcılar ilanı Forwext sepetine ekleyebilir. '
             .'Ödeme sağlayıcısı ve gerçek teslimat işleyicileri sonraki Marketplace adımlarında bağlanır.</p>'
             .'<form method="post" action="'.$action.'" class="search-form">'.self::csrf($csrf)
             .'<label><span>Durum</span><select name="enabled"><option value="0"'.($enabled?'':' selected').'>Kapalı</option>'
             .'<option value="1"'.($enabled?' selected':'').'>Aktif</option></select></label>'
             .'<div class="search-actions"><button type="submit">Kaydet</button></div></form>'
-            .'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimine dön</a></p></section>';
+            .'</section></section>';
         return ProfileHtml::page('Dahili Satın Alım',$body,$basePath,authenticated:true);
     }
 

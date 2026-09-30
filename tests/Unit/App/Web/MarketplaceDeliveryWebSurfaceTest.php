@@ -37,6 +37,14 @@ final class MarketplaceDeliveryWebSurfaceTest extends TestCase
         self::assertStringContainsString("name=\"value\" maxlength=\"16384\"",$html);
         self::assertStringContainsString("if(\$action==='reveal')",$handler);
         self::assertStringContainsString("'Cache-Control','private, no-store'",$handler);
+        $deliveryHtml=(string)file_get_contents($root.'/app/Web/Marketplace/MarketplaceDeliveryHtml.php');
+        $externalHtml=(string)file_get_contents($root.'/app/Web/Marketplace/MarketplaceExternalSaleHtml.php');
+        $purchaseHtml=(string)file_get_contents($root.'/app/Web/Marketplace/MarketplacePurchaseHtml.php');
+        self::assertStringContainsString('module-manage-page discovery-page',$deliveryHtml);
+        self::assertStringContainsString('delivery-reveal-page discovery-page',$deliveryHtml);
+        self::assertStringContainsString('module-manage-page discovery-page',$externalHtml);
+        self::assertStringContainsString('external-warning-page discovery-page',$externalHtml);
+        self::assertStringContainsString('module-manage-page discovery-page',$purchaseHtml);
         self::assertStringContainsString("'Referrer-Policy','no-referrer'",$handler);
         self::assertStringContainsString("if(\$action==='download')",$handler);
     }

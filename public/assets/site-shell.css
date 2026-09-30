@@ -3216,3 +3216,12 @@ a.forum-thread-author:hover{color:var(--text)}
   .module-manage-link-panel{grid-template-columns:1fr}
   .module-manage-link-panel h2{border-right:0;border-bottom:1px solid var(--line)}
 }
+
+.delivery-summary{padding:11px 13px}.delivery-summary .market-specs{margin:0}
+.delivery-reveal-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.delivery-reveal-panel{display:grid;gap:12px}.delivery-reveal-panel .market-specs{margin:0}
+.delivery-secret{max-height:420px;overflow:auto;margin:0;padding:12px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);font-size:10.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.marketplace-setting-panel,.external-warning-panel{display:grid;gap:11px}
+.marketplace-setting-panel>p,.external-warning-panel>p{margin:0;font-size:11px;line-height:1.55}
+.marketplace-setting-panel>.search-form,.external-warning-panel>.search-form{margin:0}
+.external-warning-head{padding-bottom:12px}

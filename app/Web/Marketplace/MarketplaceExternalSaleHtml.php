@@ -23,8 +23,11 @@ final class MarketplaceExternalSaleHtml
     ):string{
         $action=self::e($basePath->prepend('/marketplace/manage/external/'.$listing->listingId->value()));
         $hosts=$allowedHosts===[]?'Tanımlı izinli domain yok.':implode(', ',$allowedHosts);
-        $body='<section class="card"><h1>Haricî Satış Bağlantısı</h1><p class="muted">İlan: '.self::e($listing->title).'</p>'
-            .($updated?'<div class="search-alert market-success">Haricî satış ayarı kaydedildi.</div>':'')
+        $body='<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            .'<span class="forum-eyebrow">HARİCÎ SATIŞ</span><h1>Haricî Satış Bağlantısı</h1><p>'.self::e($listing->title).'</p></div>'
+            .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimi</a></header>'
+            .($updated?'<div class="notification-settings-notice" role="status">Haricî satış ayarı kaydedildi.</div>':'')
+            .'<section class="surface-panel marketplace-setting-panel">
             .'<p>Satış bağlantıları yalnız yönetici tarafından izin verilen HTTPS domainlerine gidebilir. '
             .'Ziyaretçi dış siteye gönderilmeden önce Forwext güvenlik uyarısını görür.</p>'
             .'<p class="muted">İzinli domainler: '.self::e($hosts).'</p>'
@@ -36,7 +39,7 @@ final class MarketplaceExternalSaleHtml
             .'<option value="1"'.($link?->enabled===true?' selected':'').'>Aktif</option></select></label>'
             .'<div class="search-actions"><button type="submit">Kaydet</button></div></form>'
             .'<p class="muted">URL alanını boş kaydetmek mevcut haricî satış bağlantısını kaldırır.</p>'
-            .'<p><a href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">İlan yönetimine dön</a></p></section>';
+            .'</section></section>';
         return ProfileHtml::page('Haricî Satış Bağlantısı',$body,$basePath,authenticated:true);
     }
 
@@ -48,14 +51,16 @@ final class MarketplaceExternalSaleHtml
         bool $authenticated,
     ):string{
         $action=self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/external/go'));
-        $body='<section class="card"><div class="search-hit-type">Haricî satış</div><h1>Forwext\'ten ayrılıyorsunuz</h1>'
+        $body='<section class="external-warning-page discovery-page"><header class="surface-head external-warning-head"><div>'
+            .'<span class="forum-eyebrow">HARİCÎ SATIŞ</span><h1>Forwext\'ten ayrılıyorsunuz</h1></div></header>'
+            .'<section class="surface-panel external-warning-panel">
             .'<p><strong>'.self::e($listing->title).'</strong> için satın alma işlemi Forwext dışında, satıcının seçtiği sitede devam edecek.</p>'
             .'<p class="muted">Hedef domain: <strong>'.self::e($link->targetHost).'</strong></p>'
             .'<p>Haricî sitenin ödeme, teslimat, gizlilik ve iade koşulları Forwext\'ten bağımsız olabilir. '
             .'Adres çubuğundaki domaini ve HTTPS bağlantısını kontrol edin.</p>'
             .'<form method="post" action="'.$action.'" class="search-form">'.self::csrf($csrf)
             .'<div class="search-actions"><button type="submit">Satıcı sitesine devam et</button>'
-            .'<a href="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value())).'">İlana dön</a></div></form></section>';
+            .'<a href="'.self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value())).'">İlana dön</a></div></form></section></section>';
         return ProfileHtml::page('Haricî Site Uyarısı',$body,$basePath,authenticated:$authenticated);
     }
 
