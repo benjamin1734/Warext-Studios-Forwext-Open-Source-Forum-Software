@@ -35,11 +35,7 @@ final readonly class DatabaseAuthSessionIndex implements AuthSessionIndex
             'INSERT INTO `forwext_auth_session_index` '
             . '(`session_hash`, `user_id`, `device_id`, `credential_version`, `issued_at_utc`, '
             . '`expires_at_utc`, `last_seen_at_utc`, `revoked_at_utc`) '
-            . 'VALUES (:session_hash, :user_id, :device_id, :credential_version, :issued_at, :expires_at, :last_seen_at, NULL) '
-            . 'ON DUPLICATE KEY UPDATE `user_id` = VALUES(`user_id`), `device_id` = VALUES(`device_id`), '
-            . '`credential_version` = VALUES(`credential_version`), `issued_at_utc` = VALUES(`issued_at_utc`), '
-            . '`expires_at_utc` = VALUES(`expires_at_utc`), `last_seen_at_utc` = VALUES(`last_seen_at_utc`), '
-            . '`revoked_at_utc` = NULL',
+            . 'VALUES (:session_hash, :user_id, :device_id, :credential_version, :issued_at, :expires_at, :last_seen_at, NULL)',
             [
                 'session_hash' => $record->sessionHash,
                 'user_id' => $record->userId->value(),
