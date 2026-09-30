@@ -68,12 +68,16 @@ final readonly class ThreadFreshnessPolicyHandler implements RequestHandlerInter
                 ?? new ThreadFreshnessPolicy($forumId,false,30,21,45,90,30,60,24);
             $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (!is_string($token) || $token === '') return Response::text('Internal Server Error',500);
-            $body = '<section class="card"><h1>Konu güncellik politikası</h1>'
-                . '<h2>'.ProfileHtml::escape($node->title()).'</h2>'
-                . '<form method="post" action="'.ProfileHtml::escape($this->basePath->prepend('/moderation/freshness/policy')).'" class="search-form">'
+            $body = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+                . '<span class="forum-eyebrow">KONU GÜNCELLİĞİ</span><h1>Konu güncellik politikası</h1>'
+                . '<p>'.ProfileHtml::escape($node->title()).' forumunun otomatik güncellik ve inceleme eşiklerini yönet.</p></div>'
+                . '<a class="fx-btn" href="'.ProfileHtml::escape($this->basePath->prepend('/moderation/freshness/policy')).'">Tüm politikalar</a></header>'
+                . '<section class="surface-panel freshness-policy-panel"><form method="post" action="'
+                . ProfileHtml::escape($this->basePath->prepend('/moderation/freshness/policy')).'" class="search-form freshness-policy-form">'
                 . '<input type="hidden" name="_csrf" value="'.ProfileHtml::escape($token).'">'
                 . '<input type="hidden" name="forum" value="'.ProfileHtml::escape($forumId->value()).'">'
-                . '<label><span>Aktif</span><select name="enabled"><option value="0"'.(!$policy->enabled?' selected':'').'>Hayır</option><option value="1"'.($policy->enabled?' selected':'').'>Evet</option></select></label>'
+                . '<label><span>Aktif</span><select name="enabled"><option value="0"'.(!$policy->enabled?' selected':'').'>Hayır</option>'
+                . '<option value="1"'.($policy->enabled?' selected':'').'>Evet</option></select></label>'
                 . $this->number('stale_after_days','Stale sonrası gün',$policy->staleAfterDays,true)
                 . $this->number('notify_after_days','Yazar bildirimi günü',$policy->notifyAfterDays)
                 . $this->number('auto_unfeature_after_days','Öne çıkarmayı kaldır',$policy->autoUnfeatureAfterDays)
@@ -81,7 +85,8 @@ final readonly class ThreadFreshnessPolicyHandler implements RequestHandlerInter
                 . $this->number('moderator_review_after_days','Moderatör inceleme',$policy->moderatorReviewAfterDays)
                 . $this->number('auto_archive_after_days','Otomatik arşivle',$policy->autoArchiveAfterDays)
                 . $this->number('renewal_cooldown_hours','Yenileme bekleme saati',$policy->renewalCooldownHours,true)
-                . '<button type="submit">Politikayı kaydet</button></form></section>';
+                . '<div class="freshness-policy-actions"><button class="fx-btn fx-btn--primary" type="submit">Politikayı kaydet</button></div>'
+                . '</form></section></section>';
             return Response::html(ProfileHtml::page('Konu güncellik politikası',$body,$this->basePath,authenticated:true))
                 ->withHeader('Cache-Control','private, no-store');
         } catch (ThreadFreshnessAccessDeniedException) {
@@ -93,7 +98,11 @@ final readonly class ThreadFreshnessPolicyHandler implements RequestHandlerInter
 
     private function index(EntityId $actor): Response
     {
-        $body = '<section class="card"><h1>Konu güncellik politikaları</h1><p>Politikasını düzenlemek istediğiniz forumu seçin.</p>';
+        $body = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+            . '<span class="forum-eyebrow">KONU GÜNCELLİĞİ</span><h1>Konu güncellik politikaları</h1>'
+            . '<p>Politikasını düzenlemek istediğin forumu seç.</p></div>'
+            . '<a class="fx-btn" href="'.ProfileHtml::escape($this->basePath->prepend('/moderation/freshness')).'">İnceleme kuyruğu</a></header>'
+            . '<section class="surface-panel freshness-forum-panel"><div class="freshness-forum-list">';
         $found = false;
         foreach ($this->nodes->all() as $node) {
             if ($node->type() !== ForumNodeType::Forum) continue;
@@ -104,10 +113,11 @@ final readonly class ThreadFreshnessPolicyHandler implements RequestHandlerInter
             }
             $found = true;
             $url = $this->basePath->prepend('/moderation/freshness/policy?forum='.$node->id()->value());
-            $body .= '<p><a href="'.ProfileHtml::escape($url).'">'.ProfileHtml::escape($node->title()).'</a></p>';
+            $body .= '<a class="freshness-forum-row" href="'.ProfileHtml::escape($url).'"><strong>'
+                . ProfileHtml::escape($node->title()) . '</strong><span aria-hidden="true">→</span></a>';
         }
         if (!$found) throw new ThreadFreshnessAccessDeniedException('No manageable freshness policy.');
-        $body .= '</section>';
+        $body .= '</div></section></section>';
         return Response::html(ProfileHtml::page('Konu güncellik politikaları',$body,$this->basePath,authenticated:true))
             ->withHeader('Cache-Control','private, no-store');
     }

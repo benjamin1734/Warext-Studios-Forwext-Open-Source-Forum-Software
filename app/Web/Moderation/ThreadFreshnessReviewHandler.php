@@ -61,26 +61,32 @@ final readonly class ThreadFreshnessReviewHandler implements RequestHandlerInter
             $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (!is_string($token) || $token === '') return Response::text('Internal Server Error',500);
             $action = ProfileHtml::escape($this->basePath->prepend('/moderation/freshness'));
-            $body = '<section class="card"><h1>Konu güncellik incelemeleri</h1>'
-                . ($message===null?'':'<div class="notice">'.ProfileHtml::escape($message).'</div>')
+            $body = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
+                . '<span class="forum-eyebrow">KONU GÜNCELLİĞİ</span><h1>Güncellik incelemeleri</h1>'
+                . '<p>Stale eşiklerine ulaşan konuları incele ve bakım turunu çalıştır.</p></div>'
+                . '<a class="fx-btn" href="'.ProfileHtml::escape($this->basePath->prepend('/moderation/freshness/policy')).'">Politikalar</a></header>'
+                . ($message===null?'':'<div class="notification-settings-notice" role="status">'.ProfileHtml::escape($message).'</div>')
+                . '<section class="surface-panel freshness-maintenance"><div><h2>Bakım turu</h2>'
+                . '<p>En fazla 100 konuyu tarar; bildirim, kilit, arşiv ve inceleme kurallarını uygular.</p></div>'
                 . '<form method="post" action="'.$action.'"><input type="hidden" name="_csrf" value="'.ProfileHtml::escape($token).'">'
-                . '<button type="submit" name="mode" value="maintain">100 konuluk bakım turu çalıştır</button></form></section>'
-                . '<section class="card" style="margin-top:18px"><h2>Bekleyen incelemeler</h2>';
+                . '<button class="fx-btn fx-btn--primary" type="submit" name="mode" value="maintain">100 konuluk bakım turu</button></form></section>'
+                . '<section class="surface-panel moderation-report-panel"><header><h2>Bekleyen incelemeler</h2><span>'
+                . count($reviews) . '</span></header><div class="moderation-list">';
             if ($reviews === []) {
-                $body .= '<p class="muted">Bekleyen inceleme yok.</p>';
+                $body .= '<div class="surface-empty"><strong>Bekleyen inceleme yok.</strong><span>Kuyruk şu anda temiz.</span></div>';
             }
             foreach ($reviews as $review) {
-                $body .= '<article class="search-hit"><h3>'.ProfileHtml::escape($review->title).'</h3>'
-                    . '<p>'.$review->ageDays.' gündür güncellenmedi.</p>'
-                    . '<form method="post" action="'.$action.'">'
+                $body .= '<article class="freshness-review-row"><div><span class="moderation-row-type">STALE</span><h3>'
+                    . ProfileHtml::escape($review->title) . '</h3><p>' . $review->ageDays . ' gündür güncellenmedi.</p></div>'
+                    . '<form method="post" action="'.$action.'" class="freshness-review-actions">'
                     . '<input type="hidden" name="_csrf" value="'.ProfileHtml::escape($token).'">'
                     . '<input type="hidden" name="mode" value="resolve">'
                     . '<input type="hidden" name="thread_id" value="'.ProfileHtml::escape($review->threadId->value()).'">'
-                    . '<button name="resolution" value="keep">Olduğu gibi bırak</button> '
-                    . '<button name="resolution" value="renew">Yenile/aç</button> '
-                    . '<button name="resolution" value="archive">Arşivle</button></form></article>';
+                    . '<button class="fx-btn" name="resolution" value="keep">Bırak</button>'
+                    . '<button class="fx-btn" name="resolution" value="renew">Yenile/aç</button>'
+                    . '<button class="fx-btn" name="resolution" value="archive">Arşivle</button></form></article>';
             }
-            $body .= '</section>';
+            $body .= '</div></section></section>';
             return Response::html(ProfileHtml::page('Konu güncellik incelemeleri',$body,$this->basePath,authenticated:true))
                 ->withHeader('Cache-Control','private, no-store');
         } catch (ThreadFreshnessAccessDeniedException) {

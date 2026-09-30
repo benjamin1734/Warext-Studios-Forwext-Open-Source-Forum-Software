@@ -46,5 +46,8 @@ final class CoreAuditHtmlTest extends TestCase
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         self::assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $html);
         self::assertStringContainsString('req-audit-ui', $html);
+        self::assertStringContainsString('moderation-subpage discovery-page', $html);
+        self::assertStringContainsString('surface-head moderation-subpage-head', $html);
+        self::assertStringContainsString('class="moderation-audit-row"', $html);
     }
 }
