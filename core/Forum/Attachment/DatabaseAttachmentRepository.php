@@ -132,6 +132,43 @@ final readonly class DatabaseAttachmentRepository implements AttachmentRepositor
         }
     }
 
+    /**
+     * @param list<EntityId> $postIds
+     * @return list<AttachmentRecord>
+     */
+    public function attachedForPosts(array $postIds): array
+    {
+        if ($postIds === []) {
+            return [];
+        }
+
+        $parameters = [];
+        $placeholders = [];
+        $seen = [];
+        foreach ($postIds as $index => $postId) {
+            PostId::assert($postId);
+            if (isset($seen[$postId->value()])) {
+                continue;
+            }
+            $seen[$postId->value()] = true;
+            $name = 'post_' . $index;
+            $placeholders[] = ':' . $name;
+            $parameters[$name] = $postId->value();
+        }
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            $this->selectSql()
+            . " WHERE `state` = 'attached' AND `post_id` IN (" . implode(',', $placeholders) . ') '
+            . 'ORDER BY `post_id` ASC, `attached_at_utc` ASC, `attachment_id` ASC',
+            $parameters,
+        ));
+
+        return array_map($this->hydrate(...), $rows);
+    }
+
     public function expiredTemporary(DateTimeImmutable $before, int $limit = 100): array
     {
         if ($limit < 1 || $limit > 1000) {
