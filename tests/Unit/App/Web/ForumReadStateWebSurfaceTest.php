@@ -45,7 +45,7 @@ final class ForumReadStateWebSurfaceTest extends TestCase
             $factory,
         );
         self::assertStringContainsString(
-            "$forumPublicReader,\n            $discussionState,\n            $editorPreview",
+            "$forumPublicReader,\n            $discussionState,\n            $attachmentRepository,\n            $editorPreview",
             $factory,
         );
     }
