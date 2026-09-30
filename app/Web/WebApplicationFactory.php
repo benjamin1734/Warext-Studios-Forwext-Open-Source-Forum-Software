@@ -57,6 +57,7 @@ use Forwext\App\Web\Editor\SpellcheckDictionaryHandler;
 use Forwext\App\Web\EasterEgg\EasterEggManageHandler;
 use Forwext\App\Web\EasterEgg\EasterEggMiddleware;
 use Forwext\App\Web\EasterEgg\EasterEggRenderer;
+use Forwext\App\Web\Forum\AttachmentCsrfTokenHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadHandler;
 use Forwext\App\Web\Forum\AttachmentDownloadResponseFactory;
 use Forwext\App\Web\Forum\AttachmentFinalizeHandler;
@@ -965,27 +966,6 @@ final readonly class WebApplicationFactory
             $searchChanges,
             spellcheck: $spellcheck,
         );
-        $threadCreateHandler = new ThreadCreateHandler(
-            $database,
-            $nodes,
-            $threads,
-            $posts,
-            $threadTypes,
-            $viewerResolver,
-            $authorizer,
-            $contentManagerPipeline,
-            $basePath,
-        );
-        $threadReplyHandler = new ThreadReplyHandler(
-            $nodes,
-            $threads,
-            $posts,
-            $threadTypes,
-            $viewerResolver,
-            $authorizer,
-            $contentManagerPipeline,
-            $basePath,
-        );
         $contentManagerModeration = new DatabaseContentModerationRepository(
             $database,
             new DatabaseModerationAuditStore($database),
@@ -1365,8 +1345,9 @@ final readonly class WebApplicationFactory
             $firstPartyModuleRepository,
             $analyticsMiddleware,
         );
+        $attachmentRepository = new DatabaseAttachmentRepository($database, $attachmentQuota);
         $attachmentServices = new AttachmentServiceResolver(
-            new DatabaseAttachmentRepository($database, $attachmentQuota),
+            $attachmentRepository,
             $posts,
             $threads,
             $nodes,
@@ -1375,6 +1356,29 @@ final readonly class WebApplicationFactory
             new GdAttachmentThumbnailGenerator($attachmentQuota),
             $attachmentQuota,
             $authorizer,
+        );
+        $threadCreateHandler = new ThreadCreateHandler(
+            $database,
+            $nodes,
+            $threads,
+            $posts,
+            $threadTypes,
+            $viewerResolver,
+            $authorizer,
+            $contentManagerPipeline,
+            $attachmentServices,
+            $basePath,
+        );
+        $threadReplyHandler = new ThreadReplyHandler(
+            $nodes,
+            $threads,
+            $posts,
+            $threadTypes,
+            $viewerResolver,
+            $authorizer,
+            $contentManagerPipeline,
+            $attachmentServices,
+            $basePath,
         );
         $supportTickets = new DatabaseSupportTicketRepository($database);
         $supportIntake = new DatabaseSupportTicketIntakeRepository($database);
@@ -2115,6 +2119,10 @@ final readonly class WebApplicationFactory
             new PathTemplate('/account/spellcheck-dictionary'),
             new SpellcheckDictionaryHandler($spellcheck, $viewerResolver, $basePath),
             [$spellcheckDictionaryCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.attachment.csrf', [HttpMethod::Get], new PathTemplate('/attachments/csrf'),
+            new AttachmentCsrfTokenHandler($viewerResolver), [$attachmentCsrf],
         ));
         $routes->add(new Route(
             'forum.attachment.stage', [HttpMethod::Post], new PathTemplate('/forums/{forumId}/attachments'),
