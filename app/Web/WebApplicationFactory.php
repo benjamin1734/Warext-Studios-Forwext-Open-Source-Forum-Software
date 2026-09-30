@@ -930,16 +930,6 @@ final readonly class WebApplicationFactory
             $authorizer,
             $basePath,
         );
-        $threadViewHandler = new ThreadViewHandler(
-            $threads,
-            $nodes,
-            $forumPublicReader,
-            $discussionState,
-            $editorPreview,
-            $viewerResolver,
-            $authorizer,
-            $basePath,
-        );
         $adminCommunity = new AdminCommunityService(
             $database,
             $users,
@@ -1356,6 +1346,17 @@ final readonly class WebApplicationFactory
             new GdAttachmentThumbnailGenerator($attachmentQuota),
             $attachmentQuota,
             $authorizer,
+        );
+        $threadViewHandler = new ThreadViewHandler(
+            $threads,
+            $nodes,
+            $forumPublicReader,
+            $discussionState,
+            $attachmentRepository,
+            $editorPreview,
+            $viewerResolver,
+            $authorizer,
+            $basePath,
         );
         $threadCreateHandler = new ThreadCreateHandler(
             $database,
