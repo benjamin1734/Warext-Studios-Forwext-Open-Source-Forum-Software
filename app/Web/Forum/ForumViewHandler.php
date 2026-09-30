@@ -91,6 +91,13 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         $body .= '<a class="fx-btn" href="' . self::e($forumSearch) . '">Bu forumda ara</a>'
             . '</div></section>';
 
+        if (($request->query()['submitted'] ?? null) === '1') {
+            $body .= '<div class="forum-notice">Konunuz gönderildi ve moderasyon onayı bekliyor.</div>';
+        }
+        if (($request->query()['attachment_warning'] ?? null) === '1') {
+            $body .= '<div class="forum-notice forum-notice--warning">Konu gönderildi ancak bir veya daha fazla dosya mesaja bağlanamadı. Onaydan sonra dosyayı yeniden ekleyebilirsiniz.</div>';
+        }
+
         $children = array_values(array_filter(
             $hierarchy->navigationChildren($node->id()),
             fn (ForumNode $child): bool => $child->type() === ForumNodeType::Forum
