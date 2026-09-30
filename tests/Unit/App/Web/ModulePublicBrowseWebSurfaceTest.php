@@ -61,4 +61,18 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('.giveaway-grid', $css);
     }
 
+    public function testPortfolioManagementUsesSharedModuleSurface(): void
+    {
+        $root=dirname(__DIR__,4);
+        $html=(string)file_get_contents($root.'/app/Web/Portfolio/PortfolioHtml.php');
+        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+
+        self::assertStringContainsString('module-manage-page discovery-page',$html);
+        self::assertStringContainsString('surface-head module-manage-head',$html);
+        self::assertStringContainsString('surface-panel module-manage-panel',$html);
+        self::assertStringContainsString('surface-panel module-manage-section',$html);
+        self::assertStringContainsString('module-manage-details',$html);
+        self::assertStringContainsString('.module-manage-panel',$css);
+    }
+
 }

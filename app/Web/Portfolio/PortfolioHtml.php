@@ -176,9 +176,11 @@ final class PortfolioHtml
         ?string $error = null,
     ): string {
         $action = self::e($basePath->prepend('/portfolio/manage'));
-        $notice = $updated ? '<div class="notice success">Portfolyo projesi güncellendi.</div>' : '';
+        $notice = $updated
+            ? '<div class="notification-settings-notice" role="status">Portfolyo projesi güncellendi.</div>'
+            : '';
         if ($error !== null) {
-            $notice .= '<div class="notice error">' . self::e($error) . '</div>';
+            $notice .= '<div class="auth-entry-error" role="alert">' . self::e($error) . '</div>';
         }
 
         $categoryOptions = '';
@@ -189,10 +191,13 @@ final class PortfolioHtml
         }
 
         $tagValue = $project === null ? '' : implode(', ', $project->tags);
-        $body = '<section class="card"><h1>Portfolyo Projesi</h1>'
-            . '<p class="muted">Proje metni ortak yazım/AI moderasyon hattından geçirilir; yayımlama gerektiğinde onaya düşebilir.</p>'
+        $body = '<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            . '<span class="forum-eyebrow">PORTFOLYO YÖNETİMİ</span><h1>'
+            . ($project === null ? 'Yeni proje' : 'Projeyi düzenle') . '</h1>'
+            . '<p>Proje içeriği ortak yazım ve moderasyon hattından geçirilir.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/portfolio')) . '">Portfolyoya dön</a></header>'
             . $notice
-            . '<form method="post" action="' . $action . '" class="search-form">'
+            . '<section class="surface-panel module-manage-panel"><form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken)
             . '<input type="hidden" name="action" value="project_save">'
             . '<input type="hidden" name="project_id" value="' . self::e($project?->projectId->value() ?? '') . '">'
@@ -214,14 +219,13 @@ final class PortfolioHtml
                 . ($project?->featured ? ' checked' : '') . '> Öne çıkar</label>';
         }
 
-        $body .= '<div class="search-actions"><button type="submit">Kaydet</button>'
-            . '<a href="' . self::e($basePath->prepend('/portfolio')) . '">Portfolyoya dön</a></div></form>';
+        $body .= '<div class="search-actions"><button type="submit">Kaydet</button></div></form></section>';
 
         if ($project !== null) {
             $mediaAction = self::e($basePath->prepend(
                 '/portfolio/' . rawurlencode($project->projectId->value()) . '/media',
             ));
-            $body .= '<section class="section"><h2>Proje medyası</h2>'
+            $body .= '<section class="surface-panel module-manage-section"><header><h2>Proje medyası</h2></header>'
                 . '<p class="muted">Görseller ortak MIME/signature, boyut, piksel ve EXIF güvenlik denetiminden geçirilir. En fazla 12 görsel.</p>';
             if ($project->media !== []) {
                 $body .= '<div class="portfolio-media">';
@@ -250,7 +254,8 @@ final class PortfolioHtml
         }
 
         if ($canManageAll) {
-            $body .= '<details class="section"><summary>Kategori yönetimi</summary>'
+            $body .= '<details class="surface-panel module-manage-details"><summary><strong>Kategori yönetimi</strong>'
+                . '<span>Portfolyo kategorilerini düzenle.</span></summary>'
                 . '<form method="post" action="' . $action . '" class="search-form">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="category_save">'
