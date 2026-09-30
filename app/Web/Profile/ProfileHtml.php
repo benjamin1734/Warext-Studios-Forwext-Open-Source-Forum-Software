@@ -148,7 +148,7 @@ final class ProfileHtml
                 . '<details class="nav-account-menu"><summary aria-label="Hesap menüsü">'
                 . '<span class="nav-user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.25 0-7.5 2.14-7.5 5v1.5h15V19c0-2.86-3.25-5-7.5-5Z"/></svg></span>'
                 . '<span class="nav-account-label">Hesabım</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary>'
-                . '<div class="nav-account-popover" role="menu">' . $accountNav
+                . '<div class="nav-account-popover" aria-label="Hesap seçenekleri">' . $accountNav
                 . '<a data-nav-key="auth.logout" href="' . $navHref('/logout') . '">Çıkış yap</a>'
                 . '</div></details>' . $notificationNav . $searchIcon . '</div>';
         } else {
