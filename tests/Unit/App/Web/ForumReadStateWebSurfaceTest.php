@@ -41,11 +41,11 @@ final class ForumReadStateWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('new DatabaseDiscussionStateRepository($database)', $factory);
         self::assertStringContainsString(
-            "$forumPublicReader,\n            $discussionState,\n            $viewerResolver",
+            "\$forumPublicReader,\n            \$discussionState,\n            \$viewerResolver",
             $factory,
         );
         self::assertStringContainsString(
-            "$forumPublicReader,\n            $discussionState,\n            $attachmentRepository,\n            $editorPreview",
+            "\$forumPublicReader,\n            \$discussionState,\n            \$attachmentRepository,\n            \$editorPreview",
             $factory,
         );
     }
