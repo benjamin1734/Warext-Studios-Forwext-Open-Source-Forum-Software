@@ -3199,3 +3199,20 @@ a.forum-thread-author:hover{color:var(--text)}
 .faq-manage-row strong{font-size:11.5px}
 .faq-manage-row small{color:var(--muted);font-size:9.25px}
 @media(max-width:700px){.module-manage-head-actions{justify-content:flex-start}}
+
+.marketplace-manage-list{padding:0}
+.module-manage-section>h2{margin:0;padding:10px 13px;border-bottom:1px solid var(--line);background:var(--panel2);font-size:13.5px}
+.module-manage-section>.search-form{margin:0;padding:13px}
+.marketplace-category-picker>p,.module-manage-link-panel>p{margin:0;padding:11px 13px;color:var(--muted);font-size:10.5px}
+.marketplace-category-picker .market-category-links{padding:0 13px 13px}
+.module-manage-link-panel{display:grid;grid-template-columns:minmax(160px,.35fr) minmax(0,1fr);align-items:center;padding:0;overflow:hidden}
+.module-manage-link-panel h2{margin:0;padding:11px 13px;border-right:1px solid var(--line);background:var(--panel2);font-size:12.5px}
+.module-manage-link-panel p a{font-weight:760}
+.marketplace-media-manage>.market-media{margin:0;padding:11px 13px}
+.marketplace-lifecycle>.market-actions{padding:11px 13px}
+.marketplace-review-moderation>.market-review{padding:11px 13px;border-radius:0;border-bottom:1px solid var(--line)}
+.marketplace-review-moderation>.market-review:last-child{border-bottom:0}
+@media(max-width:700px){
+  .module-manage-link-panel{grid-template-columns:1fr}
+  .module-manage-link-panel h2{border-right:0;border-bottom:1px solid var(--line)}
+}

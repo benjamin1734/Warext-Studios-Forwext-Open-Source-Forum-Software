@@ -199,19 +199,25 @@ final class MarketplaceHtml
         bool $canInternalSale,BasePath $basePath,string $csrf,bool $updated
     ):string{
         $action=self::e($basePath->prepend('/marketplace/manage'));
-        $body='<section class="card"><h1>Marketplace İlan Yönetimi</h1><p class="muted">İlan oluşturun, düzenleyin ve yaşam döngüsünü yönetin.</p>'
-            .($updated?'<div class="search-alert market-success">İşlem kaydedildi.</div>':'')
-            .'<section class="section"><h2>İlanlar</h2>';
+        $body='<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
+            .'<span class="forum-eyebrow">MARKETPLACE YÖNETİMİ</span><h1>Marketplace İlan Yönetimi</h1>'
+            .'<p>İlan oluştur, düzenle ve yaşam döngüsünü yönet.</p></div>'
+            .'<a class="fx-btn" href="'.self::e($basePath->prepend('/marketplace')).'">Marketplace’e dön</a></header>'
+            .($updated?'<div class="notification-settings-notice" role="status">İşlem kaydedildi.</div>':'')
+            .'<section class="surface-panel module-manage-section marketplace-manage-list"><header><h2>İlanlar</h2><span>'
+            .count($listings).'</span></header><div class="module-manage-list">';
         if($listings===[])$body.='<p class="muted">Henüz yönetebileceğiniz ilan yok.</p>';
         foreach($listings as $listing){
-            $body.='<article class="search-hit"><div class="search-hit-type">'.self::e($listing->state->value).'</div><h3><a href="'
-                .self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">'.self::e($listing->title).'</a></h3>'
-                .'<p class="muted">'.self::e(self::money($listing->price->minorUnits,$listing->price->currency)).'</p></article>';
+            $body.='<a class="module-manage-row" href="'.self::e($basePath->prepend('/marketplace/manage?listing='.$listing->listingId->value())).'">'
+                .'<div><span class="module-manage-row-type">'.self::e($listing->state->value).'</span><strong>'
+                .self::e($listing->title).'</strong><small>'.self::e(self::money($listing->price->minorUnits,$listing->price->currency))
+                .'</small></div><span aria-hidden="true">→</span></a>';
         }
-        $body.='</section>';
+        $body.='</div></section>';
 
         if($selected===null&&$newCategoryId===null&&$canCreate){
-            $body.='<section class="section"><h2>Yeni ilan</h2><p class="muted">Önce kategori seçin.</p><div class="market-category-links">';
+            $body.='<section class="surface-panel module-manage-section marketplace-category-picker"><h2>Yeni ilan</h2>'
+    .'<p class="muted">Önce kategori seç.</p><div class="market-category-links">';
             foreach($categories as $category)$body.='<a href="'.self::e($basePath->prepend('/marketplace/manage?new_category='.$category->categoryId->value())).'">'.self::e($category->name).'</a>';
             $body.='</div></section>';
         }
@@ -219,7 +225,8 @@ final class MarketplaceHtml
         $formCategory=$selected?->categoryId??$newCategoryId;
         if($formCategory!==null&&($selected!==null||$canCreate)){
             $current=[];if($selected!==null)$current=$selected->customValues;
-            $body.='<section class="section"><h2>'.($selected===null?'Yeni ilan':'İlanı düzenle').'</h2>'
+            $body.='<section class="surface-panel module-manage-section marketplace-editor"><h2>'
+    .($selected===null?'Yeni ilan':'İlanı düzenle').'</h2>'
                 .'<form method="post" action="'.$action.'" class="search-form">'.self::csrf($csrf)
                 .'<input type="hidden" name="action" value="listing_save"><input type="hidden" name="listing_id" value="'.self::e($selected?->listingId->value()??'').'">'
                 .'<input type="hidden" name="category_id" value="'.self::e($formCategory->value()).'">'
@@ -235,15 +242,15 @@ final class MarketplaceHtml
 
         if($selected!==null){
             if($canExternalSale){
-                $body.='<section class="section"><h2>Haricî satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/external/'.$selected->listingId->value())).'">Haricî satış bağlantısını yönet</a></p></section>';
+                $body.='<section class="surface-panel module-manage-link-panel"><h2>Haricî satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/external/'.$selected->listingId->value())).'">Haricî satış bağlantısını yönet</a></p></section>';
             }
             if($canInternalSale){
-                $body.='<section class="section"><h2>Dahili satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/internal/'.$selected->listingId->value())).'">Dahili satın alımı yönet</a></p></section>';
+                $body.='<section class="surface-panel module-manage-link-panel"><h2>Dahili satış</h2><p><a href="'.self::e($basePath->prepend('/marketplace/manage/internal/'.$selected->listingId->value())).'">Dahili satın alımı yönet</a></p></section>';
             }
-            $body.='<section class="section"><h2>Dijital teslimat</h2><p><a href="'
+            $body.='<section class="surface-panel module-manage-link-panel"><h2>Dijital teslimat</h2><p><a href="'
                 .self::e($basePath->prepend('/marketplace/manage/delivery/'.$selected->listingId->value()))
                 .'">Teslimat türünü, dosyayı ve anahtar havuzunu yönet</a></p></section>';
-            $body.='<section class="section"><h2>İlan görselleri</h2><div class="market-media">';
+            $body.='<section class="surface-panel module-manage-section marketplace-media-manage"><h2>İlan görselleri</h2><div class="market-media">';
             foreach($selected->media as $media){
                 $body.='<figure><img src="'.self::e($basePath->prepend('/marketplace/media/'.$media->mediaId->value())).'" alt="'.self::e($media->altText).'">'
                     .'<form method="post" enctype="multipart/form-data" action="'.self::e($basePath->prepend('/marketplace/listings/'.$selected->listingId->value().'/media')).'">'
@@ -253,17 +260,17 @@ final class MarketplaceHtml
             $body.='</div><form method="post" enctype="multipart/form-data" action="'.self::e($basePath->prepend('/marketplace/listings/'.$selected->listingId->value().'/media')).'" class="search-form">'
                 .self::csrf($csrf).'<label><span>Görsel (JPEG/PNG/WebP)</span><input type="file" name="file" accept="image/jpeg,image/png,image/webp" required></label>'
                 .'<label><span>Alt metin</span><input name="alt" maxlength="500"></label><div class="search-actions"><button type="submit">Görsel yükle</button></div></form></section>';
-            $body.='<section class="section"><h2>Yaşam döngüsü</h2><div class="market-actions">'
+            $body.='<section class="surface-panel module-manage-section marketplace-lifecycle"><h2>Yaşam döngüsü</h2><div class="market-actions">'
                 .self::stateActions($selected,$action,$csrf,$canManageAll).'</div></section>';
             if($canFeature&&$selected->state->publicVisible()){
-                $body.='<section class="section"><h2>Öne çıkarma / sabitleme</h2><form method="post" action="'.$action.'" class="search-form">'
+                $body.='<section class="surface-panel module-manage-section marketplace-promotion"><h2>Öne çıkarma / sabitleme</h2><form method="post" action="'.$action.'" class="search-form">'
                     .self::csrf($csrf).'<input type="hidden" name="action" value="promotion_save"><input type="hidden" name="listing_id" value="'.$selected->listingId->value().'">'
                     .'<label><span>Öne çıkarma bitişi (UTC)</span><input type="datetime-local" name="featured_until" value="'.self::e($promotion?->featuredUntil?->format('Y-m-d\TH:i')??'').'"></label>'
                     .'<label><span>Sabitleme bitişi (UTC)</span><input type="datetime-local" name="pinned_until" value="'.self::e($promotion?->pinnedUntil?->format('Y-m-d\TH:i')??'').'"></label>'
                     .'<div class="search-actions"><button type="submit">Yerleşimi kaydet</button></div></form></section>';
             }
             if($canModerateReviews){
-                $body.='<section class="section"><h2>Review moderasyonu</h2>';
+                $body.='<section class="surface-panel module-manage-section marketplace-review-moderation"><h2>Review moderasyonu</h2>';
                 if($reviews===[])$body.='<p class="muted">Bu ilanda review yok.</p>';
                 foreach($reviews as $review){
                     $author=$reviewAuthors[$review->reviewerUserId->value()]??$review->reviewerUserId->value();

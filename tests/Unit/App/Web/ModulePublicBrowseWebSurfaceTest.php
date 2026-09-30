@@ -88,4 +88,18 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('.module-manage-list',$css);
     }
 
+    public function testMarketplaceManagementUsesSharedModuleSurface(): void
+    {
+        $root=dirname(__DIR__,4);
+        $html=(string)file_get_contents($root.'/app/Web/Marketplace/MarketplaceHtml.php');
+        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+
+        self::assertStringContainsString('module-manage-page discovery-page',$html);
+        self::assertStringContainsString('marketplace-manage-list',$html);
+        self::assertStringContainsString('class="module-manage-row"',$html);
+        self::assertStringContainsString('marketplace-media-manage',$html);
+        self::assertStringContainsString('marketplace-review-moderation',$html);
+        self::assertStringContainsString('.module-manage-link-panel',$css);
+    }
+
 }
