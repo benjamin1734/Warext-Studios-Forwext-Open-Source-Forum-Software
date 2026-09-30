@@ -12,6 +12,9 @@ use Forwext\App\Web\Editor\RichEditorView;
 use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Forum\Attachment\AttachmentPermission;
+use Forwext\Core\Forum\Attachment\AttachmentRecord;
+use Forwext\Core\Forum\Attachment\DatabaseAttachmentRepository;
 use Forwext\Core\Forum\Discovery\DatabaseForumPublicReader;
 use Forwext\Core\Forum\Editor\EditorPreviewService;
 use Forwext\Core\Forum\Editor\EditorLimits;
@@ -45,6 +48,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         private ForumNodeRepository $nodes,
         private DatabaseForumPublicReader $reader,
         private DatabaseDiscussionStateRepository $discussionState,
+        private DatabaseAttachmentRepository $attachments,
         private EditorPreviewService $preview,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
@@ -95,6 +99,24 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
         }
 
+        $attachmentsByPost = [];
+        if (
+            $actor !== null
+            && $posts['rows'] !== []
+            && $this->authorizer->allows($actor, AttachmentPermission::Download->key(), $forum->id())
+        ) {
+            $postIds = array_map(
+                static fn (array $post): EntityId => EntityId::fromString($post['post_id']),
+                $posts['rows'],
+            );
+            foreach ($this->attachments->attachedForPosts($postIds) as $attachment) {
+                $postId = $attachment->postId?->value();
+                if ($postId !== null) {
+                    $attachmentsByPost[$postId][] = $attachment;
+                }
+            }
+        }
+
         $body = '<section class="thread-view-head"><div class="thread-view-title"><div class="thread-badges">'
             . ($thread->isSticky() ? '<span class="thread-badge">Sabit</span>' : '')
             . ($thread->isFeatured() ? '<span class="thread-badge thread-badge--accent">Öne çıkan</span>' : '')
@@ -113,6 +135,9 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         if (($request->query()['reply_pending'] ?? null) === '1') {
             $body .= '<div class="forum-notice">Yanıtınız gönderildi ve moderasyon onayı bekliyor.</div>';
         }
+        if (($request->query()['attachment_warning'] ?? null) === '1') {
+            $body .= '<div class="forum-notice forum-notice--warning">Mesajınız gönderildi ancak bir veya daha fazla dosya mesaja bağlanamadı. Dosyayı yeniden ekleyebilirsiniz.</div>';
+        }
 
         if ($posts['rows'] === []) {
             $body .= '<section class="card forum-empty-state"><h2>Görüntülenebilir mesaj yok</h2></section>';
@@ -123,7 +148,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
             $body .= '<div class="thread-post-list">';
             foreach ($posts['rows'] as $post) {
-                $body .= $this->renderPost($post, $actor, $canReply);
+                $body .= $this->renderPost($post, $actor, $canReply, $attachmentsByPost[$post['post_id']] ?? []);
             }
             $body .= '</div>';
             if ($pagination !== '') {
@@ -134,7 +159,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         if ($canReply) {
             $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (is_string($token) && $token !== '') {
-                $body .= $this->quickReply($thread, $token);
+                $body .= $this->quickReply($thread, $forum, $token);
             }
         }
 
@@ -175,7 +200,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         );
     }
 
-    private function quickReply(Thread $thread, string $token): string
+    private function quickReply(Thread $thread, ForumNode $forum, string $token): string
     {
         $threadUrl = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()));
         $action = $threadUrl . '/reply';
@@ -193,6 +218,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
                 new EditorLimits(),
                 $this->basePath,
                 'thread-quick-reply-editor',
+                null,
+                $forum->id(),
             )
             . '<div class="thread-quick-reply-actions"><a class="fx-btn" href="' . self::e($threadUrl)
             . '">Vazgeç</a><button class="fx-btn fx-btn--primary" type="submit">Yanıtı gönder</button></div>'
@@ -200,7 +227,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
-    private function renderPost(array $post, ?EntityId $actor, bool $canReply): string
+    private function renderPost(array $post, ?EntityId $actor, bool $canReply, array $attachments): string
     {
         $username = $post['author_username'] ?? 'Silinmiş üye';
         $profileUrl = $post['author_username'] === null
@@ -236,9 +263,37 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . number_format($post['position'], 0, ',', '.') . ' bağlantısı">#'
             . number_format($post['position'], 0, ',', '.') . '</a></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
+            . $this->renderAttachments($attachments)
             . '<footer>' . $edited
             . $this->interactionControls($post, $actor, $canReply) . '</footer>'
             . '</div></article>';
+    }
+
+    /** @param list<AttachmentRecord> $attachments */
+    private function renderAttachments(array $attachments): string
+    {
+        if ($attachments === []) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($attachments as $attachment) {
+            $url = $this->basePath->prepend('/attachments/' . rawurlencode($attachment->attachmentId->value()));
+            $filename = $attachment->filename->value();
+            $preview = '';
+            if ($attachment->thumbnailPath !== null) {
+                $preview = '<a class="thread-attachment-thumb" href="' . self::e($url) . '" aria-label="'
+                    . self::e($filename) . ' dosyasını aç"><img loading="lazy" src="' . self::e($url . '?thumbnail=1')
+                    . '" alt=""></a>';
+            }
+            $items .= '<article class="thread-attachment">' . $preview
+                . '<div class="thread-attachment-copy"><strong>' . self::e($filename) . '</strong>'
+                . '<span>' . self::e(self::fileSize($attachment->sizeBytes)) . ' · ' . self::e($attachment->mediaType)
+                . '</span></div><a class="fx-btn" href="' . self::e($url) . '">İndir</a></article>';
+        }
+
+        return '<section class="thread-attachments" aria-label="Mesaj dosyaları"><h3>Ek dosyalar</h3>'
+            . '<div class="thread-attachment-list">' . $items . '</div></section>';
     }
 
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
@@ -361,6 +416,18 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         }
 
         return '?';
+    }
+
+    private static function fileSize(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return number_format($bytes / 1024, 1, ',', '.') . ' KB';
+        }
+
+        return number_format($bytes / (1024 * 1024), 1, ',', '.') . ' MB';
     }
 
     private static function date(string $value): string
