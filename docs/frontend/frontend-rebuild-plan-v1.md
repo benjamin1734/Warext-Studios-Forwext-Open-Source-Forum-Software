@@ -54,21 +54,21 @@ Acceptance:
 
 ## Phase F3 — First-party module parity
 
-- [ ] Marketplace.
-  - Public browse, listing detail and seller surfaces are migrated; manage/purchase operations parity remains open.
-- [ ] Portfolio.
-  - Public index and project detail are migrated; project management parity remains open.
-- [ ] Giveaways.
-  - Public index/detail are migrated; giveaway management/proof surfaces still require the final module pass.
-- [ ] FAQ / Wiki surfaces.
-  - Public FAQ index/article are migrated; management/Wiki-adjacent surfaces remain open.
-- [ ] Support and bug reports.
-  - User intake, history, detail and conversation surfaces are migrated; staff dashboards remain open.
+- [x] Marketplace.
+  - Public browse/detail/seller, listing management, sale settings, digital delivery, cart, checkout and order surfaces use the shared module/commerce system.
+- [x] Portfolio.
+  - Public index/detail plus project/media/category management surfaces use the shared portfolio/module-management system.
+- [x] Giveaways.
+  - Public index/detail, lifecycle/eligibility management and winner-proof surfaces are migrated.
+- [x] FAQ / Wiki surfaces.
+  - Public FAQ index/article, management, import/export entry and support-draft bridge surfaces are migrated; no separate native Wiki renderer exists in the current runtime.
+- [x] Support and bug reports.
+  - User intake/history/detail/conversation, staff dashboards, SLA/category analytics and support-to-FAQ recommendation flows are migrated.
 - [x] Notifications.
-- [ ] Moderation workspaces.
-  - Main workspace, approval queue, report review, abuse, oversight, discipline and content-manager surfaces are migrated; remaining audit/freshness sub-workspaces remain open.
-- [ ] Remaining first-party modules.
-  - Referral/account upgrades, user reports and account discipline history are migrated; admin-only reward/trophy/payment/promotion/advertising surfaces are tracked with ACP remediation rather than public F3 parity.
+- [x] Moderation workspaces.
+  - Main workspace, approval queue, report review, abuse, oversight, discipline, content-manager, core audit and freshness policy/review surfaces are migrated.
+- [x] Remaining first-party modules.
+  - Referral/account upgrades, user reports and account discipline history are migrated. Admin-only reward/trophy/payment/promotion/advertising surfaces remain tracked with ACP remediation, outside public F3 parity.
 
 All modules must consume shared UI primitives instead of defining a separate visual language.
 
