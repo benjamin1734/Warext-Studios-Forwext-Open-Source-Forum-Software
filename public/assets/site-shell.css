@@ -3287,7 +3287,11 @@ a.forum-thread-author:hover{color:var(--text)}
 
 /* accessibility-regression-v1 */
 html,body{max-width:100%;overflow-x:clip}
+@supports not (overflow:clip){html,body{overflow-x:hidden}}
 .wrap,.layout-shell,.surface-panel,.thread-post,.thread-post-body,.nav-shell{min-width:0}
+:where(a,button,input,textarea,select,summary,[tabindex]):focus-visible{
+  outline-color:color-mix(in srgb,var(--accent) 72%,white);
+}
 .skip-link{
   position:fixed;
   top:8px;
@@ -3316,6 +3320,9 @@ html,body{max-width:100%;overflow-x:clip}
 }
 @media(pointer:coarse){
   button,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
   .fx-btn,
   summary,
   .nav-icon-link,
@@ -3324,6 +3331,11 @@ html,body{max-width:100%;overflow-x:clip}
   .surface-tabs a,
   .surface-pagination a{
     min-height:44px;
+  }
+  input[type="checkbox"],
+  input[type="radio"]{
+    min-width:20px;
+    min-height:20px;
   }
 }
 @media(prefers-reduced-motion:reduce){
@@ -3335,5 +3347,16 @@ html,body{max-width:100%;overflow-x:clip}
     animation-iteration-count:1!important;
     transition-duration:.01ms!important;
     scroll-behavior:auto!important;
+  }
+}
+@media(forced-colors:active){
+  :where(a,button,input,textarea,select,summary,[tabindex]):focus-visible{
+    outline:2px solid Highlight;
+    outline-offset:3px;
+  }
+  [aria-current="page"],
+  [data-active="1"]>summary{
+    outline:1px solid Highlight;
+    outline-offset:1px;
   }
 }
