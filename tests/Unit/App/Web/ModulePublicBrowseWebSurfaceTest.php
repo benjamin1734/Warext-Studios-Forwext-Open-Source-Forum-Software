@@ -46,4 +46,19 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('surface-panel portfolio-project-content', $html);
         self::assertStringContainsString('class="portfolio-comment"', $html);
     }
+    public function testGiveawayPublicSurfacesUseModuleSpecificCards(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $html = (string) file_get_contents($root . '/app/Web/Giveaway/GiveawayHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+
+        self::assertStringContainsString('giveaway-index discovery-page', $html);
+        self::assertStringContainsString('surface-head giveaway-head', $html);
+        self::assertStringContainsString('class="giveaway-card"', $html);
+        self::assertStringContainsString('giveaway-detail discovery-page', $html);
+        self::assertStringContainsString('surface-panel giveaway-eligibility', $html);
+        self::assertStringContainsString('if ($manage)', $html);
+        self::assertStringContainsString('.giveaway-grid', $css);
+    }
+
 }

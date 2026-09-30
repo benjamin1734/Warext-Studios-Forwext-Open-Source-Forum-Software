@@ -24,21 +24,25 @@ final class GiveawayHtml
         bool $canCreate,
     ): string {
         $actions = $canCreate
-            ? '<p><a href="' . self::e($basePath->prepend('/giveaways/manage')) . '">Yeni çekiliş oluştur</a></p>'
+            ? '<a class="fx-btn fx-btn--primary" href="' . self::e($basePath->prepend('/giveaways/manage'))
+                . '">Yeni çekiliş</a>'
             : '';
 
-        $body = '<section class="card"><h1>Çekilişler</h1>'
-            . '<p class="muted">Aktif, planlanmış ve tamamlanmış topluluk çekilişleri.</p>'
-            . $actions;
+        $body = '<section class="giveaway-index discovery-page"><header class="surface-head giveaway-head"><div>'
+            . '<span class="forum-eyebrow">TOPLULUK</span><h1>Çekilişler</h1>'
+            . '<p>Aktif, planlanmış ve tamamlanmış topluluk çekilişlerini takip et.</p></div>'
+            . $actions . '</header>';
 
         if ($giveaways === []) {
-            $body .= '<div class="empty">Görüntülenebilir çekiliş bulunmuyor.</div>';
+            $body .= '<section class="surface-panel giveaway-index-panel"><div class="surface-empty">'
+                . '<strong>Görüntülenebilir çekiliş yok.</strong>'
+                . '<span>Yeni bir çekiliş yayımlandığında burada görünecek.</span></div></section>';
         } else {
-            $body .= '<div class="search-results">';
+            $body .= '<section class="surface-panel giveaway-index-panel"><div class="giveaway-grid">';
             foreach ($giveaways as $giveaway) {
                 $body .= self::card($giveaway, $basePath);
             }
-            $body .= '</div>';
+            $body .= '</div></section>';
         }
         $body .= '</section>';
 
@@ -57,65 +61,74 @@ final class GiveawayHtml
         bool $entered,
         ?string $entryError,
     ): string {
-        $body = '<article class="card"><div class="search-hit-type">'
-            . self::e(self::stateLabel($giveaway->state))
-            . '</div><h1>' . self::e($giveaway->title) . '</h1>'
-            . '<p class="muted">Başlangıç: ' . self::e(self::date($giveaway->startsAt))
-            . ' · Bitiş: ' . self::e(self::date($giveaway->endsAt)) . '</p>';
+        $manage = $canManage
+            ? '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/giveaways/manage?giveaway=' . rawurlencode($giveaway->giveawayId->value()),
+            )) . '">Çekilişi yönet</a>'
+            : '';
+
+        $body = '<article class="giveaway-detail discovery-page"><header class="surface-head giveaway-detail-head"><div>'
+            . '<span class="forum-eyebrow">' . self::e(self::stateLabel($giveaway->state)) . '</span>'
+            . '<h1>' . self::e($giveaway->title) . '</h1>'
+            . '<p>' . self::e(self::date($giveaway->startsAt)) . ' → ' . self::e(self::date($giveaway->endsAt))
+            . '</p></div>' . $manage . '</header>';
 
         if ($entered) {
-            $body .= '<div class="notice success">Çekiliş katılımınız kaydedildi.</div>';
+            $body .= '<div class="notification-settings-notice" role="status">Çekiliş katılımın kaydedildi.</div>';
         } elseif ($entryError !== null) {
-            $body .= '<div class="notice error">' . self::e(self::eligibilityReason($entryError)) . '</div>';
+            $body .= '<div class="auth-entry-error" role="alert">' . self::e(self::eligibilityReason($entryError)) . '</div>';
         }
 
-        $body .= '<section class="section"><h2>Ödül</h2><p><strong>'
-            . self::e($giveaway->prize->title) . '</strong> × ' . $giveaway->prize->quantity . '</p>';
+        $body .= '<div class="giveaway-detail-grid"><section class="surface-panel giveaway-prize"><span>ÖDÜL</span>'
+            . '<h2>' . self::e($giveaway->prize->title) . '</h2><strong>× ' . $giveaway->prize->quantity . '</strong>';
         if ($giveaway->prize->description !== '') {
-            $body .= '<div class="about">' . nl2br(self::e($giveaway->prize->description), false) . '</div>';
+            $body .= '<p>' . nl2br(self::e($giveaway->prize->description), false) . '</p>';
         }
+        $body .= '</section><section class="surface-panel giveaway-description"><h2>Açıklama</h2><div class="about">'
+            . nl2br(self::e($giveaway->description), false) . '</div></section></div>';
 
-        $body .= '</section><section class="section"><h2>Açıklama</h2><div class="about">'
-            . nl2br(self::e($giveaway->description), false)
-            . '</div></section><section class="section"><h2>Katılım koşulları</h2><div class="about">'
-            . nl2br(self::e($giveaway->participationTerms), false)
-            . '</div><p class="muted">Kişi başı hak: ' . $giveaway->entriesPerUser
-            . ' · Maksimum katılımcı: '
-            . ($giveaway->maxParticipants === null ? 'Sınırsız' : (string) $giveaway->maxParticipants)
-            . '</p><ul>'
-            . '<li>Minimum hesap yaşı: ' . $policy->minAccountAgeDays . ' gün</li>'
-            . '<li>Minimum görünür mesaj: ' . $policy->minPostCount . '</li>'
-            . '<li>Doğrulanmış hesap: ' . ($policy->requireVerifiedAccount ? 'Gerekli' : 'Zorunlu değil') . '</li>'
-            . '<li>Rol koşulu: ' . ($policy->allowedRoleIds === [] ? 'Yok' : count($policy->allowedRoleIds) . ' izinli rolden biri') . '</li>'
-            . '<li>Referral koşulu: ' . self::e(self::referralLabel($policy)) . '</li>'
-            . '</ul>';
+        $body .= '<section class="surface-panel giveaway-eligibility"><header><div><h2>Katılım koşulları</h2>'
+            . '<p>Kişi başı ' . $giveaway->entriesPerUser . ' hak · '
+            . ($giveaway->maxParticipants === null ? 'Katılımcı sınırı yok' : 'En fazla ' . $giveaway->maxParticipants . ' katılımcı')
+            . '</p></div></header><div class="giveaway-terms"><div class="about">'
+            . nl2br(self::e($giveaway->participationTerms), false) . '</div><dl>'
+            . '<div><dt>Minimum hesap yaşı</dt><dd>' . $policy->minAccountAgeDays . ' gün</dd></div>'
+            . '<div><dt>Minimum görünür mesaj</dt><dd>' . $policy->minPostCount . '</dd></div>'
+            . '<div><dt>Doğrulanmış hesap</dt><dd>' . ($policy->requireVerifiedAccount ? 'Gerekli' : 'Zorunlu değil') . '</dd></div>'
+            . '<div><dt>Rol koşulu</dt><dd>' . ($policy->allowedRoleIds === [] ? 'Yok' : count($policy->allowedRoleIds) . ' izinli rolden biri') . '</dd></div>'
+            . '<div><dt>Referral koşulu</dt><dd>' . self::e(self::referralLabel($policy)) . '</dd></div>'
+            . '</dl></div>';
 
+        $participation = '';
         if ($entry !== null) {
-            $body .= '<div class="notice success">Katılım aktif · ' . $entry->entryCount . ' hak.</div>';
+            $participation = '<div class="giveaway-entry-state is-success"><strong>Katılım aktif</strong><span>'
+                . $entry->entryCount . ' hak</span></div>';
         } elseif (!$canEnter) {
-            $body .= '<p class="muted">Hesabınızın bu çekilişe katılma izni yok.</p>';
+            $participation = '<div class="giveaway-entry-state"><strong>Katılım kullanılamıyor</strong>'
+                . '<span>Hesabının bu çekilişe katılma izni yok.</span></div>';
         } elseif ($decision !== null && !$decision->eligible) {
             $labels = array_map(self::eligibilityReason(...), $decision->reasons);
-            $body .= '<div class="notice error">Şu anda uygun değilsiniz: ' . self::e(implode(' · ', $labels)) . '</div>';
+            $participation = '<div class="giveaway-entry-state is-error"><strong>Şu anda uygun değilsin</strong>'
+                . '<span>' . self::e(implode(' · ', $labels)) . '</span></div>';
         } elseif ($giveaway->state === GiveawayState::Open && $csrfToken !== null) {
-            $body .= '<form method="post" action="' . self::e($basePath->prepend(
+            $participation = '<form method="post" action="' . self::e($basePath->prepend(
                 '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/enter',
-            )) . '" class="presence-settings">' . self::csrf($csrfToken)
-                . '<button type="submit">Çekilişe katıl</button></form>';
+            )) . '" class="giveaway-entry-form">' . self::csrf($csrfToken)
+                . '<button class="fx-btn fx-btn--primary" type="submit">Çekilişe katıl</button></form>';
+        }
+        if ($participation !== '') {
+            $body .= '<div class="giveaway-participation">' . $participation . '</div>';
         }
         $body .= '</section>';
 
         if ($giveaway->state === GiveawayState::Closed) {
-            $body .= '<p><a href="' . self::e($basePath->prepend(
-                '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/proof',
-            )) . '">Kazanan seçim kanıtını incele</a></p>';
+            $body .= '<section class="surface-panel giveaway-proof-link"><div><h2>Kazanan seçimi</h2>'
+                . '<p>Kriptografik seçim kaydını ve doğrulama zincirini inceleyebilirsin.</p></div>'
+                . '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                    '/giveaways/' . rawurlencode($giveaway->giveawayId->value()) . '/proof',
+                )) . '">Seçim kanıtını aç</a></section>';
         }
 
-        if ($canManage) {
-            $body .= '<p><a href="' . self::e($basePath->prepend(
-                '/giveaways/manage?giveaway=' . rawurlencode($giveaway->giveawayId->value()),
-            )) . '">Çekilişi yönet</a></p>';
-        }
         $body .= '</article>';
 
         return ProfileHtml::page($giveaway->title, $body, $basePath, authenticated:true);
@@ -346,12 +359,25 @@ final class GiveawayHtml
         $path = $manage
             ? '/giveaways/manage?giveaway=' . rawurlencode($giveaway->giveawayId->value())
             : '/giveaways/' . rawurlencode($giveaway->giveawayId->value());
-        return '<article class="search-hit"><div class="search-hit-type">'
-            . self::e(self::stateLabel($giveaway->state)) . '</div><h2><a href="'
-            . self::e($basePath->prepend($path)) . '">' . self::e($giveaway->title) . '</a></h2>'
-            . '<p>' . self::e($giveaway->prize->title) . ' × ' . $giveaway->prize->quantity . '</p>'
-            . '<p class="muted">' . self::e(self::date($giveaway->startsAt))
-            . ' → ' . self::e(self::date($giveaway->endsAt)) . '</p></article>';
+        $href = self::e($basePath->prepend($path));
+
+        if ($manage) {
+            return '<article class="search-hit"><div class="search-hit-type">'
+                . self::e(self::stateLabel($giveaway->state)) . '</div><h2><a href="' . $href . '">'
+                . self::e($giveaway->title) . '</a></h2><p>' . self::e($giveaway->prize->title)
+                . ' × ' . $giveaway->prize->quantity . '</p><p class="muted">'
+                . self::e(self::date($giveaway->startsAt)) . ' → ' . self::e(self::date($giveaway->endsAt))
+                . '</p></article>';
+        }
+
+        return '<article class="giveaway-card"><div class="giveaway-card-top"><span>'
+            . self::e(self::stateLabel($giveaway->state)) . '</span></div><div class="giveaway-card-body">'
+            . '<h2><a href="' . $href . '">' . self::e($giveaway->title) . '</a></h2>'
+            . '<p class="giveaway-card-prize"><strong>' . self::e($giveaway->prize->title) . '</strong>'
+            . '<span>× ' . $giveaway->prize->quantity . '</span></p>'
+            . '<p class="giveaway-card-date">' . self::e(self::date($giveaway->startsAt))
+            . '<span aria-hidden="true"> → </span>' . self::e(self::date($giveaway->endsAt)) . '</p>'
+            . '</div></article>';
     }
 
     private static function option(string $value, string $label, string $selected): string
