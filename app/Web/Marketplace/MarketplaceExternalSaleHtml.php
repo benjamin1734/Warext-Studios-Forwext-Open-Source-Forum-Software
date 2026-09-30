@@ -53,7 +53,7 @@ final class MarketplaceExternalSaleHtml
         $action=self::e($basePath->prepend('/marketplace/listings/'.$listing->listingId->value().'/external/go'));
         $body='<section class="external-warning-page discovery-page"><header class="surface-head external-warning-head"><div>'
             .'<span class="forum-eyebrow">HARİCÎ SATIŞ</span><h1>Forwext\'ten ayrılıyorsunuz</h1></div></header>'
-            .'<section class="surface-panel external-warning-panel">
+            .'<section class="surface-panel external-warning-panel">'
             .'<p><strong>'.self::e($listing->title).'</strong> için satın alma işlemi Forwext dışında, satıcının seçtiği sitede devam edecek.</p>'
             .'<p class="muted">Hedef domain: <strong>'.self::e($link->targetHost).'</strong></p>'
             .'<p>Haricî sitenin ödeme, teslimat, gizlilik ve iade koşulları Forwext\'ten bağımsız olabilir. '
