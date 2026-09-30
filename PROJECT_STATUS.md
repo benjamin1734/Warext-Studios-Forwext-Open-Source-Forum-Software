@@ -8,13 +8,13 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F3
-LAST_COMMIT = 19a0cbc676422ff22f4ebee16d33c2c271712ee3
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F4
+LAST_COMMIT = 0357960753f863d924c69c4a53bcb16bd93450ee
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = finish F3 management/staff/audit sub-surfaces, then close F1 attachment/unread-state UX and run F4 browser/accessibility regression
+NEXT_STEP = run F4 responsive/accessibility/browser regression, then close remaining F1 attachment/unread-state and F2 profile/session/privacy acceptance gaps
 ```
 
-## Frontend rebuild — F3 first-party module parity in progress
+## Frontend rebuild — F4 responsive/accessibility regression in progress
 
 - Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
 - Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
@@ -37,8 +37,12 @@ NEXT_STEP = finish F3 management/staff/audit sub-surfaces, then close F1 attachm
 - Moderation workspace, approval queue, report review, abuse, oversight and discipline areas now share one moderation dashboard language.
 - Content Manager search, dry-run, queue and operation-progress screens now use the moderation workspace primitives.
 - Referral/account upgrades, user report history and account discipline history were migrated to compact account surfaces.
+- Marketplace management, sale settings, delivery, cart, checkout and order workflows now share the module/commerce presentation system.
+- Portfolio project management, Giveaway lifecycle/proof, FAQ management/support-drafts, Support/Bug staff dashboards and Core Audit/Freshness workspaces are migrated.
+- Repository-wide native web checks no longer find the legacy generic card/search-result wrappers in first-party user/staff module surfaces.
 - Obsolete account/notification/market polish selectors were removed after repository-wide usage checks.
-- Remaining F1 work is composer attachment-state UX and backend-backed unread/read presentation. F3 remains open for module management/staff/audit surfaces; final F4 browser/accessibility regression has not started.
+- F3 first-party module parity is complete for native public/account/staff module surfaces. Admin-only ACP surfaces remain separate production-acceptance work.
+- Remaining frontend work is F4 responsive/accessibility/browser regression plus the still-open F1 attachment/unread-state and F2 profile/session/privacy acceptance gaps.
 
 ## Production acceptance remediation — 1.0.5
 
