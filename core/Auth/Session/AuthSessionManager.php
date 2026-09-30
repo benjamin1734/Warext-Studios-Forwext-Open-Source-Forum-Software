@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Core\Auth\Session;
 
+use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\Core\Auth\AuthException;
@@ -22,6 +23,7 @@ final readonly class AuthSessionManager
         private CredentialStore $credentials,
         private int $ttlSeconds = 7200,
         private Clock $clock = new SystemClock(),
+        private ?AuthSessionIndex $index = null,
     ) {
         if ($ttlSeconds < 300 || $ttlSeconds > 604800) {
             throw new AuthException('Authentication session TTL is outside safe bounds.');
@@ -35,14 +37,34 @@ final readonly class AuthSessionManager
             throw new AuthException('Authentication session input is invalid.');
         }
         $sessionId = self::newSessionId();
+        $issuedAt = $this->clock->now()->setTimezone(new DateTimeZone('UTC'));
+        $expiresAt = $issuedAt->add(new DateInterval('PT' . $this->ttlSeconds . 'S'));
         $payload = json_encode([
             'schema' => 1,
             'user_id' => $userId->value(),
             'device_id' => $deviceId,
             'credential_version' => $credentialVersion,
-            'issued_at' => $this->clock->now()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z'),
+            'issued_at' => $issuedAt->format('Y-m-d\TH:i:s.u\Z'),
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         $this->sessions->write($sessionId, $payload, $this->ttlSeconds);
+
+        if ($this->index !== null) {
+            try {
+                $this->index->register(new AuthSessionIndexRecord(
+                    hash('sha256', $sessionId),
+                    $userId,
+                    $deviceId,
+                    $credentialVersion,
+                    $issuedAt,
+                    $expiresAt,
+                    $issuedAt,
+                ));
+            } catch (\Throwable $exception) {
+                $this->sessions->delete($sessionId);
+                throw new AuthException('Authentication session index registration failed.', previous: $exception);
+            }
+        }
+
         return $sessionId;
     }
 
@@ -56,8 +78,14 @@ final readonly class AuthSessionManager
         if ($previousSessionId !== null && $previousSessionId !== $newSessionId) {
             try {
                 $this->sessions->delete($previousSessionId);
+                if ($this->index !== null) {
+                    $this->index->revoke(hash('sha256', $previousSessionId), $this->clock->now());
+                }
             } catch (\Throwable $exception) {
                 $this->sessions->delete($newSessionId);
+                if ($this->index !== null) {
+                    $this->index->revoke(hash('sha256', $newSessionId), $this->clock->now());
+                }
                 throw new AuthException('Unable to replace the previous session.', previous: $exception);
             }
         }
@@ -109,7 +137,37 @@ final readonly class AuthSessionManager
         $credential = $this->credentials->find($userId);
         if ($credential === null || $credential->version !== $data['credential_version']) {
             $this->sessions->delete($sessionId);
+            if ($this->index !== null) {
+                $this->index->revoke(hash('sha256', $sessionId), $this->clock->now());
+            }
             return null;
+        }
+
+        if ($this->index !== null) {
+            $sessionHash = hash('sha256', $sessionId);
+            $indexed = $this->index->find($sessionHash);
+            if ($indexed !== null) {
+                if (
+                    !$indexed->userId->equals($userId)
+                    || !hash_equals($indexed->deviceId, $data['device_id'])
+                    || $indexed->credentialVersion !== $data['credential_version']
+                    || !$indexed->activeAt($this->clock->now())
+                ) {
+                    $this->sessions->delete($sessionId);
+                    return null;
+                }
+            } else {
+                $this->index->register(new AuthSessionIndexRecord(
+                    $sessionHash,
+                    $userId,
+                    $data['device_id'],
+                    $data['credential_version'],
+                    $issuedAt,
+                    $record->expiresAt,
+                    $this->clock->now(),
+                ));
+            }
+            $this->index->touch($sessionHash, $this->clock->now());
         }
 
         return new AuthSessionIdentity($userId, $data['device_id'], $data['credential_version'], $issuedAt);
@@ -132,6 +190,9 @@ final readonly class AuthSessionManager
     public function revoke(string $sessionId): void
     {
         $this->sessions->delete($sessionId);
+        if ($this->index !== null) {
+            $this->index->revoke(hash('sha256', $sessionId), $this->clock->now());
+        }
     }
 
     private static function newSessionId(): string
