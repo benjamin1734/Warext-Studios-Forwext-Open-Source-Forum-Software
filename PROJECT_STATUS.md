@@ -8,13 +8,13 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F4
-LAST_COMMIT = 0357960753f863d924c69c4a53bcb16bd93450ee
+CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F0-cleanup
+LAST_COMMIT = see current GitHub main
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = run F4 responsive/accessibility/browser regression, then close remaining F1 attachment/unread-state and F2 profile/session/privacy acceptance gaps
+NEXT_STEP = consolidate remaining CSS layers/breakpoints and remove dead compatibility selectors, then continue separate ACP production-acceptance remediation
 ```
 
-## Frontend rebuild — F4 responsive/accessibility regression in progress
+## Frontend rebuild — F1/F2 complete, F4 gates green, F0 cleanup remaining
 
 - Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
 - Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
@@ -30,6 +30,8 @@ NEXT_STEP = run F4 responsive/accessibility/browser regression, then close remai
 - Activity feed is presented as a compact “Neler yeni?” surface using the common discovery shell.
 - Member directory and online users now share responsive member cards, filters and common page controls.
 - Account center was replaced with grouped settings sections and responsive section navigation instead of a flat card grid.
+- Native profile settings now manage about/privacy plus avatar/banner upload/removal using the existing profile services.
+- Account security now exposes hashed active-session inventory with CSRF-protected per-session and revoke-other-session controls; raw session tokens are never persisted in the index.
 - Notifications, notification settings, relationships and bookmarks now consume the common F2 surface-head/panel/pagination language.
 - Login, registration, MFA, email verification and password recovery retain existing security flows but use the compact shared authentication presentation layer.
 - Public Portfolio index/detail, Marketplace browse/detail/seller and Giveaway index/detail now use module-specific shared surfaces instead of search-result cards.
@@ -42,7 +44,9 @@ NEXT_STEP = run F4 responsive/accessibility/browser regression, then close remai
 - Repository-wide native web checks no longer find the legacy generic card/search-result wrappers in first-party user/staff module surfaces.
 - Obsolete account/notification/market polish selectors were removed after repository-wide usage checks.
 - F3 first-party module parity is complete for native public/account/staff module surfaces. Admin-only ACP surfaces remain separate production-acceptance work.
-- Remaining frontend work is F4 responsive/accessibility/browser regression plus the still-open F1 attachment/unread-state and F2 profile/session/privacy acceptance gaps.
+- F1 forum writing/attachment/unread-state acceptance and F2 profile/media/privacy/session acceptance are complete.
+- Chromium responsive/accessibility smoke, WCAG-oriented token contrast checks, reduced-motion, focus/skip-link, overflow and screenshot regression gates are green.
+- Remaining frontend rebuild work is F0 CSS layer/breakpoint/dead-selector consolidation plus the final F4 compatibility/dead-CSS cleanup item.
 
 ## Production acceptance remediation — 1.0.5
 
