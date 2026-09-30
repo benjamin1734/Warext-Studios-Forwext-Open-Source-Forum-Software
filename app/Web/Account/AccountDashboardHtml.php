@@ -37,6 +37,7 @@ final class AccountDashboardHtml
                 'label' => 'Hesap ve araçlar',
                 'description' => 'Üyelik, kişisel araçlar ve hesap durumuyla ilgili alanlar.',
                 'items' => [
+                    ['Aktif Oturumlar', 'Hesabına açık oturumları incele ve diğer cihazlardaki oturumları kapat.', '/account/sessions'],
                     ['Üyelik Yükseltmeleri', 'Hesabına uygun planları ve üyelik yükseltmelerini görüntüle.', '/account/upgrades'],
                     ['Yazım Sözlüğü', 'Kişisel yazım denetimi sözlüğünü yönet.', '/account/spellcheck-dictionary'],
                     ['Disiplin Geçmişi', 'Hesabına uygulanan uyarı ve kısıtlamaları görüntüle.', '/account/discipline'],
