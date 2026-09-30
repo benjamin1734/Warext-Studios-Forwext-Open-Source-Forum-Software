@@ -36,6 +36,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             '/community/account/profile-activity',
             '/community/account/bookmarks',
             '/community/account/referrals',
+            '/community/account/sessions',
             '/community/account/upgrades',
             '/community/account/spellcheck-dictionary',
             '/community/account/discipline',
