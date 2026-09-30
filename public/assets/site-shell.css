@@ -687,6 +687,58 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .notification-item{
   border-radius:var(--fx-radius-lg);
 }
+.account-sessions{gap:14px}
+.account-session-panel{display:grid;gap:10px}
+.account-session-panel>header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.account-session-panel>header h2{margin:0;font-size:14px}
+.account-session-panel>header p{margin:3px 0 0;color:var(--muted);font-size:10px}
+.account-session-list{display:grid;gap:7px}
+.account-session-row{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel2);
+}
+.account-session-row.is-current{
+  border-color:color-mix(in srgb,var(--accent) 32%,var(--line));
+  background:color-mix(in srgb,var(--accent) 4%,var(--panel2));
+}
+.account-session-title{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.account-session-title strong{font-size:11.5px}
+.account-session-meta{
+  display:flex;
+  gap:4px 12px;
+  flex-wrap:wrap;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:9.5px;
+}
+.account-session-bulk{flex:0 0 auto}
+@media(max-width:650px){
+  .account-session-panel>header,
+  .account-session-row{display:grid;align-items:start}
+  .account-session-row{grid-template-columns:1fr}
+  .account-session-row>.fx-btn,
+  .account-session-row>form .fx-btn,
+  .account-session-bulk .fx-btn{min-height:44px;justify-content:center;width:100%}
+}
 .profile-wall-post,
 .activity-feed-item,
 .bookmark-card,
