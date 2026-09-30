@@ -32,7 +32,7 @@ try {
     const context = await browser.newContext({
       viewport: { width: testCase.width, height: testCase.height },
       hasTouch: testCase.touch,
-      isMobile: false,
+      isMobile: testCase.touch,
       reducedMotion: testCase.reducedMotion,
     });
     const page = await context.newPage();
