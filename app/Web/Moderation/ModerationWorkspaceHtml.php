@@ -20,8 +20,9 @@ final class ModerationWorkspaceHtml
     ): string {
         $cards = '';
         foreach (ModerationWorkspaceSection::cases() as $section) {
-            $cards .= '<div class="card stat"><span class="muted">' . self::e($section->label()) . '</span>'
-                . '<strong>' . $snapshot->count($section) . '</strong></div>';
+            $cards .= '<a class="moderation-stat" href="#moderation-' . self::e($section->value) . '">'
+                . '<span>' . self::e($section->label()) . '</span><strong>' . $snapshot->count($section)
+                . '</strong></a>';
         }
 
         $sections = '';
@@ -31,16 +32,18 @@ final class ModerationWorkspaceHtml
                 $rows .= self::item($item, $basePath, $canManage);
             }
             if ($rows === '') {
-                $rows = '<div class="empty">Kayıt yok.</div>';
+                $rows = '<div class="surface-empty"><strong>Kayıt yok.</strong><span>Bu bölümde işleme alınacak öğe bulunmuyor.</span></div>';
             }
-            $sections .= '<section class="card section" id="moderation-' . self::e($section->value) . '">'
-                . '<h2>' . self::e($section->label()) . ' <span class="muted">(' . $snapshot->count($section) . ')</span></h2>'
-                . $rows . '</section>';
+            $sections .= '<section class="surface-panel moderation-section" id="moderation-' . self::e($section->value) . '">'
+                . '<header><div><h2>' . self::e($section->label()) . '</h2><p>'
+                . $snapshot->count($section) . ' kayıt</p></div></header><div class="moderation-section-list">'
+                . $rows . '</div></section>';
         }
 
         $create = '';
         if ($canManage) {
-            $create = '<details class="card section"><summary><strong>Yeni moderasyon görevi</strong></summary>'
+            $create = '<details class="surface-panel moderation-create"><summary><strong>Yeni moderasyon görevi</strong>'
+                . '<span>Manuel takip gerektiren iş için görev oluştur.</span></summary>'
                 . '<form class="search-form" method="post" action="' . self::e($basePath->prepend('/moderation/tasks')) . '" data-moderation-form>'
                 . '<label class="search-wide"><span>Başlık</span><input name="title" maxlength="200" required></label>'
                 . '<label class="search-wide"><span>Açıklama</span><input name="description" maxlength="5000"></label>'
@@ -53,15 +56,18 @@ final class ModerationWorkspaceHtml
         }
 
         $auditLink = $canViewAudit
-            ? '<p><a href="' . self::e($basePath->prepend('/moderation/audit')) . '">Core Audit Stream</a>'
-                . ' · <a href="' . self::e($basePath->prepend('/moderation/oversight')) . '">Bağımsız Moderasyon Denetimi</a></p>'
+            ? '<div class="moderation-head-actions"><a class="fx-btn" href="'
+                . self::e($basePath->prepend('/moderation/audit')) . '">Audit Stream</a>'
+                . '<a class="fx-btn" href="' . self::e($basePath->prepend('/moderation/oversight'))
+                . '">Bağımsız Denetim</a></div>'
             : '';
         $script = '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>';
-        $content = '<div class="card"><h1 style="margin:0">Moderasyon çalışma alanı</h1>'
-            . '<p class="muted">Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevleri tek dahili görünümde toplanır.</p>'
-            . $auditLink . '</div>'
-            . '<div class="stats-grid section">' . $cards . '</div>'
-            . $create . $sections . $script;
+        $content = '<section class="moderation-workspace discovery-page"><header class="surface-head moderation-head"><div>'
+            . '<span class="forum-eyebrow">MODERASYON</span><h1>Çalışma alanı</h1>'
+            . '<p>Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevlerini tek yerde yönet.</p>'
+            . '</div>' . $auditLink . '</header>'
+            . '<nav class="moderation-stats" aria-label="Moderasyon bölümleri">' . $cards . '</nav>'
+            . $create . '<div class="moderation-sections">' . $sections . '</div>' . $script . '</section>';
 
         return ProfileHtml::page('Moderasyon', $content, $basePath, authenticated: true);
     }
@@ -76,7 +82,7 @@ final class ModerationWorkspaceHtml
         $actions = '';
         if ($canManage && $item->section === ModerationWorkspaceSection::Tasks) {
             $action = $basePath->prepend('/moderation/tasks/' . rawurlencode($item->sourceId) . '/status');
-            $actions = '<form method="post" action="' . self::e($action) . '" data-moderation-form class="presence-settings">'
+            $actions = '<form method="post" action="' . self::e($action) . '" data-moderation-form class="moderation-row-action">'
                 . '<label><span class="muted">Durum</span><select name="status">'
                 . self::option('open', 'Açık', $item->status)
                 . self::option('in_progress', 'İşlemde', $item->status)
@@ -84,10 +90,10 @@ final class ModerationWorkspaceHtml
                 . '</select></label><button type="submit">Güncelle</button></form>';
         }
 
-        return '<article class="search-hit"><span class="search-hit-type">' . self::e($item->sourceType) . '</span>'
-            . '<h3>' . $title . '</h3>' . $summary
-            . '<div class="search-hit-id muted">Durum: ' . self::e($item->status)
-            . ' · Güncelleme: ' . self::e($item->updatedAt->format('Y-m-d H:i')) . ' UTC</div>'
+        return '<article class="moderation-row"><div class="moderation-row-main"><span class="moderation-row-type">'
+            . self::e($item->sourceType) . '</span><h3>' . $title . '</h3>' . $summary
+            . '<div class="moderation-row-meta">Durum · ' . self::e($item->status)
+            . ' · Güncelleme · ' . self::e($item->updatedAt->format('Y-m-d H:i')) . ' UTC</div></div>'
             . $actions . '</article>';
     }
 
