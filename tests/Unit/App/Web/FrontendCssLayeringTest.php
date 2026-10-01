@@ -59,6 +59,29 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testForumAndThreadSurfacesAreNotOwnedByTheBaseLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+        $pages = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        self::assertStringContainsString('/* forum-layer-ownership-v2 */', $pages);
+
+        foreach (['forum-home-layout', 'forum-node', 'forum-thread-row', 'thread-post', 'thread-post-author'] as $class) {
+            self::assertSame(
+                0,
+                self::rootClassDefinitionCount($base, $class),
+                sprintf('%s must not be defined in the base layer.', $class),
+            );
+            self::assertGreaterThan(
+                0,
+                self::rootClassDefinitionCount($components . $pages, $class),
+                sprintf('%s must be owned by component/page layers.', $class),
+            );
+        }
+    }
+
     private static function rootClassDefinitionCount(string $css, string $class): int
     {
         preg_match_all(

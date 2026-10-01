@@ -18,8 +18,9 @@ final class ProfileShellUiTest extends TestCase
 
         self::assertStringContainsString("/assets/site-base.css", $profile);
         self::assertStringNotContainsString(".forum-home-layout{display:grid", $profile);
-        self::assertStringContainsString('.forum-home-layout', $baseCss);
-        self::assertStringContainsString('.thread-post', $baseCss);
+        self::assertStringNotContainsString('.forum-home-layout{', $baseCss);
+        self::assertStringNotContainsString('.thread-post{', $baseCss);
+        self::assertStringContainsString('/* forum-layer-ownership-v2 */', $css);
 
         self::assertStringContainsString('.top[data-scrolled="1"]', $css);
         self::assertStringContainsString('.nav-primary>a[aria-current="page"]', $css);

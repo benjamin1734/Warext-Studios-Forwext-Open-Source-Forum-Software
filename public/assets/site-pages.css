@@ -3,6 +3,7 @@
  * Contains forum, discovery, account, module, staff and responsive page-surface rules.
  */
 /* forum-surfaces-v1 */
+/* forum-layer-ownership-v2 */
 .wrap{
   width:min(1180px,calc(100% - (var(--fx-shell-gutter) * 2)));
   margin-top:24px;
