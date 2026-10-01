@@ -12,6 +12,8 @@ const cases = [
   { name: "member-1024", fixture: "member", width: 1024, height: 900, touch: false, reducedMotion: "no-preference" },
   { name: "member-desktop", fixture: "member", width: 1440, height: 1000, touch: false, reducedMotion: "no-preference" },
   { name: "moderator-desktop", fixture: "moderator", width: 1440, height: 1000, touch: false, reducedMotion: "no-preference" },
+  { name: "admin-mobile", fixture: "admin", width: 390, height: 844, touch: true, reducedMotion: "no-preference", admin: true },
+  { name: "admin-desktop", fixture: "admin", width: 1440, height: 1000, touch: false, reducedMotion: "no-preference", admin: true },
 ];
 
 const fail = (message) => {
@@ -59,6 +61,7 @@ try {
       "/public/assets/site-components.css",
       "/public/assets/site-pages.css",
     ];
+    if (testCase.admin) requiredStylesheets.push("/public/assets/admin.css");
     const loadedStylesheets = await page.evaluate(() =>
       [...document.styleSheets]
         .map((sheet) => sheet.href)
@@ -102,6 +105,12 @@ try {
     if (overflow.length > 0) {
       fail(`${testCase.name}: horizontal overflow: ${JSON.stringify(overflow)}`);
     }
+
+    if (testCase.admin) {
+      const adminSurfaceVisible = await page.locator('[data-browser-fixture="admin"]').isVisible();
+      if (!adminSurfaceVisible) fail(`${testCase.name}: ACP fixture is not visible`);
+    }
+
 
     await page.keyboard.press("Tab");
     const skipLinkFocused = await page.evaluate(

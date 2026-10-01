@@ -117,12 +117,66 @@ $moderationContent = <<<'HTML'
 </section>
 HTML;
 
+$adminContent = <<<'HTML'
+<section class="acp-dashboard" data-browser-fixture="admin">
+  <nav class="acp-breadcrumbs" aria-label="Yönetim yolu">
+    <ol><li><a href="#fixture-admin">Admin</a></li><li>Dashboard</li></ol>
+  </nav>
+
+  <aside class="acp-ux-guide" aria-label="Güvenli yönetim rehberi">
+    <div><strong>Bu ekranda güvenli çalışma</strong><p>Kompleks ayarları önce bul, doğrula, sonra uygula.</p></div>
+    <div class="acp-ux-grid">
+      <div class="acp-ux-item"><strong>Amaç</strong><span>Yetkili yönetim alanlarını tek merkezden bul.</span></div>
+      <div class="acp-ux-item"><strong>Güvenli varsayılan</strong><span>Salt-okunur özetlerden başlayıp gerekli ekrana ilerle.</span></div>
+      <div class="acp-ux-item"><strong>Önizleme / doğrulama</strong><span>Değişiklikten önce etki alanını kontrol et.</span></div>
+      <div class="acp-ux-item"><strong>Geri dönüş</strong><span>Desteklenen işlemlerde reset veya geri alma yolunu kullan.</span></div>
+    </div>
+  </aside>
+
+  <header id="fixture-admin" class="acp-hero">
+    <div><h1>Administration</h1><p class="acp-muted">ACP responsive, odak ve taşma regresyon fixture'ı.</p></div>
+    <form id="fixture-form" class="acp-search" action="#" method="get">
+      <label class="sr-only" for="admin-search">Yönetim alanlarında ara</label>
+      <input id="admin-search" name="q" value="kullanıcı" autocomplete="off">
+      <button type="button">Ara</button>
+    </form>
+  </header>
+
+  <section class="acp-panel">
+    <div class="acp-heading"><div><h2>Yönetim alanları</h2><p class="acp-muted">Kartlar dar ekranda tek kolona düşmelidir.</p></div><span class="acp-count">3</span></div>
+    <div class="acp-grid">
+      <article class="acp-card"><h3>Kullanıcılar</h3><p>Hesap, rol ve erişim yönetimi.</p><small>users.manage</small><div class="acp-actions"><a class="acp-button primary" href="#fixture-queue">Aç</a></div></article>
+      <article class="acp-card"><h3>Forumlar</h3><p>Node, alan ve görünürlük ayarları.</p><small>forum.manage</small><div class="acp-actions"><a class="acp-button" href="#fixture-queue">Aç</a></div></article>
+      <article class="acp-card"><h3>Sistem</h3><p>Uzun yönetim açıklamaları küçük ekranlarda yatay taşma üretmemelidir.</p><small>system.operations.manage</small><div class="acp-actions"><a class="acp-button" href="#fixture-queue">Aç</a></div></article>
+    </div>
+  </section>
+
+  <section id="fixture-queue" class="acp-panel">
+    <div class="acp-heading"><div><h2>İşlem gerekenler</h2><p class="acp-muted">Yoğun ACP kart düzeni.</p></div></div>
+    <div class="acp-queue-grid">
+      <article class="acp-queue"><div class="acp-queue-number">7</div><div><h3>Bekleyen rapor</h3><p>Yetkili kullanıcıların incelemesini bekleyen kayıtlar.</p><a class="acp-button" href="#fixture-admin">İncele</a></div></article>
+      <article class="acp-queue"><div class="acp-queue-number">2</div><div><h3>Bakım görevi</h3><p>Planlanmış sistem görevi özeti.</p><a class="acp-button" href="#fixture-admin">İncele</a></div></article>
+    </div>
+  </section>
+</section>
+HTML;
+
 $basePath = new BasePath('/public');
 
 $fixtures = [
     'guest' => ProfileHtml::page('Tarayıcı Testi · Misafir', $forumContent, $basePath, authenticated: false),
     'member' => ProfileHtml::page('Tarayıcı Testi · Üye', $forumContent, $basePath, authenticated: true),
 ];
+
+$adminHeadAssets = '<link rel="stylesheet" href="'
+    . ProfileHtml::escape($basePath->prepend('/assets/admin.css')) . '">';
+$fixtures['admin'] = ProfileHtml::page(
+    'Tarayıcı Testi · Administration',
+    $adminContent,
+    $basePath,
+    authenticated: true,
+    headAssets: $adminHeadAssets,
+);
 
 $moderatorNavigation = NavigationRegistry::withCoreDefaults();
 $moderatorNavigation->register(new NavigationItem(

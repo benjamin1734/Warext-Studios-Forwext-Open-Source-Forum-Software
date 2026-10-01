@@ -14,6 +14,7 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-components.css')
             . (string) file_get_contents($root . '/public/assets/site-pages.css');
+        $adminCss = (string) file_get_contents($root . '/public/assets/admin.css');
         $mobileNav = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
         $package = (string) file_get_contents($root . '/package.json');
         $workflow = (string) file_get_contents($root . '/.github/workflows/qualification-matrix.yml');
@@ -54,6 +55,13 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('Browser fixture script isolation failed.', $fixtureRenderer);
         self::assertStringContainsString("'member' => ProfileHtml::page", $fixtureRenderer);
         self::assertStringContainsString("\$fixtures['moderator']", $fixtureRenderer);
+        self::assertStringContainsString("\$fixtures['admin']", $fixtureRenderer);
+        self::assertStringContainsString('/assets/admin.css', $fixtureRenderer);
+        self::assertStringContainsString('admin-mobile', $browserSmoke);
+        self::assertStringContainsString('admin-desktop', $browserSmoke);
+        self::assertStringContainsString('requiredStylesheets.push("/public/assets/admin.css")', $browserSmoke);
+        self::assertStringContainsString('@media(pointer:coarse)', $adminCss);
+        self::assertStringContainsString('min-height:44px', $adminCss);
         self::assertStringContainsString('width: 390', $browserSmoke);
         self::assertStringContainsString('width: 768', $browserSmoke);
         self::assertStringContainsString('width: 1024', $browserSmoke);
