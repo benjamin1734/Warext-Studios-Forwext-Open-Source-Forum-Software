@@ -196,6 +196,24 @@ $adminContent = <<<'HTML'
       <form><label>Tema adı<input value="Forwext Dark"></label><label>Özel CSS<textarea rows="4">.example { display: block; }</textarea></label><div class="theme-actions"><button type="button">Taslağı kaydet</button><button type="button">Önizle</button></div></form>
     </section>
   </section>
+
+  <section class="card" data-browser-acp-legacy>
+    <h2>Reward Provider</h2>
+    <p class="muted">Legacy admin module primitives must use the same ACP visual language.</p>
+    <form class="search-form" action="#" method="get">
+      <label class="search-wide"><span>Tanım ara</span><input name="legacy_q" value="role reward"></label>
+      <label><span>Durum</span><select><option>Aktif</option></select></label>
+      <label><span>Provider</span><select><option>Role</option></select></label>
+      <div class="search-actions"><button type="button">Filtrele</button><button type="button">Sıfırla</button></div>
+    </form>
+    <div class="section">
+      <article class="search-hit"><span class="search-hit-type">ROLE</span><h3>Premium role reward</h3><p class="muted">Yetki yükseltmeyen güvenli reward hedefi.</p><div class="market-actions"><button type="button">Düzenle</button><button type="button">Doğrula</button></div></article>
+    </div>
+    <div class="stats-grid">
+      <div class="card stat"><span class="muted">Aktif</span><strong>12</strong></div>
+      <div class="card stat"><span class="muted">Bekleyen</span><strong>3</strong></div>
+    </div>
+  </section>
 </section>
 HTML;
 

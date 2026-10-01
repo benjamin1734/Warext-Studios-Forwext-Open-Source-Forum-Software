@@ -63,6 +63,9 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-browser-acp-module', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-builder', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-theme', $fixtureRenderer);
+        self::assertStringContainsString('data-browser-acp-legacy', $fixtureRenderer);
+        self::assertStringContainsString('legacyForm', $browserSmoke);
+        self::assertStringContainsString('legacy-admin-module-primitives-v1', $adminCss);
         self::assertStringContainsString('ACP layout expected', $browserSmoke);
         self::assertStringContainsString('breadcrumbs: new BreadcrumbTrail([])', $fixtureRenderer);
         self::assertStringContainsString('ACP must expose exactly one breadcrumb trail', $browserSmoke);

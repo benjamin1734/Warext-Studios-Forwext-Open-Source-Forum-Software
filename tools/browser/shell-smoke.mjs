@@ -124,6 +124,7 @@ try {
           module: columns("[data-browser-acp-module] .mod-shell"),
           builder: columns("[data-browser-acp-builder] .builder-grid"),
           theme: columns("[data-browser-acp-theme]"),
+          legacyForm: columns("[data-browser-acp-legacy] .search-form"),
         };
       });
       const expectedColumns = testCase.width <= 760 ? 1 : 2;
@@ -138,6 +139,7 @@ try {
           "[data-browser-acp-module] .mod-button",
           "[data-browser-acp-builder] .builder-toolbar button",
           "[data-browser-acp-theme] button",
+          "[data-browser-acp-legacy] .search-actions button",
         ]) {
           const height = await page.$eval(selector, (element) => element.getBoundingClientRect().height);
           if (height < 43.5) fail(`${testCase.name}: ACP touch target below 44px for ${selector}`);
