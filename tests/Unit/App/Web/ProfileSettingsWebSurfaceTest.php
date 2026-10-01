@@ -81,7 +81,8 @@ final class ProfileSettingsWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $dashboard = (string) file_get_contents($root . '/app/Web/Account/AccountDashboardHtml.php');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileViewHandler.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'/account/profile'", $dashboard);
         self::assertStringContainsString('Profil ve Gizlilik', $dashboard);
