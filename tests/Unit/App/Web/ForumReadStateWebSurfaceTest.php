@@ -13,7 +13,8 @@ final class ForumReadStateWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $forum = (string) file_get_contents($root . '/app/Web/Forum/ForumViewHandler.php');
         $repository = (string) file_get_contents($root . '/core/Forum/State/DatabaseDiscussionStateRepository.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('unreadThreadIds($actor, $threadIds)', $forum);
         self::assertStringContainsString('isset($unread[$thread[\'thread_id\']])', $forum);
