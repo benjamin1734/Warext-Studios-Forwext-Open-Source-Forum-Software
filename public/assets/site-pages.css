@@ -77,6 +77,93 @@
   gap:7px;
   flex-wrap:wrap;
 }
+/* forum-compose-surface-v2 */
+.forum-compose{
+  display:grid;
+  gap:14px;
+}
+.forum-compose-head{
+  min-height:0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  padding:2px 2px 14px;
+  border-bottom:1px solid var(--line);
+}
+.forum-compose-head h1{
+  margin:2px 0 3px;
+  font-size:clamp(24px,3vw,31px);
+  line-height:1.15;
+  letter-spacing:-.03em;
+}
+.forum-compose-head p{
+  max-width:760px;
+  margin:0;
+  color:var(--muted);
+  font-size:12.5px;
+}
+.forum-compose-form{
+  display:grid;
+  gap:14px;
+  padding:16px;
+  border-radius:10px;
+}
+.forum-compose-form label{
+  display:grid;
+  gap:6px;
+}
+.forum-compose-form label>span{
+  color:var(--muted);
+  font-size:11.5px;
+  font-weight:780;
+}
+.forum-compose-form input,
+.forum-compose-form textarea{
+  width:100%;
+  padding:10px 11px;
+  border:var(--forwext-component-input-border-width) solid var(--forwext-component-input-border-color);
+  border-radius:8px;
+  background:var(--forwext-component-input-background);
+  color:var(--forwext-component-input-text);
+  font:inherit;
+}
+.forum-compose-form textarea{
+  min-height:220px;
+  resize:vertical;
+  line-height:1.6;
+}
+.forum-compose-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  flex-wrap:wrap;
+  padding-top:2px;
+}
+.forum-compose-form button.fx-btn{cursor:pointer}
+.forum-compose-error,
+.forum-notice{
+  padding:11px 13px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel2);
+}
+.forum-compose-error{
+  border-color:color-mix(in srgb,#a65353 72%,var(--line));
+  box-shadow:inset 3px 0 0 #a65353;
+}
+.forum-notice{
+  margin:12px 0;
+  border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
+  box-shadow:inset 3px 0 0 var(--accent);
+}
+.forum-notice--warning{
+  border-color:color-mix(in srgb,#d9a441 46%,var(--line));
+  background:color-mix(in srgb,#d9a441 8%,var(--panel));
+  color:var(--text);
+  box-shadow:inset 3px 0 0 #d9a441;
+}
+
 .forum-category{
   overflow:hidden;
   border:1px solid var(--line);
@@ -809,6 +896,9 @@ a.forum-thread-author:hover{color:var(--text)}
 }
 
 @media(max-width:700px){
+  .forum-compose-head{display:grid;align-items:start}
+  .forum-compose-actions{display:grid;grid-template-columns:1fr 1fr}
+  .forum-compose-actions .fx-btn{justify-content:center}
   .forum-hero,
   .forum-view-head,
   .thread-view-head{

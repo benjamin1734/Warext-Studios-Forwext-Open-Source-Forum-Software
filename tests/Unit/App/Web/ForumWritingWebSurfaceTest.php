@@ -81,7 +81,11 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('RichEditorView::render(', $thread);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $thread);
         self::assertStringContainsString('headAssets: $canReply ? RichEditorView::assets', $thread);
-        self::assertStringContainsString('.forum-compose-form', $css);
+        self::assertStringContainsString('/* forum-compose-surface-v2 */', $css);
+        self::assertStringContainsString('.forum-compose{', $css);
+        self::assertStringContainsString('.forum-compose-form{', $css);
+        self::assertStringContainsString('.forum-compose-error', $css);
+        self::assertStringContainsString('.forum-notice--warning', $css);
         self::assertStringContainsString('.thread-view-actions', $css);
     }
 }

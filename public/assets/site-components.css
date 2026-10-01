@@ -1219,17 +1219,6 @@ select:focus{
 }
 
 
-.forum-compose-form{
-  border-radius:var(--fx-radius-xl);
-}
-.forum-compose-form input,
-.forum-compose-form textarea{
-  border-radius:10px;
-}
-.forum-compose-actions{
-  padding-top:2px;
-}
-
 @media(max-width:760px){
   .notification-unread{min-width:88px}
   .notification-actions{
