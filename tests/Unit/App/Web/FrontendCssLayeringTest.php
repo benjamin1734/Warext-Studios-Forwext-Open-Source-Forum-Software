@@ -60,6 +60,23 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testNotificationSurfaceIsNotOwnedByTheBaseLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+        $pages = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        self::assertStringContainsString('/* notification-surface-ownership-v2 */', $components);
+        self::assertStringNotContainsString('.notification-hero{', $base);
+        self::assertStringNotContainsString('.notification-settings-hero{', $base);
+
+        foreach (['notification-item', 'notification-unread', 'notification-settings-form', 'notification-settings-notice'] as $class) {
+            self::assertSame(0, self::rootClassDefinitionCount($base, $class));
+            self::assertGreaterThan(0, self::rootClassDefinitionCount($components . $pages, $class));
+        }
+    }
+
     public function testAccountSocialListsAreOwnedByThePageLayer(): void
     {
         $root = dirname(__DIR__, 4);

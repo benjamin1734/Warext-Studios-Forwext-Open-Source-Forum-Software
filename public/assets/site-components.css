@@ -1020,16 +1020,35 @@ select:focus{
   background:var(--panel2);
 }
 
-.notification-list{gap:9px}
+/* notification-surface-ownership-v2 */
+.notification-settings{display:grid;gap:16px}
+.notification-list{display:grid;gap:9px}
 .notification-item{
   position:relative;
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px 18px;
+  border:1px solid var(--line);
   border-radius:14px;
   overflow:hidden;
+  background:var(--panel);
 }
 .notification-item.is-unread{
   border-color:color-mix(in srgb,var(--accent) 60%,var(--line));
   background:color-mix(in srgb,var(--accent) 5%,var(--panel));
   box-shadow:inset 3px 0 0 var(--accent),0 8px 24px rgba(0,0,0,.08);
+}
+.notification-main{min-width:0}
+.notification-main h2{margin:5px 0 6px;font-size:16px}
+.notification-main p{margin:0;color:var(--muted);overflow-wrap:anywhere}
+.notification-meta{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  color:var(--muted);
+  font-size:11px;
 }
 .notification-meta>span:first-child{
   display:inline-flex;
@@ -1038,32 +1057,90 @@ select:focus{
   padding:2px 7px;
   border-radius:999px;
   background:color-mix(in srgb,var(--accent) 8%,var(--panel2));
+  color:var(--accent);
+  font-weight:850;
 }
 .notification-count{
+  padding:2px 6px;
+  border:1px solid var(--line);
+  border-radius:999px;
   background:var(--panel2);
 }
-.notification-unread{
-  border-color:color-mix(in srgb,var(--accent) 25%,var(--line));
-  background:color-mix(in srgb,var(--accent) 6%,var(--panel2));
+.notification-actions{
+  min-width:185px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
 }
-.notification-unread strong{color:var(--text)}
+.notification-actions form{margin:0}
+.notification-actions button{cursor:pointer}
+.notification-read-state{color:var(--muted);font-size:12px}
+.notification-unread{
+  min-width:96px;
+  padding:10px 14px;
+  border-width:1px;
+  border-style:solid;
+  border-color:color-mix(in srgb,var(--accent) 25%,var(--line));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel2));
+  text-align:center;
+}
+.notification-unread strong{
+  display:block;
+  color:var(--text);
+  font-size:25px;
+}
+.notification-unread span{color:var(--muted);font-size:11px}
 .notification-pagination .fx-btn{min-width:92px;text-align:center}
 .notification-settings-form{
+  display:grid;
+  gap:18px;
   border-radius:var(--fx-radius-xl);
 }
 .notification-settings-form>label{
+  display:grid;
+  gap:8px;
   padding:12px;
   border:1px solid var(--line);
   border-radius:11px;
   background:var(--panel2);
 }
+.notification-settings-form>label>span{font-size:13px;font-weight:800}
+.notification-settings-form select,
+.notification-settings-form input[type="range"]{width:100%}
+.notification-settings-form select{
+  padding:10px 11px;
+  border:var(--forwext-component-input-border-width) solid var(--forwext-component-input-border-color);
+  border-radius:var(--forwext-component-input-radius);
+  background:var(--forwext-component-input-background);
+  color:var(--forwext-component-input-text);
+  font:inherit;
+}
 .notification-settings-switch{
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:start;
   padding:14px!important;
 }
-.notification-settings-form input[type="range"]{
-  accent-color:var(--accent);
+.notification-settings-switch input{margin-top:4px}
+.notification-settings-switch span{display:grid;gap:3px}
+.notification-settings-switch small{color:var(--muted);font-weight:400}
+.notification-settings-form input[type="range"]{accent-color:var(--accent)}
+.notification-settings-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
 }
+.notification-settings-actions button{cursor:pointer}
+.notification-settings-info h2{margin:0 0 8px;font-size:17px}
+.notification-settings-info p{margin:6px 0;color:var(--muted)}
 .notification-settings-notice{
+  padding:12px 14px;
+  border:1px solid var(--accent);
+  border-radius:10px;
+  background:var(--panel2);
   box-shadow:inset 3px 0 0 var(--accent);
 }
 

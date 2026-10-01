@@ -1139,6 +1139,7 @@ a.forum-thread-author:hover{color:var(--text)}
   .account-setting-row{align-items:flex-start}
 }
 
+.notification-center{display:grid;gap:16px}
 .notification-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .notification-head-actions .notification-unread{min-width:76px;padding:6px 9px;border-radius:7px}
 .notification-head-actions .notification-unread strong{font-size:18px}
@@ -1147,7 +1148,9 @@ a.forum-thread-author:hover{color:var(--text)}
 .notification-item{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:13px 14px}
 .notification-item:last-child{border-bottom:0}
 .notification-item.is-unread{border-color:var(--line);background:color-mix(in srgb,var(--accent) 4%,var(--panel));box-shadow:inset 3px 0 0 var(--accent)}
-.notification-pagination{padding:11px 14px;border-top:1px solid var(--line)}
+.notification-pagination{display:flex;justify-content:flex-end;gap:8px;padding:11px 14px;border-top:1px solid var(--line)}
+.notification-empty{display:grid;gap:5px;padding:30px;text-align:center}
+.notification-empty span{color:var(--muted)}
 .notification-settings-form{padding:15px}
 .notification-settings-info{padding:14px}
 .notification-settings-notice{margin:0}
