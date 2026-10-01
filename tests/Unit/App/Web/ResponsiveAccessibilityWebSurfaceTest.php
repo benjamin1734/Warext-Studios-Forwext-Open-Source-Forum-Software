@@ -64,6 +64,8 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-browser-acp-builder', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-theme', $fixtureRenderer);
         self::assertStringContainsString('ACP layout expected', $browserSmoke);
+        self::assertStringContainsString('breadcrumbs: new BreadcrumbTrail([])', $fixtureRenderer);
+        self::assertStringContainsString('ACP must expose exactly one breadcrumb trail', $browserSmoke);
         self::assertStringContainsString('ACP touch target below 44px', $browserSmoke);
         self::assertStringContainsString('@media(pointer:coarse)', $adminCss);
         self::assertStringContainsString('min-height:44px', $adminCss);

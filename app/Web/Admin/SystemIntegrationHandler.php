@@ -20,6 +20,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use Forwext\Core\Security\Secret\SecretException;
 use InvalidArgumentException;
 
@@ -69,6 +70,7 @@ final readonly class SystemIntegrationHandler implements RequestHandlerInterface
                 'Sistem ve Entegrasyonlar',
                 $content,
                 $this->basePath,
+                breadcrumbs: new BreadcrumbTrail([]),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

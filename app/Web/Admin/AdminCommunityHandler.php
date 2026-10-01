@@ -34,6 +34,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
 use ValueError;
 
@@ -71,6 +72,7 @@ final readonly class AdminCommunityHandler implements RequestHandlerInterface
                 $this->section->label() . ' · Administration',
                 $content,
                 $this->basePath,
+                breadcrumbs: new BreadcrumbTrail([]),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

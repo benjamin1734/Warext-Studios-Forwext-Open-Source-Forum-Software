@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Forwext\App\Web\Profile\ProfileHtml;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Ui\Navigation\NavigationAudience;
 use Forwext\Core\Ui\Navigation\NavigationItem;
@@ -211,6 +212,7 @@ $fixtures['admin'] = ProfileHtml::page(
     'Tarayıcı Testi · Administration',
     $adminContent,
     $basePath,
+    breadcrumbs: new BreadcrumbTrail([]),
     authenticated: true,
     headAssets: $adminHeadAssets,
 );

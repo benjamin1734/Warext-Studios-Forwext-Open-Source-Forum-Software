@@ -20,6 +20,7 @@ use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Http\Upload\UploadedFile;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -63,6 +64,7 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
                 'System Operations',
                 SystemOperationsHtml::page($snapshot, $verified, $this->basePath, $csrf, $notice, $logLimit, $section),
                 $this->basePath,
+                breadcrumbs: new BreadcrumbTrail([]),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

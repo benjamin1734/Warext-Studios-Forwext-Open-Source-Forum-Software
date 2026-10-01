@@ -16,6 +16,7 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
 
 final readonly class AdminDashboardHandler implements RequestHandlerInterface
@@ -52,6 +53,7 @@ final readonly class AdminDashboardHandler implements RequestHandlerInterface
                 'Administration',
                 $content,
                 $this->basePath,
+                breadcrumbs: new BreadcrumbTrail([]),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

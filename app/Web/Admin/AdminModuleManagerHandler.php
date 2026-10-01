@@ -19,6 +19,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Module\FirstParty\FirstPartyModuleScope;
 use Forwext\Core\Module\FirstParty\FirstPartyModuleService;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
 
 final readonly class AdminModuleManagerHandler implements RequestHandlerInterface
@@ -73,6 +74,7 @@ final readonly class AdminModuleManagerHandler implements RequestHandlerInterfac
                 'First-party Module Manager',
                 $content,
                 $this->basePath,
+                breadcrumbs: new BreadcrumbTrail([]),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

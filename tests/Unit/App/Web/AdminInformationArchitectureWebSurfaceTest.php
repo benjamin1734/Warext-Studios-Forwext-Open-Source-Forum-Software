@@ -176,6 +176,23 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         }
     }
 
+
+    public function testCoreAcpUsesOneBreadcrumbTrail(): void
+    {
+        $root = dirname(__DIR__, 4);
+
+        foreach ([
+            'AdminDashboardHandler.php',
+            'AdminCommunityHandler.php',
+            'AdminModuleManagerHandler.php',
+            'SystemIntegrationHandler.php',
+            'SystemOperationsHandler.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/Admin/' . $file);
+            self::assertStringContainsString('breadcrumbs: new BreadcrumbTrail([])', $source, $file);
+        }
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);
