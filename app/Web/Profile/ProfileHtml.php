@@ -197,7 +197,8 @@ final class ProfileHtml
         $bugReportScript = self::escape($basePath->prepend('/assets/bug-report-link.js'));
         $mobileNavScript = self::escape($basePath->prepend('/assets/mobile-nav.js'));
         $siteBaseStylesheet = self::escape($basePath->prepend('/assets/site-base.css'));
-        $siteShellStylesheet = self::escape($basePath->prepend('/assets/site-shell.css'));
+        $siteComponentsStylesheet = self::escape($basePath->prepend('/assets/site-components.css'));
+        $sitePagesStylesheet = self::escape($basePath->prepend('/assets/site-pages.css'));
         $bugReportLink = $authenticated
             ? '<a class="bug-report-fab" data-bug-report-link href="' . self::escape($basePath->prepend('/bugs/report'))
                 . '" aria-label="Hata bildir" title="Hata bildir">'
@@ -232,7 +233,8 @@ final class ProfileHtml
             . '<title>' . $safeTitle . ' · Forwext</title><style>' . self::appearanceCss($basePath)
             . '</style>'
             . '<link rel="stylesheet" href="' . $siteBaseStylesheet . '">'
-            . '<link rel="stylesheet" href="' . $siteShellStylesheet . '">' . $headAssets
+            . '<link rel="stylesheet" href="' . $siteComponentsStylesheet . '">'
+            . '<link rel="stylesheet" href="' . $sitePagesStylesheet . '">' . $headAssets
             . '</head><body data-forwext-background-scope="site">'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
