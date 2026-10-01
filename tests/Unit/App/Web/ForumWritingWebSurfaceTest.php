@@ -66,7 +66,8 @@ final class ForumWritingWebSurfaceTest extends TestCase
         $forum = (string) file_get_contents($root.'/app/Web/Forum/ForumViewHandler.php');
         $thread = (string) file_get_contents($root.'/app/Web/Forum/ThreadViewHandler.php');
         $css = (string) file_get_contents($root.'/public/assets/site-base.css')
-            . (string) file_get_contents($root.'/public/assets/site-shell.css');
+            . (string) file_get_contents($root.'/public/assets/site-components.css')
+            . (string) file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('canCreateThread($actor, $node)', $forum);
         self::assertStringContainsString('ThreadPermission::Create->key()', $forum);
