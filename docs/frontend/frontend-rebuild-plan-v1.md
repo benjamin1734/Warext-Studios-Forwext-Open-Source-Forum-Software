@@ -17,11 +17,11 @@ The current `main` implementation and automated qualification remain the source 
 - [x] Replace multiple historical navbar generations with one maintained navigation shell block.
 - [x] Remove the separate oversized masthead and place brand/navigation/user tools in one compact primary bar.
 - [x] Lock background scrolling while the mobile navigation drawer is open.
-- [ ] Split remaining base CSS into explicit base/components/pages layers without changing runtime behavior.
+- [x] Split remaining base CSS into explicit base/components/pages layers without changing runtime behavior.
 - [x] Reduce repeated breakpoint definitions to a documented responsive scale.
   - Native CSS now uses the locked 1100 / 920 / 820 / 760 / 700 / 520 px scale; CI rejects off-scale max-width queries.
-- [ ] Normalize button, input, card, list-row, badge, dropdown, pagination and empty-state primitives.
-- [ ] Remove obsolete selectors after repository-wide usage checks.
+- [x] Normalize button, input, card, list-row, badge, dropdown, pagination and empty-state primitives.
+- [x] Remove obsolete selectors after repository-wide usage checks.
 
 Acceptance:
 - no public page depends on static CSS embedded in PHP;
@@ -82,7 +82,8 @@ All modules must consume shared UI primitives instead of defining a separate vis
 - [x] Horizontal overflow audit.
 - [x] Browser-level smoke/regression coverage in CI.
 - [x] Representative screenshots for guest/member/moderator layouts where CI tooling permits.
-- [ ] Remove temporary compatibility rules and dead CSS after visual parity is proven.
+  - Administration is also covered at 390px and 1440px with stylesheet-load, overflow, keyboard and coarse-pointer touch-target checks.
+- [x] Remove temporary compatibility rules and dead CSS after visual parity is proven.
 
 ## Implementation rules
 

@@ -8,13 +8,13 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.10
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / frontend-rebuild-F0-cleanup
+CURRENT_STEP = production-acceptance-remediation / ACP production acceptance
 LAST_COMMIT = see current GitHub main
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = consolidate remaining CSS layers/breakpoints and remove dead compatibility selectors, then continue separate ACP production-acceptance remediation
+NEXT_STEP = continue ACP production-acceptance remediation; frontend rebuild F0/F4 cleanup is complete
 ```
 
-## Frontend rebuild — F1/F2 complete, F4 gates green, F0 cleanup remaining
+## Frontend rebuild — F0/F1/F2/F3/F4 complete
 
 - Binding frontend plan: `docs/frontend/frontend-rebuild-plan-v1.md`.
 - Static public UI CSS was extracted from `ProfileHtml::page()` into `public/assets/site-base.css`; PHP now emits only dynamic appearance/design-token CSS.
@@ -47,7 +47,9 @@ NEXT_STEP = consolidate remaining CSS layers/breakpoints and remove dead compati
 - F1 forum writing/attachment/unread-state acceptance and F2 profile/media/privacy/session acceptance are complete.
 - Chromium responsive/accessibility smoke, WCAG-oriented token contrast checks, reduced-motion, focus/skip-link, overflow and screenshot regression gates are green.
 - Public CSS now uses a canonical responsive scale of 1100 / 920 / 820 / 760 / 700 / 520 px, enforced by regression coverage.
-- Remaining frontend rebuild work is F0 CSS layer/breakpoint/dead-selector consolidation plus the final F4 compatibility/dead-CSS cleanup item.
+- Final F0/F4 cleanup is complete: base/components/pages ownership is explicit, shared primitive ownership is regression-tested, obsolete compatibility selectors were removed and the responsive scale remains enforced.
+- F0 closeout commit `288da34ff0cd40fac98f05d867e432d453775832` passed qualification matrix, security, MySQL/MariaDB migration smoke, performance/observability and installation-package workflows.
+- ACP presentation is now centralized in `public/assets/admin.css` (`a4f7237c4becc70dc222e1c06a19ff395b88becb`) and representative Administration browser acceptance at 390px/1440px is enforced by Chromium regression coverage (`04947d094ea9dcb5769b15b13e6c9ac958a64f4a`).
 
 ## Production acceptance remediation — 1.0.5
 

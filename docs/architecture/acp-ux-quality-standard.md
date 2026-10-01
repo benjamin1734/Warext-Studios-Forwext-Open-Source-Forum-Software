@@ -16,6 +16,8 @@ Every complex ACP surface should provide the controls that fit its domain:
 
 The UI is never authority. Existing backend permission checks, CSRF middleware, audit services, typed validation and domain invariants remain mandatory.
 
+Static ACP presentation is centralized in `public/assets/admin.css`; native administration renderers do not embed per-page `<style>` blocks. Shared focus states and coarse-pointer touch targets therefore have one maintained source while authorization and mutation behavior remain server-side.
+
 ## 17.06 coverage
 
 - Administration dashboard: permission-filtered search, action-needed summaries and shared safe-work guidance.
@@ -23,5 +25,7 @@ The UI is never authority. Existing backend permission checks, CSRF middleware, 
 - First-party Module Manager: server-validated text + lifecycle-state filtering, effective scoped-value explanation, dependency/conflict verification and existing override/uninstall recovery controls.
 - System / Integrations: existing text/section filters, generated-override reset, secret confirmation and runtime capability verification are brought under the shared guidance contract.
 - System Operations: bounded section filtering plus existing permission-gated health/integrity, backup verification, redacted logs, typed destructive confirmations and environment-override fail-closed behavior.
+
+Representative ACP browser acceptance now runs in Chromium at 390px mobile and 1440px desktop. The gate verifies the Administration stylesheet is loaded and applies the common horizontal-overflow, keyboard-navigation, failed-request/console and 44px coarse-pointer control checks used by the public shell.
 
 No database migration is required. Filters and guidance are request-scoped presentation state only. The minimum cPanel runtime gains no Composer/npm/Node/Redis/Docker/Supervisor requirement.
