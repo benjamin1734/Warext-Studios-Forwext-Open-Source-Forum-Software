@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Appearance;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -52,6 +53,7 @@ final readonly class AppearanceGuideHandler implements RequestHandlerInterface
                 $this->basePath,
                 authenticated: true,
                 viewerId: $actor->value(),
+                headAssets: AdminAssetsHtml::headAssets($this->basePath),
             ))
                 ->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');

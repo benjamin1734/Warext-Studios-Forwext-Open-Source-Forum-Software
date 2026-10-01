@@ -65,7 +65,7 @@ final readonly class SystemOperationsHandler implements RequestHandlerInterface
                 $this->basePath,
                 authenticated: true,
                 viewerId: $actor->value(),
-                headAssets: '<link rel="stylesheet" href="' . ProfileHtml::escape($this->basePath->prepend('/assets/admin.css')) . '">',
+                headAssets: AdminAssetsHtml::headAssets($this->basePath),
             ))
                 ->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');

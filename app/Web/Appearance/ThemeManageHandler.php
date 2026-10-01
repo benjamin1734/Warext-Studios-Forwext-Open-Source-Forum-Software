@@ -7,6 +7,7 @@ namespace Forwext\App\Web\Appearance;
 use DateTimeImmutable;
 use DateTimeZone;
 use Forwext\App\Web\Audit\HttpAuditRequestId;
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Access\Permission\PermissionDeniedException;
@@ -81,6 +82,7 @@ final readonly class ThemeManageHandler implements RequestHandlerInterface
                 $this->basePath,
                 authenticated: true,
                 viewerId: $actor->value(),
+                headAssets: AdminAssetsHtml::headAssets($this->basePath),
             ))
                 ->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');

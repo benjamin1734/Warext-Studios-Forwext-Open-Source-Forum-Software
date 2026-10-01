@@ -77,6 +77,28 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         self::assertSame('/bugs/staff', $targets['admin.bugs'] ?? null);
     }
 
+
+    public function testCoreAndAppearanceAcpSurfacesLoadSharedAdministrationStyles(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $helper = (string) file_get_contents($root . '/app/Web/Admin/AdminAssetsHtml.php');
+        self::assertStringContainsString('/assets/admin.css', $helper);
+
+        foreach ([
+            'Admin/AdminDashboardHandler.php',
+            'Admin/AdminCommunityHandler.php',
+            'Admin/AdminModuleManagerHandler.php',
+            'Admin/SystemIntegrationHandler.php',
+            'Admin/SystemOperationsHandler.php',
+            'Appearance/AppearanceGuideHandler.php',
+            'Appearance/LayoutBuilderHandler.php',
+            'Appearance/ThemeManageHandler.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/' . $file);
+            self::assertStringContainsString('AdminAssetsHtml::headAssets', $source, $file);
+        }
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);
