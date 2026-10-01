@@ -60,6 +60,11 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('admin-mobile', $browserSmoke);
         self::assertStringContainsString('admin-desktop', $browserSmoke);
         self::assertStringContainsString('requiredStylesheets.push("/public/assets/admin.css")', $browserSmoke);
+        self::assertStringContainsString('data-browser-acp-module', $fixtureRenderer);
+        self::assertStringContainsString('data-browser-acp-builder', $fixtureRenderer);
+        self::assertStringContainsString('data-browser-acp-theme', $fixtureRenderer);
+        self::assertStringContainsString('ACP layout expected', $browserSmoke);
+        self::assertStringContainsString('ACP touch target below 44px', $browserSmoke);
         self::assertStringContainsString('@media(pointer:coarse)', $adminCss);
         self::assertStringContainsString('min-height:44px', $adminCss);
         self::assertStringContainsString('width: 390', $browserSmoke);

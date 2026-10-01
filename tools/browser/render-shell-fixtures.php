@@ -158,6 +158,43 @@ $adminContent = <<<'HTML'
       <article class="acp-queue"><div class="acp-queue-number">2</div><div><h3>Bakım görevi</h3><p>Planlanmış sistem görevi özeti.</p><a class="acp-button" href="#fixture-admin">İncele</a></div></article>
     </div>
   </section>
+
+  <section class="mod-panel" data-browser-acp-module>
+    <h2>First-party Module Manager</h2>
+    <form class="mod-filter" action="#" method="get">
+      <label>Modüllerde ara<input name="module_q" value="marketplace"></label>
+      <label>Durum<select name="state"><option>Aktif</option></select></label>
+      <button class="mod-button primary" type="button">Filtrele</button>
+      <a class="mod-button" href="#fixture-admin">Sıfırla</a>
+    </form>
+    <div class="mod-shell">
+      <aside class="mod-sidebar">
+        <a class="mod-list-item is-selected" href="#fixture-module-detail"><span><strong>Marketplace</strong><small>marketplace</small></span><span class="mod-state state-enabled">Aktif</span></a>
+        <a class="mod-list-item" href="#fixture-module-detail"><span><strong>Portfolio</strong><small>portfolio</small></span><span class="mod-state">Kapalı</span></a>
+      </aside>
+      <main id="fixture-module-detail" class="mod-detail">
+        <section class="mod-panel">
+          <div class="mod-head"><div><h1>Marketplace</h1><p class="mod-muted">Scoped ayarlar ve lifecycle yönetimi.</p></div><span class="mod-state state-enabled">Aktif</span></div>
+          <div class="mod-setting"><div><strong>Liste sayfa boyutu</strong><p class="mod-muted">Effective değer: 24</p></div><div class="mod-setting-actions"><form><label class="mod-field">Değer<input value="24"></label><button class="mod-button" type="button">Kaydet</button></form></div></div>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <section class="card builder-admin" data-browser-acp-builder>
+    <div class="builder-toolbar"><button type="button">Taslak oluştur</button><a href="#fixture-admin">Dışa aktar</a></div>
+    <div class="builder-grid">
+      <aside class="builder-palette"><button class="builder-widget-add" type="button"><strong>Forum istatistikleri</strong><small>sidebar.primary</small></button></aside>
+      <div class="builder-preview-shell"><div class="builder-preview" data-device="desktop"><section class="builder-slot"><header><strong>sidebar.primary</strong><span>1 widget</span></header><div class="builder-dropzone"><article class="builder-placement"><div class="builder-placement-head"><strong>Forum istatistikleri</strong><span>Aktif</span></div></article></div></section></div></div>
+    </div>
+  </section>
+
+  <section class="theme-admin" data-browser-acp-theme>
+    <aside class="theme-sidebar"><a class="theme-list-item" href="#fixture-theme"><strong>Default</strong><small>Base theme</small></a></aside>
+    <section id="fixture-theme" class="theme-editor">
+      <form><label>Tema adı<input value="Forwext Dark"></label><label>Özel CSS<textarea rows="4">.example { display: block; }</textarea></label><div class="theme-actions"><button type="button">Taslağı kaydet</button><button type="button">Önizle</button></div></form>
+    </section>
+  </section>
 </section>
 HTML;
 

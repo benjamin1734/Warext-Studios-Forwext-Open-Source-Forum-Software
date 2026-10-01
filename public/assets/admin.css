@@ -9,9 +9,9 @@
 :where(.acp-search input,.ac-form input,.ac-form select,.ac-form textarea,.ac-filter input,.mod-filter input,.mod-filter select,.mod-field input,.mod-field select,.mod-confirm,.int-search input,.int-search select,.int-control,.ops-input,.ops-select):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 @media(pointer:coarse){
-  :where(.acp-search button,.acp-button,.ac-btn,.mod-button,.mod-list-item,.mod-scope-nav a,.int-search button,.int-button,.int-chip,.ops-button,.ac-tab){min-height:44px}
-  :where(.acp-search input,.ac-form input,.ac-form select,.ac-form textarea,.ac-filter input,.mod-filter input,.mod-filter select,.mod-field input,.mod-field select,.mod-confirm,.int-search input,.int-search select,.int-control,.ops-input,.ops-select){min-height:44px}
-  .mod-scope-nav a{display:inline-flex;align-items:center}
+  :where(.acp-search button,.acp-button,.ac-btn,.mod-button,.mod-list-item,.mod-scope-nav a,.int-search button,.int-button,.int-chip,.ops-button,.ac-tab,.ag-link,.ag-chip,.ag-reset,.ag-search button,.builder-toolbar button,.builder-toolbar a,.builder-publish-form button,.builder-import button,.theme-admin button,.theme-list-item){min-height:44px}
+  :where(.acp-search input,.ac-form input,.ac-form select,.ac-form textarea,.ac-filter input,.mod-filter input,.mod-filter select,.mod-field input,.mod-field select,.mod-confirm,.int-search input,.int-search select,.int-control,.ops-input,.ops-select,.ag-search input,.builder-condition input,.builder-condition select,.builder-import textarea,.theme-editor input,.theme-editor select,.theme-editor textarea,.theme-diff-form select){min-height:44px}
+  .mod-scope-nav a,.ag-link,.ag-chip,.ag-reset,.theme-list-item{display:inline-flex;align-items:center}
 }
 
 /* Dashboard */

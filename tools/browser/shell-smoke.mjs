@@ -109,6 +109,36 @@ try {
     if (testCase.admin) {
       const adminSurfaceVisible = await page.locator('[data-browser-fixture="admin"]').isVisible();
       if (!adminSurfaceVisible) fail(`${testCase.name}: ACP fixture is not visible`);
+
+      const layoutColumns = await page.evaluate(() => {
+        const columns = (selector) => {
+          const element = document.querySelector(selector);
+          if (!(element instanceof HTMLElement)) return 0;
+          return getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean).length;
+        };
+        return {
+          module: columns("[data-browser-acp-module] .mod-shell"),
+          builder: columns("[data-browser-acp-builder] .builder-grid"),
+          theme: columns("[data-browser-acp-theme]"),
+        };
+      });
+      const expectedColumns = testCase.width <= 760 ? 1 : 2;
+      for (const [surface, columns] of Object.entries(layoutColumns)) {
+        if (columns !== expectedColumns) {
+          fail(`${testCase.name}: ${surface} ACP layout expected ${expectedColumns} column(s), got ${columns}`);
+        }
+      }
+
+      if (testCase.touch) {
+        for (const selector of [
+          "[data-browser-acp-module] .mod-button",
+          "[data-browser-acp-builder] .builder-toolbar button",
+          "[data-browser-acp-theme] button",
+        ]) {
+          const height = await page.$eval(selector, (element) => element.getBoundingClientRect().height);
+          if (height < 43.5) fail(`${testCase.name}: ACP touch target below 44px for ${selector}`);
+        }
+      }
     }
 
 
