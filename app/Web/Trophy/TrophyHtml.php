@@ -73,7 +73,7 @@ final class TrophyHtml
                 .'<div class="search-actions"><button type="submit">İşlemi uygula</button></div></form></section>';
         }
         $body.='</section>';
-        return ProfileHtml::page('Kupa/Rozet/Başarım Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Kupa/Rozet/Başarım Yönetimi',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Kupa/Rozet/Başarım Yönetimi'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
     private static function csrf(string $v):string{return '<input type="hidden" name="_csrf" value="'.self::e($v).'">';}
     private static function option(string $v,string $label,string $selected):string{return '<option value="'.self::e($v).'"'.($v===$selected?' selected':'').'>'.self::e($label).'</option>';}

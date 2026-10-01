@@ -80,6 +80,7 @@ final readonly class ThemeManageHandler implements RequestHandlerInterface
                 'Temalar',
                 $content,
                 $this->basePath,
+                breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Temalar'),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

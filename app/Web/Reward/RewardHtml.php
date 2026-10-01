@@ -98,7 +98,7 @@ final class RewardHtml
         $body.='<form method="post" action="'.$action.'" class="presence-settings">'.self::csrf($csrf)
             .'<input type="hidden" name="action" value="retry_batch"><label>Batch limit <input type="number" name="limit" min="1" max="500" value="100"></label>'
             .'<button type="submit">Bounded retry çalıştır</button></form></section></section>';
-        return ProfileHtml::page('Reward Provider',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Reward Provider',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Reward Provider'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
     private static function csrf(string $v):string{return '<input type="hidden" name="_csrf" value="'.self::e($v).'">';}
     private static function e(string $v):string{return ProfileHtml::escape($v);}

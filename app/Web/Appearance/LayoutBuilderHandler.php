@@ -70,6 +70,7 @@ final readonly class LayoutBuilderHandler implements RequestHandlerInterface
                 'Layout Builder',
                 $content,
                 $this->basePath,
+                breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Layout Builder'),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),

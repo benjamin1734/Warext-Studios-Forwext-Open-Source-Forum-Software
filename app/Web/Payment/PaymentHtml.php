@@ -63,7 +63,7 @@ final class PaymentHtml
         }
 
         $body.='</section></section>';
-        return ProfileHtml::page('Payment Operations',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Payment Operations',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Payment Operations'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function operation(

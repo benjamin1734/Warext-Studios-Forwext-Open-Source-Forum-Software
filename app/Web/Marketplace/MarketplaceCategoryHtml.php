@@ -110,7 +110,7 @@ final class MarketplaceCategoryHtml
             .'<p class="muted">Kategori derinliği backend’de en fazla 8 seviye; cycle/self-parent kabul edilmez. '
             .'Custom field değer tipi ilan kaydında tekrar backend tarafından doğrulanır.</p></section>';
 
-        return ProfileHtml::page('Marketplace Kategori Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Marketplace Kategori Yönetimi',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Marketplace Kategori Yönetimi'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function csrf(string $token):string

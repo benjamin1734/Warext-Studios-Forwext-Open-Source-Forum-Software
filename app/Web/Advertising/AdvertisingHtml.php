@@ -121,7 +121,7 @@ final class AdvertisingHtml
         }
         $body.='</tbody></table></div></section></section>';
 
-        return ProfileHtml::page('Reklam / Notice Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Reklam / Notice Yönetimi',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Reklam / Notice Yönetimi'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function option(string $value,string $label,string $selected):string

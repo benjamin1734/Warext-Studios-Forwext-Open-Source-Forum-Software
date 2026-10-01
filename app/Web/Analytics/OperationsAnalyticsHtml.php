@@ -74,7 +74,7 @@ final class OperationsAnalyticsHtml
             . 'updated_at zamanını kullanır. Destek ve bug süreleri kendi authoritative response/resolved/finalized zaman alanlarından hesaplanır.</p>'
             . '<p class="muted">Üretildi: '.self::e($snapshot->generatedAt->format('Y-m-d H:i:s')).' UTC</p></section>';
 
-        return ProfileHtml::page('Moderasyon, Destek ve Hata Analizleri', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Moderasyon, Destek ve Hata Analizleri', $body, $basePath, breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Moderasyon, Destek ve Hata Analizleri'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function bugCategoryTable(OperationsAnalyticsSnapshot $snapshot): string

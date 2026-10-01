@@ -83,6 +83,7 @@ final class CommerceAnalyticsHtml
             'Marketplace, Gelir, Referral ve Giveaway Analizleri',
             $body,
             $basePath,
+            breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Marketplace, Gelir, Referral ve Giveaway Analizleri'),
             authenticated: true,
             headAssets: AdminAssetsHtml::headAssets($basePath),
         );

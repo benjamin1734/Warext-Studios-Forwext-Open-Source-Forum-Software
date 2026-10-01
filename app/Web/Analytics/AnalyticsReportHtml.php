@@ -140,7 +140,7 @@ final class AnalyticsReportHtml
             . 'ticket/bug/report serbest metni veya payment billing/receipt payloadları bu datasetlerde seçilmez. '
             . 'Dataset erişimi backend permission ile, export ayrıca analytics.export ile doğrulanır.</p></section>';
 
-        return ProfileHtml::page('Analytics Report Builder', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Analytics Report Builder', $body, $basePath, breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Analytics Report Builder'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function filterFields(AnalyticsReportDefinition $definition): string

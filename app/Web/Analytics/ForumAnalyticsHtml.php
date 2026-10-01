@@ -73,7 +73,7 @@ final class ForumAnalyticsHtml
             . 'Bu ekran site-geneli BI izni olmadan açılamaz.</p>'
             . '<p class="muted">Üretildi: '.self::e($snapshot->generatedAt->format('Y-m-d H:i:s')).' UTC</p></section>';
 
-        return ProfileHtml::page('Forum Analiz Dashboardu', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Forum Analiz Dashboardu', $body, $basePath, breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Forum Analiz Dashboardu'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function growth(string $label, int $current, int $previous): string

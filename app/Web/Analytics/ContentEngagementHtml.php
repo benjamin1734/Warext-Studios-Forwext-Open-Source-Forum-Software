@@ -57,7 +57,7 @@ final class ContentEngagementHtml
             .'E-posta, URL, IP, telefon benzeri veya serbest/hassas sorgular yalnız redacted sınıfında sayılır.</p>'
             .'<p class="muted">Üretildi: '.self::e($snapshot->generatedAt->format('Y-m-d H:i:s')).' UTC</p></section>';
 
-        return ProfileHtml::page('İçerik ve Engagement Analizleri',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('İçerik ve Engagement Analizleri',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('İçerik ve Engagement Analizleri'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function forumTable(ContentEngagementSnapshot $snapshot):string

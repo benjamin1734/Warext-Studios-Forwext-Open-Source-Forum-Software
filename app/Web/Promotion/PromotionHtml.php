@@ -61,7 +61,7 @@ final class PromotionHtml
             .'<form method="post" action="'.$action.'" class="presence-settings">'.self::csrf($csrf)
             .'<input type="hidden" name="action" value="evaluate_batch"><label>Batch limit <input type="number" name="limit" min="1" max="500" value="100"></label>'
             .'<button type="submit">Bounded batch çalıştır</button></form></section></section>';
-        return ProfileHtml::page('User Promotions',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('User Promotions',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('User Promotions'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
     private static function csrf(string $v):string{return '<input type="hidden" name="_csrf" value="'.self::e($v).'">';}
     private static function option(string $v,string $l,string $s):string{return '<option value="'.self::e($v).'"'.($v===$s?' selected':'').'>'.self::e($l).'</option>';}

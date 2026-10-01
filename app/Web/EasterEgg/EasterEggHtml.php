@@ -141,7 +141,7 @@ final class EasterEggHtml
             . '</button><a href="' . self::e($basePath->prepend('/admin/easter-eggs')) . '">Yeni tanım</a></div>'
             . '</form></section></section>';
 
-        return ProfileHtml::page('Easter Egg Yönetimi', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Easter Egg Yönetimi', $body, $basePath, breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Easter Egg Yönetimi'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function csrf(string $token): string

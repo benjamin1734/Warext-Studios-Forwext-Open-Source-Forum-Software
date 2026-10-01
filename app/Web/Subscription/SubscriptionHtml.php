@@ -169,7 +169,7 @@ final class SubscriptionHtml
             $body.='</article>';
         }
         $body.='</section></section>';
-        return ProfileHtml::page('Abonelik Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
+        return ProfileHtml::page('Abonelik Yönetimi',$body,$basePath,breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Abonelik Yönetimi'), authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function csrf(string $token):string{return '<input type="hidden" name="_csrf" value="'.self::e($token).'">';}

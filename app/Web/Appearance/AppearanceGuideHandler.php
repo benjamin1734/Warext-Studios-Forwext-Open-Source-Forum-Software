@@ -51,6 +51,7 @@ final readonly class AppearanceGuideHandler implements RequestHandlerInterface
                 'Appearance Studio',
                 $content,
                 $this->basePath,
+                breadcrumbs: AdminAssetsHtml::breadcrumbTrail('Appearance Studio'),
                 authenticated: true,
                 viewerId: $actor->value(),
                 headAssets: AdminAssetsHtml::headAssets($this->basePath),
