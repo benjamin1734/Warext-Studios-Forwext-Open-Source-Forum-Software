@@ -12,7 +12,8 @@ final class ModerationWorkspaceWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Moderation/ModerationWorkspaceHtml.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('moderation-workspace discovery-page', $html);
         self::assertStringContainsString('surface-head moderation-head', $html);
