@@ -13,7 +13,8 @@ final class ThreadFreshnessWebSurfaceTest extends TestCase
         $root=dirname(__DIR__,5);
         $policy=(string)file_get_contents($root.'/app/Web/Moderation/ThreadFreshnessPolicyHandler.php');
         $review=(string)file_get_contents($root.'/app/Web/Moderation/ThreadFreshnessReviewHandler.php');
-        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+        $css=(string)file_get_contents($root.'/public/assets/site-components.css')
+            .(string)file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('moderation-subpage discovery-page',$policy);
         self::assertStringContainsString('surface-panel freshness-policy-panel',$policy);
