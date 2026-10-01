@@ -42,8 +42,9 @@ final class FrontendCssLayeringTest extends TestCase
         $components = (string) file_get_contents($root . '/public/assets/site-components.css');
 
         self::assertStringContainsString('/* shell-ownership-v2 */', $components);
+        self::assertStringContainsString('/* shell-layout-ownership-v2 */', $components);
 
-        foreach (['top', 'topin', 'brand', 'wrap', 'breadcrumbs'] as $class) {
+        foreach (['top', 'topin', 'brand', 'wrap', 'breadcrumbs', 'layout-shell', 'layout-sidebar', 'site-footer', 'footerin', 'core-brand-footer', 'ui-page-slot'] as $class) {
             self::assertSame(
                 0,
                 self::rootClassDefinitionCount($base, $class),

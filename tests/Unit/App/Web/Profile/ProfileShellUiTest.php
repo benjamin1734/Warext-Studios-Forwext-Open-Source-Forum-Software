@@ -36,6 +36,9 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('grid-template-columns:168px minmax(0,1fr)', $css);
         self::assertStringContainsString('/* navigation-shell-v1 */', $css);
         self::assertStringContainsString('/* shell-ownership-v2 */', $css);
+        self::assertStringContainsString('/* shell-layout-ownership-v2 */', $css);
+        self::assertStringContainsString('.layout-sidebar{', $css);
+        self::assertStringContainsString('.ui-page-slot{', $css);
         self::assertStringContainsString('/* forum-surfaces-v1 */', $css);
         self::assertStringContainsString(".forum-category{", $css);
         self::assertStringNotContainsString(".thread-view-actions .forum-category{", $css);
