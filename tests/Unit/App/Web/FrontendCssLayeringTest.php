@@ -60,6 +60,22 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testProfileFoundationIsNotOwnedByTheBaseLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+
+        self::assertStringContainsString('/* profile-foundation-ownership-v2 */', $components);
+        self::assertStringContainsString('/* profile-mobile-foundation-v2 */', $components);
+        self::assertStringNotContainsString('.account-center-card,}', $base);
+
+        foreach (['profile', 'banner', 'profilebody', 'profilehead', 'profile-relationship-actions', 'tabs', 'profile-wall'] as $class) {
+            self::assertSame(0, self::rootClassDefinitionCount($base, $class));
+            self::assertGreaterThan(0, self::rootClassDefinitionCount($components, $class));
+        }
+    }
+
     public function testMarketplaceTrophyAndBugFabAreNotOwnedByTheBaseLayer(): void
     {
         $root = dirname(__DIR__, 4);
