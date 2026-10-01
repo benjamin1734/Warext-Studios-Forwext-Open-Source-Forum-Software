@@ -76,9 +76,7 @@
   gap:7px;
   flex-wrap:wrap;
 }
-.forum-hero-actions .fx-btn,
-.forum-view-actions .fx-btn,
-.thread-view-actions .forum-category{
+.forum-category{
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:8px;
