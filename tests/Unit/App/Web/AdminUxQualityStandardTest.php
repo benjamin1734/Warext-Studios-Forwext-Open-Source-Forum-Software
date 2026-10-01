@@ -56,6 +56,9 @@ final class AdminUxQualityStandardTest extends TestCase
             self::assertStringNotContainsString('AdminUxQualityHtml::css', $source, $file);
         }
 
+        $assetsHelper = (string) file_get_contents($root . '/app/Web/Admin/AdminAssetsHtml.php');
+        self::assertStringContainsString('/assets/admin.css', $assetsHelper);
+
         foreach ([
             'AdminDashboardHandler.php',
             'AdminCommunityHandler.php',
@@ -64,7 +67,7 @@ final class AdminUxQualityStandardTest extends TestCase
             'SystemOperationsHandler.php',
         ] as $file) {
             $source = (string) file_get_contents($root . '/app/Web/Admin/' . $file);
-            self::assertStringContainsString('/assets/admin.css', $source, $file);
+            self::assertStringContainsString('AdminAssetsHtml::headAssets', $source, $file);
             self::assertStringContainsString('headAssets:', $source, $file);
         }
     }
