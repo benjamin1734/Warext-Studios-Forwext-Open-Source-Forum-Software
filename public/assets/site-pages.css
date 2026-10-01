@@ -164,6 +164,26 @@
   box-shadow:inset 3px 0 0 #d9a441;
 }
 
+/* forum-empty-state-v2 */
+.forum-empty-state{
+  padding:30px 18px;
+  text-align:center;
+}
+.forum-empty-state .forum-node-icon{
+  margin:0 auto 11px;
+}
+.forum-empty-state h2,
+.forum-empty-state h3{
+  margin:0 0 6px;
+}
+.forum-empty-state p{
+  max-width:620px;
+  margin:0 auto;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.55;
+}
+
 .forum-category{
   overflow:hidden;
   border:1px solid var(--line);

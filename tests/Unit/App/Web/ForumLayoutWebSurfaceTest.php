@@ -24,6 +24,10 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="forum-recent-item"', $index);
         self::assertStringContainsString('class="forum-recent-avatar"', $index);
         self::assertStringContainsString('class="forum-recent-user"', $index);
+
+        $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
+        self::assertStringContainsString('/* forum-empty-state-v2 */', $css);
+        self::assertStringContainsString('.forum-empty-state{', $css);
     }
 
     public function testForumThreadListUsesExplicitDesktopColumns(): void
