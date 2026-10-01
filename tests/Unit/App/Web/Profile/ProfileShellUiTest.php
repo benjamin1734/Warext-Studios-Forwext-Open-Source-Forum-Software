@@ -11,7 +11,8 @@ final class ProfileShellUiTest extends TestCase
     public function testSharedShellStylesheetCoversCoreForumProfileAdminAndResponsiveSurfaces(): void
     {
         $root = dirname(__DIR__, 5);
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
         $baseCss = (string) file_get_contents($root . '/public/assets/site-base.css');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
 
