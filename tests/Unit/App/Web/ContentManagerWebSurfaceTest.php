@@ -13,7 +13,8 @@ final class ContentManagerWebSurfaceTest extends TestCase
         $root=dirname(__DIR__,4);
         $handler=(string)file_get_contents($root.'/app/Web/ContentManager/ContentManagerHandler.php');
         $operation=(string)file_get_contents($root.'/app/Web/ContentManager/ContentManagerOperationHandler.php');
-        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+        $css=(string)file_get_contents($root.'/public/assets/site-components.css')
+            .(string)file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('content-manager-page discovery-page',$handler);
         self::assertStringContainsString('surface-head content-manager-head',$handler);
