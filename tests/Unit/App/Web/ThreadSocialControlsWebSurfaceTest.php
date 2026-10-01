@@ -70,8 +70,10 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString("quotePost(editorRoot, postId)", $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/thread-interactions.js', $profile);
+        self::assertStringContainsString('/* thread-social-controls-v2 */', $css);
         self::assertStringContainsString('.thread-reaction-popover', $css);
         self::assertStringContainsString('.thread-bookmark-form', $css);
+        self::assertStringContainsString('.thread-post-interactions details', $css);
     }
 
     public function testClientLoadsReactionSummaryLazilyInsteadOfOnPageBootstrap(): void

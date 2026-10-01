@@ -642,6 +642,102 @@ a.forum-thread-author:hover{color:var(--text)}
   border-radius:6px;
   font-size:10.5px;
 }
+/* thread-social-controls-v2 */
+.thread-post-interactions details{position:relative}
+.thread-post-interactions summary{list-style:none;cursor:pointer}
+.thread-post-interactions summary::-webkit-details-marker{display:none}
+.thread-reaction-popover,
+.thread-bookmark-form{
+  position:absolute;
+  z-index:30;
+  top:calc(100% + 7px);
+  right:0;
+  width:min(330px,80vw);
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--panel2);
+  box-shadow:var(--forwext-semantic-shadow-floating);
+}
+.thread-reaction-options{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.thread-reaction-option{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 9px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--panel);
+  color:var(--text);
+  cursor:pointer;
+}
+.thread-reaction-option:hover,
+.thread-reaction-option:focus-visible{
+  border-color:var(--accent);
+  outline:none;
+}
+.thread-reaction-option span{font-size:10px}
+.thread-reaction-remove{
+  width:100%;
+  margin-top:5px;
+  padding:5px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  text-align:left;
+  cursor:pointer;
+}
+.thread-reaction-counts{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.thread-reaction-count{
+  display:inline-flex;
+  padding:3px 7px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--muted);
+  font-size:10px;
+}
+.thread-bookmark-form{
+  display:grid;
+  gap:10px;
+}
+.thread-bookmark-form label{
+  display:grid;
+  gap:5px;
+}
+.thread-bookmark-form label>span{font-weight:800}
+.thread-bookmark-form input{
+  width:100%;
+  box-sizing:border-box;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--panel);
+  color:var(--text);
+  font:inherit;
+}
+.thread-bookmark-form>div{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.thread-interaction-status{
+  min-height:1em;
+  color:var(--muted);
+}
+.thread-interaction-status[data-error="1"]{color:#ff9a9a}
+.thread-own-reaction-note{
+  display:block;
+  padding:5px;
+}
 .thread-quote-button{
   cursor:pointer;
 }
@@ -819,6 +915,11 @@ a.forum-thread-author:hover{color:var(--text)}
     width:100%;
     margin-left:0;
     justify-content:flex-start;
+  }
+  .thread-reaction-popover,
+  .thread-bookmark-form{
+    left:0;
+    right:auto;
   }
   .thread-quick-reply-head{
     display:grid;
