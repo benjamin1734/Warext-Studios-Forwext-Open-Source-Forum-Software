@@ -60,6 +60,24 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testSearchFoundationIsNotOwnedByTheBaseLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+        $pages = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        self::assertStringContainsString('/* search-foundation-ownership-v2 */', $components);
+
+        foreach (['search-form', 'search-actions', 'search-hit', 'search-alert'] as $class) {
+            self::assertSame(0, self::rootClassDefinitionCount($base, $class));
+            self::assertGreaterThan(0, self::rootClassDefinitionCount($components . $pages, $class));
+        }
+
+        self::assertSame(0, self::rootClassDefinitionCount($base, 'presence-settings'));
+        self::assertGreaterThan(0, self::rootClassDefinitionCount($pages, 'presence-settings'));
+    }
+
     public function testNotificationSurfaceIsNotOwnedByTheBaseLayer(): void
     {
         $root = dirname(__DIR__, 4);
