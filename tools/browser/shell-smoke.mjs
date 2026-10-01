@@ -54,10 +54,21 @@ try {
       fail(`${testCase.name}: fixture failed to load`);
     }
 
-    const shellLoaded = await page.evaluate(() =>
-      [...document.styleSheets].some((sheet) => sheet.href?.includes("/public/assets/site-shell.css")),
+    const requiredStylesheets = [
+      "/public/assets/site-base.css",
+      "/public/assets/site-components.css",
+      "/public/assets/site-pages.css",
+    ];
+    const loadedStylesheets = await page.evaluate(() =>
+      [...document.styleSheets]
+        .map((sheet) => sheet.href)
+        .filter((href) => typeof href === "string"),
     );
-    if (!shellLoaded) fail(`${testCase.name}: site-shell.css did not load`);
+    for (const stylesheet of requiredStylesheets) {
+      if (!loadedStylesheets.some((href) => href.includes(stylesheet))) {
+        fail(`${testCase.name}: ${stylesheet} did not load`);
+      }
+    }
 
     const scriptLoaded = await page.evaluate(() =>
       [...document.scripts].some((script) => script.src.includes("/public/assets/mobile-nav.js")),
