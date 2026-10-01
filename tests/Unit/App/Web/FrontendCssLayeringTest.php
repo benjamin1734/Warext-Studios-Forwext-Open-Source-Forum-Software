@@ -60,6 +60,28 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testAccountSocialListsAreOwnedByThePageLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $pages = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        self::assertStringContainsString('/* account-social-lists-ownership-v2 */', $pages);
+
+        foreach (['relationship-panel', 'relationship-row', 'bookmark-card', 'activity-feed-item'] as $class) {
+            self::assertSame(
+                0,
+                self::rootClassDefinitionCount($base, $class),
+                sprintf('%s must not be defined in the base layer.', $class),
+            );
+            self::assertGreaterThan(
+                0,
+                self::rootClassDefinitionCount($pages, $class),
+                sprintf('%s must be owned by the page layer.', $class),
+            );
+        }
+    }
+
     public function testAuthSurfaceIsNotOwnedByTheBaseLayer(): void
     {
         $root = dirname(__DIR__, 4);
