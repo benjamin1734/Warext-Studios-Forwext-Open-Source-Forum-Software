@@ -83,22 +83,6 @@ final class LayoutBuilderHtml
                 . '<button type="submit">Taslağı yayınla</button></form>';
 
         return '<section class="card builder-admin" data-layout-builder>'
-            . '<style>'
-            . '.builder-admin{display:grid;gap:18px}.builder-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}'
-            . '.builder-toolbar button,.builder-toolbar a,.builder-publish-form button,.builder-import button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:9px;text-decoration:none;cursor:pointer}'
-            . '.builder-notice{padding:10px 12px;border:1px solid #2f6f47;background:#173722;border-radius:9px}'
-            . '.builder-grid{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,1fr);gap:18px}'
-            . '.builder-palette{display:grid;align-content:start;gap:8px}.builder-widget-add{text-align:left;display:grid;gap:3px}.builder-widget-add small{color:var(--muted)}'
-            . '.builder-preview-shell{overflow:auto;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}'
-            . '.builder-preview{margin-inline:auto;transition:max-width .15s ease}.builder-preview[data-device="desktop"]{max-width:1180px}.builder-preview[data-device="tablet"]{max-width:820px}.builder-preview[data-device="mobile"]{max-width:390px}'
-            . '.builder-slot{border:1px dashed var(--line);border-radius:10px;margin:10px 0;background:var(--panel)}.builder-slot>header{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;color:var(--muted)}'
-            . '.builder-dropzone{min-height:52px;padding:8px;display:grid;gap:8px}.builder-placement{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:10px;display:grid;gap:8px;cursor:grab}'
-            . '.builder-placement[hidden]{display:none}.builder-placement-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.builder-placement-actions{display:flex;gap:6px}.builder-placement-actions button{padding:5px 8px}'
-            . '.builder-condition{display:grid;grid-template-columns:2fr 1fr;gap:8px}.builder-condition label{display:grid;gap:4px;font-size:12px;color:var(--muted)}.builder-condition input,.builder-condition select,.builder-import textarea{width:100%;background:#0d1117;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:7px}'
-            . '.builder-device-checks{display:flex;gap:8px;flex-wrap:wrap}.builder-preview-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.builder-preview-controls label{display:grid;gap:4px}'
-            . '.builder-import{display:grid;gap:8px}.builder-import textarea{min-height:130px}.builder-status{font-size:13px;color:var(--muted)}'
-            . '@media(max-width:760px){.builder-grid{grid-template-columns:1fr}.builder-condition{grid-template-columns:1fr}}'
-            . '</style>'
             . '<div><h1 style="margin:0">Layout Builder</h1><p class="muted">Widget taşı, sırala, çoğalt; koşul ve cihaz önizlemesi yap; taslak kaydet ve güvenli yayınla.</p></div>'
             . $notice
             . '<div class="builder-toolbar">'

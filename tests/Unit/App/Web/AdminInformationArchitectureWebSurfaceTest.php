@@ -124,6 +124,28 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         }
     }
 
+
+    public function testAppearanceAcpPresentationHasNoInlineStyles(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/admin.css');
+
+        foreach ([
+            'AppearanceGuideHtml.php',
+            'LayoutBuilderHtml.php',
+            'ThemeManageHtml.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/Appearance/' . $file);
+            self::assertStringNotContainsString('<style>', $source, $file);
+            self::assertStringNotContainsString('</style>', $source, $file);
+        }
+
+        self::assertStringContainsString('/* Appearance Studio */', $asset);
+        self::assertStringContainsString('/* Layout Builder */', $asset);
+        self::assertStringContainsString('/* Theme Manager */', $asset);
+        self::assertSame(substr_count($asset, '{'), substr_count($asset, '}'));
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);

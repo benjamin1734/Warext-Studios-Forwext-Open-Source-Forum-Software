@@ -144,15 +144,7 @@ final class ThemeManageHtml
             ? '<p class="muted">Custom CSS/JS bu revision ile versionlanır ve yayın sırasında same-origin asset cache’e derlenir.</p>'
             : '<p class="muted">Custom CSS/JS ve publish/rollback için appearance.advanced yetkisi gerekir.</p>';
 
-        return '<section class="theme-admin"><style>'
-            . '.theme-admin{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}.theme-sidebar,.theme-editor,.theme-history,.theme-diff{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px}'
-            . '.theme-sidebar{display:grid;align-content:start;gap:7px}.theme-list-item{display:grid;gap:2px;padding:9px;border:1px solid var(--line);border-radius:8px;text-decoration:none}.theme-list-item small{color:var(--muted)}'
-            . '.theme-editor form{display:grid;gap:12px}.theme-editor label,.theme-diff-form label{display:grid;gap:5px}.theme-editor input,.theme-editor select,.theme-editor textarea,.theme-diff-form select{width:100%;border:1px solid var(--line);border-radius:8px;background:#0d1117;color:var(--text);padding:9px;font:inherit}'
-            . '.theme-editor textarea{min-height:150px;font-family:ui-monospace,monospace}.theme-actions{display:flex;gap:8px;flex-wrap:wrap}.theme-admin button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}'
-            . '.theme-notice{grid-column:1/-1;padding:10px 12px;border:1px solid #2f6f47;background:#173722;border-radius:9px}.theme-revision{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.theme-revision>div{display:grid;gap:3px}.theme-revision small{color:var(--muted)}'
-            . '.theme-diff-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.theme-diff table{width:100%;border-collapse:collapse}.theme-diff th,.theme-diff td{border-top:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.theme-diff pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:520px;margin:0}'
-            . '@media(max-width:760px){.theme-admin{grid-template-columns:1fr}}'
-            . '</style>' . $notice
+        return '<section class="theme-admin">'
             . '<aside class="theme-sidebar"><h2>Temalar</h2>' . $themeList . '</aside>'
             . '<div style="display:grid;gap:18px"><section class="theme-editor"><h1>'
             . self::escape($selected?->name ?? 'Yeni Tema') . '</h1>'
