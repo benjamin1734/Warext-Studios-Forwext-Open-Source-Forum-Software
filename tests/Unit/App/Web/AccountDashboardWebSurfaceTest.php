@@ -56,7 +56,8 @@ final class AccountDashboardWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $navigation = (string) file_get_contents($root . '/core/Ui/Navigation/NavigationRegistry.php');
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'account.own'", $navigation);
         self::assertStringContainsString("'Hesabım'", $navigation);
