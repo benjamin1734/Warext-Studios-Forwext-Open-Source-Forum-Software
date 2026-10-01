@@ -75,6 +75,7 @@ final readonly class AdminModuleManagerHandler implements RequestHandlerInterfac
                 $this->basePath,
                 authenticated: true,
                 viewerId: $actor->value(),
+                headAssets: '<link rel="stylesheet" href="' . ProfileHtml::escape($this->basePath->prepend('/assets/admin.css')) . '">',
             ))
                 ->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');

@@ -94,20 +94,7 @@ final class SystemIntegrationHtml
             $capabilities .= self::capability($capability);
         }
 
-        return '<section class="integration-admin"><style>'
-            . '.integration-admin{display:grid;gap:18px}.int-hero,.int-panel{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:18px}'
-            . '.int-hero{display:grid;gap:12px}.int-hero h1,.int-panel h2,.int-card h3{margin:0}.int-muted,.int-empty{color:var(--muted)}'
-            . '.int-badges,.int-actions,.int-section-nav{display:flex;flex-wrap:wrap;gap:7px}.int-badge,.int-chip{display:inline-flex;align-items:center;min-height:30px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--text);text-decoration:none;font-size:.86rem}'
-            . '.int-chip[aria-current="page"]{outline:2px solid var(--accent);outline-offset:1px}.int-notice{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--panel2)}'
-            . '.int-search{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,230px) auto;gap:8px}.int-search input,.int-search select,.int-control{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 10px}'
-            . '.int-search button,.int-button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 12px;cursor:pointer;text-decoration:none}.int-button.primary{font-weight:700}'
-            . '.int-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.int-heading p{margin:5px 0 0}.int-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-weight:700}'
-            . '.int-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.int-card{display:grid;gap:10px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}.int-card p{margin:0}.int-card form{display:grid;gap:8px;margin:0}.int-card label{font-weight:700}.int-meta{font-size:.82rem;color:var(--muted);word-break:break-word}.int-current{border:1px dashed var(--line);border-radius:8px;padding:8px 10px;background:var(--panel);word-break:break-word;white-space:pre-wrap}'
-            . '.int-secret-status{font-weight:700}.int-danger{border-style:dashed}.int-capabilities{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}.int-capability{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}.int-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;background:currentColor}.int-capability[data-ok="0"]{opacity:.7}'
-            . '.acp-breadcrumbs ol{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0;margin:0;color:var(--muted)}.acp-breadcrumbs li+li:before{content:"/";margin-right:7px}.acp-breadcrumbs a{color:inherit}'
-            . AdminUxQualityHtml::css()
-            . '@media(max-width:720px){.int-search{grid-template-columns:1fr}.int-heading{align-items:center}.int-grid{grid-template-columns:1fr}.int-actions{display:grid}.int-actions .int-button{width:100%}}'
-            . '</style>'
+        return '<section class="integration-admin">'
             . $breadcrumbs
             . AdminUxQualityHtml::guidance(
                 'Entegrasyon ayarlarını metin ve bölüm filtresiyle daralt; secret değerlerini ekrana geri taşımadan yönet.',

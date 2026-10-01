@@ -50,17 +50,7 @@ final class AdminCommunityHtml
             AdminCommunitySection::Moderation => self::moderation($snapshot['operations'], $basePath),
         };
 
-        return '<section class="ac-community"><style>'
-            . '.ac-community{display:grid;gap:16px}.ac-tabs{display:flex;gap:7px;flex-wrap:wrap}.ac-tab,.ac-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);text-decoration:none}.ac-tab[aria-current="page"]{outline:2px solid var(--accent);outline-offset:1px}'
-            . '.ac-panel{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}.ac-panel h1,.ac-panel h2,.ac-panel h3{margin-top:0}.ac-muted{color:var(--muted)}'
-            . '.ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.ac-card{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:13px}.ac-card h3{margin:0 0 6px}.ac-card p{margin:4px 0}'
-            . '.ac-form{display:grid;gap:10px}.ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.ac-form label{display:grid;gap:5px;font-size:.92rem}.ac-form input,.ac-form select,.ac-form textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px}.ac-form select[multiple]{min-height:150px}.ac-form textarea{min-height:100px;resize:vertical}.ac-checks{display:flex;gap:12px;flex-wrap:wrap}.ac-checks label{display:flex;align-items:center;gap:6px}.ac-checks input{width:auto}'
-            . '.ac-table-wrap{overflow:auto}.ac-table{width:100%;border-collapse:collapse;min-width:700px}.ac-table th,.ac-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}.ac-table th{font-size:.85rem;color:var(--muted)}'
-            . '.ac-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.ac-kpi{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:14px}.ac-kpi strong{display:block;font-size:1.45rem}.ac-badge{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:.82rem}.ac-good{font-weight:700}.ac-danger{font-weight:700}.ac-actions{display:flex;gap:7px;flex-wrap:wrap}.ac-stack{display:grid;gap:10px}.ac-analysis-layer{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}'
-            . '.ac-filter{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end;margin-bottom:12px}.ac-filter label{display:grid;gap:5px}.ac-filter input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px}.ac-role-preview{display:grid;gap:7px;border:1px dashed var(--line);border-radius:10px;padding:12px;background:var(--panel2)}'
-            . AdminUxQualityHtml::css()
-            . '@media(max-width:700px){.ac-actions{display:grid}.ac-actions>*{width:100%}.ac-btn{width:100%;box-sizing:border-box}.ac-filter{grid-template-columns:1fr}}'
-            . '</style>'
+        return '<section class="ac-community">'
             . $breadcrumbs
             . self::qualityGuidance($section)
             . '<nav class="ac-tabs" aria-label="ACP yönetim bölümleri">' . $tabs . '</nav>'

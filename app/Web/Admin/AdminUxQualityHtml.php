@@ -22,15 +22,6 @@ final class AdminUxQualityHtml
             . '</div></aside>';
     }
 
-    public static function css(): string
-    {
-        return '.acp-ux-guide{display:grid;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:16px}'
-            . '.acp-ux-guide>div:first-child p{margin:4px 0 0;color:var(--muted)}'
-            . '.acp-ux-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}'
-            . '.acp-ux-item{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}'
-            . '.acp-ux-item strong{display:block;margin-bottom:4px}.acp-ux-item span{color:var(--muted);font-size:.9rem;line-height:1.45}';
-    }
-
     private static function item(string $label, string $text): string
     {
         return '<div class="acp-ux-item"><strong>' . self::escape($label) . '</strong><span>'

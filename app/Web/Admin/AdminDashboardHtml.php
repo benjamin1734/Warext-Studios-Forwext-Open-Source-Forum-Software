@@ -101,19 +101,7 @@ final class AdminDashboardHtml
             $sections .= '</div></section>';
         }
 
-        return '<section class="acp-dashboard"><style>'
-            . '.acp-dashboard{display:grid;gap:18px}.acp-breadcrumbs ol{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0;margin:0;color:var(--muted)}'
-            . '.acp-breadcrumbs li+li:before{content:"/";margin-right:7px}.acp-breadcrumbs a{color:inherit}.acp-hero,.acp-panel{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:18px}'
-            . '.acp-hero{display:grid;gap:12px}.acp-hero h1,.acp-panel h2,.acp-card h3{margin:0}.acp-muted,.acp-empty{color:var(--muted)}'
-            . '.acp-search{display:flex;gap:8px;max-width:780px}.acp-search input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:11px 12px}.acp-search button,.acp-button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:9px 12px;cursor:pointer;text-decoration:none}'
-            . '.acp-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.acp-heading p{margin:5px 0 0}.acp-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-weight:700}'
-            . '.acp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.acp-card{display:grid;gap:10px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}.acp-card p{margin:0}.acp-card small{color:var(--muted)}'
-            . '.acp-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}.acp-actions form{margin:0}.acp-button.primary{font-weight:700}.acp-button.favorite[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}'
-            . '.acp-queue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.acp-queue{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}'
-            . '.acp-queue-number{display:flex;align-items:center;justify-content:center;min-width:52px;height:52px;border-radius:12px;background:var(--panel);font-size:1.35rem;font-weight:800}.acp-queue h3{margin:0 0 5px}.acp-queue p{margin:0 0 10px;color:var(--muted)}'
-            . '@media(max-width:640px){.acp-search{display:grid}.acp-heading{align-items:center}.acp-queue{grid-template-columns:1fr}.acp-actions{display:grid}.acp-actions .acp-button{width:100%}}'
-            . AdminUxQualityHtml::css()
-            . '</style>'
+        return '<section class="acp-dashboard">'
             . $breadcrumbs
             . AdminUxQualityHtml::guidance(
                 'Yönetim alanlarını tek giriş noktasından bul ve yalnız hesabının yetkili olduğu yüzeyleri aç.',

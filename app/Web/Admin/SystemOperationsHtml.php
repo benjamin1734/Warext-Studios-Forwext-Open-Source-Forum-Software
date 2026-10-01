@@ -63,17 +63,7 @@ final class SystemOperationsHtml
             $sections .= self::repairs($snapshot, $action, $csrf);
         }
 
-        return '<section class="ops"><style>'
-            . '.ops{display:grid;gap:18px}.ops-hero,.ops-panel{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:18px}.ops-hero h1,.ops-panel h2,.ops-card h3{margin:0}'
-            . '.ops-muted{color:var(--muted)}.ops-notice{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--panel2)}'
-            . '.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.ops-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2);display:grid;gap:8px}.ops-card p{margin:0}'
-            . '.ops-table-wrap{overflow:auto}.ops-table{width:100%;border-collapse:collapse}.ops-table th,.ops-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}.ops-table th{white-space:nowrap}'
-            . '.ops-badge{display:inline-flex;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-size:.84rem}.ops-actions{display:flex;flex-wrap:wrap;gap:8px}.ops-actions form{margin:0}.ops-button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:8px 11px;cursor:pointer;text-decoration:none}.ops-danger{font-weight:700}.ops-input,.ops-select{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:8px 10px;max-width:100%}'
-            . '.ops-filter{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,220px) auto auto;gap:8px;align-items:end}.ops-filter label{display:grid;gap:5px}'
-            . '.ops-form{display:grid;gap:9px;max-width:700px}.ops-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.86rem;overflow-wrap:anywhere}.ops-log{display:grid;gap:7px;padding:10px 0;border-bottom:1px solid var(--line)}.ops-log:last-child{border-bottom:0}.ops-log pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:var(--panel2);padding:9px;border-radius:8px}'
-            . AdminUxQualityHtml::css()
-            . '@media(max-width:700px){.ops-actions,.ops-filter{display:grid;grid-template-columns:1fr}.ops-actions form,.ops-button{width:100%}.ops-table{min-width:700px}}'
-            . '</style>'
+        return '<section class="ops">'
             . $breadcrumbs
             . AdminUxQualityHtml::guidance(
                 'Health, jobs, backup, log ve repair alanını bölüm filtresiyle daralt; yalnız yetkili olduğun bölümler render edilir.',

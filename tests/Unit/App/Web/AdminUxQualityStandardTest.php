@@ -31,6 +31,44 @@ final class AdminUxQualityStandardTest extends TestCase
         }
     }
 
+    public function testNativeAcpPresentationUsesOneStaticStylesheet(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/admin.css');
+        $qualityHelper = (string) file_get_contents($root . '/app/Web/Admin/AdminUxQualityHtml.php');
+
+        self::assertNotSame('', trim($asset));
+        self::assertStringContainsString('.acp-breadcrumbs', $asset);
+        self::assertStringContainsString('.acp-ux-guide', $asset);
+        self::assertStringContainsString(':focus-visible', $asset);
+        self::assertSame(substr_count($asset, '{'), substr_count($asset, '}'));
+        self::assertStringNotContainsString('function css(', $qualityHelper);
+
+        foreach ([
+            'AdminDashboardHtml.php',
+            'AdminCommunityHtml.php',
+            'AdminModuleManagerHtml.php',
+            'SystemIntegrationHtml.php',
+            'SystemOperationsHtml.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/Admin/' . $file);
+            self::assertStringNotContainsString('<style>', $source, $file);
+            self::assertStringNotContainsString('AdminUxQualityHtml::css', $source, $file);
+        }
+
+        foreach ([
+            'AdminDashboardHandler.php',
+            'AdminCommunityHandler.php',
+            'AdminModuleManagerHandler.php',
+            'SystemIntegrationHandler.php',
+            'SystemOperationsHandler.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/Admin/' . $file);
+            self::assertStringContainsString('/assets/admin.css', $source, $file);
+            self::assertStringContainsString('headAssets:', $source, $file);
+        }
+    }
+
     public function testModuleManagerHasServerValidatedSearchAndLifecycleStateFilter(): void
     {
         $root = dirname(__DIR__, 4);
