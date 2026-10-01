@@ -10,6 +10,7 @@
   --fx-radius-lg:14px;
   --fx-radius-md:11px;
   --fx-transition:160ms ease;
+  --fx-surface-panel-padding:14px;
 }
 
 html{scroll-behavior:smooth}
@@ -103,7 +104,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   color:var(--muted);
 }
 .surface-panel{
-  padding:14px;
+  padding:var(--fx-surface-panel-padding);
   border:1px solid var(--line);
   border-radius:9px;
   background:var(--panel);
@@ -303,7 +304,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .pagination{
   display:flex;
   gap:8px;
-  margin-top:18px;
+  margin-top:12px;
 }
 .pagination a,
 .pagination span{
@@ -832,7 +833,7 @@ select:focus{
 }
 
 @media(max-width:700px){
-  :root{--fx-shell-gutter:14px}
+  :root{--fx-shell-gutter:14px;--fx-surface-panel-padding:11px}
   .wrap,.layout-shell{margin-top:18px;margin-bottom:48px}
   .breadcrumbs{font-size:12px;margin-bottom:12px}
   .forum-hero,
