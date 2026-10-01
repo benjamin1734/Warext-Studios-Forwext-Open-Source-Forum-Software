@@ -56,7 +56,8 @@ final readonly class TrophyManageHandler implements RequestHandlerInterface
             return Response::html(TrophyHtml::manage(
                 $snapshot['definitions'],$selected,$snapshot['can_manage'],$snapshot['can_award'],
                 $this->basePath,$token,($request->query()['updated']??null)==='1'
-            ))->withHeader('Cache-Control','private, no-store');
+            ))->withHeader('Cache-Control','private, no-store')
+                ->withHeader('X-Robots-Tag', 'noindex,nofollow');
         }catch(PermissionDeniedException){
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');
         }catch(InvalidArgumentException|ValueError){

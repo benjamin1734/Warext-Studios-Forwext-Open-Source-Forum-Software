@@ -76,7 +76,8 @@ final readonly class MarketplaceCategoryManageHandler implements RequestHandlerI
             return Response::html(MarketplaceCategoryHtml::manage(
                 $snapshot['categories'],$snapshot['fields'],$selectedCategory,$selectedField,
                 $this->basePath,$token,($request->query()['updated']??null)==='1'
-            ))->withHeader('Cache-Control','private, no-store');
+            ))->withHeader('Cache-Control','private, no-store')
+                ->withHeader('X-Robots-Tag', 'noindex,nofollow');
         }catch(PermissionDeniedException){
             return Response::text('Forbidden',403)->withHeader('Cache-Control','no-store');
         }catch(InvalidArgumentException|ValueError){

@@ -146,6 +146,36 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         self::assertSame(substr_count($asset, '{'), substr_count($asset, '}'));
     }
 
+
+    public function testInternalAcpManagementResponsesArePrivateAndNoindex(): void
+    {
+        $root = dirname(__DIR__, 4);
+
+        foreach ([
+            'Advertising/AdvertisingManageHandler.php',
+            'Analytics/AnalyticsReportBuilderHandler.php',
+            'Analytics/CommerceAnalyticsHandler.php',
+            'Analytics/ContentEngagementHandler.php',
+            'Analytics/ForumAnalyticsHandler.php',
+            'Analytics/OperationsAnalyticsHandler.php',
+            'Appearance/AppearanceGuideHandler.php',
+            'Appearance/LayoutBuilderHandler.php',
+            'Appearance/ThemeManageHandler.php',
+            'EasterEgg/EasterEggManageHandler.php',
+            'Marketplace/MarketplaceCategoryManageHandler.php',
+            'Payment/PaymentManageHandler.php',
+            'Promotion/PromotionManageHandler.php',
+            'Reward/RewardManageHandler.php',
+            'Subscription/SubscriptionManageHandler.php',
+            'Trophy/TrophyManageHandler.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/' . $file);
+            self::assertStringContainsString('private, no-store', $source, $file);
+            self::assertStringContainsString('X-Robots-Tag', $source, $file);
+            self::assertStringContainsString('noindex,nofollow', $source, $file);
+        }
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);
