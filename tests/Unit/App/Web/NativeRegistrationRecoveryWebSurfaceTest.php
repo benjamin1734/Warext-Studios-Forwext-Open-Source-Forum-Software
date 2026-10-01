@@ -87,7 +87,8 @@ final class NativeRegistrationRecoveryWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
         $login = (string) file_get_contents($root . '/app/Web/Auth/LoginHandler.php');
 
         self::assertStringContainsString('data-nav-key="auth.register"', $profile);
