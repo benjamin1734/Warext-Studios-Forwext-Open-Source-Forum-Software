@@ -75,7 +75,8 @@ final class NotificationInboxWebSurfaceTest extends TestCase
         $handler = (string) file_get_contents($root . '/app/Web/Notification/NotificationRealtimeHandler.php');
         $asset = (string) file_get_contents($root . '/public/assets/notification-realtime.js');
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'notifications.own'", $navigation);
         self::assertStringContainsString("'/account/notifications'", $navigation);
