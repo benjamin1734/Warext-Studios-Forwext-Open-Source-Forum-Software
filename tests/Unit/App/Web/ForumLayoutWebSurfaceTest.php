@@ -49,7 +49,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('class="thread-view-title"', $thread);
         self::assertStringContainsString('class="thread-post-author"', $thread);
