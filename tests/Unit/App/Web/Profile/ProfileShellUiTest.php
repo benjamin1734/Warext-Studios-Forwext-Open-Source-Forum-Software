@@ -37,6 +37,8 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('/* navigation-shell-v1 */', $css);
         self::assertStringContainsString('/* shell-ownership-v2 */', $css);
         self::assertStringContainsString('/* shell-layout-ownership-v2 */', $css);
+        self::assertStringContainsString('/* navigation-responsive-ownership-v2 */', $css);
+        self::assertStringNotContainsString('.nav[data-mobile-open="1"]', $css);
         self::assertStringContainsString('.layout-sidebar{', $css);
         self::assertStringContainsString('.ui-page-slot{', $css);
         self::assertStringContainsString('/* forum-surfaces-v1 */', $css);

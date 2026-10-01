@@ -822,67 +822,18 @@ select:focus{
 
 /* Forwext responsive scale: 1100 / 920 / 820 / 760 / 700 / 520 px. */
 @media(max-width:1100px){
-  .nav a{padding-inline:8px;font-size:12.5px}
   .forum-home-layout{grid-template-columns:minmax(0,1fr) 285px}
 }
 
 @media(max-width:920px){
   .layout-shell{grid-template-columns:1fr}
   .layout-sidebar{order:2}
-  .topin{
-    min-height:62px;
-    flex-wrap:wrap;
-    padding:10px 0;
-  }
-  .nav-toggle{display:inline-flex;margin-left:auto}
-  .nav{
-    order:3;
-    width:100%;
-    max-height:0;
-    padding:0;
-    overflow:hidden;
-    flex-direction:column;
-    align-items:stretch;
-    gap:3px;
-    border:0 solid var(--line);
-    border-radius:12px;
-    background:var(--panel);
-    opacity:0;
-    transform:translateY(-4px);
-    pointer-events:none;
-    transition:
-      max-height 220ms ease,
-      opacity var(--fx-transition),
-      transform var(--fx-transition),
-      padding var(--fx-transition),
-      border-width var(--fx-transition);
-  }
-  .nav[data-mobile-open="1"]{
-    max-height:min(68vh,620px);
-    padding:8px;
-    overflow-y:auto;
-    border-width:1px;
-    opacity:1;
-    transform:translateY(0);
-    pointer-events:auto;
-    box-shadow:0 16px 36px rgba(0,0,0,.16);
-  }
-  .nav a{
-    width:100%;
-    min-height:42px;
-    justify-content:space-between;
-    padding:10px 12px;
-    font-size:13px;
-  }
-  .nav-notification-badge{box-shadow:none}
   .forum-home-side{position:static}
 }
 
 @media(max-width:700px){
   :root{--fx-shell-gutter:14px}
   .wrap,.layout-shell{margin-top:18px;margin-bottom:48px}
-  .brand{font-size:20px}
-  .brand::before{width:30px;height:30px;flex-basis:30px;border-radius:9px}
   .breadcrumbs{font-size:12px;margin-bottom:12px}
   .forum-hero,
   .forum-view-head,
@@ -1770,6 +1721,7 @@ body.forwext-nav-open{overflow:hidden}
   .nav-primary-menu>summary{padding-inline:8px;font-size:12.5px}
   .nav-account-label,.nav-chevron{display:none}
 }
+/* navigation-responsive-ownership-v2 */
 @media(max-width:920px){
   .topin{
     min-height:54px;
@@ -1865,6 +1817,7 @@ body.forwext-nav-open{overflow:hidden}
     border-radius:7px;
     background:var(--panel2);
   }
+  .nav-icon-link .nav-notification-badge{box-shadow:none}
   .nav-auth-link{
     min-height:42px;
     justify-content:center;
