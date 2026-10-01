@@ -12,7 +12,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Marketplace/MarketplaceHtml.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('marketplace-page discovery-page', $html);
         self::assertStringContainsString('surface-head marketplace-head', $html);
@@ -32,7 +33,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Portfolio/PortfolioHtml.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('portfolio-index discovery-page', $html);
         self::assertStringContainsString('surface-head portfolio-head', $html);
@@ -50,7 +52,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Giveaway/GiveawayHtml.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('giveaway-index discovery-page', $html);
         self::assertStringContainsString('surface-head giveaway-head', $html);
@@ -65,7 +68,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root=dirname(__DIR__,4);
         $html=(string)file_get_contents($root.'/app/Web/Portfolio/PortfolioHtml.php');
-        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+        $css=(string)file_get_contents($root.'/public/assets/site-components.css')
+            .(string)file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('module-manage-page discovery-page',$html);
         self::assertStringContainsString('surface-head module-manage-head',$html);
@@ -79,7 +83,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root=dirname(__DIR__,4);
         $html=(string)file_get_contents($root.'/app/Web/Giveaway/GiveawayHtml.php');
-        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+        $css=(string)file_get_contents($root.'/public/assets/site-components.css')
+            .(string)file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('module-manage-page discovery-page',$html);
         self::assertStringContainsString('class="module-manage-row"',$html);
@@ -92,7 +97,8 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root=dirname(__DIR__,4);
         $html=(string)file_get_contents($root.'/app/Web/Marketplace/MarketplaceHtml.php');
-        $css=(string)file_get_contents($root.'/public/assets/site-shell.css');
+        $css=(string)file_get_contents($root.'/public/assets/site-components.css')
+            .(string)file_get_contents($root.'/public/assets/site-pages.css');
 
         self::assertStringContainsString('module-manage-page discovery-page',$html);
         self::assertStringContainsString('marketplace-manage-list',$html);
