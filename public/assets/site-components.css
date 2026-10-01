@@ -1067,6 +1067,7 @@ select:focus{
   box-shadow:inset 3px 0 0 var(--accent);
 }
 
+/* auth-surface-ownership-v2 */
 .auth-entry{
   width:min(100%,520px);
   margin:28px auto 0;
@@ -1121,21 +1122,30 @@ select:focus{
 }
 .auth-entry-form input:not([type=checkbox]),
 .auth-entry-form select{
+  width:100%;
   min-height:42px;
   padding:9px 10px;
+  border:var(--forwext-component-input-border-width) solid var(--forwext-component-input-border-color);
   border-radius:7px;
   background:var(--panel2);
+  color:var(--forwext-component-input-text);
+  font:inherit;
 }
 .auth-entry-form input:not([type=checkbox]):focus,
 .auth-entry-form select:focus{
   background:var(--panel);
 }
 .auth-entry-check{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:start;
+  gap:10px!important;
   padding:9px 10px;
   border:1px solid var(--line);
   border-radius:7px;
   background:var(--panel2);
 }
+.auth-entry-check input{margin:3px 0 0}
 .auth-entry-check span{
   color:var(--text)!important;
   font-size:10.5px!important;
@@ -1143,6 +1153,8 @@ select:focus{
 }
 .auth-entry-challenge{
   min-height:64px;
+  display:flex;
+  align-items:center;
   padding:8px 0;
   overflow-x:auto;
 }
@@ -1150,12 +1162,14 @@ select:focus{
   min-height:42px;
   justify-content:center;
   border-radius:7px;
+  cursor:pointer;
 }
 .auth-entry-links{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:8px 12px;
+  flex-wrap:wrap;
   padding-top:11px;
   border-top:1px solid var(--line);
   color:var(--muted);
@@ -1164,13 +1178,16 @@ select:focus{
 .auth-entry-links a{
   color:var(--text);
   font-weight:760;
+  text-decoration:none;
 }
+.auth-entry-links a:hover{color:var(--accent)}
 .auth-entry-actions{
   display:flex;
   justify-content:flex-end;
   gap:7px;
   flex-wrap:wrap;
 }
+.auth-entry-actions button{cursor:pointer}
 .auth-entry-error,
 .auth-entry-notice{
   display:grid;

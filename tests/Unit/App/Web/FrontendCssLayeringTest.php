@@ -60,6 +60,28 @@ final class FrontendCssLayeringTest extends TestCase
         self::assertSame(0, self::rootClassDefinitionCount($base, 'nav'));
     }
 
+    public function testAuthSurfaceIsNotOwnedByTheBaseLayer(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+
+        self::assertStringContainsString('/* auth-surface-ownership-v2 */', $components);
+
+        foreach (['auth-entry', 'auth-entry-card', 'auth-entry-form', 'auth-entry-check', 'auth-entry-challenge', 'auth-entry-links', 'auth-entry-submit', 'auth-entry-actions'] as $class) {
+            self::assertSame(
+                0,
+                self::rootClassDefinitionCount($base, $class),
+                sprintf('%s must not be defined in the base layer.', $class),
+            );
+            self::assertGreaterThan(
+                0,
+                self::rootClassDefinitionCount($components, $class),
+                sprintf('%s must be owned by the component layer.', $class),
+            );
+        }
+    }
+
     public function testForumAndThreadSurfacesAreNotOwnedByTheBaseLayer(): void
     {
         $root = dirname(__DIR__, 4);
