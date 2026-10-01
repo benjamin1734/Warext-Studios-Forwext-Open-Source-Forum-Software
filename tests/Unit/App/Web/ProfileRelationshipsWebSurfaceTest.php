@@ -55,7 +55,8 @@ final class ProfileRelationshipsWebSurfaceTest extends TestCase
         $asset = (string) file_get_contents($root . '/public/assets/profile-relationships.js');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('/account/interactions/csrf', $asset);
         self::assertStringContainsString("'X-CSRF-Token': token", $asset);
