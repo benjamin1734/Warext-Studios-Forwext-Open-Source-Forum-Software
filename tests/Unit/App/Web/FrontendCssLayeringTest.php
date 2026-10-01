@@ -193,6 +193,45 @@ final class FrontendCssLayeringTest extends TestCase
         }
     }
 
+    public function testBaseLayerIsBalancedAndAccountStatisticsArePageOwned(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $base = (string) file_get_contents($root . '/public/assets/site-base.css');
+        $components = (string) file_get_contents($root . '/public/assets/site-components.css');
+        $pages = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        foreach ([$base, $components, $pages] as $css) {
+            self::assertSame(
+                substr_count($css, '{'),
+                substr_count($css, '}'),
+                'Every frontend CSS layer must have balanced braces.',
+            );
+        }
+
+        self::assertStringContainsString('/* account-and-statistics-page-ownership-v2 */', $pages);
+
+        foreach (['account-center', 'stats-grid', 'stat'] as $class) {
+            self::assertSame(
+                0,
+                self::rootClassDefinitionCount($base, $class),
+                sprintf('%s must not be defined in the base layer.', $class),
+            );
+            self::assertGreaterThan(
+                0,
+                self::rootClassDefinitionCount($pages, $class),
+                sprintf('%s must be owned by the page layer.', $class),
+            );
+        }
+
+        foreach (['account-center-hero', 'account-center-grid', 'account-center-card'] as $class) {
+            self::assertSame(
+                0,
+                self::rootClassDefinitionCount($base . $components . $pages, $class),
+                sprintf('%s is obsolete compatibility CSS and must stay removed.', $class),
+            );
+        }
+    }
+
     private static function rootClassDefinitionCount(string $css, string $class): int
     {
         preg_match_all(

@@ -708,7 +708,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .relationship-row,
 .activity-feed-item,
 .bookmark-card,
-.account-center-card,
+
 .notification-item{
   border-radius:var(--fx-radius-lg);
 }
@@ -767,7 +767,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .profile-wall-post,
 .activity-feed-item,
 .bookmark-card,
-.account-center-card,
+
 .notification-item,
 .relationship-row{
   transition:border-color var(--fx-transition),background var(--fx-transition),transform var(--fx-transition);
@@ -775,7 +775,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 .profile-wall-post:hover,
 .activity-feed-item:hover,
 .bookmark-card:hover,
-.account-center-card:hover,
+
 .notification-item:hover,
 .relationship-row:hover{
   border-color:color-mix(in srgb,var(--accent) 24%,var(--line));
