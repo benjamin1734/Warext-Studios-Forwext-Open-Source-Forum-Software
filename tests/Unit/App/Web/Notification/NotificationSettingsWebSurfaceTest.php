@@ -65,7 +65,8 @@ final class NotificationSettingsWebSurfaceTest extends TestCase
         $asset = (string) file_get_contents($root . '/public/assets/notification-settings.js');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('ForwextNotificationSound?.preview', $asset);
         self::assertStringContainsString('ForwextNotificationSound?.load', $asset);
