@@ -46,7 +46,8 @@ final class ForumAttachmentComposerWebSurfaceTest extends TestCase
         $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
         $repository = (string) file_get_contents($root . '/core/Forum/Attachment/DatabaseAttachmentRepository.php');
         $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('AttachmentPermission::Download->key()', $thread);
         self::assertStringContainsString('$this->attachments->attachedForPosts($postIds)', $thread);
