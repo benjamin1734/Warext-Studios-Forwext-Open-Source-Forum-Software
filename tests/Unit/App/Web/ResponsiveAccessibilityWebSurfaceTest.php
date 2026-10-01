@@ -12,7 +12,8 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
-        $css = (string) file_get_contents($root . '/public/assets/site-shell.css');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
         $mobileNav = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
         $package = (string) file_get_contents($root . '/package.json');
         $workflow = (string) file_get_contents($root . '/.github/workflows/qualification-matrix.yml');
@@ -65,7 +66,8 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $css = (string) file_get_contents($root . '/public/assets/site-base.css')
             . "\n"
-            . (string) file_get_contents($root . '/public/assets/site-shell.css');
+            . (string) file_get_contents($root . '/public/assets/site-components.css')
+            . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         preg_match_all('/@media\\s*\\(\\s*max-width:(\\d+)px\\s*\\)/', $css, $matches);
         $actual = array_values(array_unique(array_map('intval', $matches[1] ?? [])));
