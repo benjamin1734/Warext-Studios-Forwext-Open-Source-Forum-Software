@@ -99,6 +99,31 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         }
     }
 
+
+    public function testModuleAndAnalyticsAcpRenderersLoadSharedAdministrationStyles(): void
+    {
+        $root = dirname(__DIR__, 4);
+
+        foreach ([
+            'Advertising/AdvertisingHtml.php',
+            'Analytics/AnalyticsReportHtml.php',
+            'Analytics/CommerceAnalyticsHtml.php',
+            'Analytics/ContentEngagementHtml.php',
+            'Analytics/ForumAnalyticsHtml.php',
+            'Analytics/OperationsAnalyticsHtml.php',
+            'EasterEgg/EasterEggHtml.php',
+            'Marketplace/MarketplaceCategoryHtml.php',
+            'Payment/PaymentHtml.php',
+            'Promotion/PromotionHtml.php',
+            'Reward/RewardHtml.php',
+            'Subscription/SubscriptionHtml.php',
+            'Trophy/TrophyHtml.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/' . $file);
+            self::assertStringContainsString('AdminAssetsHtml::headAssets', $source, $file);
+        }
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);

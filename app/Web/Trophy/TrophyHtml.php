@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Trophy;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Trophy\TrophyDefinition;
@@ -72,7 +73,7 @@ final class TrophyHtml
                 .'<div class="search-actions"><button type="submit">İşlemi uygula</button></div></form></section>';
         }
         $body.='</section>';
-        return ProfileHtml::page('Kupa/Rozet/Başarım Yönetimi',$body,$basePath,authenticated:true);
+        return ProfileHtml::page('Kupa/Rozet/Başarım Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
     private static function csrf(string $v):string{return '<input type="hidden" name="_csrf" value="'.self::e($v).'">';}
     private static function option(string $v,string $label,string $selected):string{return '<option value="'.self::e($v).'"'.($v===$selected?' selected':'').'>'.self::e($label).'</option>';}

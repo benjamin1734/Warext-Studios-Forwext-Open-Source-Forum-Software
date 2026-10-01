@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Payment;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Payment\PaymentAttempt;
 use Forwext\Core\Payment\PaymentAttemptState;
@@ -62,7 +63,7 @@ final class PaymentHtml
         }
 
         $body.='</section></section>';
-        return ProfileHtml::page('Payment Operations',$body,$basePath,authenticated:true);
+        return ProfileHtml::page('Payment Operations',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function operation(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\EasterEgg;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\EasterEgg\EasterEggAnimation;
 use Forwext\Core\EasterEgg\EasterEggDefinition;
@@ -140,7 +141,7 @@ final class EasterEggHtml
             . '</button><a href="' . self::e($basePath->prepend('/admin/easter-eggs')) . '">Yeni tanım</a></div>'
             . '</form></section></section>';
 
-        return ProfileHtml::page('Easter Egg Yönetimi', $body, $basePath, authenticated:true);
+        return ProfileHtml::page('Easter Egg Yönetimi', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function csrf(string $token): string

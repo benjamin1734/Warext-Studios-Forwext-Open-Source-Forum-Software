@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Analytics;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Analytics\Report\AnalyticsReportDataset;
 use Forwext\Core\Analytics\Report\AnalyticsReportDefinition;
@@ -139,7 +140,7 @@ final class AnalyticsReportHtml
             . 'ticket/bug/report serbest metni veya payment billing/receipt payloadları bu datasetlerde seçilmez. '
             . 'Dataset erişimi backend permission ile, export ayrıca analytics.export ile doğrulanır.</p></section>';
 
-        return ProfileHtml::page('Analytics Report Builder', $body, $basePath, authenticated:true);
+        return ProfileHtml::page('Analytics Report Builder', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function filterFields(AnalyticsReportDefinition $definition): string

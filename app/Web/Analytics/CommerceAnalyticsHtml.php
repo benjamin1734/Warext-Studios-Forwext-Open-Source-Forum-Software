@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Analytics;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Analytics\Commerce\CommerceAnalyticsSnapshot;
 use Forwext\Core\Routing\BasePath;
@@ -83,6 +84,7 @@ final class CommerceAnalyticsHtml
             $body,
             $basePath,
             authenticated: true,
+            headAssets: AdminAssetsHtml::headAssets($basePath),
         );
     }
 

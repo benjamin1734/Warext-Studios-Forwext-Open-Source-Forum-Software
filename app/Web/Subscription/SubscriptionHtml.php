@@ -6,6 +6,7 @@ namespace Forwext\App\Web\Subscription;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Subscription\SubscriptionPlan;
@@ -168,7 +169,7 @@ final class SubscriptionHtml
             $body.='</article>';
         }
         $body.='</section></section>';
-        return ProfileHtml::page('Abonelik Yönetimi',$body,$basePath,authenticated:true);
+        return ProfileHtml::page('Abonelik Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function csrf(string $token):string{return '<input type="hidden" name="_csrf" value="'.self::e($token).'">';}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Analytics;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Analytics\Dashboard\ForumAnalyticsSnapshot;
 use Forwext\Core\Routing\BasePath;
@@ -72,7 +73,7 @@ final class ForumAnalyticsHtml
             . 'Bu ekran site-geneli BI izni olmadan açılamaz.</p>'
             . '<p class="muted">Üretildi: '.self::e($snapshot->generatedAt->format('Y-m-d H:i:s')).' UTC</p></section>';
 
-        return ProfileHtml::page('Forum Analiz Dashboardu', $body, $basePath, authenticated:true);
+        return ProfileHtml::page('Forum Analiz Dashboardu', $body, $basePath, authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function growth(string $label, int $current, int $previous): string

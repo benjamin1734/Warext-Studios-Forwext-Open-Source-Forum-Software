@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Advertising;
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Advertising\AdvertisingCampaign;
 use Forwext\Core\Advertising\AdvertisingDevice;
@@ -120,7 +121,7 @@ final class AdvertisingHtml
         }
         $body.='</tbody></table></div></section></section>';
 
-        return ProfileHtml::page('Reklam / Notice Yönetimi',$body,$basePath,authenticated:true);
+        return ProfileHtml::page('Reklam / Notice Yönetimi',$body,$basePath,authenticated: true, headAssets: AdminAssetsHtml::headAssets($basePath));
     }
 
     private static function option(string $value,string $label,string $selected):string
