@@ -70,6 +70,10 @@ final class ErrorAndLoggingTest extends TestCase
         self::assertSame(500, $response->status());
         self::assertStringNotContainsString('database failed', $response->body());
         self::assertStringNotContainsString('api-secret', $response->body());
+        self::assertStringContainsString('İstek tamamlanamadı', $response->body());
+        self::assertStringContainsString('request-12345678', $response->body());
+        self::assertStringContainsString('Ana sayfaya dön', $response->body());
+        self::assertSame('text/html; charset=UTF-8', $response->headers()->first('Content-Type'));
         self::assertSame('request-12345678', $response->headers()->first(RequestIdMiddleware::HEADER));
         self::assertCount(1, $logger->records);
         self::assertSame('database failed with [REDACTED]', $logger->records[0]['context']['exception_message']);

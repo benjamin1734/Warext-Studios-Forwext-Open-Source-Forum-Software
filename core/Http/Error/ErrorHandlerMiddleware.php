@@ -73,7 +73,7 @@ final readonly class ErrorHandlerMiddleware implements MiddlewareInterface
             ], 500);
         }
 
-        return Response::text('Internal Server Error. Request ID: ' . $requestId, 500);
+        return Response::html(ErrorPage::render($requestId), 500);
     }
 
     private function debugResponse(Request $request, Throwable $throwable, string $requestId): Response

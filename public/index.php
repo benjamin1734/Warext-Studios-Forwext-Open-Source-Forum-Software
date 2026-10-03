@@ -8,6 +8,7 @@ use Forwext\App\Web\Report\ReportApplicationFactory;
 use Forwext\App\Web\ResponseEmitter;
 use Forwext\App\Web\Seo\SeoApplicationFactory;
 use Forwext\App\Web\WebApplicationFactory;
+use Forwext\Core\Http\Error\ErrorPage;
 use Forwext\Core\Http\HttpMethod;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
@@ -124,7 +125,7 @@ try {
         $root . '/storage/logs/runtime.log',
     ))->report($exception, $requestUri);
 
-    $response = Response::text('Internal Server Error [' . $reference . ']', 500)
+    $response = Response::html(ErrorPage::render($reference), 500)
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('X-Robots-Tag', 'noindex, nofollow')
         ->withHeader('Cache-Control', 'no-store');
