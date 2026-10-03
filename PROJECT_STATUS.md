@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.13
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / 1.0.13 release candidate
+CURRENT_STEP = maintenance / complete
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = validate immutable 1.0.13 full/update release, then continue from the final product-quality pass
+NEXT_STEP = continue only from the final product-quality pass, a new regression or an approved roadmap item
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -58,7 +58,7 @@ NEXT_STEP = validate immutable 1.0.13 full/update release, then continue from th
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
-## Maintenance release — 1.0.13 candidate
+## Maintenance release — 1.0.13 complete
 
 - Production acceptance remains closed; this patch hardens the shared public navigation shell.
 - Primary and secondary navigation now honor the provided visible NavigationRegistry instead of rendering Marketplace, Members, FAQ or related links unconditionally.
@@ -67,7 +67,9 @@ NEXT_STEP = validate immutable 1.0.13 full/update release, then continue from th
 - Mobile/desktop navigation enhancement now resolves the current section relative to the installation base path, fixing active/sub-navigation behavior for cPanel subdirectory installs such as `/forum`.
 - Regression coverage locks custom-registry visibility, subdirectory base-path handling and safe navigation enhancement behavior.
 - Pre-release head `fec3cbf31f19ebad25f873193311b5920e35f17d` passed qualification/Chromium (`37122718332`), security (`37122718290`), performance (`37122718299`), MySQL/MariaDB migration smoke (`37122718343`) and full-package/installer qualification (`37122718289`).
-- Release packaging must produce immutable `forwext-v1.0.13-full.zip` and differential `forwext-v1.0.13-update.zip` from predecessor 1.0.12.
+- Release commit `5572cbdc9c2c96ced48f770921490c447d2c41c8` passed the release qualification matrix, security, performance, MySQL/MariaDB, PHP 8.4/8.5, SDK/React/Next.js and packaged installer checks.
+- Release 1.0.13 published successfully as immutable GitHub Release `v1.0.13` (release id `402504636`) on 2026-10-03.
+- Published assets: `forwext-v1.0.13-full.zip` (4,075,664 bytes) and `forwext-v1.0.13-update.zip` (11,235 bytes), each with a SHA-256 companion.
 
 ## Maintenance release — 1.0.12 complete
 
