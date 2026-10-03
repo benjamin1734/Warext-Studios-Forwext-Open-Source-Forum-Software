@@ -39,7 +39,8 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('.sr-only{', $css);
         self::assertStringContainsString('clip-path:inset(50%)', $css);
-        self::assertStringContainsString('.nav-account-menu[open]{z-index:1400}', $css);
+        self::assertStringContainsString('.nav-account-menu[open]{z-index:10}', $css);
+        self::assertStringContainsString('z-index:20;', $css);
         self::assertStringContainsString('.skip-link:focus-visible', $css);
         self::assertStringContainsString('@media(pointer:coarse)', $css);
         self::assertStringContainsString('input:not([type="checkbox"]):not([type="radio"])', $css);
