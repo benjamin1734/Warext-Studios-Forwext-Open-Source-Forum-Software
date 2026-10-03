@@ -670,6 +670,53 @@ jobs:
           )
           PY
 
+      - name: Smoke packaged web installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\\r\\n' < VERSION)"
+          WORK="dist/package-runtime-smoke"
+          rm -rf "$WORK"
+          mkdir -p "$WORK"
+          unzip -q "dist/forwext-v${VERSION}-full.zip" -d "$WORK"
+          PACKAGE_ROOT="$(find "$WORK" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          if [[ -z "$PACKAGE_ROOT" ]]; then
+            echo "Packaged application root could not be located." >&2
+            exit 1
+          fi
+
+          php -S 127.0.0.1:8124 -t "$PACKAGE_ROOT" >"$WORK/php-server.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" >/dev/null 2>&1 || true' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8124/install.php >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          check_installer() {
+            local request_path="$1"
+            local body="$WORK/body.html"
+            local headers="$WORK/headers.txt"
+            curl --fail --silent --show-error \
+              --dump-header "$headers" \
+              --output "$body" \
+              "http://127.0.0.1:8124${request_path}"
+
+            grep -Fq 'Forwext’i Kur' "$body"
+            grep -Fqi 'Cache-Control: no-store' "$headers"
+            grep -Fqi 'Content-Security-Policy:' "$headers"
+            grep -Fqi 'X-Content-Type-Options: nosniff' "$headers"
+            grep -Fqi 'Referrer-Policy: no-referrer' "$headers"
+          }
+
+          check_installer "/install.php"
+          check_installer "/public/install.php"
+
+          kill "$SERVER_PID" >/dev/null 2>&1 || true
+          trap - EXIT
       - name: Upload CI package artifact
         uses: actions/upload-artifact@v4
         with:
