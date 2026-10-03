@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.10
+CURRENT_VERSION = 1.0.11
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / ACP production acceptance
+CURRENT_STEP = production-acceptance-remediation / 1.0.11 release validation
 LAST_COMMIT = see current GitHub main
-BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = finish ACP consistency/end-to-end sweep, then final fresh-install/update-package production acceptance
+BLOCKERS = v1.0.11 full/update publication must pass the immutable release workflow
+NEXT_STEP = validate v1.0.11 full/update release assets, then close production-acceptance remediation
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -57,6 +57,20 @@ NEXT_STEP = finish ACP consistency/end-to-end sweep, then final fresh-install/up
 - Dense Chromium ACP acceptance now exercises dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin module primitives at 390px and 1440px, including stylesheet loading, horizontal overflow, single-breadcrumb, keyboard and 44px control checks.
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
+
+## Production acceptance remediation — 1.0.11 release candidate
+
+- Frontend rebuild F0-F4 and the ACP consistency sweep are complete.
+- All 26 registered ACP navigation targets plus the Administration dashboard resolve in real fresh-install smoke on MySQL 8.4 and MariaDB 10.11 and require authentication when unauthenticated.
+- Administration presentation is centralized in `public/assets/admin.css`; core, Appearance, Analytics and first-party admin surfaces share the same responsive/accessibility contract.
+- Dense Chromium acceptance covers dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin-module primitives at 390px and 1440px.
+- Internal management responses are private/no-store and noindex/nofollow; duplicate ACP/public breadcrumb trails are removed.
+- Advertising/Analytics static inline presentation was moved into shared ACP utilities; remaining Appearance inline style is dynamic preview token output by design.
+- cPanel package-root and `public/` document-root layouts are both supported. Root `index.php` delegates to the public runtime; installer-managed routing preserves hosting PHP handlers and upgrades older managed rewrite blocks.
+- Full-package verification requires runtime entrypoints, installer, core public/ACP assets and protected runtime-directory guards.
+- CI extracts the actual full ZIP, generates its managed routing files through the packaged production autoloader, serves both installer entrypoints, checks security headers and verifies an uninstalled package root redirects to `install.php`.
+- Pre-release acceptance head `712b2eb9d7ed833d3660372d96d00400e7a5dbea` passed security, performance, PHP 8.4/8.5 qualification, Chromium responsive/accessibility, MySQL/MariaDB clean-install + upgrade smoke and full-package validation.
+- Release 1.0.11 is intended to publish an immutable full ZIP plus a differential update ZIP from the immediate predecessor 1.0.10. Database/user/forum state remains preserved by the existing update manifest and migration contract.
 
 ## Production acceptance remediation — 1.0.5
 
