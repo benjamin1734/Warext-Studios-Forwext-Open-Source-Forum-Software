@@ -26,7 +26,7 @@ final class RewardHtml
         $body='<section class="card"><h1>Ortak Reward Provider</h1>'
             .'<p class="muted">Referral, giveaway, trophy ve promotion kaynaklarını aynı idempotent fulfilment ledger’ında yönetin. '
             .'Otomatik provider yalnız güvenli custom role veya non-system secondary group hedeflerini kabul eder.</p>'
-            .($updated?'<div class="search-alert" style="border-color:#2f6f47;background:#173722">Reward ayarları kaydedildi.</div>':'');
+            .($updated?'<div class="search-alert acp-success">Reward ayarları kaydedildi.</div>':'');
 
         $body.='<section class="section"><h2>Reward tanımları</h2>';
         foreach($snapshot['definitions'] as $definition){

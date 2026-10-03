@@ -21,7 +21,7 @@ final class TrophyHtml
         $action=self::e($basePath->prepend('/admin/trophies'));
         $body='<section class="card"><h1>Kupa, Rozet ve Başarım Yönetimi</h1>'
             .'<p class="muted">Kural bazlı ve manuel başarımları yönetin. Reward/group promotion işlemleri 13.08 ortak provider katmanına aittir.</p>'
-            .($updated?'<div class="search-alert" style="border-color:#2f6f47;background:#173722">İşlem kaydedildi.</div>':'')
+            .($updated?'<div class="search-alert acp-success">İşlem kaydedildi.</div>':'')
             .'<section class="section"><h2>Tanımlar</h2>';
         if($definitions===[])$body.='<div class="empty">Henüz tanım yok.</div>';
         foreach($definitions as $d){

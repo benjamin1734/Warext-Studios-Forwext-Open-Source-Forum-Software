@@ -20,7 +20,7 @@ final class PromotionHtml
         $action=self::e($basePath->prepend('/admin/promotions'));
         $body='<section class="card"><h1>User Promotions</h1>'
             .'<p class="muted">Kullanıcı metrikleri kurala ulaştığında ortak reward provider üzerinden güvenli role/group entitlement uygular.</p>'
-            .($updated?'<div class="search-alert" style="border-color:#2f6f47;background:#173722">Promotion işlemi kaydedildi.</div>':'')
+            .($updated?'<div class="search-alert acp-success">Promotion işlemi kaydedildi.</div>':'')
             .'<section class="section"><h2>Kurallar</h2>';
         foreach($definitions as $definition){
             $body.='<article class="search-hit"><h3><a href="'.self::e($basePath->prepend(
