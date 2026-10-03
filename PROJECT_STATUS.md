@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.12
+CURRENT_VERSION = 1.0.13
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / complete
+CURRENT_STEP = maintenance / 1.0.13 release candidate
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = no open maintenance blocker; continue only from a new issue, regression or approved roadmap item
+NEXT_STEP = validate immutable 1.0.13 full/update release, then continue from the final product-quality pass
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -57,6 +57,17 @@ NEXT_STEP = no open maintenance blocker; continue only from a new issue, regress
 - Dense Chromium ACP acceptance now exercises dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin module primitives at 390px and 1440px, including stylesheet loading, horizontal overflow, single-breadcrumb, keyboard and 44px control checks.
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
+
+## Maintenance release — 1.0.13 candidate
+
+- Production acceptance remains closed; this patch hardens the shared public navigation shell.
+- Primary and secondary navigation now honor the provided visible NavigationRegistry instead of rendering Marketplace, Members, FAQ or related links unconditionally.
+- Independently visible Portfolio/Giveaway navigation falls back under “Diğer” when Marketplace itself is not exposed.
+- The secondary navigation shell starts hidden server-side and is revealed only after the current section is resolved, avoiding an empty pre-enhancement strip.
+- Mobile/desktop navigation enhancement now resolves the current section relative to the installation base path, fixing active/sub-navigation behavior for cPanel subdirectory installs such as `/forum`.
+- Regression coverage locks custom-registry visibility, subdirectory base-path handling and safe navigation enhancement behavior.
+- Pre-release head `fec3cbf31f19ebad25f873193311b5920e35f17d` passed qualification/Chromium (`37122718332`), security (`37122718290`), performance (`37122718299`), MySQL/MariaDB migration smoke (`37122718343`) and full-package/installer qualification (`37122718289`).
+- Release packaging must produce immutable `forwext-v1.0.13-full.zip` and differential `forwext-v1.0.13-update.zip` from predecessor 1.0.12.
 
 ## Maintenance release — 1.0.12 complete
 
