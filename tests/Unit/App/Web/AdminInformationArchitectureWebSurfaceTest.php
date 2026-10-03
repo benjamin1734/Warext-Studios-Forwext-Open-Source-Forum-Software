@@ -249,6 +249,20 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         }
     }
 
+
+    public function testAppearanceStaticPresentationIsOwnedByAdminStylesheet(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/admin.css');
+        $layout = (string) file_get_contents($root . '/app/Web/Appearance/LayoutBuilderHtml.php');
+        $theme = (string) file_get_contents($root . '/app/Web/Appearance/ThemeManageHtml.php');
+
+        self::assertStringContainsString('.builder-title', $asset);
+        self::assertStringContainsString('.theme-main', $asset);
+        self::assertStringNotContainsString('style="margin:0"', $layout);
+        self::assertStringNotContainsString('style="display:grid;gap:18px"', $theme);
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);

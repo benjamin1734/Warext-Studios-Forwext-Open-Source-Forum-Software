@@ -131,4 +131,5 @@
 .acp-text-start{text-align:left}
 .acp-text-center{text-align:center}
 .acp-filter-active{font-weight:700}
-
+.builder-title{margin:0}
+.theme-main{display:grid;gap:18px}

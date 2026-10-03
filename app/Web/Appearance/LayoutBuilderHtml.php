@@ -83,7 +83,7 @@ final class LayoutBuilderHtml
                 . '<button type="submit">Taslağı yayınla</button></form>';
 
         return '<section class="card builder-admin" data-layout-builder>'
-            . '<div><h1 style="margin:0">Layout Builder</h1><p class="muted">Widget taşı, sırala, çoğalt; koşul ve cihaz önizlemesi yap; taslak kaydet ve güvenli yayınla.</p></div>'
+            . '<div><h1 class="builder-title">Layout Builder</h1><p class="muted">Widget taşı, sırala, çoğalt; koşul ve cihaz önizlemesi yap; taslak kaydet ve güvenli yayınla.</p></div>'
             . $notice
             . '<div class="builder-toolbar">'
             . '<button type="button" data-builder-undo disabled>Geri al</button>'

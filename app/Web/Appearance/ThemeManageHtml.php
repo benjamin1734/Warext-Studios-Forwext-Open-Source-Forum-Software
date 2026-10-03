@@ -146,7 +146,7 @@ final class ThemeManageHtml
 
         return '<section class="theme-admin">'
             . '<aside class="theme-sidebar"><h2>Temalar</h2>' . $themeList . '</aside>'
-            . '<div style="display:grid;gap:18px"><section class="theme-editor"><h1>'
+            . '<div class="theme-main"><section class="theme-editor"><h1>'
             . self::escape($selected?->name ?? 'Yeni Tema') . '</h1>'
             . '<form method="post" action="' . $action . '">'
             . '<input type="hidden" name="_csrf" value="' . self::escape($csrf) . '">'
