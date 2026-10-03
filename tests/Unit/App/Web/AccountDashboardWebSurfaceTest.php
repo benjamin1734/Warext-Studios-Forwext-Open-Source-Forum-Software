@@ -29,6 +29,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
         $html = AccountDashboardHtml::page(new BasePath('/community'));
 
         foreach ([
+            '/community/account/conversations',
             '/community/account/notifications',
             '/community/account/notification-settings',
             '/community/account/profile',
@@ -60,6 +61,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'account.own'", $navigation);
+        self::assertStringContainsString("'conversations.own'", $navigation);
         self::assertStringContainsString("'Hesabım'", $navigation);
         self::assertStringContainsString("NavigationAudience::Member", $navigation);
         self::assertStringContainsString('.account-center-layout', $css);
