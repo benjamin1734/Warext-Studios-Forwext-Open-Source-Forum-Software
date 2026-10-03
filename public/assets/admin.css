@@ -32,6 +32,7 @@
   background:var(--panel2);
 }
 .search-form label{min-width:0}
+.search-form input,.search-form select,.search-form textarea{min-height:44px}
 .search-hit{
   margin-top:8px;
   padding:12px 13px;
@@ -61,6 +62,7 @@
 .form-grid>label{display:grid;gap:5px;min-width:0}
 .form-grid input,.form-grid select,.form-grid textarea{
   width:100%;
+  min-height:44px;
   box-sizing:border-box;
   border:1px solid var(--line);
   border-radius:9px;
@@ -70,6 +72,7 @@
 }
 .search-actions,.market-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .search-actions button,.market-actions button{
+  min-height:44px;
   border:1px solid var(--line);
   border-radius:9px;
   background:var(--panel2);
