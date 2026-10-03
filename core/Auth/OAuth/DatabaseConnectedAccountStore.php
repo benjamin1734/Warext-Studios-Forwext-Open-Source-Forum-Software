@@ -38,6 +38,25 @@ final readonly class DatabaseConnectedAccountStore implements ConnectedAccountSt
         return (int) $this->database->fetchValue(new CompiledQuery('SELECT COUNT(*) FROM `forwext_connected_accounts` WHERE `user_id`=:user_id', ['user_id' => $userId->value()]));
     }
 
+    public function forUser(EntityId $userId): array
+    {
+        UserId::assert($userId);
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT `user_id`,`provider`,`provider_subject`,`provider_email_normalized`,`display_name`,'
+            . '`linked_at_utc`,`last_authenticated_at_utc` FROM `forwext_connected_accounts` '
+            . 'WHERE `user_id`=:user_id ORDER BY `provider`,`provider_subject`',
+            ['user_id'=>$userId->value()],
+        ));
+        $accounts = [];
+        foreach ($rows as $row) {
+            $account = $this->hydrate($row);
+            if ($account !== null) {
+                $accounts[] = $account;
+            }
+        }
+        return $accounts;
+    }
+
     public function link(ConnectedAccount $account): void
     {
         UserId::assert($account->userId);
