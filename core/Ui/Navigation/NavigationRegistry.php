@@ -37,6 +37,13 @@ final class NavigationRegistry
             NavigationAudience::Member,
         ));
         $registry->register(new NavigationItem(
+            'security.own',
+            'Güvenlik',
+            '/account/security',
+            256,
+            NavigationAudience::Member,
+        ));
+        $registry->register(new NavigationItem(
             'conversations.own',
             'Mesajlar',
             '/account/conversations',
