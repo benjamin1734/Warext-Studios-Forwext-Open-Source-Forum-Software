@@ -19,7 +19,7 @@ final class ContentEngagementHtml
         $commerce=self::e($basePath->prepend('/admin/analytics/commerce'));
         $reports=self::e($basePath->prepend('/admin/analytics/reports'));
 
-        $body='<section class="card"><h1 style="margin-top:0">İçerik ve Engagement Analizleri</h1>'
+        $body='<section class="card"><h1 class="acp-title-reset">İçerik ve Engagement Analizleri</h1>'
             .'<p class="muted">Forum/category/thread performansı ve privacy-aware arama etkileşimleri. '
             .'Tüm zaman aralıkları UTC tabanlıdır.</p>'
             .'<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>';
@@ -27,12 +27,12 @@ final class ContentEngagementHtml
         $body.='<a href="'.$commerce.'">Marketplace & gelir</a>';
         $body.='<a href="'.$reports.'">Rapor builder</a>';
         foreach([7,30,90] as $days){
-            $style=$snapshot->windowDays===$days?' style="font-weight:700"':'';
-            $body.='<a'.$style.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
+            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
+            $body.='<a'.$class.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
         }
         $body.='</div></section>';
 
-        $body.='<div class="stats-grid" style="margin-top:16px">'
+        $body.='<div class="stats-grid acp-stack">'
             .self::stat('Reaction',self::n($snapshot->reactionCount),'Seçili dönemde')
             .self::stat('Bookmark',self::n($snapshot->bookmarkCount),'Seçili dönemde')
             .self::stat('Thread watch',self::n($snapshot->watchedThreadCount),'Yeni/güncellenen watch')
@@ -49,7 +49,7 @@ final class ContentEngagementHtml
         $body.=self::followTable($snapshot);
         $body.=self::searchTable($snapshot);
 
-        $body.='<section class="card" style="margin-top:16px"><h2>Oranların anlamı</h2>'
+        $body.='<section class="card acp-stack"><h2>Oranların anlamı</h2>'
             .'<p class="muted">Thread tablosundaki watch/bookmark/reaction oranları gerçek satış conversion değildir. '
             .'Seçili dönem içindeki aksiyon sayısının aynı dönemde kaydedilen thread view sayısına oranıdır ve '
             .'engagement proxy olarak yorumlanmalıdır. Analytics event geçmişi sistemin kurulmasından önceki görüntülemeleri içermez.</p>'
@@ -62,9 +62,9 @@ final class ContentEngagementHtml
 
     private static function forumTable(ContentEngagementSnapshot $snapshot):string
     {
-        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Forum performansı</h2>'
-            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Forum</th><th>Konu</th><th>Mesaj</th><th>View</th><th>Reaction</th><th>Watch</th>'
+        $body='<section class="card acp-stack acp-table-wrap"><h2>Forum performansı</h2>'
+            .'<table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Forum</th><th>Konu</th><th>Mesaj</th><th>View</th><th>Reaction</th><th>Watch</th>'
             .'</tr></thead><tbody>';
         if($snapshot->forums===[])$body.='<tr><td colspan="6" class="muted">Veri yok.</td></tr>';
         foreach($snapshot->forums as $row){
@@ -77,9 +77,9 @@ final class ContentEngagementHtml
 
     private static function categoryTable(ContentEngagementSnapshot $snapshot):string
     {
-        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Kategori performansı</h2>'
-            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Kategori</th><th>Forum</th><th>Konu</th><th>Mesaj</th><th>View</th><th>Reaction</th><th>Watch</th>'
+        $body='<section class="card acp-stack acp-table-wrap"><h2>Kategori performansı</h2>'
+            .'<table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Kategori</th><th>Forum</th><th>Konu</th><th>Mesaj</th><th>View</th><th>Reaction</th><th>Watch</th>'
             .'</tr></thead><tbody>';
         if($snapshot->categories===[])$body.='<tr><td colspan="7" class="muted">Veri yok.</td></tr>';
         foreach($snapshot->categories as $row){
@@ -93,9 +93,9 @@ final class ContentEngagementHtml
 
     private static function threadTable(ContentEngagementSnapshot $snapshot):string
     {
-        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Thread performansı</h2>'
-            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Konu</th><th style="text-align:left">Forum</th><th>Reply</th><th>View</th>'
+        $body='<section class="card acp-stack acp-table-wrap"><h2>Thread performansı</h2>'
+            .'<table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Konu</th><th class="acp-text-start">Forum</th><th>Reply</th><th>View</th>'
             .'<th>Reaction</th><th>Bookmark</th><th>Watch</th><th>Reaction/View</th><th>Bookmark/View</th><th>Watch/View</th>'
             .'</tr></thead><tbody>';
         if($snapshot->threads===[])$body.='<tr><td colspan="10" class="muted">Veri yok.</td></tr>';
@@ -111,9 +111,9 @@ final class ContentEngagementHtml
 
     private static function followTable(ContentEngagementSnapshot $snapshot):string
     {
-        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Follow performansı</h2>'
-            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Kullanıcı</th><th>Yeni follow</th>'
+        $body='<section class="card acp-stack acp-table-wrap"><h2>Follow performansı</h2>'
+            .'<table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Kullanıcı</th><th>Yeni follow</th>'
             .'</tr></thead><tbody>';
         if($snapshot->followLeaders===[])$body.='<tr><td colspan="2" class="muted">Follow verisi yok.</td></tr>';
         foreach($snapshot->followLeaders as $row){
@@ -124,9 +124,9 @@ final class ContentEngagementHtml
 
     private static function searchTable(ContentEngagementSnapshot $snapshot):string
     {
-        $body='<section class="card" style="margin-top:16px;overflow:auto"><h2>Güvenli arama terimleri</h2>'
-            .'<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Terim</th><th>Arama</th><th>0 sonuç</th><th>Ort. dönen sonuç</th>'
+        $body='<section class="card acp-stack acp-table-wrap"><h2>Güvenli arama terimleri</h2>'
+            .'<table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Terim</th><th>Arama</th><th>0 sonuç</th><th>Ort. dönen sonuç</th>'
             .'</tr></thead><tbody>';
         if($snapshot->searchTerms===[])$body.='<tr><td colspan="4" class="muted">Güvenli trend terimi yok.</td></tr>';
         foreach($snapshot->searchTerms as $row){

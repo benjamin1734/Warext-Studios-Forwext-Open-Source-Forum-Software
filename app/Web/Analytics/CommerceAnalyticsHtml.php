@@ -19,7 +19,7 @@ final class CommerceAnalyticsHtml
         $operations = self::e($basePath->prepend('/admin/analytics/operations'));
         $reports = self::e($basePath->prepend('/admin/analytics/reports'));
 
-        $body = '<section class="card"><h1 style="margin-top:0">Marketplace, Gelir, Referral ve Giveaway Analizleri</h1>'
+        $body = '<section class="card"><h1 class="acp-title-reset">Marketplace, Gelir, Referral ve Giveaway Analizleri</h1>'
             . '<p class="muted">Marketplace funnel, para akışı, external yönlendirme, referral conversion ve giveaway participation. '
             . 'Tüm dönemler UTC tabanlıdır.</p>'
             . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
@@ -27,12 +27,12 @@ final class CommerceAnalyticsHtml
             . '<a href="'.$operations.'">Moderasyon & operasyon</a>'
             . '<a href="'.$reports.'">Rapor builder</a>';
         foreach ([7, 30, 90] as $days) {
-            $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
-            $body .= '<a'.$style.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
+            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
+            $body .= '<a'.$class.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
         }
         $body .= '</div></section>';
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Marketplace funnel</h2><div class="stats-grid">'
+        $body .= '<section class="card acp-stack"><h2>Marketplace funnel</h2><div class="stats-grid">'
             . self::stat('Yeni ilan', $snapshot->listingsCreated, 'Dönemde oluşturulan listing')
             . self::stat('Aktif ilan', $snapshot->activeListings, 'Şu an active durumda')
             . self::stat('Listing view', $snapshot->listingViews, '15.05 producer sonrası kaydedilen görünüm')
@@ -47,7 +47,7 @@ final class CommerceAnalyticsHtml
         $body .= self::moneyTable($snapshot);
         $body .= self::advertisingTable($snapshot);
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Referral funnel</h2><div class="stats-grid">'
+        $body .= '<section class="card acp-stack"><h2>Referral funnel</h2><div class="stats-grid">'
             . self::stat('Referral click', $snapshot->referralClicks, 'Dönemde link click')
             . self::stat('Attributed', $snapshot->referralAttributed, 'Dönemde oluşturulan attribution cohort')
             . self::stat('Review', $snapshot->referralReview, 'Cohort içinde mevcut review')
@@ -60,7 +60,7 @@ final class CommerceAnalyticsHtml
 
         $body .= self::referralTable($snapshot);
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Giveaway participation</h2><div class="stats-grid">'
+        $body .= '<section class="card acp-stack"><h2>Giveaway participation</h2><div class="stats-grid">'
             . self::stat('Yeni giveaway', $snapshot->giveawaysCreated, 'Dönemde oluşturulan')
             . self::stat('Katılımcı', $snapshot->giveawayParticipants, 'Dönemde unique user')
             . self::stat('Entry weight', $snapshot->giveawayEntries, 'Entry_count toplamı')
@@ -69,7 +69,7 @@ final class CommerceAnalyticsHtml
 
         $body .= self::giveawayTable($snapshot);
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Veri sınırları</h2>'
+        $body .= '<section class="card acp-stack"><h2>Veri sınırları</h2>'
             . '<p class="muted">Para değerleri hiçbir zaman farklı currency kodları arasında toplanmaz. Marketplace GMV, order history içindeki '
             . 'ilk paid transition ile ilişkilendirilen order total değeridir. Refund satırı dönem içinde succeeded olan refundları gösterir; '
             . 'net payment flow = GMV - refund olabilir ve eski dönem satışlarına yapılan iadeler nedeniyle negatif olabilir. Bu metrik platform kârı değildir.</p>'
@@ -91,9 +91,9 @@ final class CommerceAnalyticsHtml
 
     private static function moneyTable(CommerceAnalyticsSnapshot $snapshot): string
     {
-        $body = '<section class="card" style="margin-top:16px;overflow:auto"><h2>Marketplace GMV ve payment flow</h2>'
-            . '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            . '<th style="text-align:left">Currency</th><th>Paid order</th><th>GMV</th><th>Refund</th><th>Net payment flow</th>'
+        $body = '<section class="card acp-stack acp-table-wrap"><h2>Marketplace GMV ve payment flow</h2>'
+            . '<table class="acp-data-table"><thead><tr>'
+            . '<th class="acp-text-start">Currency</th><th>Paid order</th><th>GMV</th><th>Refund</th><th>Net payment flow</th>'
             . '</tr></thead><tbody>';
         if ($snapshot->marketplaceMoney === []) {
             $body .= '<tr><td colspan="5" class="muted">Para akışı verisi yok.</td></tr>';
@@ -110,9 +110,9 @@ final class CommerceAnalyticsHtml
 
     private static function advertisingTable(CommerceAnalyticsSnapshot $snapshot): string
     {
-        $body = '<section class="card" style="margin-top:16px;overflow:auto"><h2>Advertising estimated revenue</h2>'
-            . '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            . '<th style="text-align:left">Currency</th><th>Impression</th><th>Click</th><th>CTR</th><th>Estimated revenue</th>'
+        $body = '<section class="card acp-stack acp-table-wrap"><h2>Advertising estimated revenue</h2>'
+            . '<table class="acp-data-table"><thead><tr>'
+            . '<th class="acp-text-start">Currency</th><th>Impression</th><th>Click</th><th>CTR</th><th>Estimated revenue</th>'
             . '</tr></thead><tbody>';
         if ($snapshot->advertisingRevenue === []) {
             $body .= '<tr><td colspan="5" class="muted">Advertising event verisi yok.</td></tr>';
@@ -128,9 +128,9 @@ final class CommerceAnalyticsHtml
 
     private static function referralTable(CommerceAnalyticsSnapshot $snapshot): string
     {
-        $body = '<section class="card" style="margin-top:16px;overflow:auto"><h2>Referral campaign conversion</h2>'
-            . '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            . '<th style="text-align:left">Campaign</th><th>Click</th><th>Attributed</th><th>Review</th><th>Qualified</th>'
+        $body = '<section class="card acp-stack acp-table-wrap"><h2>Referral campaign conversion</h2>'
+            . '<table class="acp-data-table"><thead><tr>'
+            . '<th class="acp-text-start">Campaign</th><th>Click</th><th>Attributed</th><th>Review</th><th>Qualified</th>'
             . '<th>Rejected</th><th>Reward units</th><th>Click→Attr.</th><th>Attr.→Qualified</th>'
             . '</tr></thead><tbody>';
         if ($snapshot->referralCampaigns === []) {
@@ -149,9 +149,9 @@ final class CommerceAnalyticsHtml
 
     private static function giveawayTable(CommerceAnalyticsSnapshot $snapshot): string
     {
-        $body = '<section class="card" style="margin-top:16px;overflow:auto"><h2>Giveaway bazlı participation</h2>'
-            . '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            . '<th style="text-align:left">Giveaway</th><th>State</th><th>Katılımcı</th><th>Entry weight</th><th>Draw</th>'
+        $body = '<section class="card acp-stack acp-table-wrap"><h2>Giveaway bazlı participation</h2>'
+            . '<table class="acp-data-table"><thead><tr>'
+            . '<th class="acp-text-start">Giveaway</th><th>State</th><th>Katılımcı</th><th>Entry weight</th><th>Draw</th>'
             . '</tr></thead><tbody>';
         if ($snapshot->giveaways === []) {
             $body .= '<tr><td colspan="5" class="muted">Giveaway participation verisi yok.</td></tr>';

@@ -18,7 +18,7 @@ final class ForumAnalyticsHtml
         $operations = self::e($basePath->prepend('/admin/analytics/operations'));
         $commerce = self::e($basePath->prepend('/admin/analytics/commerce'));
         $reports = self::e($basePath->prepend('/admin/analytics/reports'));
-        $body = '<section class="card"><h1 style="margin-top:0">Forum Analiz Dashboardu</h1>'
+        $body = '<section class="card"><h1 class="acp-title-reset">Forum Analiz Dashboardu</h1>'
             . '<p class="muted">Site geneli büyüme, aktif kullanıcı ve içerik üretim metrikleri. Saatler UTC tabanlıdır.</p>'
             . '<div class="market-actions">';
         $body .= '<a href="'.$content.'">İçerik & engagement</a>';
@@ -27,12 +27,12 @@ final class ForumAnalyticsHtml
         $body .= '<a href="'.$reports.'">Rapor builder</a>';
         foreach ([7,30,90] as $days) {
             $label = $days . ' gün';
-            $style = $snapshot->windowDays === $days ? ' style="font-weight:700"' : '';
-            $body .= '<a'.$style.' href="'.$base.'?days='.$days.'">'.self::e($label).'</a>';
+            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
+            $body .= '<a'.$class.' href="'.$base.'?days='.$days.'">'.self::e($label).'</a>';
         }
         $body .= '</div></section>';
 
-        $body .= '<div class="stats-grid" style="margin-top:16px">'
+        $body .= '<div class="stats-grid acp-stack">'
             . self::stat('DAU', $snapshot->dau, 'Bugün benzersiz aktif hesap')
             . self::stat('MAU', $snapshot->mau, 'Son 30 gün benzersiz aktif hesap')
             . self::stat('Aktif hesap', $snapshot->activeAccounts, 'Şu an active durumundaki hesaplar')
@@ -43,7 +43,7 @@ final class ForumAnalyticsHtml
             . self::stat('30g aktivite retention', self::rate($snapshot->retention30), '30 gün önce aktif olup bugün yeniden aktif olanlar')
             . '</div>';
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Büyüme</h2>'
+        $body .= '<section class="card acp-stack"><h2>Büyüme</h2>'
             . '<div class="stats-grid">'
             . self::growth('Kayıtlar', $snapshot->registrationsWindow, $snapshot->registrationsPreviousWindow)
             . self::growth('Konular', $snapshot->threadsWindow, $snapshot->threadsPreviousWindow)
@@ -53,21 +53,21 @@ final class ForumAnalyticsHtml
             . self::stat('Toplam mesaj', $snapshot->postsTotal, 'Görünür ve silinmemiş içerik')
             . '</div></section>';
 
-        $body .= '<section class="card" style="margin-top:16px;overflow:auto"><h2>Günlük trend</h2>'
+        $body .= '<section class="card acp-stack acp-table-wrap"><h2>Günlük trend</h2>'
             . '<p class="muted">Kayıt/konu/mesaj sayıları authoritative domain tablolarından; aktif kullanıcı sayısı pseudonymous analytics eventlerinden hesaplanır.</p>'
-            . '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-            . '<th style="text-align:left">Gün (UTC)</th><th>Kayıt</th><th>Konu</th><th>Mesaj</th><th>Aktif kullanıcı</th>'
+            . '<table class="acp-data-table"><thead><tr>'
+            . '<th class="acp-text-start">Gün (UTC)</th><th>Kayıt</th><th>Konu</th><th>Mesaj</th><th>Aktif kullanıcı</th>'
             . '</tr></thead><tbody>';
         foreach ($snapshot->daily as $row) {
             $body .= '<tr><td>'.self::e($row->day->format('Y-m-d')).'</td>'
-                . '<td style="text-align:center">'.self::n($row->registrations).'</td>'
-                . '<td style="text-align:center">'.self::n($row->threads).'</td>'
-                . '<td style="text-align:center">'.self::n($row->posts).'</td>'
-                . '<td style="text-align:center">'.self::n($row->activeUsers).'</td></tr>';
+                . '<td class="acp-text-center">'.self::n($row->registrations).'</td>'
+                . '<td class="acp-text-center">'.self::n($row->threads).'</td>'
+                . '<td class="acp-text-center">'.self::n($row->posts).'</td>'
+                . '<td class="acp-text-center">'.self::n($row->activeUsers).'</td></tr>';
         }
         $body .= '</tbody></table></section>';
 
-        $body .= '<section class="card" style="margin-top:16px"><h2>Veri sınırları</h2>'
+        $body .= '<section class="card acp-stack"><h2>Veri sınırları</h2>'
             . '<p class="muted">DAU/MAU, peak ve aktivite retention metrikleri ham kullanıcı kimliği yerine installation-specific HMAC actor hash kullanır. '
             . 'Kayıt, konu ve mesaj sayıları analytics event kaybından etkilenmemesi için doğrudan domain tablolarından okunur. '
             . 'Bu ekran site-geneli BI izni olmadan açılamaz.</p>'

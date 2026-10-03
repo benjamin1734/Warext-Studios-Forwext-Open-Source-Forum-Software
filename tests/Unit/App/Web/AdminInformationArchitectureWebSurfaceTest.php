@@ -224,6 +224,31 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         }
     }
 
+
+    public function testAnalyticsAndAdvertisingAcpAvoidStaticInlinePresentationStyles(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/admin.css');
+        self::assertStringContainsString('analytics-and-advertising-admin-utilities-v1', $asset);
+        self::assertStringContainsString('.acp-data-table', $asset);
+        self::assertStringContainsString('.acp-table-wrap', $asset);
+
+        foreach ([
+            'Advertising/AdvertisingHtml.php',
+            'Analytics/AnalyticsReportHtml.php',
+            'Analytics/CommerceAnalyticsHtml.php',
+            'Analytics/ContentEngagementHtml.php',
+            'Analytics/ForumAnalyticsHtml.php',
+            'Analytics/OperationsAnalyticsHtml.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/' . $file);
+            self::assertStringNotContainsString('style="margin-top:16px;overflow:auto"', $source, $file);
+            self::assertStringNotContainsString('style="width:100%;border-collapse:collapse"', $source, $file);
+            self::assertStringNotContainsString('style="text-align:left"', $source, $file);
+            self::assertStringNotContainsString('style="text-align:center"', $source, $file);
+        }
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);

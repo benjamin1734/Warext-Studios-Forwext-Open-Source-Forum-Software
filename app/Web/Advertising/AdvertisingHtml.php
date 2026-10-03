@@ -110,14 +110,14 @@ final class AdvertisingHtml
             .'</div></div><div class="search-actions"><button type="submit">Kampanyayı kaydet</button></div></form></section>';
 
         $body.='<section class="section"><h2>Son 30 gün performansı</h2>'
-            .'<div class="card" style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>'
-            .'<th style="text-align:left">Kampanya</th><th>Gösterim</th><th>Tıklama</th><th>CTR</th><th>Tahmini gelir</th></tr></thead><tbody>';
+            .'<div class="card acp-table-wrap"><table class="acp-data-table"><thead><tr>'
+            .'<th class="acp-text-start">Kampanya</th><th>Gösterim</th><th>Tıklama</th><th>CTR</th><th>Tahmini gelir</th></tr></thead><tbody>';
         if($analytics===[])$body.='<tr><td colspan="5" class="muted">Henüz performans verisi yok.</td></tr>';
         foreach($analytics as $row){
             $ctr=$row['impressions']>0?($row['clicks']/$row['impressions']*100):0.0;
-            $body.='<tr><td>'.self::e($row['name']).'</td><td style="text-align:center">'.number_format($row['impressions']).'</td>'
-                .'<td style="text-align:center">'.number_format($row['clicks']).'</td><td style="text-align:center">'.number_format($ctr,2).'%</td>'
-                .'<td style="text-align:center">'.self::e(self::money($row['revenue_minor'],$row['currency'])).'</td></tr>';
+            $body.='<tr><td>'.self::e($row['name']).'</td><td class="acp-text-center">'.number_format($row['impressions']).'</td>'
+                .'<td class="acp-text-center">'.number_format($row['clicks']).'</td><td class="acp-text-center">'.number_format($ctr,2).'%</td>'
+                .'<td class="acp-text-center">'.self::e(self::money($row['revenue_minor'],$row['currency'])).'</td></tr>';
         }
         $body.='</tbody></table></div></section></section>';
 
