@@ -1834,6 +1834,12 @@ select:focus{
 }
 .nav-primary-popover{left:6px}
 .nav-account-popover{right:0}
+.nav-primary-popover[data-forwext-top-layer="1"],
+.nav-account-popover[data-forwext-top-layer="1"]{
+  right:auto;
+  margin:0;
+  max-width:calc(100vw - 24px);
+}
 .nav-primary-popover>a,
 .nav-account-popover>a{
   min-height:37px;

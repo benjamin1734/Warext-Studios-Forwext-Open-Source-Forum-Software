@@ -66,6 +66,9 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - The shared shell now defines the previously missing `.sr-only` utility used by message/notification/search icon labels, preventing assistive text from rendering visibly inside 42px header controls.
 - Live Chromium reproduced the account popover beneath both the secondary navigation and the forum page body. The header stack is now explicit: sticky header root at the page level, primary header above the secondary row, and popovers above both within the primary header stacking context.
 - The primary header no longer uses `backdrop-filter`; the translucent blur created an unnecessary compositing ancestor for overflowing account menus. Header color remains token-driven and nearly opaque while popovers stay in the normal stacking tree.
+- Dropdowns now use progressive enhancement into the browser Popover top layer when supported. The existing `<details>` structure remains the no-JavaScript/older-browser fallback, while Chromium positions the account/primary popovers with fixed viewport coordinates above every page/sidebar stacking context.
+- The full PHPUnit failure introduced by the branded-error regression test was a charset-casing expectation mismatch; the test now follows the canonical `Response::html()` content type (`text/html; charset=utf-8`).
+
 
 
 - Desktop navigation no longer clips primary popovers through the horizontal-scroll container, and open account/primary menus receive an explicit stacking context above page surfaces.

@@ -113,6 +113,14 @@ try {
   await accountSummary.click();
   const accountPopover = page.locator(".nav-account-popover");
   await accountPopover.waitFor({ state: "visible" });
+  const topLayerState = await accountPopover.evaluate((popover) => ({
+    supported: typeof popover.showPopover === "function",
+    upgraded: popover.getAttribute("popover") === "manual",
+    open: popover.matches(":popover-open"),
+  }));
+  if (topLayerState.supported && (!topLayerState.upgraded || !topLayerState.open)) {
+    fail(`header: account menu was not promoted to the browser top layer ${JSON.stringify(topLayerState)}`);
+  }
   await page.screenshot({
     path: path.join(artifactDir, "header-account-popover.png"),
     fullPage: false,

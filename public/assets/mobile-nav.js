@@ -23,6 +23,83 @@
     "[tabindex]:not([tabindex='-1'])",
   ].join(",");
 
+  const topLayerMenuSupported =
+    typeof HTMLElement.prototype.showPopover === "function"
+    && typeof HTMLElement.prototype.hidePopover === "function";
+
+  const positionTopLayerMenu = (details, popover) => {
+    const summary = details.querySelector(":scope > summary");
+    if (!(summary instanceof HTMLElement) || !(popover instanceof HTMLElement)) return;
+
+    const trigger = summary.getBoundingClientRect();
+    const width = Math.min(230, Math.max(180, window.innerWidth - 24));
+    const preferredLeft = details.classList.contains("nav-account-menu")
+      ? trigger.right - width
+      : trigger.left;
+    const left = Math.min(
+      Math.max(12, preferredLeft),
+      Math.max(12, window.innerWidth - width - 12),
+    );
+    const top = Math.min(trigger.bottom + 7, Math.max(12, window.innerHeight - 56));
+
+    popover.style.position = "fixed";
+    popover.style.inset = "auto";
+    popover.style.margin = "0";
+    popover.style.left = left + "px";
+    popover.style.right = "auto";
+    popover.style.top = top + "px";
+    popover.style.width = width + "px";
+    popover.style.maxHeight = Math.max(120, window.innerHeight - top - 12) + "px";
+    popover.style.overflowY = "auto";
+  };
+
+  const syncTopLayerMenu = (details, popover) => {
+    if (!topLayerMenuSupported) return;
+    if (details.open) {
+      positionTopLayerMenu(details, popover);
+      if (!popover.matches(":popover-open")) {
+        try {
+          popover.showPopover();
+        } catch (_error) {
+          return;
+        }
+      }
+      positionTopLayerMenu(details, popover);
+      return;
+    }
+
+    if (popover.matches(":popover-open")) {
+      try {
+        popover.hidePopover();
+      } catch (_error) {
+        // A concurrently closed popover is already in the desired state.
+      }
+    }
+  };
+
+  const topLayerMenus = [];
+  if (topLayerMenuSupported) {
+    for (const details of header.querySelectorAll(".nav-primary-menu, .nav-account-menu")) {
+      if (!(details instanceof HTMLDetailsElement)) continue;
+      const popover = details.querySelector(":scope > .nav-primary-popover, :scope > .nav-account-popover");
+      if (!(popover instanceof HTMLElement)) continue;
+
+      popover.setAttribute("popover", "manual");
+      popover.dataset.forwextTopLayer = "1";
+      topLayerMenus.push([details, popover]);
+      details.addEventListener("toggle", () => syncTopLayerMenu(details, popover));
+      syncTopLayerMenu(details, popover);
+    }
+  }
+
+  const repositionTopLayerMenus = () => {
+    for (const [details, popover] of topLayerMenus) {
+      if (details.open && popover.matches(":popover-open")) {
+        positionTopLayerMenu(details, popover);
+      }
+    }
+  };
+
   const normalizePath = (value) => {
     const collapsed = value.replace(/\/{2,}/g, "/");
     return collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : collapsed;
@@ -260,5 +337,9 @@
     desktop.addListener(closeForDesktop);
   }
 
-  window.addEventListener("scroll", syncHeader, { passive: true });
+  window.addEventListener("scroll", () => {
+    syncHeader();
+    repositionTopLayerMenus();
+  }, { passive: true });
+  window.addEventListener("resize", repositionTopLayerMenus, { passive: true });
 })();
