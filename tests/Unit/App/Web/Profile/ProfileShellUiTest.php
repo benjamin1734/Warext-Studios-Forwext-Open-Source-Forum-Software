@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\App\Web\Profile;
 
+use Forwext\App\Web\Profile\ProfileHtml;
+use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Ui\Navigation\NavigationItem;
+use Forwext\Core\Ui\Navigation\NavigationRegistry;
 use PHPUnit\Framework\TestCase;
 
 final class ProfileShellUiTest extends TestCase
@@ -75,10 +79,34 @@ final class ProfileShellUiTest extends TestCase
         self::assertStringContainsString('header.dataset.scrolled', $asset);
         self::assertStringContainsString('header.querySelectorAll', $asset);
         self::assertStringContainsString('sectionForPath', $asset);
+        self::assertStringContainsString('relativeToBasePath', $asset);
+        self::assertStringContainsString('brandHome', $asset);
         self::assertStringContainsString('data-nav-section', $asset);
         self::assertStringContainsString('activeNavSection', $asset);
         self::assertStringContainsString('forwext-nav-open', $asset);
         self::assertStringContainsString('.nav-account-menu', $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
+    }
+
+    public function testSharedShellHonorsTheProvidedVisibleNavigationRegistry(): void
+    {
+        $navigation = new NavigationRegistry();
+        $navigation->register(new NavigationItem('forums', 'Forumlar', '/forums', 50));
+        $navigation->register(new NavigationItem('custom.docs', 'Dokümanlar', '/docs', 250));
+
+        $html = ProfileHtml::page(
+            'Test',
+            '<p>Body</p>',
+            new BasePath('/community'),
+            $navigation,
+        );
+
+        self::assertStringContainsString('href="/community/forums"', $html);
+        self::assertStringContainsString('href="/community/docs"', $html);
+        self::assertStringContainsString('>Diğer ', $html);
+        self::assertStringNotContainsString('href="/community/marketplace"', $html);
+        self::assertStringNotContainsString('href="/community/members"', $html);
+        self::assertStringNotContainsString('href="/community/faq"', $html);
+        self::assertStringContainsString('data-forwext-subnav-shell hidden', $html);
     }
 }
