@@ -16,6 +16,7 @@ final class AccountDashboardHtml
                 'label' => 'Bildirim ve içerik',
                 'description' => 'Bildirimlerini, akışını ve kaydettiğin içerikleri yönet.',
                 'items' => [
+                    ['Özel Mesajlar', 'Topluluk üyeleriyle özel konuşmalarını görüntüle ve yeni mesaj gönder.', '/account/conversations'],
                     ['Bildirimler', 'Okunmamış ve geçmiş bildirimlerini görüntüle.', '/account/notifications'],
                     ['Bildirim Ayarları', 'Bildirim sesini, ses seviyesini ve varsayılan sesi yönet.', '/account/notification-settings'],
                     ['Neler yeni?', 'Erişebildiğin forum ve profil hareketlerini takip et.', '/activity'],
