@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.14
+CURRENT_VERSION = 1.0.15
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / 1.0.14 release candidate
+CURRENT_STEP = maintenance / 1.0.15 release candidate
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = validate immutable 1.0.14 full/update release and close the final product-quality pass
+NEXT_STEP = validate immutable 1.0.15 full/update release and close the final product-quality pass
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -58,7 +58,16 @@ NEXT_STEP = validate immutable 1.0.14 full/update release and close the final pr
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
-## Maintenance release — 1.0.14 candidate
+## Maintenance release — 1.0.15 candidate
+
+- Patch-only follow-up to immutable 1.0.14; no roadmap scope expansion.
+- Mandatory MFA enrollment now keeps TOTP available if WebAuthn/passkey registration cannot be started, instead of failing the entire enrollment screen.
+- MFA enrollment and recovery responses now set `Referrer-Policy: no-referrer` so the short-lived login challenge carried in the enrollment URL is not leaked through referrers.
+- Regression coverage locks both the TOTP fallback and challenge-referrer privacy behavior.
+- Pre-release head `ab723df21e7c03316ffc5b98b03f0cb0ee984550` passed PHP 8.4/8.5 qualification, Chromium responsive/accessibility, dedicated security, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and release-contract checks.
+- Differential predecessor is immutable `v1.0.14`.
+
+## Maintenance release — 1.0.14 complete
 
 - Final product-quality pass closes multiple user-facing gaps that were present behind otherwise complete backend contracts.
 - Native member-to-member private conversations are now production-routed with participant checks, `conversation.use` permission enforcement, ignore-relationship blocking, unread counts, pagination, CSRF-protected start/reply flows and IDOR-safe detail access.
@@ -71,7 +80,8 @@ NEXT_STEP = validate immutable 1.0.14 full/update release and close the final pr
 - `MfaLoginCompletionService::completeEnrollment()` refuses session creation until `MfaFactorAvailability` confirms a verified factor, then consumes the existing login challenge and establishes the normal secure session.
 - Shared login/account/navigation presentation exposes OAuth, private messages and account security while remaining responsive and using the existing design-token system.
 - Pre-release head `b11f5662a77f8e670b81827f1e6f2d6a3323d648` passed PHP 8.4/8.5 qualification, Chromium responsive/accessibility, architecture/security regression, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and cPanel full-package/installer smoke.
-- The dedicated security workflow passed on functional MFA composition head `a9650c3dca10b242c4d1cb6fb213b0fc3c27f905`; the newest dedicated security run was still queued behind an older run when the release candidate commit was prepared.
+- Release commit `83e8560c7ea1f8f47883d01dd2761a7f8313f1a2` passed PHP 8.4/8.5 qualification, Chromium responsive/accessibility, dedicated security, MySQL/MariaDB migration smoke and performance qualification.
+- Release `v1.0.14` published successfully on 2026-10-03 with full/update ZIPs and SHA-256 companions. Full ZIP size: 4,103,941 bytes; differential update ZIP size: 179,643 bytes.
 
 ## Maintenance release — 1.0.13 complete
 
