@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.11
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production-acceptance-remediation / 1.0.11 release validation
+CURRENT_STEP = production-acceptance / complete
 LAST_COMMIT = see current GitHub main
-BLOCKERS = v1.0.11 full/update publication must pass the immutable release workflow
-NEXT_STEP = validate v1.0.11 full/update release assets, then close production-acceptance remediation
+BLOCKERS = none
+NEXT_STEP = no remaining production-acceptance blocker; future work starts from maintenance issues or a new approved roadmap
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -58,7 +58,7 @@ NEXT_STEP = validate v1.0.11 full/update release assets, then close production-a
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
-## Production acceptance remediation — 1.0.11 release candidate
+## Production acceptance remediation — 1.0.11 complete
 
 - Frontend rebuild F0-F4 and the ACP consistency sweep are complete.
 - All 26 registered ACP navigation targets plus the Administration dashboard resolve in real fresh-install smoke on MySQL 8.4 and MariaDB 10.11 and require authentication when unauthenticated.
@@ -70,7 +70,11 @@ NEXT_STEP = validate v1.0.11 full/update release assets, then close production-a
 - Full-package verification requires runtime entrypoints, installer, core public/ACP assets and protected runtime-directory guards.
 - CI extracts the actual full ZIP, generates its managed routing files through the packaged production autoloader, serves both installer entrypoints, checks security headers and verifies an uninstalled package root redirects to `install.php`.
 - Pre-release acceptance head `712b2eb9d7ed833d3660372d96d00400e7a5dbea` passed security, performance, PHP 8.4/8.5 qualification, Chromium responsive/accessibility, MySQL/MariaDB clean-install + upgrade smoke and full-package validation.
-- Release 1.0.11 is intended to publish an immutable full ZIP plus a differential update ZIP from the immediate predecessor 1.0.10. Database/user/forum state remains preserved by the existing update manifest and migration contract.
+- Release 1.0.11 published successfully as an immutable production GitHub Release from predecessor 1.0.10.
+- The differential package contained 16 added files, 113 replaced files, 1 deleted packaged file and 1 migration file; integrity verification reported 129 changed payload files and 1 delete entry.
+- Both `forwext-v1.0.11-full.zip` and `forwext-v1.0.11-update.zip` passed SHA-256/archive/manifest integrity, packaged installer smoke and runtime routing acceptance before publication.
+- Release workflow `37119777348` completed successfully; security, performance, qualification/Chromium and MySQL/MariaDB workflows for the release commit also completed successfully.
+- Production acceptance remediation is closed at 1.0.11. Database/user/forum state remains protected by the update manifest, preserve paths, migration and rollback contracts.
 
 ## Production acceptance remediation — 1.0.5
 
@@ -125,14 +129,14 @@ NEXT_STEP = validate v1.0.11 full/update release assets, then close production-a
 
 ## Current position
 
-- Target: **Forwext 1.0.10+ Production acceptance remediation / frontend rebuild**, not an MVP/demo/prototype.
+- Target: **Forwext 1.0.11 production**, with the reopened production-acceptance remediation completed.
 - Binding roadmap: **20 main steps / 138 real sub-steps**, plan v2.0.
 - Repository: `benjamin1734/Warext-Studios-Forwext-Open-Source-Forum-Software`, default branch `main`.
 - Project license: **Apache-2.0**.
-- Historical implementation checklist: `01` through `20` were marked complete. **Final production acceptance is reopened and this historical checkbox state must not be interpreted as proof that every required UI/workflow is finished.**
+- Historical implementation checklist: `01` through `20` was completed before production acceptance was reopened. **The reopened production-acceptance remediation is now closed by the tested 1.0.11 release; future regressions remain maintenance work rather than reopening the historical roadmap automatically.**
 - Completed sub-steps: `01.01–01.06`, `02.01–02.07`, `03.01–03.07`, `04.01–04.08`, `05.01–05.07`, `06.01–06.08`, `07.01–07.07`, `08.01–08.06`, `09.01–09.07`, `10.01–10.06`, `11.01–11.05`, `12.01–12.08`, `13.01–13.08`, `14.01–14.08`, `15.01–15.06`, `16.01–16.08`, `17.01–17.06`, `18.01–18.06`, `19.01–19.06`, `20.01–20.08` — **138/138 complete**.
 - Current roadmap sub-step: none; the original v2.0 numbered checklist is exhausted.
-- Current acceptance work: **open** — native PHP public/ACP end-to-end remediation is active.
+- Current acceptance work: **closed** — native PHP public/ACP, fresh-install and full/update package acceptance passed for 1.0.11.
 - Remaining original numbered roadmap work after 20.08: **0 sub-steps**; remaining production-acceptance defects are tracked separately until the product satisfies the plan's actual completion criteria.
 - Minimum deployment remains PHP 8.4+, MySQL/MariaDB and Apache/LiteSpeed/Nginx with a first-class native PHP frontend; Composer/npm/Node/SSH/Redis/Docker/Supervisor are not mandatory on normal cPanel runtime.
 - Advanced deployments may add Redis, workers, WebSocket/SSE providers, S3-compatible storage, external search and Docker/VDS infrastructure without breaking the minimum profile.
