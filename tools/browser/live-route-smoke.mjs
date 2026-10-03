@@ -55,7 +55,7 @@ try {
     if (overflow.length > 0) fail(`${label}: horizontal overflow ${JSON.stringify(overflow)}`);
   };
 
-  let response = await page.goto(baseUrl + "/", { waitUntil: "networkidle" });
+  let response = await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("home: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Forumlar", exact: true }).waitFor();
   const forumHomeLayout = await page.evaluate(() => {
@@ -85,12 +85,12 @@ try {
   }
   await assertHealthyDocument("home");
 
-  response = await page.goto(baseUrl + "/login", { waitUntil: "networkidle" });
+  response = await page.goto(baseUrl + "/login", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("login: real route did not return HTTP 200");
   await page.locator('input[name="identifier"]').fill("ci-admin");
   await page.locator('input[name="password"]').fill("Forwext-CI-Admin-Password-2026");
   await Promise.all([
-    page.waitForURL((url) => url.pathname === "/" || url.pathname.startsWith("/mfa/")),
+    page.waitForURL((url) => url.pathname === "/" || url.pathname.startsWith("/mfa/"), { waitUntil: "domcontentloaded" }),
     page.locator('form.auth-entry-form button[type="submit"]').click(),
   ]);
   if (new URL(page.url()).pathname.startsWith("/mfa/")) {
@@ -126,7 +126,7 @@ try {
   if (popoverCovered) fail("header: account popover is covered by page content or another stacking context");
   await page.keyboard.press("Escape");
 
-  response = await page.goto(baseUrl + "/members", { waitUntil: "networkidle" });
+  response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
   const subnavState = await page.evaluate(() => {
     const shell = document.querySelector("[data-forwext-subnav-shell]");
@@ -145,17 +145,24 @@ try {
   }
   await assertHealthyDocument("members");
 
-  response = await page.goto(baseUrl + "/admin", { waitUntil: "networkidle" });
+  response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail(`admin: real route returned HTTP ${response?.status() ?? "no response"}`);
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
   await assertHealthyDocument("admin GET");
 
   const favorite = page.getByRole("button", { name: "Favoriye ekle" }).first();
   if (!(await favorite.count())) fail("admin: no CSRF-protected favorite action was rendered");
-  await Promise.all([
-    page.waitForLoadState("networkidle"),
+  const [favoriteResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/admin";
+    }),
     favorite.click(),
   ]);
+  if (favoriteResponse.status() !== 200) {
+    fail(`admin POST: favorite mutation returned HTTP ${favoriteResponse.status()}`);
+  }
+  await page.waitForLoadState("domcontentloaded");
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
   await assertHealthyDocument("admin POST");
 
@@ -164,7 +171,7 @@ try {
     fullPage: true,
   });
 
-  await page.goto(baseUrl + "/", { waitUntil: "networkidle" });
+  await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {
     document.documentElement.style.zoom = "1.25";
   });
