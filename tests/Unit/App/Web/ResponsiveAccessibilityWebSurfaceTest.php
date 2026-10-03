@@ -54,6 +54,9 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('event.key === "Tab"', $mobileNav);
         self::assertStringContainsString('visibleFocusable()', $mobileNav);
         self::assertStringContainsString('button.focus()', $mobileNav);
+
+        self::assertStringContainsString('$notificationScripts = $authenticated', $profile);
+        self::assertStringContainsString('. $notificationScripts', $profile);
         self::assertStringContainsString('showPopover', $mobileNav);
         self::assertStringContainsString('setAttribute("popover", "manual")', $mobileNav);
         self::assertStringContainsString('data.forwextTopLayer', str_replace('dataset.', 'data.', $mobileNav));

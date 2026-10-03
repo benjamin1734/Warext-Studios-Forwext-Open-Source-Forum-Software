@@ -219,6 +219,11 @@ final class ProfileHtml
         $notificationSoundScript = self::escape($basePath->prepend('/assets/notification-sound.js'));
         $notificationSettingsScript = self::escape($basePath->prepend('/assets/notification-settings.js'));
         $notificationRealtimeScript = self::escape($basePath->prepend('/assets/notification-realtime.js'));
+        $notificationScripts = $authenticated
+            ? '<script src="' . $notificationSoundScript . '" defer></script>'
+                . '<script src="' . $notificationSettingsScript . '" defer></script>'
+                . '<script src="' . $notificationRealtimeScript . '" defer></script>'
+            : '';
         $threadInteractionsScript = self::escape($basePath->prepend('/assets/thread-interactions.js'));
         $profileRelationshipsScript = self::escape($basePath->prepend('/assets/profile-relationships.js'));
         $profileActivityWallScript = self::escape($basePath->prepend('/assets/profile-activity-wall.js'));
@@ -278,9 +283,7 @@ final class ProfileHtml
             . '<div class="top-sub" data-forwext-subnav-shell hidden><div class="top-subin">' . $secondaryNav . '</div></div>'
             . $headerAfter . '</header>' . $mainHtml . $footerHtml . $pageAfterHtml . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
-            . '<script src="' . $notificationSoundScript . '" defer></script>'
-            . '<script src="' . $notificationSettingsScript . '" defer></script>'
-            . '<script src="' . $notificationRealtimeScript . '" defer></script>'
+            . $notificationScripts
             . '<script src="' . $threadInteractionsScript . '" defer></script>'
             . '<script src="' . $profileRelationshipsScript . '" defer></script>'
             . '<script src="' . $profileActivityWallScript . '" defer></script>'

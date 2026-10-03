@@ -60,6 +60,7 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 
 ## Production UX acceptance reopened — 2026-10-03
 
+- The final live-browser console failure was traced to account notification realtime scripts being loaded on guest pages. The guest bootstrap correctly returned HTTP 401, but that response still surfaced as a browser console resource error. Notification sound/settings/realtime scripts are now emitted only for authenticated shells; public pages no longer make unauthorized account requests.
 - Live cPanel acceptance exposed a bare `Internal Server Error` on `/admin` plus navigation text/overlap and secondary-navigation presentation regressions that representative static browser fixtures did not catch.
 - P0 remediation starts by making the CSRF middleware contract consistent across safe and verified unsafe requests, so ACP POST handlers receive a fresh render token instead of falling into an impossible-state 500 branch.
 - ACP dashboard POST mutation now runs before the GET-only render-token requirement; a genuinely missing render token is escalated into the structured runtime error path rather than returned as an uncorrelated plain-text 500.
