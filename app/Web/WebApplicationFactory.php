@@ -49,6 +49,7 @@ use Forwext\App\Web\Community\OnlineUsersHandler;
 use Forwext\App\Web\Community\PresenceHeartbeatHandler;
 use Forwext\App\Web\Community\PresencePreferenceHandler;
 use Forwext\App\Web\Community\PresenceRequestGuard;
+use Forwext\App\Web\Conversation\DirectConversationHandler;
 use Forwext\App\Web\Editor\EditorLinkPreviewHandler;
 use Forwext\App\Web\Editor\EditorMentionLookupHandler;
 use Forwext\App\Web\Editor\EditorPreviewHandler;
@@ -198,6 +199,7 @@ use Forwext\Core\Audit\CoreAuditRecorder;
 use Forwext\Core\Audit\DatabaseAuditEventStore;
 use Forwext\Core\Capability\CapabilityResolver;
 use Forwext\Core\Capability\DatabaseServerCapabilityProbe;
+use Forwext\Core\Conversation\DatabaseDirectConversationRepository;
 use Forwext\Core\Auth\AuthenticationFingerprint;
 use Forwext\Core\Auth\Challenge\DatabaseAuthChallengeTokenStore;
 use Forwext\Core\Auth\Credential\DatabaseCredentialStore;
@@ -1216,6 +1218,7 @@ final readonly class WebApplicationFactory
         );
         $socialRepository = new DatabaseSocialInteractionRepository($database);
         $socialRelationshipReader = new DatabaseSocialRelationshipReader($database);
+        $directConversationRepository = new DatabaseDirectConversationRepository($database);
         $profileActivityRepository = new DatabaseProfileActivityRepository($database);
         $profileActivity = new ProfileActivityService(
             $profileActivityRepository,
@@ -1429,6 +1432,7 @@ final readonly class WebApplicationFactory
         $layoutBuilderCsrf = $this->layoutBuilderCsrfMiddleware($config);
         $themeCsrf = $this->themeCsrfMiddleware($config);
         $interactionCsrf = $this->interactionCsrfMiddleware($config);
+        $conversationCsrf = $this->conversationCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $profileSettingsCsrf = $this->profileSettingsCsrfMiddleware($config);
         $notificationInboxCsrf = $this->notificationInboxCsrfMiddleware($config);
@@ -1516,6 +1520,29 @@ final readonly class WebApplicationFactory
                 new DateTimeZone($config->requireString('site.timezone')),
             ),
             [$accountSessionCsrf],
+        ));
+        $directConversationHandler = new DirectConversationHandler(
+            $directConversationRepository,
+            $users,
+            $socialRepository,
+            $viewerResolver,
+            $authorizer,
+            $basePath,
+            new DateTimeZone($config->requireString('site.timezone')),
+        );
+        $routes->add(new Route(
+            'account.conversations',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/conversations'),
+            $directConversationHandler,
+            [$conversationCsrf],
+        ));
+        $routes->add(new Route(
+            'account.conversation.detail',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/conversations/{conversationId}', ['conversationId'=>'[0-9a-f]{32}']),
+            $directConversationHandler,
+            [$conversationCsrf],
         ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
@@ -2936,6 +2963,11 @@ final readonly class WebApplicationFactory
     private function interactionCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'interaction', 'forwext.csrf.interaction.v1');
+    }
+
+    private function conversationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'conversation', 'forwext.csrf.conversation.v1');
     }
 
     private function profileActivityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
