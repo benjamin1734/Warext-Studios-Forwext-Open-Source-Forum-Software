@@ -61,6 +61,7 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('admin-desktop', $browserSmoke);
         self::assertStringContainsString('requiredStylesheets.push("/public/assets/admin.css")', $browserSmoke);
         self::assertStringContainsString('data-browser-acp-module', $fixtureRenderer);
+        self::assertStringContainsString('aria-label="Breadcrumb"', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-builder', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-theme', $fixtureRenderer);
         self::assertStringContainsString('data-browser-acp-legacy', $fixtureRenderer);
@@ -68,7 +69,7 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('legacy-admin-module-primitives-v1', $adminCss);
         self::assertStringContainsString('ACP layout expected', $browserSmoke);
         self::assertStringContainsString('breadcrumbs: new BreadcrumbTrail([])', $fixtureRenderer);
-        self::assertStringContainsString('ACP must expose exactly one breadcrumb trail', $browserSmoke);
+        self::assertStringContainsString('ACP breadcrumb contract failed', $browserSmoke);
         self::assertStringContainsString('ACP touch target below 44px', $browserSmoke);
         self::assertStringContainsString('@media(pointer:coarse)', $adminCss);
         self::assertStringContainsString('min-height:44px', $adminCss);

@@ -109,9 +109,10 @@ try {
     if (testCase.admin) {
       const adminSurfaceVisible = await page.locator('[data-browser-fixture="admin"]').isVisible();
       if (!adminSurfaceVisible) fail(`${testCase.name}: ACP fixture is not visible`);
-      const adminBreadcrumbCount = await page.locator('nav[aria-label="Breadcrumb"]').count();
-      if (adminBreadcrumbCount !== 1) {
-        fail(`${testCase.name}: ACP must expose exactly one breadcrumb trail, got ${adminBreadcrumbCount}`);
+      const adminBreadcrumbCount = await page.locator('nav.acp-breadcrumbs[aria-label="Breadcrumb"]').count();
+      const publicBreadcrumbCount = await page.locator('nav.breadcrumbs[aria-label="Breadcrumb"]').count();
+      if (adminBreadcrumbCount !== 1 || publicBreadcrumbCount !== 0) {
+        fail(`${testCase.name}: ACP breadcrumb contract failed (admin=${adminBreadcrumbCount}, public=${publicBreadcrumbCount})`);
       }
 
       const layoutColumns = await page.evaluate(() => {

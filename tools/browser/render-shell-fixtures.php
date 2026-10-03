@@ -120,7 +120,7 @@ HTML;
 
 $adminContent = <<<'HTML'
 <section class="acp-dashboard" data-browser-fixture="admin">
-  <nav class="acp-breadcrumbs" aria-label="Yönetim yolu">
+  <nav class="acp-breadcrumbs" aria-label="Breadcrumb">
     <ol><li><a href="#fixture-admin">Admin</a></li><li>Dashboard</li></ol>
   </nav>
 
