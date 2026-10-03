@@ -113,17 +113,36 @@ try {
   await accountSummary.click();
   const accountPopover = page.locator(".nav-account-popover");
   await accountPopover.waitFor({ state: "visible" });
-  const popoverCovered = await page.evaluate(() => {
+  await page.screenshot({
+    path: path.join(artifactDir, "header-account-popover.png"),
+    fullPage: false,
+  });
+  const popoverCoverage = await page.evaluate(() => {
     const popover = document.querySelector(".nav-account-popover");
-    if (!(popover instanceof HTMLElement)) return true;
+    if (!(popover instanceof HTMLElement)) return [{ reason: "popover-missing" }];
     const links = [...popover.querySelectorAll("a")].filter((link) => link instanceof HTMLElement);
-    return links.some((link) => {
+    return links.flatMap((link) => {
       const rect = link.getBoundingClientRect();
-      const top = document.elementFromPoint(rect.left + Math.min(18, rect.width / 2), rect.top + rect.height / 2);
-      return top !== null && !popover.contains(top);
+      const x = rect.left + Math.min(18, rect.width / 2);
+      const y = rect.top + rect.height / 2;
+      const top = document.elementFromPoint(x, y);
+      if (top === null || popover.contains(top)) return [];
+      const style = top instanceof HTMLElement ? getComputedStyle(top) : null;
+      return [{
+        link: (link.textContent ?? "").trim(),
+        x: Math.round(x),
+        y: Math.round(y),
+        coveringTag: top instanceof Element ? top.tagName.toLowerCase() : String(top),
+        coveringClass: top instanceof Element ? top.getAttribute("class") ?? "" : "",
+        coveringPosition: style?.position ?? "",
+        coveringZIndex: style?.zIndex ?? "",
+        coveringText: top instanceof HTMLElement ? (top.innerText ?? "").trim().slice(0, 120) : "",
+      }];
     });
   });
-  if (popoverCovered) fail("header: account popover is covered by page content or another stacking context");
+  if (popoverCoverage.length > 0) {
+    fail(`header: account popover coverage ${JSON.stringify(popoverCoverage)}`);
+  }
   await page.keyboard.press("Escape");
 
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
