@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.15
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / 1.0.15 release candidate
+CURRENT_STEP = maintenance / complete
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = validate immutable 1.0.15 full/update release and close the final product-quality pass
+NEXT_STEP = no open blocker; continue only from a new regression or an approved roadmap item
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -58,14 +58,17 @@ NEXT_STEP = validate immutable 1.0.15 full/update release and close the final pr
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
-## Maintenance release — 1.0.15 candidate
+## Maintenance release — 1.0.15 complete
 
 - Patch-only follow-up to immutable 1.0.14; no roadmap scope expansion.
 - Mandatory MFA enrollment now keeps TOTP available if WebAuthn/passkey registration cannot be started, instead of failing the entire enrollment screen.
 - MFA enrollment and recovery responses now set `Referrer-Policy: no-referrer` so the short-lived login challenge carried in the enrollment URL is not leaked through referrers.
 - Regression coverage locks both the TOTP fallback and challenge-referrer privacy behavior.
-- Pre-release head `ab723df21e7c03316ffc5b98b03f0cb0ee984550` passed PHP 8.4/8.5 qualification, Chromium responsive/accessibility, dedicated security, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and release-contract checks.
-- Differential predecessor is immutable `v1.0.14`.
+- Release commit `236afa5dbb8fc9eff2ec403fd6a9fe0e55518814` passed security (`37134729106`), PHP 8.4/8.5 + Chromium/release qualification (`37134729137`), performance (`37134729108`), MySQL 8.4/MariaDB 10.11 migration smoke (`37134729088`) and full/update package qualification (`37134729109`).
+- Release `v1.0.15` published successfully on 2026-10-03 as GitHub Release id `402581334`.
+- Published assets: `forwext-v1.0.15-full.zip` (4,104,068 bytes, SHA-256 `f4ad347cd583a36f3cc6153e2e45d389615e19cbd6401d967cbad2c71db930e2`) and `forwext-v1.0.15-update.zip` (6,719 bytes, SHA-256 `611e01fc4b2ef71efa8b416118c4419b401bcb6c3af7ff8b696c5c739343b2be`), each with a SHA-256 companion asset.
+- Differential predecessor is immutable `v1.0.14`; full/update integrity and packaged web-installer smoke completed successfully before publication.
+- Final product-quality pass is closed. There is no open maintenance blocker in the canonical roadmap/status pointer.
 
 ## Maintenance release — 1.0.14 complete
 
