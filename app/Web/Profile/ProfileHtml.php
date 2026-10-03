@@ -47,14 +47,26 @@ final class ProfileHtml
             return '<a data-nav-key="' . self::escape($key) . '" href="' . $navHref($path) . '"' . $extra . '>'
                 . self::escape($label) . '</a>';
         };
+        $visibleNavItem = static function (
+            string $key,
+            string $fallbackLabel,
+            string $fallbackPath,
+            string $extra = '',
+        ) use ($visibleNavigation, $navItem): string {
+            if (!isset($visibleNavigation[$key])) {
+                return '';
+            }
+            $item = $visibleNavigation[$key];
+            return $navItem($key, $item->label ?: $fallbackLabel, $item->path ?: $fallbackPath, $extra);
+        };
 
         $primaryNav = $navItem('home', 'Ana Sayfa', '/', ' data-nav-section-link="home"')
-            . $navItem('forums', 'Forumlar', '/forums', ' data-nav-section-link="forums"')
+            . $visibleNavItem('forums', 'Forumlar', '/forums', ' data-nav-section-link="forums"')
             . ($authenticated
                 ? $navItem('activity', 'Neler yeni?', '/activity', ' data-nav-section-link="whatsnew"')
                 : '')
-            . $navItem('marketplace', 'Marketplace', '/marketplace', ' data-nav-section-link="marketplace"')
-            . $navItem('members', 'Üyeler', '/members', ' data-nav-section-link="members"');
+            . $visibleNavItem('marketplace', 'Marketplace', '/marketplace', ' data-nav-section-link="marketplace"')
+            . $visibleNavItem('members', 'Üyeler', '/members', ' data-nav-section-link="members"');
 
         $knownKeys = [
             'forums' => true,
@@ -79,13 +91,20 @@ final class ProfileHtml
             }
         }
 
-        $moreNav = $navItem('faq', 'SSS', '/faq') . $extraNavigation;
-        $primaryNav .= '<details class="nav-primary-menu" data-nav-section-link="more">'
-            . '<summary>Diğer <span aria-hidden="true">⌄</span></summary>'
-            . '<div class="nav-primary-popover">' . $moreNav . '</div></details>';
+        $moreNav = $visibleNavItem('faq', 'SSS', '/faq');
+        if (!isset($visibleNavigation['marketplace'])) {
+            $moreNav .= $visibleNavItem('portfolio', 'Portfolyo', '/portfolio')
+                . $visibleNavItem('giveaways', 'Çekilişler', '/giveaways');
+        }
+        $moreNav .= $extraNavigation;
+        if ($moreNav !== '') {
+            $primaryNav .= '<details class="nav-primary-menu" data-nav-section-link="more">'
+                . '<summary>Diğer <span aria-hidden="true">⌄</span></summary>'
+                . '<div class="nav-primary-popover">' . $moreNav . '</div></details>';
+        }
 
-        $forumSubNav = $navItem('forums.list', 'Forum listesi', '/forums')
-            . $navItem('forums.search', 'Forumlarda ara', '/search')
+        $forumSubNav = $visibleNavItem('forums', 'Forum listesi', '/forums')
+            . $visibleNavItem('search', 'Forumlarda ara', '/search')
             . ($authenticated ? $navItem('forums.activity', 'Yeni içerikler', '/activity') : '');
 
         $whatsNewSubNav = $authenticated
@@ -96,7 +115,7 @@ final class ProfileHtml
                     : '')
             : '';
 
-        $marketplaceSubNav = $navItem('marketplace.home', 'İlanlar', '/marketplace')
+        $marketplaceSubNav = $visibleNavItem('marketplace', 'İlanlar', '/marketplace')
             . (isset($visibleNavigation['portfolio'])
                 ? $navItem('marketplace.portfolio', 'Portfolyo', '/portfolio')
                 : '')
@@ -104,7 +123,7 @@ final class ProfileHtml
                 ? $navItem('marketplace.giveaways', 'Çekilişler', '/giveaways')
                 : '');
 
-        $membersSubNav = $navItem('members.list', 'Kayıtlı üyeler', '/members')
+        $membersSubNav = $visibleNavItem('members', 'Kayıtlı üyeler', '/members')
             . (isset($visibleNavigation['members.online'])
                 ? $navItem('members.online', 'Çevrimiçi üyeler', '/members/online')
                 : '')
@@ -112,9 +131,9 @@ final class ProfileHtml
                 ? $navItem('members.stats', 'İstatistikler', '/stats')
                 : '');
 
-        $homeSubNav = $navItem('home.forums', 'Forumlar', '/forums')
-            . $navItem('home.search', 'Ara', '/search')
-            . $navItem('home.faq', 'SSS', '/faq');
+        $homeSubNav = $visibleNavItem('forums', 'Forumlar', '/forums')
+            . $visibleNavItem('search', 'Ara', '/search')
+            . $visibleNavItem('faq', 'SSS', '/faq');
 
         $accountSubNav = '';
         $accountNav = '';
@@ -244,7 +263,7 @@ final class ProfileHtml
             . '<button class="nav-toggle" type="button" data-forwext-nav-toggle aria-expanded="false" aria-controls="forwext-primary-navigation"><span aria-hidden="true">☰</span><span>Menü</span></button>'
             . '<div id="forwext-primary-navigation" class="nav-shell" data-forwext-primary-navigation data-mobile-open="0">'
             . '<nav class="nav-primary" aria-label="Ana navigasyon">' . $primaryNav . '</nav>' . $userTools . '</div></div></div>'
-            . '<div class="top-sub" data-forwext-subnav-shell><div class="top-subin">' . $secondaryNav . '</div></div>'
+            . '<div class="top-sub" data-forwext-subnav-shell hidden><div class="top-subin">' . $secondaryNav . '</div></div>'
             . $headerAfter . '</header>' . $mainHtml . $footerHtml . $pageAfterHtml . $bugReportLink
             . '<script src="' . $musicScript . '" defer></script>'
             . '<script src="' . $notificationSoundScript . '" defer></script>'
