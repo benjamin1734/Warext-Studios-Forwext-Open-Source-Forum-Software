@@ -91,11 +91,17 @@ final readonly class LoginHandler implements RequestHandlerInterface
                 previousSessionId: $previousSessionId,
             ));
         } catch (SecondFactorRequiredException $exception) {
+            if ($exception->enrollmentRequired) {
+                return Response::redirect(
+                    $this->basePath->prepend('/mfa/enroll?challenge=' . rawurlencode($exception->challengeToken)),
+                    303,
+                )->withHeader('Cache-Control', 'no-store');
+            }
             return $this->viewMfa(
                 $request,
                 $exception->challengeToken,
                 $exception->methods,
-                $exception->enrollmentRequired,
+                false,
             );
         } catch (AuthenticationRejectedException|InvalidArgumentException) {
             return $this->view($request, true, $identifier);
