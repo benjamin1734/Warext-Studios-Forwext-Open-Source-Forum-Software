@@ -688,6 +688,17 @@ jobs:
             exit 1
           fi
 
+          php -r '
+          $root = $argv[1];
+          require $root . "/vendor/autoload.php";
+          (new \Forwext\Core\Install\ApacheHtaccessManager($root . "/.htaccess"))->ensureRootRouting();
+          (new \Forwext\Core\Install\ApacheHtaccessManager($root . "/public/.htaccess"))->ensurePublicRouting();
+          ' "$PACKAGE_ROOT"
+
+          grep -Fq 'RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]' "$PACKAGE_ROOT/.htaccess"
+          grep -Fq 'RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]' "$PACKAGE_ROOT/.htaccess"
+          grep -Fq 'RewriteRule ^ index.php [L,QSA]' "$PACKAGE_ROOT/public/.htaccess"
+
           php -S 127.0.0.1:8124 -t "$PACKAGE_ROOT" >"$WORK/php-server.log" 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" >/dev/null 2>&1 || true' EXIT

@@ -23,6 +23,8 @@ The full ZIP is a clean-install package, not a source archive. CI verifies the b
 
 The ordinary cPanel full package continues to include production PHP dependencies and does not require Composer/npm/Node/SSH on the target host.
 
+Full-package CI also requires both runtime entrypoints, the public installer, core frontend/ACP assets and protected runtime-directory guards. The built ZIP is extracted and its own production autoloader is used to generate the root/public routing files before both installer entrypoints are served over a local PHP runtime. An uninstalled root front controller must redirect to `install.php`; this prevents source-checkout-only success from masking a broken release ZIP.
+
 ## Differential update contract
 
 The update ZIP is built by comparing the new full package with the **immediately preceding immutable GitHub Release full package**. Older legacy `install.zip` assets are read only as predecessor compatibility and are never produced again.

@@ -45,3 +45,10 @@ The worker exits after a bounded batch and therefore does not require Supervisor
 ## Release/package expectation
 
 Use the immutable GitHub Release `full.zip`, not GitHub's source-code archive. The full package contains the production `vendor/` tree required by the web installer. Generated config, master keys, encrypted secrets and installed-version state are site-local mutable data and are not source-controlled release configuration.
+
+The full package deliberately does not overwrite root/public `.htaccess` files. During installation Forwext preserves any hosting-managed/cPanel PHP handler content and installs a bounded managed routing block instead. Two document-root layouts are supported:
+
+- **package root as document root** — root `index.php` delegates to `public/index.php`; the managed root rewrite maps public `/assets/*` and `/storage/*` paths to the public directory, blocks direct access to internal application/config/vendor paths, and sends dynamic routes through the root front controller;
+- **`public/` as document root** — the managed public rewrite sends non-file/non-directory requests directly to `public/index.php`.
+
+A previously managed root file that contains the older public-style rewrite is upgraded in place; unrelated cPanel handler lines are preserved.

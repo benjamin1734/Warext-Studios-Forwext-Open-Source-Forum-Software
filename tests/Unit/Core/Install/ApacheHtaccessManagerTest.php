@@ -69,6 +69,35 @@ HTACCESS;
         self::assertStringContainsString('RewriteRule ^ index.php [L,QSA]', $contents);
     }
 
+    public function testRootRoutingPrecedesUnmarkedLegacyPublicRouting(): void
+    {
+        $legacy = <<<'HTACCESS'
+Options -Indexes
+DirectoryIndex index.php
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+# php -- BEGIN cPanel-generated handler, do not edit
+AddHandler application/x-httpd-ea-php84 .php
+# php -- END cPanel-generated handler, do not edit
+HTACCESS;
+        file_put_contents($this->path, $legacy . PHP_EOL);
+
+        (new ApacheHtaccessManager($this->path))->ensureRootRouting();
+
+        $contents = (string) file_get_contents($this->path);
+        $assetRule = strpos($contents, 'RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]');
+        $legacyRule = strrpos($contents, 'RewriteRule ^ index.php [L,QSA]');
+
+        self::assertIsInt($assetRule);
+        self::assertIsInt($legacyRule);
+        self::assertLessThan($legacyRule, $assetRule);
+        self::assertSame(1, substr_count($contents, 'application/x-httpd-ea-php84'));
+    }
+
     public function testRootRoutingUpgradesPreviouslyManagedPublicStyleBlock(): void
     {
         $manager = new ApacheHtaccessManager($this->path);

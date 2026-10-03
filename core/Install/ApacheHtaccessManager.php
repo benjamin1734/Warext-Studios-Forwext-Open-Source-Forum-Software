@@ -42,6 +42,13 @@ final readonly class ApacheHtaccessManager
 
         if (str_contains($existing, self::BEGIN_MARKER) || str_contains($existing, self::END_MARKER)) {
             $updated = $this->replaceManagedBlock($existing, $block);
+        } elseif (
+            $rootLayout
+            && $this->hasLegacyRouting($existing)
+            && !$this->alreadyHasLegacyForwextRouting($existing, true)
+        ) {
+            $suffix = ltrim($existing);
+            $updated = $block . ($suffix === '' ? '' : PHP_EOL . PHP_EOL . $suffix) . PHP_EOL;
         } elseif ($this->alreadyHasLegacyForwextRouting($existing, $rootLayout)) {
             return;
         } else {
@@ -83,11 +90,7 @@ final readonly class ApacheHtaccessManager
 
     private function alreadyHasLegacyForwextRouting(string $existing, bool $rootLayout): bool
     {
-        $common = str_contains($existing, 'RewriteRule ^ index.php [L,QSA]')
-            && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-f')
-            && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-d');
-
-        if (!$common) {
+        if (!$this->hasLegacyRouting($existing)) {
             return false;
         }
 
@@ -96,6 +99,13 @@ final readonly class ApacheHtaccessManager
                 str_contains($existing, 'RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]')
                 && str_contains($existing, 'RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]')
             );
+    }
+
+    private function hasLegacyRouting(string $existing): bool
+    {
+        return str_contains($existing, 'RewriteRule ^ index.php [L,QSA]')
+            && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-f')
+            && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-d');
     }
 
     private function atomicWrite(string $contents): void
