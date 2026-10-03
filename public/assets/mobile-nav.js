@@ -113,7 +113,14 @@
 
   const markCurrentNavigation = () => {
     const currentPath = normalizePath(window.location.pathname);
-    const activeSection = sectionForPath(relativeToBasePath(currentPath));
+    let activeSection = sectionForPath(relativeToBasePath(currentPath));
+    if (
+      activeSection === "marketplace"
+      && header.querySelector('[data-nav-section-link="marketplace"]') === null
+      && header.querySelector('[data-nav-section-link="more"]') !== null
+    ) {
+      activeSection = "more";
+    }
     header.dataset.activeNavSection = activeSection;
 
     for (const anchor of header.querySelectorAll("[aria-current]")) {
