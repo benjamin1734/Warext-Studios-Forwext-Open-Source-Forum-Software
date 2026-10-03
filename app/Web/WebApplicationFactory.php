@@ -31,6 +31,9 @@ use Forwext\App\Web\Analytics\CommerceAnalyticsHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportBuilderHandler;
 use Forwext\App\Web\Analytics\AnalyticsReportExportHandler;
 use Forwext\App\Web\Auth\EmailVerificationHandler;
+use Forwext\App\Web\Auth\AccountSecurityHandler;
+use Forwext\App\Web\Auth\OAuthCallbackHandler;
+use Forwext\App\Web\Auth\OAuthStartHandler;
 use Forwext\App\Web\Auth\LoginHandler;
 use Forwext\App\Web\Auth\LogoutHandler;
 use Forwext\App\Web\Auth\PasswordResetHandler;
@@ -220,6 +223,11 @@ use Forwext\Core\Auth\Mfa\Passkey\WebAuthnLibEngine;
 use Forwext\Core\Auth\Mfa\Recovery\RecoveryCodeService;
 use Forwext\Core\Auth\Mfa\Totp\DatabaseTotpService;
 use Forwext\Core\Auth\Mfa\TrustedDevice\TrustedDeviceService;
+use Forwext\Core\Auth\OAuth\DatabaseConnectedAccountStore;
+use Forwext\Core\Auth\OAuth\DatabaseOAuthTransactionStore;
+use Forwext\Core\Auth\OAuth\NativeOAuthHttpClient;
+use Forwext\Core\Auth\OAuth\OAuthConnectedAccountService;
+use Forwext\Core\Auth\OAuth\OAuthProviderRegistryFactory;
 use Forwext\Core\Auth\Password\NativePasswordHasher;
 use Forwext\Core\Auth\Password\PasswordHashPolicy;
 use Forwext\Core\Auth\Password\PasswordResetService;
@@ -310,6 +318,7 @@ use Forwext\Core\Health\HealthService;
 use Forwext\Core\Health\RuntimeEnvironmentHealthCheck;
 use Forwext\Core\Health\WritableDirectoryHealthCheck;
 use Forwext\Core\Install\CoreMigrationRegistry;
+use Forwext\Core\Infrastructure\SystemClock;
 use Forwext\Core\Lock\FileLockManager;
 use Forwext\Core\Migration\FileInstalledVersionStore;
 use Forwext\Core\Migration\InstallUpgradeEngine;
@@ -512,6 +521,12 @@ final readonly class WebApplicationFactory
         $accessPolicy = new OwnerSafeProfileAccessPolicy();
         $profileService = new ProfileService($profileStore, $accessPolicy);
         $credentials = new DatabaseCredentialStore($database);
+        $authenticationAvailability = new DatabaseDisciplineAuthenticationAvailability($database);
+        $authFingerprints = new AuthenticationFingerprint(
+            $secretStore,
+            $config->requireString('authentication.fingerprint_secret_name'),
+        );
+        $authDevices = new DatabaseDeviceRepository($database);
         $authSessionIndex = new DatabaseAuthSessionIndex($database);
         $sessions = new AuthSessionManager(
             $runtime->sessionStore(),
@@ -528,7 +543,7 @@ final readonly class WebApplicationFactory
             $sessions,
             $users,
             $config->requireString('authentication.session.cookie_name'),
-            new DatabaseDisciplineAuthenticationAvailability($database),
+            $authenticationAvailability,
         );
         $passwordHasher = new NativePasswordHasher(new PasswordHashPolicy(
             $config->requireInt('authentication.password.minimum_characters'),
@@ -561,10 +576,10 @@ final readonly class WebApplicationFactory
             $mfaChallenges,
         );
         $loginHistory = new DatabaseLoginHistoryRecorder($database);
-        $canonicalHost = parse_url(
-            RuntimeCanonicalUrlResolver::resolve($config->requireString('routing.canonical_url')),
-            PHP_URL_HOST,
+        $canonicalUrl = RuntimeCanonicalUrlResolver::resolve(
+            $config->requireString('routing.canonical_url'),
         );
+        $canonicalHost = parse_url($canonicalUrl, PHP_URL_HOST);
         if (!is_string($canonicalHost) || trim($canonicalHost) === '') {
             throw new RuntimeException('Canonical URL host is required for WebAuthn composition.');
         }
@@ -616,12 +631,9 @@ final readonly class WebApplicationFactory
             $users,
             $credentials,
             $passwordHasher,
-            new AuthenticationFingerprint(
-                $secretStore,
-                $config->requireString('authentication.fingerprint_secret_name'),
-            ),
+            $authFingerprints,
             new DatabaseAuthenticationRateLimiter($database),
-            new DatabaseDeviceRepository($database),
+            $authDevices,
             $sessions,
             $rememberTokens,
             $loginHistory,
@@ -629,8 +641,44 @@ final readonly class WebApplicationFactory
             $config->requireInt('authentication.login_rate_limit.identity_attempts'),
             $config->requireInt('authentication.login_rate_limit.network_attempts'),
             $config->requireInt('authentication.login_rate_limit.window_seconds'),
-            availability: new DatabaseDisciplineAuthenticationAvailability($database),
+            availability: $authenticationAvailability,
         );
+
+        $oauthConfig = $config->get('oauth', []);
+        if (!is_array($oauthConfig)) {
+            throw new RuntimeException('OAuth configuration must be an array.');
+        }
+        $oauthRegistry = OAuthProviderRegistryFactory::fromConfig($oauthConfig);
+        $oauthAccounts = new DatabaseConnectedAccountStore($database);
+        $oauthService = new OAuthConnectedAccountService(
+            $oauthRegistry,
+            new NativeOAuthHttpClient(
+                $config->requireInt('oauth.http_timeout_seconds'),
+                $config->requireInt('oauth.maximum_response_bytes'),
+            ),
+            new DatabaseOAuthTransactionStore($database),
+            $oauthAccounts,
+            $users,
+            $credentials,
+            $secretStore,
+            new SystemClock(),
+            $config->requireInt('oauth.transaction_ttl_seconds'),
+        );
+        $oauthRedirectUris = [];
+        $oauthProviderEnabled = [];
+        $oauthProviderLabels = [];
+        foreach (['google'=>'Google','discord'=>'Discord'] as $providerId => $providerLabel) {
+            [, $providerConfig] = $oauthRegistry->resolve($providerId);
+            $callback = rtrim($canonicalUrl, '/') . '/oauth/' . $providerId . '/callback';
+            $oauthRedirectUris[$providerId] = $callback;
+            $enabled = $providerConfig->enabled
+                && trim($providerConfig->clientId) !== ''
+                && in_array($callback, $providerConfig->redirectUris, true);
+            $oauthProviderEnabled[$providerId] = $enabled;
+            if ($enabled) {
+                $oauthProviderLabels[$providerId] = $providerLabel;
+            }
+        }
 
         $mailTransport = $this->mailTransport($config, $secretStore);
         $authLinkDelivery = new MailAuthLinkDelivery(
@@ -727,6 +775,36 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_url.maximum_changes_per_window'),
         );
         $basePath = $this->basePath($config);
+        $oauthStartHandler = new OAuthStartHandler(
+            $oauthService,
+            $viewerResolver,
+            $basePath,
+            $oauthRedirectUris,
+        );
+        $oauthCallbackHandler = new OAuthCallbackHandler(
+            $oauthService,
+            $credentials,
+            $authenticationAvailability,
+            $authFingerprints,
+            $authDevices,
+            $mfaLoginGate,
+            $mfaCompletion,
+            $loginHistory,
+            $sessions,
+            $viewerResolver,
+            $this->trustedProxyResolver($config),
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
+            $config->requireInt('authentication.session.ttl_seconds'),
+            $oauthRedirectUris,
+        );
+        $accountSecurityHandler = new AccountSecurityHandler(
+            $oauthService,
+            $oauthAccounts,
+            $viewerResolver,
+            $basePath,
+            $oauthProviderEnabled,
+        );
         $turnstileSiteKey = $config->get('registration.captcha.site_key');
         if ($turnstileSiteKey !== null && !is_string($turnstileSiteKey)) {
             throw new RuntimeException('Registration Turnstile site key must be a string or null.');
@@ -760,6 +838,7 @@ final readonly class WebApplicationFactory
             $config->requireString('authentication.session.cookie_name'),
             $config->requireInt('authentication.session.ttl_seconds'),
             $mfaCompletion,
+            $oauthProviderLabels,
         );
         $logoutHandler = new LogoutHandler(
             $sessions,
@@ -1500,6 +1579,27 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/reset-password'),
             $passwordResetHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.oauth.start',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/oauth/{provider}/start', ['provider'=>'google|discord']),
+            $oauthStartHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.oauth.callback',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/oauth/{provider}/callback', ['provider'=>'google|discord']),
+            $oauthCallbackHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'account.security',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/security'),
+            $accountSecurityHandler,
             [$authCsrf],
         ));
         $routes->add(new Route(
