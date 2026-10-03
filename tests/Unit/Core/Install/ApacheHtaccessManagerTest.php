@@ -48,6 +48,39 @@ HTACCESS;
         self::assertStringContainsString('RewriteRule ^ index.php [L,QSA]', $contents);
     }
 
+    public function testRootRoutingPreservesCpanelHandlerAndMapsPublicAssets(): void
+    {
+        $handler = <<<'HTACCESS'
+# php -- BEGIN cPanel-generated handler, do not edit
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php84 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
+HTACCESS;
+        file_put_contents($this->path, $handler . PHP_EOL);
+
+        (new ApacheHtaccessManager($this->path))->ensureRootRouting();
+
+        $contents = (string) file_get_contents($this->path);
+        self::assertStringContainsString('application/x-httpd-ea-php84', $contents);
+        self::assertStringContainsString('RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]', $contents);
+        self::assertStringContainsString('RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]', $contents);
+        self::assertStringContainsString('RewriteRule ^config(?:/|$) - [F,L,NC]', $contents);
+        self::assertStringContainsString('RewriteRule ^ index.php [L,QSA]', $contents);
+    }
+
+    public function testRootRoutingUpgradesPreviouslyManagedPublicStyleBlock(): void
+    {
+        $manager = new ApacheHtaccessManager($this->path);
+        $manager->ensurePublicRouting();
+        $manager->ensureRootRouting();
+
+        $contents = (string) file_get_contents($this->path);
+        self::assertSame(1, substr_count($contents, '# BEGIN Forwext'));
+        self::assertStringContainsString('RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]', $contents);
+        self::assertStringContainsString('RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]', $contents);
+    }
+
     public function testManagedBlockIsIdempotentAndDoesNotDuplicateCpanelHandler(): void
     {
         file_put_contents(

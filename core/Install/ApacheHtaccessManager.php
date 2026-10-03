@@ -17,6 +17,16 @@ final readonly class ApacheHtaccessManager
 
     public function ensurePublicRouting(): void
     {
+        $this->ensureRouting(self::publicRoutingBlock(), false);
+    }
+
+    public function ensureRootRouting(): void
+    {
+        $this->ensureRouting(self::rootRoutingBlock(), true);
+    }
+
+    private function ensureRouting(string $block, bool $rootLayout): void
+    {
         if (is_link($this->path)) {
             throw new RuntimeException('Managed .htaccess may not be a symbolic link.');
         }
@@ -30,11 +40,9 @@ final readonly class ApacheHtaccessManager
             $existing = $contents;
         }
 
-        $block = self::routingBlock();
-
         if (str_contains($existing, self::BEGIN_MARKER) || str_contains($existing, self::END_MARKER)) {
             $updated = $this->replaceManagedBlock($existing, $block);
-        } elseif ($this->alreadyHasLegacyForwextRouting($existing)) {
+        } elseif ($this->alreadyHasLegacyForwextRouting($existing, $rootLayout)) {
             return;
         } else {
             $prefix = rtrim($existing);
@@ -73,11 +81,21 @@ final readonly class ApacheHtaccessManager
         return implode(PHP_EOL . PHP_EOL, $parts) . PHP_EOL;
     }
 
-    private function alreadyHasLegacyForwextRouting(string $existing): bool
+    private function alreadyHasLegacyForwextRouting(string $existing, bool $rootLayout): bool
     {
-        return str_contains($existing, 'RewriteRule ^ index.php [L,QSA]')
+        $common = str_contains($existing, 'RewriteRule ^ index.php [L,QSA]')
             && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-f')
             && str_contains($existing, 'RewriteCond %{REQUEST_FILENAME} !-d');
+
+        if (!$common) {
+            return false;
+        }
+
+        return !$rootLayout
+            || (
+                str_contains($existing, 'RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]')
+                && str_contains($existing, 'RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]')
+            );
     }
 
     private function atomicWrite(string $contents): void
@@ -114,7 +132,7 @@ final readonly class ApacheHtaccessManager
         }
     }
 
-    private static function routingBlock(): string
+    private static function publicRoutingBlock(): string
     {
         return <<<'HTACCESS'
 # BEGIN Forwext
@@ -127,6 +145,33 @@ DirectoryIndex index.php
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [L,QSA]
 </IfModule>
+# END Forwext
+HTACCESS;
+    }
+
+    private static function rootRoutingBlock(): string
+    {
+        return <<<'HTACCESS'
+# BEGIN Forwext
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L,NC]
+    RewriteRule ^storage/(.*)$ public/storage/$1 [L,NC]
+    RewriteRule ^(?:app|core|database|docs|frontend|modules|packages|resources|storage|tests|themes|tools|vendor)(?:/|$) - [F,L,NC]
+    RewriteRule ^config(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:\.git|\.github)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml\.dist|phpstan\.neon\.dist|psalm\.xml|phpcs\.xml\.dist|VERSION|PROJECT_STATUS\.md|CHANGELOG\.md|LICENSE|NOTICE|THIRD_PARTY_NOTICES\.md)$ - [F,L,NC]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
 # END Forwext
 HTACCESS;
     }

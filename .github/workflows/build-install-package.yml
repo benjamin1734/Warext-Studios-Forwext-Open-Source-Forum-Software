@@ -542,6 +542,7 @@ jobs:
                   f"{root}/THIRD_PARTY_NOTICES.md",
                   f"{root}/install.php",
                   f"{root}/public/install.php",
+                  f"{root}/index.php",
                   f"{root}/public/index.php",
                   f"{root}/config/defaults.php",
                   f"{root}/public/assets/site-base.css",
@@ -714,6 +715,14 @@ jobs:
 
           check_installer "/install.php"
           check_installer "/public/install.php"
+
+          ROOT_STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8124/)"
+          ROOT_LOCATION="$(curl --silent --head http://127.0.0.1:8124/ | tr -d '\r' | awk 'tolower($1) == "location:" {print $2}' | tail -n 1)"
+          if [[ "$ROOT_STATUS" != "302" || "$ROOT_LOCATION" != "install.php" ]]; then
+            echo "Packaged root front controller must redirect an uninstalled site to install.php." >&2
+            echo "status=$ROOT_STATUS location=$ROOT_LOCATION" >&2
+            exit 1
+          fi
 
           kill "$SERVER_PID" >/dev/null 2>&1 || true
           trap - EXIT
