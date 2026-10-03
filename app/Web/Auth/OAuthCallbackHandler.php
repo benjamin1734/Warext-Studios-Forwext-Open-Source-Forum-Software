@@ -134,11 +134,17 @@ final readonly class OAuthCallbackHandler implements RequestHandlerInterface
                     LoginOutcome::MfaRequired,
                     new DateTimeImmutable('now', new DateTimeZone('UTC')),
                 );
+                if ($exception->enrollmentRequired) {
+                    return Response::redirect(
+                        $this->basePath->prepend('/mfa/enroll?challenge=' . rawurlencode($exception->challengeToken)),
+                        303,
+                    )->withHeader('Cache-Control', 'no-store');
+                }
                 return $this->mfaView(
                     $request,
                     $exception->challengeToken,
                     $exception->methods,
-                    $exception->enrollmentRequired,
+                    false,
                 );
             }
 
