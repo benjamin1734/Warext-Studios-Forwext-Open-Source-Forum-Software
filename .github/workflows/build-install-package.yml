@@ -175,6 +175,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          php -l index.php >/dev/null
+          php -l install.php >/dev/null
           find app core config database modules packages public resources tests themes tools \
             -type f -name '*.php' -print0 \
             | xargs -0 -r -n1 php -l >/dev/null

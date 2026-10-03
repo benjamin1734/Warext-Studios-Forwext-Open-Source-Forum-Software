@@ -10,6 +10,23 @@ $directories = ['app', 'config', 'core', 'modules', 'addons', 'database', 'publi
 $violations = [];
 $checked = 0;
 
+foreach (['index.php', 'install.php'] as $filename) {
+    $path = $root . '/' . $filename;
+    if (!is_file($path)) {
+        $violations[] = $filename . ' (missing)';
+        continue;
+    }
+
+    ++$checked;
+    $contents = file_get_contents($path);
+    if ($contents === false || preg_match(
+        '/\\A<\\?php(?:\\s|\\/\\*.*?\\*\\/|\\/\\/[^\\r\\n]*(?:\\R|$)|#[^\\r\\n]*(?:\\R|$))*declare\\s*\\(\\s*strict_types\\s*=\\s*1\\s*\\)\\s*;/s',
+        $contents
+    ) !== 1) {
+        $violations[] = $filename;
+    }
+}
+
 foreach ($directories as $directory) {
     $path = $root . '/' . $directory;
     if (!is_dir($path)) {
