@@ -12,6 +12,7 @@ use Forwext\Core\Auth\Mfa\Challenge\MfaChallengeGrant;
 use Forwext\Core\Auth\Mfa\Challenge\MfaChallengePurpose;
 use Forwext\Core\Auth\Mfa\Challenge\MfaChallengeStore;
 use Forwext\Core\Auth\Mfa\MfaException;
+use Forwext\Core\Auth\Mfa\MfaFactorAvailability;
 use Forwext\Core\Auth\Mfa\MfaMethod;
 use Forwext\Core\Auth\Mfa\Passkey\DatabasePasskeyService;
 use Forwext\Core\Auth\Mfa\Passkey\PasskeyCeremony;
@@ -36,6 +37,7 @@ final readonly class MfaLoginCompletionService
         private TrustedDeviceService $trustedDevices,
         private LoginHistoryRecorder $history,
         private Clock $clock = new SystemClock(),
+        private ?MfaFactorAvailability $availability = null,
     ) {
     }
 
@@ -56,6 +58,15 @@ final readonly class MfaLoginCompletionService
     public function beginPasskey(string $challengeToken): PasskeyCeremony
     {
         return $this->passkeys->beginAuthentication($this->requireLoginGrant($challengeToken)->userId);
+    }
+
+    public function completeEnrollment(string $challengeToken): MfaLoginCompletionResult
+    {
+        $grant = $this->requireLoginGrant($challengeToken);
+        if ($this->availability === null || $this->availability->methods($grant->userId) === []) {
+            throw new MfaException('MFA enrollment must be verified before login can be completed.');
+        }
+        return $this->finalize($challengeToken, $grant, false);
     }
 
     public function completePasskey(string $challengeToken, string $ceremonyToken, string $responseJson, bool $trustDevice = false): MfaLoginCompletionResult
