@@ -78,6 +78,7 @@ final class ProfileHtml
             'marketplace' => true,
             'faq' => true,
             'account.own' => true,
+            'conversations.own' => true,
             'referrals.own' => true,
             'subscriptions.own' => true,
             'notifications.own' => true,
@@ -139,6 +140,7 @@ final class ProfileHtml
         $accountNav = '';
         foreach ([
             'account.own' => ['Hesap merkezi', '/account'],
+            'conversations.own' => ['Özel mesajlar', '/account/conversations'],
             'referrals.own' => ['Davetlerim', '/account/referrals'],
             'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
             'bugs.mine' => ['Hata bildirimlerim', '/bugs'],
@@ -147,6 +149,14 @@ final class ProfileHtml
                 $accountNav .= $navItem($key, $label, $path);
                 $accountSubNav .= $navItem('sub.' . $key, $label, $path);
             }
+        }
+
+        $conversationNav = '';
+        if (isset($visibleNavigation['conversations.own'])) {
+            $conversationNav = '<a class="nav-icon-link nav-icon-link--messages" data-nav-key="conversations.own" href="'
+                . $navHref('/account/conversations') . '" aria-label="Özel mesajlar" title="Özel mesajlar">'
+                . '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 3v-3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm1.1 3.2 6.9 4.6 6.9-4.6-1-1.5L12 10.6 6.1 6.7l-1 1.5Z"/></svg>'
+                . '<span class="sr-only">Özel mesajlar</span></a>';
         }
 
         $notificationNav = '';
@@ -169,7 +179,7 @@ final class ProfileHtml
                 . '<span class="nav-account-label">Hesabım</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary>'
                 . '<div class="nav-account-popover" aria-label="Hesap seçenekleri">' . $accountNav
                 . '<a data-nav-key="auth.logout" href="' . $navHref('/logout') . '">Çıkış yap</a>'
-                . '</div></details>' . $notificationNav . $searchIcon . '</div>';
+                . '</div></details>' . $conversationNav . $notificationNav . $searchIcon . '</div>';
         } else {
             $userTools = '<div class="nav-user-tools nav-user-tools--guest">'
                 . '<a class="nav-auth-link" data-nav-key="auth.login" href="' . $navHref('/login') . '">Giriş yap</a>'
