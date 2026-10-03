@@ -30,6 +30,13 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('/* accessibility-regression-v1 */', $css);
         self::assertStringContainsString('/* accessible-visually-hidden-v2 */', $css);
+        self::assertStringContainsString('/* navigation-stacking-ownership-v2 */', $css);
+        self::assertStringContainsString('z-index:2000;', $css);
+        self::assertStringContainsString('.top-main{', $css);
+        self::assertStringContainsString('z-index:2;', $css);
+        self::assertStringContainsString('.top-sub{', $css);
+        self::assertStringContainsString('z-index:1;', $css);
+
         self::assertStringContainsString('.sr-only{', $css);
         self::assertStringContainsString('clip-path:inset(50%)', $css);
         self::assertStringContainsString('.nav-account-menu[open]{z-index:1400}', $css);

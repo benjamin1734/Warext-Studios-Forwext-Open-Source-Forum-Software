@@ -1681,11 +1681,13 @@ select:focus{
 
 /* navigation-shell-v1 */
 /* shell-ownership-v2 */
+/* navigation-stacking-ownership-v2 */
 .top{
   position:sticky;
   top:0;
-  z-index:1000;
+  z-index:2000;
   isolation:isolate;
+  overflow:visible;
   border:0;
   background:transparent;
   box-shadow:0 1px 0 var(--line);
@@ -1695,6 +1697,9 @@ select:focus{
   box-shadow:0 12px 34px rgba(0,0,0,.19),0 1px 0 color-mix(in srgb,var(--accent) 18%,var(--line));
 }
 .top-main{
+  position:relative;
+  z-index:2;
+  overflow:visible;
   background:color-mix(in srgb,var(--forwext-component-header-background) 97%,var(--panel));
   border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent);
 }
@@ -1705,6 +1710,9 @@ select:focus{
   }
 }
 .topin{
+  position:relative;
+  z-index:2;
+  overflow:visible;
   width:min(var(--fx-shell-width),calc(100% - (var(--fx-shell-gutter) * 2)));
   min-height:58px;
   margin:auto;
@@ -1813,11 +1821,11 @@ select:focus{
 .nav-primary-menu,
 .nav-account-menu{position:relative}
 .nav-primary-menu[open],
-.nav-account-menu[open]{z-index:1400}
+.nav-account-menu[open]{z-index:10}
 .nav-primary-popover,
 .nav-account-popover{
   position:absolute;
-  z-index:1250;
+  z-index:20;
   top:calc(100% + 7px);
   width:230px;
   display:grid;
@@ -1968,6 +1976,8 @@ select:focus{
   border-left:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));
 }
 .top-sub{
+  position:relative;
+  z-index:1;
   min-height:35px;
   background:color-mix(in srgb,var(--panel2) 91%,var(--forwext-component-header-background));
   border-bottom:1px solid var(--line);

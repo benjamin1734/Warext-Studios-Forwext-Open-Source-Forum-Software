@@ -64,6 +64,8 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - P0 remediation starts by making the CSRF middleware contract consistent across safe and verified unsafe requests, so ACP POST handlers receive a fresh render token instead of falling into an impossible-state 500 branch.
 - ACP dashboard POST mutation now runs before the GET-only render-token requirement; a genuinely missing render token is escalated into the structured runtime error path rather than returned as an uncorrelated plain-text 500.
 - The shared shell now defines the previously missing `.sr-only` utility used by message/notification/search icon labels, preventing assistive text from rendering visibly inside 42px header controls.
+- Live Chromium reproduced the account popover beneath both the secondary navigation and the forum page body. The header stack is now explicit: sticky header root at the page level, primary header above the secondary row, and popovers above both within the primary header stacking context.
+
 - Desktop navigation no longer clips primary popovers through the horizontal-scroll container, and open account/primary menus receive an explicit stacking context above page surfaces.
 - Browser and runtime acceptance remain open until real routed pages (not only rendered fixtures) cover login/session/CSRF, forum, account and ACP flows.
 - Qualification now provisions a real MySQL-backed install for Chromium, starts the actual native PHP runtime, signs in with the installer-created administrator and exercises live home/login/member navigation plus authenticated `/admin` GET and CSRF-protected POST flows.
