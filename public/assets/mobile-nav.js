@@ -28,6 +28,17 @@
     return collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : collapsed;
   };
 
+  const brandHome = header.querySelector(".brand[href]");
+  const basePath = brandHome instanceof HTMLAnchorElement
+    ? normalizePath(new URL(brandHome.href, window.location.href).pathname)
+    : "/";
+  const relativeToBasePath = (path) => {
+    if (basePath === "/") return path;
+    if (path === basePath) return "/";
+    if (path.startsWith(basePath + "/")) return path.slice(basePath.length);
+    return path;
+  };
+
   const sectionForPath = (path) => {
     if (path === "/") return "home";
     if (path === "/activity" || path.startsWith("/activity/")) return "whatsnew";
@@ -102,7 +113,7 @@
 
   const markCurrentNavigation = () => {
     const currentPath = normalizePath(window.location.pathname);
-    const activeSection = sectionForPath(currentPath);
+    const activeSection = sectionForPath(relativeToBasePath(currentPath));
     header.dataset.activeNavSection = activeSection;
 
     for (const anchor of header.querySelectorAll("[aria-current]")) {
