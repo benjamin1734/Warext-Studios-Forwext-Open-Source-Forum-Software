@@ -68,6 +68,9 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - The primary header no longer uses `backdrop-filter`; the translucent blur created an unnecessary compositing ancestor for overflowing account menus. Header color remains token-driven and nearly opaque while popovers stay in the normal stacking tree.
 - Dropdowns now use progressive enhancement into the browser Popover top layer when supported. The existing `<details>` structure remains the no-JavaScript/older-browser fallback, while Chromium positions the account/primary popovers with fixed viewport coordinates above every page/sidebar stacking context.
 - The top-layer upgrade is desktop-only. Mobile/tablet navigation keeps the existing in-panel `<details>` behavior, and closed upgraded popovers have an explicit hidden-state rule so they cannot enter layout/keyboard/overflow calculations before opening.
+- Live Chromium now reaches and renders the authenticated Administration dashboard, completes a CSRF-protected ACP favorite POST/303/GET cycle, and captures the corrected account popover above the forum sidebar.
+- The prior “125% zoom” assertion used CSS `zoom`, which intentionally enlarges layout beyond the CSS viewport and produced a false horizontal-overflow signal. Acceptance now models 125% desktop reflow as a 1440→1152 CSS-pixel viewport and checks the actual responsive layout instead.
+
 
 - The full PHPUnit failure introduced by the branded-error regression test was a charset-casing expectation mismatch; the test now follows the canonical `Response::html()` content type (`text/html; charset=utf-8`).
 

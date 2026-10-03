@@ -205,11 +205,9 @@ try {
     fullPage: true,
   });
 
+  await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
-  await page.evaluate(() => {
-    document.documentElement.style.zoom = "1.25";
-  });
-  await assertHealthyDocument("authenticated home 125% zoom");
+  await assertHealthyDocument("authenticated home 125% reflow equivalent");
 
   if (failedRequests.length > 0) {
     fail(`live routes: failed browser requests: ${failedRequests.join(" | ")}`);
