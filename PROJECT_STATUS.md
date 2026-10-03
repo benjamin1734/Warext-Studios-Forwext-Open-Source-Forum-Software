@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.12
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / 1.0.12 release candidate
+CURRENT_STEP = maintenance / complete
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = validate immutable 1.0.12 full/update release, then return to maintenance issues or a new approved roadmap
+NEXT_STEP = no open maintenance blocker; continue only from a new issue, regression or approved roadmap item
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -58,13 +58,16 @@ NEXT_STEP = validate immutable 1.0.12 full/update release, then return to mainte
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
-## Maintenance release — 1.0.12 candidate
+## Maintenance release — 1.0.12 complete
 
 - Production acceptance remains closed; this is a maintenance-only patch release.
 - Promotion, Reward and Trophy ACP success notices now use the shared `acp-success` presentation instead of duplicating static inline color styles.
 - Regression coverage prevents those static inline success styles from returning and explicitly permits only the dynamic Appearance preview style that is generated from escaped design-token state.
 - Pre-release maintenance head `6f66b7a9faf691ea10aa9bd82688d963ed14081a` passed security, performance, PHP 8.4/8.5 qualification, Chromium responsive/accessibility, MySQL/MariaDB smoke and full-package validation including packaged installer smoke.
-- Release packaging must produce immutable `forwext-v1.0.12-full.zip` and differential `forwext-v1.0.12-update.zip` from predecessor 1.0.11.
+- Release 1.0.12 published successfully as an immutable production GitHub Release from predecessor 1.0.11.
+- Differential update contents: 0 added files, 6 replaced files, 0 deleted files and 0 migration files.
+- `forwext-v1.0.12-full.zip` and `forwext-v1.0.12-update.zip` both passed archive/SHA-256/manifest integrity and packaged web-installer smoke before publication.
+- Release workflow completed successfully; security, performance, PHP 8.4/8.5 qualification, Chromium responsive/accessibility and MySQL/MariaDB smoke were green for the release head.
 
 ## Production acceptance remediation — 1.0.11 complete
 
