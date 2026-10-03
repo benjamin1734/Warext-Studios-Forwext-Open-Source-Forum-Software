@@ -185,7 +185,7 @@ final class AdminModuleManagerHtml
         string $action,
         string $csrf,
     ): string {
-        $html = '<div class="mod-actions" style="margin-top:14px">';
+        $html = '<div class="mod-actions mod-actions--spaced">';
         if ($record->state === FirstPartyModuleState::Enabled) {
             $html .= self::actionForm($action, $csrf, $definition->key, 'disable', 'Devre dışı bırak');
         } elseif ($record->state === FirstPartyModuleState::Disabled) {
@@ -210,7 +210,7 @@ final class AdminModuleManagerHtml
         $html .= '</div>';
 
         if ($record->state === FirstPartyModuleState::Disabled) {
-            $html .= '<div class="mod-warning" style="margin-top:12px"><strong>Uninstall veri politikası</strong>'
+            $html .= '<div class="mod-warning mod-warning--spaced"><strong>Uninstall veri politikası</strong>'
                 . '<p class="mod-muted">Keep data modülü kaldırır ancak veriyi korur. Delete data kayıtlı modül tablolarını ve scope ayarlarını siler; storage nesneleri güvenli purge kuyruğundan temizlenir. İşlemden önce modül anahtarını birebir yazman gerekir.</p>'
                 . '<div class="mod-actions">'
                 . self::uninstallForm($action, $csrf, $definition->key, false)
@@ -294,7 +294,7 @@ final class AdminModuleManagerHtml
         }
 
         return '<section class="mod-panel"><h2>Scoped settings</h2><p class="mod-muted">Öncelik post → thread → forum → group → global → güvenli varsayılan şeklindedir. Reset, bu scope override’ını kaldırır ve üst fallback’i yeniden etkinleştirir.</p>'
-            . $scopeNav . $target . '<div style="margin-top:12px">' . $body . '</div></section>';
+            . $scopeNav . $target . '<div class="mod-settings-body">' . $body . '</div></section>';
     }
 
     /**
