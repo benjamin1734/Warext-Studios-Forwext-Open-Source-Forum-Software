@@ -549,6 +549,10 @@ jobs:
                   f"{root}/public/assets/site-pages.css",
                   f"{root}/public/assets/admin.css",
                   f"{root}/public/assets/mobile-nav.js",
+                  f"{root}/core/.htaccess",
+                  f"{root}/config/.htaccess",
+                  f"{root}/storage/.htaccess",
+                  f"{root}/vendor/.htaccess",
                   f"{root}/vendor/autoload.php",
               }
               missing = sorted(required - set(files))
