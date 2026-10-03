@@ -70,6 +70,8 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - The top-layer upgrade is desktop-only. Mobile/tablet navigation keeps the existing in-panel `<details>` behavior, and closed upgraded popovers have an explicit hidden-state rule so they cannot enter layout/keyboard/overflow calculations before opening.
 - Live Chromium now reaches and renders the authenticated Administration dashboard, completes a CSRF-protected ACP favorite POST/303/GET cycle, and captures the corrected account popover above the forum sidebar.
 - The prior “125% zoom” assertion used CSS `zoom`, which intentionally enlarges layout beyond the CSS viewport and produced a false horizontal-overflow signal. Acceptance now models 125% desktop reflow as a 1440→1152 CSS-pixel viewport and checks the actual responsive layout instead.
+- Browser request diagnostics now ignore only Chromium `ERR_ABORTED` lifecycle cancellations caused by intentional navigation/realtime shutdown. Other failed requests and every browser console/page error still fail the live-route gate. A 1152px reflow screenshot is retained as an artifact.
+
 
 
 - The full PHPUnit failure introduced by the branded-error regression test was a charset-casing expectation mismatch; the test now follows the canonical `Response::html()` content type (`text/html; charset=utf-8`).

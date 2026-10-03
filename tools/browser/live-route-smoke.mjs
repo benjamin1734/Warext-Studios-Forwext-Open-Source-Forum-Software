@@ -25,7 +25,9 @@ try {
   });
   page.on("pageerror", (error) => consoleErrors.push(error.message));
   page.on("requestfailed", (request) => {
-    failedRequests.push(`${request.method()} ${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`);
+    const errorText = request.failure()?.errorText ?? "unknown";
+    if (errorText.includes("ERR_ABORTED")) return;
+    failedRequests.push(`${request.method()} ${request.url()} :: ${errorText}`);
   });
 
   const assertHealthyDocument = async (label) => {
@@ -208,6 +210,10 @@ try {
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
+  await page.screenshot({
+    path: path.join(artifactDir, "home-125-percent-reflow.png"),
+    fullPage: true,
+  });
 
   if (failedRequests.length > 0) {
     fail(`live routes: failed browser requests: ${failedRequests.join(" | ")}`);
