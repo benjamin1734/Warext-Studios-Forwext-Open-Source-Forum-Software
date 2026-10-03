@@ -123,3 +123,119 @@
         }
     });
 })();
+
+
+(() => {
+    'use strict';
+
+    const form = document.querySelector('[data-auth-passkey-register-form]');
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    const button = form.querySelector('[data-auth-passkey-register-button]');
+    const optionsInput = form.querySelector('[data-auth-passkey-register-options]');
+    const responseInput = form.querySelector('[data-auth-passkey-register-response]');
+    const status = form.querySelector('[data-auth-passkey-register-status]');
+
+    if (!(button instanceof HTMLButtonElement)
+        || !(optionsInput instanceof HTMLInputElement)
+        || !(responseInput instanceof HTMLInputElement)
+    ) {
+        return;
+    }
+
+    const showStatus = (message) => {
+        if (!(status instanceof HTMLElement)) return;
+        status.hidden = false;
+        status.textContent = message;
+    };
+
+    const bytesToBase64Url = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/u, '');
+    };
+
+    const base64UrlToBytes = (value) => {
+        const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+        const binary = atob(padded);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return bytes;
+    };
+
+    const decodeOptions = () => {
+        const binary = atob(optionsInput.value);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return JSON.parse(new TextDecoder().decode(bytes));
+    };
+
+    const creationOptions = (json) => {
+        if (typeof PublicKeyCredential.parseCreationOptionsFromJSON === 'function') {
+            return PublicKeyCredential.parseCreationOptionsFromJSON(json);
+        }
+        const publicKey = {
+            ...json,
+            challenge: base64UrlToBytes(json.challenge),
+            user: {...json.user, id: base64UrlToBytes(json.user.id)},
+        };
+        if (Array.isArray(json.excludeCredentials)) {
+            publicKey.excludeCredentials = json.excludeCredentials.map((credential) => ({
+                ...credential,
+                id: base64UrlToBytes(credential.id),
+            }));
+        }
+        return publicKey;
+    };
+
+    const credentialJson = (credential) => {
+        const response = credential.response;
+        const transports = typeof response.getTransports === 'function' ? response.getTransports() : [];
+        return {
+            id: credential.id,
+            rawId: bytesToBase64Url(credential.rawId),
+            type: credential.type,
+            response: {
+                clientDataJSON: bytesToBase64Url(response.clientDataJSON),
+                attestationObject: bytesToBase64Url(response.attestationObject),
+                transports,
+            },
+            clientExtensionResults: credential.getClientExtensionResults(),
+            authenticatorAttachment: credential.authenticatorAttachment ?? null,
+        };
+    };
+
+    if (!window.PublicKeyCredential || !navigator.credentials || typeof navigator.credentials.create !== 'function') {
+        button.disabled = true;
+        showStatus('Bu tarayıcı passkey oluşturmayı desteklemiyor. TOTP yöntemini kullan.');
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        showStatus('Passkey oluşturma başlatılıyor…');
+        try {
+            const credential = await navigator.credentials.create({
+                publicKey: creationOptions(decodeOptions()),
+            });
+            if (!(credential instanceof PublicKeyCredential)) {
+                throw new Error('Passkey credential was not returned.');
+            }
+            responseInput.value = JSON.stringify(credentialJson(credential));
+            showStatus('Passkey oluşturuldu. Kurulum tamamlanıyor…');
+            form.submit();
+        } catch (error) {
+            responseInput.value = '';
+            button.disabled = false;
+            if (error instanceof DOMException && error.name === 'NotAllowedError') {
+                showStatus('Passkey oluşturma iptal edildi veya zaman aşımına uğradı.');
+                return;
+            }
+            showStatus('Passkey oluşturulamadı. Yeniden deneyebilir veya TOTP yöntemini kullanabilirsin.');
+        }
+    });
+})();
