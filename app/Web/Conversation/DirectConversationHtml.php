@@ -81,12 +81,16 @@ final class DirectConversationHtml
         }
 
         $action = self::e($basePath->prepend('/account/conversations/' . rawurlencode($conversationId)));
-        $memberHref = self::e($basePath->prepend('/members/' . rawurlencode($view->summary->otherUsername)));
+        $counterpart = self::e($view->summary->otherUsername);
+        if ($view->summary->otherUsername !== 'Silinmiş kullanıcı') {
+            $counterpart = '<a href="' . self::e(
+                $basePath->prepend('/members/' . rawurlencode($view->summary->otherUsername)),
+            ) . '">' . $counterpart . '</a>';
+        }
         $body = '<section class="conversation-page conversation-detail discovery-page">'
             . '<header class="surface-head conversation-head"><div>'
             . '<a class="surface-back-link" href="' . self::e($basePath->prepend('/account/conversations')) . '">← Mesajlar</a>'
-            . '<span class="forum-eyebrow">ÖZEL KONUŞMA</span><h1>'
-            . '<a href="' . $memberHref . '">' . self::e($view->summary->otherUsername) . '</a></h1>'
+            . '<span class="forum-eyebrow">ÖZEL KONUŞMA</span><h1>' . $counterpart . '</h1>'
             . '<p>Bu konuşmayı yalnız katılımcılar görüntüleyebilir.</p></div></header>'
             . '<section class="surface-panel conversation-thread"><div class="conversation-message-list">'
             . $messages . '</div></section>'
