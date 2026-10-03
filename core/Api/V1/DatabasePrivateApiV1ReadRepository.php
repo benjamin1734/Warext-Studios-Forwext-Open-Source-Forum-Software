@@ -25,25 +25,34 @@ final readonly class DatabasePrivateApiV1ReadRepository implements PrivateApiV1R
         [$limit, $offset] = self::page($page, $perPage);
 
         $rows = $this->database->fetchAll(new CompiledQuery(
-            'SELECT conversation_type,conversation_id,title,status,updated_at_utc FROM ('
-            . "SELECT 'support' AS conversation_type,ticket_id AS conversation_id,subject AS title,status,updated_at_utc "
-            . 'FROM forwext_support_tickets WHERE requester_user_id=:support_user_id '
-            . 'UNION ALL '
-            . "SELECT 'bug' AS conversation_type,report_id AS conversation_id,title,status,updated_at_utc "
-            . 'FROM forwext_bug_reports WHERE reporter_user_id=:bug_user_id'
-            . ') conversations ORDER BY updated_at_utc DESC,conversation_type,conversation_id DESC '
+            'SELECT c.conversation_id,op.user_id AS other_user_id,'
+            . 'COALESCE(u.username,\'Silinmiş kullanıcı\') AS other_username,'
+            . 'COALESCE(lm.body,\'\') AS preview,c.updated_at_utc,'
+            . '(SELECT COUNT(*) FROM forwext_direct_messages um '
+            . 'WHERE um.conversation_id=c.conversation_id '
+            . 'AND (um.author_user_id IS NULL OR um.author_user_id<>:unread_actor_id) '
+            . 'AND (p.last_read_at_utc IS NULL OR um.created_at_utc>p.last_read_at_utc)) AS unread_count '
+            . 'FROM forwext_direct_conversation_participants p '
+            . 'INNER JOIN forwext_direct_conversations c ON c.conversation_id=p.conversation_id '
+            . 'INNER JOIN forwext_direct_conversation_participants op '
+            . 'ON op.conversation_id=c.conversation_id AND op.user_id<>p.user_id '
+            . 'LEFT JOIN forwext_users u ON u.user_id=op.user_id '
+            . 'LEFT JOIN forwext_direct_messages lm ON lm.message_id=c.last_message_id '
+            . 'WHERE p.user_id=:actor_id '
+            . 'ORDER BY c.updated_at_utc DESC,c.conversation_id DESC '
             . 'LIMIT ' . ($limit + 1) . ' OFFSET ' . $offset,
             [
-                'support_user_id'=>$userId->value(),
-                'bug_user_id'=>$userId->value(),
+                'actor_id'=>$userId->value(),
+                'unread_actor_id'=>$userId->value(),
             ],
         ));
 
         return self::pageResult($rows, $page, $perPage, static fn (array $row): array => [
             'id'=>(string) $row['conversation_id'],
-            'type'=>(string) $row['conversation_type'],
-            'title'=>(string) $row['title'],
-            'status'=>(string) $row['status'],
+            'other_user_id'=>(string) $row['other_user_id'],
+            'other_username'=>(string) $row['other_username'],
+            'preview'=>(string) $row['preview'],
+            'unread_count'=>max(0, (int) $row['unread_count']),
             'updated_at'=>self::timestamp((string) $row['updated_at_utc']),
         ]);
     }
