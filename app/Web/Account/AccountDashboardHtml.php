@@ -38,6 +38,7 @@ final class AccountDashboardHtml
                 'label' => 'Hesap ve araçlar',
                 'description' => 'Üyelik, kişisel araçlar ve hesap durumuyla ilgili alanlar.',
                 'items' => [
+                    ['Hesap Güvenliği', 'Google/Discord bağlantılarını ve harici giriş yöntemlerini yönet.', '/account/security'],
                     ['Aktif Oturumlar', 'Hesabına açık oturumları incele ve diğer cihazlardaki oturumları kapat.', '/account/sessions'],
                     ['Üyelik Yükseltmeleri', 'Hesabına uygun planları ve üyelik yükseltmelerini görüntüle.', '/account/upgrades'],
                     ['Yazım Sözlüğü', 'Kişisel yazım denetimi sözlüğünü yönet.', '/account/spellcheck-dictionary'],
