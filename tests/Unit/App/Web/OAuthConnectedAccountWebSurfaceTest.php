@@ -64,7 +64,7 @@ final class OAuthConnectedAccountWebSurfaceTest extends TestCase
         $handler = (string) file_get_contents($root . '/app/Web/Auth/OAuthStartHandler.php');
 
         self::assertStringContainsString('$request->method() === HttpMethod::Post', $handler);
-        self::assertStringContainsString("($body['intent'] ?? null) !== 'link'", $handler);
+        self::assertStringContainsString('(\$body[\'intent\'] ?? null) !== \'link\'', $handler);
         self::assertStringContainsString('$this->oauth->begin($provider, $redirectUri, $actor)', $handler);
         self::assertStringContainsString('$this->oauth->begin($provider, $redirectUri)', $handler);
         self::assertStringContainsString("Referrer-Policy', 'no-referrer", $handler);
