@@ -114,6 +114,7 @@ final readonly class MfaEnrollmentHandler implements RequestHandlerInterface
             ),
         )->withHeader('Cache-Control', 'no-store')
             ->withHeader('X-Robots-Tag', 'noindex,nofollow')
+            ->withHeader('Referrer-Policy', 'no-referrer')
             ->withCookie(new ResponseCookie(
                 $this->sessionCookieName,
                 $result->login->sessionId,
@@ -132,8 +133,28 @@ final readonly class MfaEnrollmentHandler implements RequestHandlerInterface
         bool $invalid = false,
     ): Response {
         $totp = $this->enrollment->beginTotp($challenge, $username);
-        $passkey = $this->enrollment->beginPasskey($challenge, $username, $username);
         $action = self::e($this->basePath->prepend('/mfa/enroll?challenge=' . rawurlencode($challenge)));
+        $passkeyBlock = '';
+        try {
+            $passkey = $this->enrollment->beginPasskey($challenge, $username, $username);
+            $passkeyBlock = '<section class="mfa-enrollment-method"><h2>Passkey</h2>'
+                . '<p>Cihazındaki biyometrik doğrulama veya güvenlik anahtarını kullan.</p>'
+                . '<form class="auth-entry-form" method="post" action="' . $action . '" data-auth-passkey-register-form>'
+                . self::hidden('_csrf', $csrf)
+                . self::hidden('action', 'complete_passkey')
+                . self::hidden('ceremony', $passkey->token)
+                . '<label><span>Passkey adı</span><input type="text" name="label" value="Ana cihaz" maxlength="191" required></label>'
+                . '<input type="hidden" name="passkey_response" value="" data-auth-passkey-register-response>'
+                . '<input type="hidden" value="' . self::e(base64_encode($passkey->optionsJson))
+                . '" data-auth-passkey-register-options>'
+                . '<div class="auth-entry-notice" data-auth-passkey-register-status hidden></div>'
+                . '<button class="fx-btn fx-btn--primary" type="button" data-auth-passkey-register-button>Passkey oluştur</button>'
+                . '</form></section>';
+        } catch (MfaException) {
+            $passkeyBlock = '<section class="mfa-enrollment-method"><h2>Passkey</h2>'
+                . '<div class="auth-entry-notice" role="status"><strong>Passkey şu anda kullanılamıyor.</strong>'
+                . '<span>TOTP doğrulama uygulamasıyla kuruluma devam edebilirsin.</span></div></section>';
+        }
 
         $body = '<section class="auth-entry mfa-enrollment"><div class="auth-entry-card card">'
             . '<div class="auth-entry-copy"><span class="forum-eyebrow">GÜVENLİK</span><h1>MFA kurulumu</h1>'
@@ -151,26 +172,15 @@ final readonly class MfaEnrollmentHandler implements RequestHandlerInterface
             . 'autocomplete="one-time-code" maxlength="12" required></label>'
             . '<button class="fx-btn fx-btn--primary" type="submit">TOTP kurulumunu doğrula</button></form></section>'
             . '<div class="auth-oauth"><span>veya</span></div>'
-            . '<section class="mfa-enrollment-method"><h2>Passkey</h2>'
-            . '<p>Cihazındaki biyometrik doğrulama veya güvenlik anahtarını kullan.</p>'
-            . '<form class="auth-entry-form" method="post" action="' . $action . '" data-auth-passkey-register-form>'
-            . self::hidden('_csrf', $csrf)
-            . self::hidden('action', 'complete_passkey')
-            . self::hidden('ceremony', $passkey->token)
-            . '<label><span>Passkey adı</span><input type="text" name="label" value="Ana cihaz" maxlength="191" required></label>'
-            . '<input type="hidden" name="passkey_response" value="" data-auth-passkey-register-response>'
-            . '<input type="hidden" value="' . self::e(base64_encode($passkey->optionsJson))
-            . '" data-auth-passkey-register-options>'
-            . '<div class="auth-entry-notice" data-auth-passkey-register-status hidden></div>'
-            . '<button class="fx-btn fx-btn--primary" type="button" data-auth-passkey-register-button>Passkey oluştur</button>'
-            . '</form></section>'
+            . $passkeyBlock
             . '<div class="auth-entry-actions"><a class="fx-btn" href="' . self::e($this->basePath->prepend('/login'))
             . '">Girişe dön</a></div></div></section>'
             . '<script src="' . self::e($this->basePath->prepend('/assets/auth-mfa.js')) . '" defer></script>';
 
         return Response::html(ProfileHtml::page('MFA kurulumu', $body, $this->basePath), $invalid ? 422 : 200)
             ->withHeader('Cache-Control', 'no-store')
-            ->withHeader('X-Robots-Tag', 'noindex,nofollow');
+            ->withHeader('X-Robots-Tag', 'noindex,nofollow')
+            ->withHeader('Referrer-Policy', 'no-referrer');
     }
 
     /** @param list<string> $codes */
@@ -209,7 +219,8 @@ final readonly class MfaEnrollmentHandler implements RequestHandlerInterface
             . self::e($this->basePath->prepend('/login')) . '">Girişe dön</a></div></div></section>',
             $this->basePath,
         ), 410)->withHeader('Cache-Control', 'no-store')
-            ->withHeader('X-Robots-Tag', 'noindex,nofollow');
+            ->withHeader('X-Robots-Tag', 'noindex,nofollow')
+            ->withHeader('Referrer-Policy', 'no-referrer');
     }
 
     private static function hidden(string $name, string $value): string
