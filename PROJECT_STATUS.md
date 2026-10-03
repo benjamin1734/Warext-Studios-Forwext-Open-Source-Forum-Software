@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.13
+CURRENT_VERSION = 1.0.14
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / complete
+CURRENT_STEP = maintenance / 1.0.14 release candidate
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = continue only from the final product-quality pass, a new regression or an approved roadmap item
+NEXT_STEP = validate immutable 1.0.14 full/update release and close the final product-quality pass
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -57,6 +57,21 @@ NEXT_STEP = continue only from the final product-quality pass, a new regression 
 - Dense Chromium ACP acceptance now exercises dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin module primitives at 390px and 1440px, including stylesheet loading, horizontal overflow, single-breadcrumb, keyboard and 44px control checks.
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
+
+## Maintenance release — 1.0.14 candidate
+
+- Final product-quality pass closes multiple user-facing gaps that were present behind otherwise complete backend contracts.
+- Native member-to-member private conversations are now production-routed with participant checks, `conversation.use` permission enforcement, ignore-relationship blocking, unread counts, pagination, CSRF-protected start/reply flows and IDOR-safe detail access.
+- Direct-message schema adds pair uniqueness, participants, message history and read state with installer migration coverage on MySQL 8.4 and MariaDB 10.11.
+- `/api/v1/conversations`, the official SDK contract and the Next.js conversations surface now describe real private conversations instead of support/bug ticket summaries.
+- Google/Discord OAuth login and connected-account management are now native web features. Login, callback, account linking/unlinking and `Hesabım → Güvenlik` reuse the existing device, credential-version, discipline, MFA, session and CSRF controls.
+- Mandatory MFA users without an enrolled factor no longer dead-end after primary authentication. Password and OAuth login now route to `/mfa/enroll`, where TOTP or passkey enrollment can be completed before a session is issued.
+- TOTP enrollment exposes the secret/otpauth contract, verifies the first code, regenerates one-time recovery codes and shows them once after successful enrollment.
+- Passkey enrollment uses the native WebAuthn creation flow (`navigator.credentials.create`) and existing server-side ceremony verification; unsupported browsers can fall back to TOTP.
+- `MfaLoginCompletionService::completeEnrollment()` refuses session creation until `MfaFactorAvailability` confirms a verified factor, then consumes the existing login challenge and establishes the normal secure session.
+- Shared login/account/navigation presentation exposes OAuth, private messages and account security while remaining responsive and using the existing design-token system.
+- Pre-release head `b11f5662a77f8e670b81827f1e6f2d6a3323d648` passed PHP 8.4/8.5 qualification, Chromium responsive/accessibility, architecture/security regression, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and cPanel full-package/installer smoke.
+- The dedicated security workflow passed on functional MFA composition head `a9650c3dca10b242c4d1cb6fb213b0fc3c27f905`; the newest dedicated security run was still queued behind an older run when the release candidate commit was prepared.
 
 ## Maintenance release — 1.0.13 complete
 
