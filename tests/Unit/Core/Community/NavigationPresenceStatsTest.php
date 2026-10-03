@@ -55,6 +55,10 @@ final class NavigationPresenceStatsTest extends TestCase
             'forum.stats',
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
         );
+        self::assertContains(
+            'conversations.own',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
+        );
     }
 
     public function testMemberDirectoryEscapesLikeWildcardsAndKeepsPublicProfileFilter(): void
