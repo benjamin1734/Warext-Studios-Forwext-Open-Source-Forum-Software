@@ -26,6 +26,8 @@ Static ACP presentation is centralized in `public/assets/admin.css`; native admi
 - System / Integrations: existing text/section filters, generated-override reset, secret confirmation and runtime capability verification are brought under the shared guidance contract.
 - System Operations: bounded section filtering plus existing permission-gated health/integrity, backup verification, redacted logs, typed destructive confirmations and environment-override fail-closed behavior.
 
-Representative ACP browser acceptance now runs in Chromium at 390px mobile and 1440px desktop. The gate verifies the Administration stylesheet is loaded and applies the common horizontal-overflow, keyboard-navigation, failed-request/console and 44px coarse-pointer control checks used by the public shell.
+Representative ACP browser acceptance runs in Chromium at 390px mobile and 1440px desktop. The gate verifies the Administration stylesheet is loaded and applies the common horizontal-overflow, keyboard-navigation, failed-request/console and touch-target checks used by the public shell. Dense ACP fixtures cover the dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin-module primitives. Core ACP fixtures must expose exactly one admin breadcrumb and no duplicate public breadcrumb.
+
+Legacy first-party admin renderers that still use shared public primitive class names are normalized by ACP-only overrides in `admin.css`; this avoids changing public module presentation while keeping administrative cards, forms, tables, actions and stats visually consistent. Advertising and Analytics table/spacing/alignment utilities are also centralized there rather than repeated as inline style attributes.
 
 No database migration is required. Filters and guidance are request-scoped presentation state only. The minimum cPanel runtime gains no Composer/npm/Node/Redis/Docker/Supervisor requirement.

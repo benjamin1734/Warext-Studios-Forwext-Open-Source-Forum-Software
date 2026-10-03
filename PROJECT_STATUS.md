@@ -11,7 +11,7 @@ LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = production-acceptance-remediation / ACP production acceptance
 LAST_COMMIT = see current GitHub main
 BLOCKERS = final production acceptance remains open until native public/ACP workflows are fully usable end-to-end
-NEXT_STEP = continue ACP production-acceptance remediation; frontend rebuild F0/F4 cleanup is complete
+NEXT_STEP = finish ACP consistency/end-to-end sweep, then final fresh-install/update-package production acceptance
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -50,6 +50,13 @@ NEXT_STEP = continue ACP production-acceptance remediation; frontend rebuild F0/
 - Final F0/F4 cleanup is complete: base/components/pages ownership is explicit, shared primitive ownership is regression-tested, obsolete compatibility selectors were removed and the responsive scale remains enforced.
 - F0 closeout commit `288da34ff0cd40fac98f05d867e432d453775832` passed qualification matrix, security, MySQL/MariaDB migration smoke, performance/observability and installation-package workflows.
 - ACP presentation is now centralized in `public/assets/admin.css` (`a4f7237c4becc70dc222e1c06a19ff395b88becb`) and representative Administration browser acceptance at 390px/1440px is enforced by Chromium regression coverage (`04947d094ea9dcb5769b15b13e6c9ac958a64f4a`).
+- ACP shared presentation now covers core Administration, community management, module manager, system integrations/operations, Appearance, Analytics and first-party admin management surfaces through one `AdminAssetsHtml` contract.
+- Appearance Studio, Layout Builder and Theme Manager no longer embed page-local `<style>` blocks; their presentation is owned by `public/assets/admin.css`.
+- Core ACP navigation has route-acceptance coverage for all 26 registered navigation targets; internal management responses are required to remain private/no-store and noindex/nofollow.
+- Duplicate public/admin breadcrumb trails were removed. Core Administration surfaces expose the ACP trail only; non-core `/admin/*` pages retain `Administration → current screen` context.
+- Dense Chromium ACP acceptance now exercises dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin module primitives at 390px and 1440px, including stylesheet loading, horizontal overflow, single-breadcrumb, keyboard and 44px control checks.
+- Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
+- ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
 
 ## Production acceptance remediation — 1.0.5
 
