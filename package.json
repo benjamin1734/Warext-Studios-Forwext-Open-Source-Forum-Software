@@ -30,7 +30,8 @@
     "next-frontend:typecheck": "npm run typecheck --workspace=@forwext/next-frontend",
     "next-frontend:build": "npm run build --workspace=@forwext/next-frontend",
     "browser:fixtures": "php tools/browser/render-shell-fixtures.php",
-    "browser:smoke": "node tools/browser/shell-smoke.mjs"
+    "browser:smoke": "node tools/browser/shell-smoke.mjs",
+    "browser:live": "node tools/browser/live-route-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

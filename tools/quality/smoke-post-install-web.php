@@ -58,10 +58,11 @@ $databasePort = (int) $env('FORWEXT_TEST_DB_PORT', '3306');
 $databaseName = $env('FORWEXT_TEST_DB_NAME', 'forwext_ci');
 $databaseUser = $env('FORWEXT_TEST_DB_USER', 'root');
 $databasePassword = $env('FORWEXT_TEST_DB_PASSWORD', 'root');
+$canonicalUrl = $env('FORWEXT_TEST_CANONICAL_URL', 'https://forwext.test');
 
 $installer = new InstallationService($root);
 $report = $installer->install(new InstallationInput(
-    'https://forwext.test',
+    $canonicalUrl,
     $databaseHost,
     $databasePort,
     $databaseName,

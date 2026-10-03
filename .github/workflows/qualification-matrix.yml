@@ -74,8 +74,21 @@ jobs:
 
 
   browser-regression:
-    name: Chromium responsive and accessibility smoke
+    name: Chromium responsive and live-route accessibility smoke
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: forwext_browser_ci
+        ports:
+          - 3308:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -133,6 +146,46 @@ jobs:
           path: build/browser-artifacts/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Prepare a real installed browser runtime
+        env:
+          FORWEXT_TEST_DB_HOST: 127.0.0.1
+          FORWEXT_TEST_DB_PORT: 3308
+          FORWEXT_TEST_DB_NAME: forwext_browser_ci
+          FORWEXT_TEST_DB_USER: root
+          FORWEXT_TEST_DB_PASSWORD: root
+          FORWEXT_TEST_CANONICAL_URL: http://localhost:8124
+        run: php tools/quality/smoke-post-install-web.php
+
+      - name: Start real Forwext runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -S localhost:8124 -t public tools/browser/live-router.php >/tmp/forwext-live-browser.log 2>&1 &
+          echo $! >/tmp/forwext-live-browser.pid
+          for attempt in {1..40}; do
+            if curl --fail --silent http://localhost:8124/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/forwext-live-browser.log
+          exit 1
+
+      - name: Run real routed browser acceptance
+        run: npm run browser:live
+        env:
+          FORWEXT_BROWSER_LIVE_BASE_URL: http://localhost:8124
+
+      - name: Upload live-route browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-live-route-browser-acceptance
+          path: build/browser-live-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
 
   release-contract:
     name: Release build contract
