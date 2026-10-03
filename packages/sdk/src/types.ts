@@ -87,9 +87,10 @@ export interface Post {
 
 export interface ConversationSummary {
   id: ForwextEntityId;
-  type: "support" | "bug";
-  title: string;
-  status: string;
+  other_user_id: ForwextEntityId;
+  other_username: string;
+  preview: string;
+  unread_count: number;
   updated_at: ForwextIsoTimestamp;
 }
 
