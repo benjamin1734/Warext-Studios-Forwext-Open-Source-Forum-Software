@@ -263,6 +263,35 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         self::assertStringNotContainsString('style="display:grid;gap:18px"', $theme);
     }
 
+
+    public function testStaticAdminSuccessNoticesUseSharedPresentation(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $asset = (string) file_get_contents($root . '/public/assets/admin.css');
+
+        self::assertStringContainsString('.acp-success', $asset);
+
+        foreach ([
+            'Promotion/PromotionHtml.php',
+            'Reward/RewardHtml.php',
+            'Trophy/TrophyHtml.php',
+        ] as $file) {
+            $source = (string) file_get_contents($root . '/app/Web/' . $file);
+            self::assertStringContainsString('search-alert acp-success', $source, $file);
+            self::assertStringNotContainsString('style="border-color:#2f6f47;background:#173722"', $source, $file);
+        }
+    }
+
+    public function testAppearanceGuideKeepsOnlyDynamicPreviewInlineStyle(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $source = (string) file_get_contents($root . '/app/Web/Appearance/AppearanceGuideHtml.php');
+
+        preg_match_all('/style="[^"]*"/', $source, $matches);
+        self::assertCount(1, $matches[0] ?? []);
+        self::assertStringContainsString('self::escape($previewStyle)', $source);
+    }
+
     public function testQueueQueriesAreGuardedByTheirBackendPermissions(): void
     {
         $root = dirname(__DIR__, 4);
