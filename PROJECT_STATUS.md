@@ -68,6 +68,8 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - Browser and runtime acceptance remain open until real routed pages (not only rendered fixtures) cover login/session/CSRF, forum, account and ACP flows.
 - Qualification now provisions a real MySQL-backed install for Chromium, starts the actual native PHP runtime, signs in with the installer-created administrator and exercises live home/login/member navigation plus authenticated `/admin` GET and CSRF-protected POST flows.
 - The live browser gate also rejects visibly rendered `.sr-only` labels, covered account popovers, blank member secondary navigation, horizontal overflow, console/request failures and the literal `Internal Server Error` regression.
+- Forum index layout ownership is explicit again: the main forum list/sidebar and their child stacks are real CSS grids, the sticky sidebar stays below the sticky header, community statistics render as a three-column metric group, and an empty recent-activity state no longer expands into a large full-width panel.
+
 
 
 ## Maintenance release — 1.0.15 complete

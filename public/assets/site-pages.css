@@ -9,16 +9,21 @@
   margin-top:24px;
 }
 .forum-home-layout{
+  display:grid;
   grid-template-columns:minmax(0,1fr) 290px;
   gap:18px;
   align-items:start;
 }
 .forum-home-main{
+  min-width:0;
+  display:grid;
   gap:14px;
 }
 .forum-home-side{
+  min-width:0;
+  display:grid;
   gap:12px;
-  top:18px;
+  top:112px;
 }
 .forum-hero,
 .forum-view-head,
@@ -367,11 +372,40 @@
   font-size:13px;
 }
 .forum-mini-stats{
-  gap:4px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
 }
 .forum-mini-stats>div{
-  padding:8px 3px;
+  min-width:0;
+  display:grid;
+  justify-items:center;
+  gap:2px;
+  padding:8px 4px;
   border-radius:6px;
+  text-align:center;
+}
+.forum-mini-stats strong{
+  display:block;
+  font-size:16px;
+  line-height:1.15;
+}
+.forum-mini-stats span{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.2;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.forum-side-card--empty{
+  padding-block:12px;
+}
+.forum-side-empty{
+  margin:0;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
 }
 .forum-recent-list{
   display:grid;

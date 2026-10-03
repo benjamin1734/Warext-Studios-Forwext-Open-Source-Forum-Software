@@ -58,6 +58,31 @@ try {
   let response = await page.goto(baseUrl + "/", { waitUntil: "networkidle" });
   if (!response || response.status() !== 200) fail("home: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Forumlar", exact: true }).waitFor();
+  const forumHomeLayout = await page.evaluate(() => {
+    const layout = document.querySelector(".forum-home-layout");
+    const stats = document.querySelector(".forum-mini-stats");
+    const emptyRecent = document.querySelector(".forum-side-card--empty");
+    const columns = (element) => {
+      if (!(element instanceof HTMLElement)) return [];
+      return getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean);
+    };
+    return {
+      layoutDisplay: layout instanceof HTMLElement ? getComputedStyle(layout).display : "",
+      layoutColumns: columns(layout).length,
+      statsDisplay: stats instanceof HTMLElement ? getComputedStyle(stats).display : "",
+      statsColumns: columns(stats).length,
+      emptyRecentHeight: emptyRecent instanceof HTMLElement ? Math.round(emptyRecent.getBoundingClientRect().height) : null,
+    };
+  });
+  if (forumHomeLayout.layoutDisplay !== "grid" || forumHomeLayout.layoutColumns !== 2) {
+    fail(`home: forum/sidebar layout is not a two-column desktop grid ${JSON.stringify(forumHomeLayout)}`);
+  }
+  if (forumHomeLayout.statsDisplay !== "grid" || forumHomeLayout.statsColumns !== 3) {
+    fail(`home: community statistics are not a three-column grid ${JSON.stringify(forumHomeLayout)}`);
+  }
+  if (forumHomeLayout.emptyRecentHeight !== null && forumHomeLayout.emptyRecentHeight > 110) {
+    fail(`home: empty recent-activity panel is unnecessarily tall (${forumHomeLayout.emptyRecentHeight}px)`);
+  }
   await assertHealthyDocument("home");
 
   response = await page.goto(baseUrl + "/login", { waitUntil: "networkidle" });

@@ -28,6 +28,11 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
         self::assertStringContainsString('/* forum-empty-state-v2 */', $css);
         self::assertStringContainsString('.forum-empty-state{', $css);
+        self::assertStringContainsString('.forum-home-layout{\n  display:grid;', $css);
+        self::assertStringContainsString('.forum-home-main{\n  min-width:0;\n  display:grid;', $css);
+        self::assertStringContainsString('.forum-home-side{\n  min-width:0;\n  display:grid;', $css);
+        self::assertStringContainsString('grid-template-columns:repeat(3,minmax(0,1fr));', $css);
+        self::assertStringContainsString('forum-side-card--empty', $index);
     }
 
     public function testForumThreadListUsesExplicitDesktopColumns(): void

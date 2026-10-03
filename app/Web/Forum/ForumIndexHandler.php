@@ -255,7 +255,8 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
     {
         $html = '<section class="card forum-side-card"><h2>Son hareketlilik</h2>';
         if ($recent === []) {
-            return $html . '<p class="muted">Henüz görünür konu bulunmuyor.</p></section>';
+            return '<section class="card forum-side-card forum-side-card--empty"><h2>Son hareketlilik</h2>'
+                . '<p class="forum-side-empty">Henüz görünür konu bulunmuyor.</p></section>';
         }
 
         $html .= '<div class="forum-recent-list">';
