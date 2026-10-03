@@ -1957,3 +1957,43 @@ html,body{max-width:100%;overflow-x:clip}
     outline-offset:1px;
   }
 }
+
+
+/* direct-conversations-v1 */
+.conversation-page{display:grid;gap:14px}
+.conversation-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,340px);gap:14px;align-items:start}
+.conversation-list-panel,.conversation-start,.conversation-thread,.conversation-reply{display:grid;gap:12px}
+.conversation-list{display:grid}
+.conversation-row{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px 10px;border-radius:9px;color:var(--text);text-decoration:none;transition:background var(--fx-transition),border-color var(--fx-transition)}
+.conversation-row+.conversation-row{border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
+.conversation-row:hover{background:color-mix(in srgb,var(--accent) 4%,var(--panel2))}
+.conversation-row.is-unread{background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+.conversation-avatar{width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--panel2);font-weight:800}
+.conversation-row-copy{min-width:0;display:grid;gap:4px}
+.conversation-row-copy>span{display:flex;gap:7px;align-items:center;min-width:0}
+.conversation-row-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conversation-preview{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.conversation-unread{min-width:21px;height:21px;display:inline-grid;place-items:center;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--forwext-component-button-contrast-text);font-size:10px;font-weight:800}
+.conversation-row time{color:var(--muted);font-size:10px;white-space:nowrap}
+.conversation-start h2,.conversation-reply h2{margin:0}
+.conversation-start p{margin:0;color:var(--muted)}
+.conversation-start form,.conversation-reply form{display:grid;gap:10px}
+.conversation-start label,.conversation-reply label{display:grid;gap:5px;font-size:11px;font-weight:750}
+.conversation-start input,.conversation-start textarea,.conversation-reply textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:10px 11px;font:inherit}
+.conversation-start textarea,.conversation-reply textarea{resize:vertical;line-height:1.55}
+.conversation-message-list{display:grid;gap:10px}
+.conversation-message{width:max-content;max-width:min(82%,760px);display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+.conversation-message.is-own{margin-left:auto;background:color-mix(in srgb,var(--accent) 7%,var(--panel2));border-color:color-mix(in srgb,var(--accent) 24%,var(--line))}
+.conversation-message header{display:flex;gap:10px;justify-content:space-between;align-items:baseline}
+.conversation-message header a{color:inherit;text-decoration:none}
+.conversation-message time{color:var(--muted);font-size:9.5px;white-space:nowrap}
+.conversation-message>div{line-height:1.6;overflow-wrap:anywhere}
+.surface-back-link{display:inline-flex;margin-bottom:5px;color:var(--muted);font-size:11px;text-decoration:none}
+.surface-back-link:hover{color:var(--text)}
+@media(max-width:760px){
+  .conversation-layout{grid-template-columns:1fr}
+  .conversation-start{order:-1}
+  .conversation-row{grid-template-columns:auto minmax(0,1fr)}
+  .conversation-row time{grid-column:2}
+  .conversation-message{max-width:92%}
+}
