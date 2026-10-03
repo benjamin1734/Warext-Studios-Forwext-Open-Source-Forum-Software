@@ -542,6 +542,8 @@ jobs:
                   f"{root}/THIRD_PARTY_NOTICES.md",
                   f"{root}/install.php",
                   f"{root}/public/install.php",
+                  f"{root}/public/index.php",
+                  f"{root}/config/defaults.php",
                   f"{root}/public/assets/site-base.css",
                   f"{root}/public/assets/site-components.css",
                   f"{root}/public/assets/site-pages.css",
