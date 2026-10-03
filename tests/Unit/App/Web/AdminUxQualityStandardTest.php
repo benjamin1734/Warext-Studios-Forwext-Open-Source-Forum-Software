@@ -41,6 +41,8 @@ final class AdminUxQualityStandardTest extends TestCase
         self::assertStringContainsString('.acp-breadcrumbs', $asset);
         self::assertStringContainsString('.acp-ux-guide', $asset);
         self::assertStringContainsString(':focus-visible', $asset);
+        self::assertStringContainsString('.mod-actions--spaced', $asset);
+        self::assertStringContainsString('.mod-settings-body', $asset);
         self::assertSame(substr_count($asset, '{'), substr_count($asset, '}'));
         self::assertStringNotContainsString('function css(', $qualityHelper);
 
@@ -54,6 +56,11 @@ final class AdminUxQualityStandardTest extends TestCase
             $source = (string) file_get_contents($root . '/app/Web/Admin/' . $file);
             self::assertStringNotContainsString('<style>', $source, $file);
             self::assertStringNotContainsString('AdminUxQualityHtml::css', $source, $file);
+            if ($file === 'AdminModuleManagerHtml.php') {
+                self::assertStringNotContainsString('style="margin-top:', $source, $file);
+                self::assertStringContainsString('mod-actions--spaced', $source, $file);
+                self::assertStringContainsString('mod-settings-body', $source, $file);
+            }
         }
 
         $assetsHelper = (string) file_get_contents($root . '/app/Web/Admin/AdminAssetsHtml.php');
