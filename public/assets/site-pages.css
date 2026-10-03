@@ -2021,3 +2021,16 @@ html,body{max-width:100%;overflow-x:clip}
   .account-security-provider{align-items:stretch;flex-direction:column}
   .account-security-provider form,.account-security-provider .fx-btn{width:100%}
 }
+
+
+/* mfa-enrollment-v1 */
+.mfa-enrollment .auth-entry-card{max-width:680px}
+.mfa-enrollment-method{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.mfa-enrollment-method h2{margin:0;font-size:14px}
+.mfa-enrollment-method p{margin:0;color:var(--muted);line-height:1.55}
+.mfa-enrollment-secret,.mfa-enrollment-uri{display:block;max-width:100%;overflow-wrap:anywhere;padding:9px 10px;border:1px dashed var(--line);border-radius:8px;background:var(--panel)}
+.mfa-enrollment-method details{display:grid;gap:8px}
+.mfa-enrollment-method summary{cursor:pointer;color:var(--muted);font-size:11px}
+.mfa-recovery-codes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.mfa-recovery-codes li{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);text-align:center;overflow-wrap:anywhere}
+@media(max-width:520px){.mfa-recovery-codes{grid-template-columns:1fr}}
