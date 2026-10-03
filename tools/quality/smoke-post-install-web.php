@@ -235,6 +235,33 @@ foreach ($navigationRoutes as $route) {
     }
 }
 
+$adminRoutes = [
+    '/admin',
+    '/admin/users',
+    '/admin/access',
+    '/admin/forums',
+    '/admin/content',
+    '/admin/moderation',
+    '/admin/modules',
+    '/admin/integrations',
+    '/admin/system/operations',
+    '/admin/appearance',
+    '/admin/appearance/layout',
+    '/admin/appearance/themes',
+    '/admin/analytics',
+];
+
+foreach ($adminRoutes as $route) {
+    $response = $handle($route);
+    if ($response->status() !== 401) {
+        throw new RuntimeException(sprintf(
+            'Fresh-install ACP route %s must resolve and require authentication (HTTP 401), got %d.',
+            $route,
+            $response->status(),
+        ));
+    }
+}
+
 $_SERVER['SCRIPT_NAME'] = '/public/index.php';
 foreach (array_merge(['/'], $navigationRoutes) as $route) {
     $requestPath = '/public' . $route;
@@ -248,9 +275,21 @@ foreach (array_merge(['/'], $navigationRoutes) as $route) {
     }
 }
 
+foreach ($adminRoutes as $route) {
+    $requestPath = '/public' . $route;
+    $response = $handle($requestPath);
+    if ($response->status() !== 401) {
+        throw new RuntimeException(sprintf(
+            'Subfolder ACP route %s must resolve and require authentication (HTTP 401), got %d.',
+            $requestPath,
+            $response->status(),
+        ));
+    }
+}
+
 printf(
     "Post-install web bootstrap smoke passed: version=%s migrations_applied=%d migrations_skipped=%d "
-    . "administrator=ok modules=%d theme=ok health=%s all_navigation_and_subfolder_routes=ok.\n",
+    . "administrator=ok modules=%d theme=ok health=%s all_navigation_acp_and_subfolder_routes=ok.\n",
     $version->value(),
     count($report->applied),
     count($report->skipped),
