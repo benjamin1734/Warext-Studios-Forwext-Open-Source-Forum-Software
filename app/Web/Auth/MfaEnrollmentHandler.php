@@ -35,7 +35,11 @@ final readonly class MfaEnrollmentHandler implements RequestHandlerInterface
 
     public function handle(Request $request): Response
     {
-        $challenge = $this->challenge($request);
+        try {
+            $challenge = $this->challenge($request);
+        } catch (InvalidArgumentException) {
+            return $this->expired();
+        }
         $grant = $this->challenges->inspect($challenge);
         if ($grant === null) {
             return $this->expired();
