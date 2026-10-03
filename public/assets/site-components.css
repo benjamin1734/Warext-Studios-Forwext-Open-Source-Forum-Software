@@ -1840,6 +1840,14 @@ select:focus{
   margin:0;
   max-width:calc(100vw - 24px);
 }
+.nav-primary-popover[popover]:not(:popover-open),
+.nav-account-popover[popover]:not(:popover-open){
+  display:none;
+}
+.nav-primary-popover[popover]:popover-open,
+.nav-account-popover[popover]:popover-open{
+  display:grid;
+}
 .nav-primary-popover>a,
 .nav-account-popover>a{
   min-height:37px;

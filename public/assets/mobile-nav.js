@@ -84,15 +84,43 @@
       const popover = details.querySelector(":scope > .nav-primary-popover, :scope > .nav-account-popover");
       if (!(popover instanceof HTMLElement)) continue;
 
-      popover.setAttribute("popover", "manual");
-      popover.dataset.forwextTopLayer = "1";
       topLayerMenus.push([details, popover]);
-      details.addEventListener("toggle", () => syncTopLayerMenu(details, popover));
-      syncTopLayerMenu(details, popover);
+      details.addEventListener("toggle", () => {
+        if (desktop.matches) syncTopLayerMenu(details, popover);
+      });
     }
   }
 
+  const clearTopLayerPosition = (popover) => {
+    for (const property of ["position", "inset", "margin", "left", "right", "top", "width", "max-height", "overflow-y"]) {
+      popover.style.removeProperty(property);
+    }
+  };
+
+  const configureTopLayerMenus = () => {
+    for (const [details, popover] of topLayerMenus) {
+      if (desktop.matches) {
+        popover.setAttribute("popover", "manual");
+        popover.dataset.forwextTopLayer = "1";
+        syncTopLayerMenu(details, popover);
+        continue;
+      }
+
+      if (popover.matches(":popover-open")) {
+        try {
+          popover.hidePopover();
+        } catch (_error) {
+          // A concurrently closed popover is already in the desired state.
+        }
+      }
+      popover.removeAttribute("popover");
+      delete popover.dataset.forwextTopLayer;
+      clearTopLayerPosition(popover);
+    }
+  };
+
   const repositionTopLayerMenus = () => {
+    if (!desktop.matches) return;
     for (const [details, popover] of topLayerMenus) {
       if (details.open && popover.matches(":popover-open")) {
         positionTopLayerMenu(details, popover);
@@ -262,6 +290,7 @@
   setOpen(false);
   markCurrentNavigation();
   syncHeader();
+  configureTopLayerMenus();
 
   button.addEventListener("click", () => {
     const open = navigation.dataset.mobileOpen !== "1";
@@ -327,9 +356,10 @@
   const closeForDesktop = (event) => {
     if (event.matches) {
       setOpen(false);
-      return;
+    } else {
+      syncNavigationAccessibility(navigation.dataset.mobileOpen === "1");
     }
-    syncNavigationAccessibility(navigation.dataset.mobileOpen === "1");
+    configureTopLayerMenus();
   };
   if (typeof desktop.addEventListener === "function") {
     desktop.addEventListener("change", closeForDesktop);
