@@ -41,6 +41,8 @@ final class MandatoryMfaEnrollmentWebSurfaceTest extends TestCase
         self::assertStringContainsString('navigator.credentials.create', $asset);
         self::assertStringContainsString('parseCreationOptionsFromJSON', $asset);
         self::assertStringContainsString('data-auth-passkey-register-response', $asset);
+        self::assertStringContainsString('Passkey şu anda kullanılamıyor.', $handler);
+        self::assertStringContainsString("Referrer-Policy', 'no-referrer", $handler);
     }
 
     public function testEnrollmentCompletionCannotCreateSessionBeforeFactorIsVerified(): void
