@@ -65,6 +65,8 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 - ACP dashboard POST mutation now runs before the GET-only render-token requirement; a genuinely missing render token is escalated into the structured runtime error path rather than returned as an uncorrelated plain-text 500.
 - The shared shell now defines the previously missing `.sr-only` utility used by message/notification/search icon labels, preventing assistive text from rendering visibly inside 42px header controls.
 - Live Chromium reproduced the account popover beneath both the secondary navigation and the forum page body. The header stack is now explicit: sticky header root at the page level, primary header above the secondary row, and popovers above both within the primary header stacking context.
+- The primary header no longer uses `backdrop-filter`; the translucent blur created an unnecessary compositing ancestor for overflowing account menus. Header color remains token-driven and nearly opaque while popovers stay in the normal stacking tree.
+
 
 - Desktop navigation no longer clips primary popovers through the horizontal-scroll container, and open account/primary menus receive an explicit stacking context above page surfaces.
 - Browser and runtime acceptance remain open until real routed pages (not only rendered fixtures) cover login/session/CSRF, forum, account and ACP flows.

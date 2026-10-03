@@ -1703,12 +1703,8 @@ select:focus{
   background:color-mix(in srgb,var(--forwext-component-header-background) 97%,var(--panel));
   border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent);
 }
-@supports (backdrop-filter:blur(1px)){
-  .top-main{
-    background:color-mix(in srgb,var(--forwext-component-header-background) 88%,transparent);
-    backdrop-filter:blur(18px) saturate(1.12);
-  }
-}
+/* Keep navigation popovers in the normal document compositing tree.
+ * Applying backdrop-filter to this ancestor can isolate overflowing menus behind page content. */
 .topin{
   position:relative;
   z-index:2;
