@@ -62,8 +62,10 @@ final class ReleasePackagingPolicyTest extends TestCase
         self::assertStringContainsString("--exclude '/.htaccess'", $workflow);
         self::assertStringContainsString("--exclude 'public/.htaccess'", $workflow);
         self::assertStringContainsString("\$this->projectRoot . '/.htaccess'", $installer);
+        self::assertStringContainsString('ensureRootRouting()', $installer);
         self::assertStringContainsString("\$this->projectRoot . '/public/.htaccess'", $installer);
         self::assertStringContainsString("\$root . '/.htaccess'", $runtime);
+        self::assertStringContainsString('ensureRootRouting()', $runtime);
         self::assertStringContainsString("\$root . '/public/.htaccess'", $runtime);
     }
 
@@ -78,6 +80,19 @@ final class ReleasePackagingPolicyTest extends TestCase
         self::assertStringContainsString('Update source must be immediate predecessor', $workflow);
         self::assertStringContainsString('config/generated.php', $workflow);
         self::assertStringContainsString('storage/secrets/**', $workflow);
+        self::assertStringContainsString('f"{root}/index.php"', $workflow);
+        self::assertStringContainsString('f"{root}/public/assets/admin.css"', $workflow);
+        self::assertStringContainsString('Smoke packaged web installer', $workflow);
+        self::assertStringContainsString('check_installer "/install.php"', $workflow);
+        self::assertStringContainsString('check_installer "/public/install.php"', $workflow);
+    }
+
+    public function testRootFrontControllerDelegatesToPublicRuntime(): void
+    {
+        $entrypoint = $this->read('index.php');
+
+        self::assertStringContainsString("declare(strict_types=1);", $entrypoint);
+        self::assertStringContainsString("require __DIR__ . '/public/index.php';", $entrypoint);
     }
 
     private function read(string $relativePath): string
