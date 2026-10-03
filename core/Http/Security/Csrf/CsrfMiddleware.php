@@ -83,7 +83,13 @@ final readonly class CsrfMiddleware implements MiddlewareInterface
             return $this->rejected();
         }
 
-        return $next->handle($request->withAttribute(self::ATTRIBUTE_CONTEXT, $context));
+        $freshToken = $this->tokens->issue($context, $this->scope);
+
+        return $next->handle(
+            $request
+                ->withAttribute(self::ATTRIBUTE_CONTEXT, $context)
+                ->withAttribute(self::ATTRIBUTE_TOKEN, $freshToken),
+        );
     }
 
     private function rejected(): Response

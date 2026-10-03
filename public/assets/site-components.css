@@ -1665,12 +1665,27 @@ select:focus{
 }
 
 
+/* accessible-visually-hidden-v2 */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  clip-path:inset(50%)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
 /* navigation-shell-v1 */
 /* shell-ownership-v2 */
 .top{
   position:sticky;
   top:0;
   z-index:1000;
+  isolation:isolate;
   border:0;
   background:transparent;
   box-shadow:0 1px 0 var(--line);
@@ -1749,7 +1764,7 @@ select:focus{
   display:flex;
   align-items:stretch;
   gap:0;
-  overflow-x:auto;
+  overflow:visible;
   scrollbar-width:none;
 }
 .nav-primary::-webkit-scrollbar,
@@ -1797,6 +1812,8 @@ select:focus{
 }
 .nav-primary-menu,
 .nav-account-menu{position:relative}
+.nav-primary-menu[open],
+.nav-account-menu[open]{z-index:1400}
 .nav-primary-popover,
 .nav-account-popover{
   position:absolute;
@@ -1845,6 +1862,8 @@ select:focus{
   font-size:11px;
 }
 .nav-user-tools{
+  position:relative;
+  z-index:2;
   flex:0 0 auto;
   min-width:max-content;
   display:flex;

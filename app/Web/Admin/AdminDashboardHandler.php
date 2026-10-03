@@ -18,6 +18,7 @@ use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use InvalidArgumentException;
+use RuntimeException;
 
 final readonly class AdminDashboardHandler implements RequestHandlerInterface
 {
@@ -36,13 +37,13 @@ final readonly class AdminDashboardHandler implements RequestHandlerInterface
         }
 
         try {
-            $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
-            if (!is_string($csrf) || $csrf === '') {
-                return Response::text('Internal Server Error', 500)->withHeader('Cache-Control', 'no-store');
-            }
-
             if ($request->method() === HttpMethod::Post) {
                 return $this->mutate($actor, $request);
+            }
+
+            $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
+            if (!is_string($csrf) || $csrf === '') {
+                throw new RuntimeException('ACP CSRF render token is unavailable.');
             }
 
             $search = $this->searchFromQuery($request);

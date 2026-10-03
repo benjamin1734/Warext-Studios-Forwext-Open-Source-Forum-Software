@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.15
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance / complete
+CURRENT_STEP = production UX acceptance / P0 remediation
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = no open blocker; continue only from a new regression or an approved roadmap item
+NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and real-route browser acceptance before the next immutable patch release
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -57,6 +57,15 @@ NEXT_STEP = no open blocker; continue only from a new regression or an approved 
 - Dense Chromium ACP acceptance now exercises dashboard, Module Manager, Layout Builder, Theme Manager and legacy admin module primitives at 390px and 1440px, including stylesheet loading, horizontal overflow, single-breadcrumb, keyboard and 44px control checks.
 - Advertising and Analytics admin renderers moved repeated table/spacing/alignment presentation out of inline HTML into shared ACP utility classes.
 - ACP qualification head `b78bb60c3c6c5674621e394b8298b1aa8e106a2d` passes PHP 8.4, PHP 8.5, release contract, Chromium responsive/accessibility, security, database migration and performance qualification.
+
+## Production UX acceptance reopened — 2026-10-03
+
+- Live cPanel acceptance exposed a bare `Internal Server Error` on `/admin` plus navigation text/overlap and secondary-navigation presentation regressions that representative static browser fixtures did not catch.
+- P0 remediation starts by making the CSRF middleware contract consistent across safe and verified unsafe requests, so ACP POST handlers receive a fresh render token instead of falling into an impossible-state 500 branch.
+- ACP dashboard POST mutation now runs before the GET-only render-token requirement; a genuinely missing render token is escalated into the structured runtime error path rather than returned as an uncorrelated plain-text 500.
+- The shared shell now defines the previously missing `.sr-only` utility used by message/notification/search icon labels, preventing assistive text from rendering visibly inside 42px header controls.
+- Desktop navigation no longer clips primary popovers through the horizontal-scroll container, and open account/primary menus receive an explicit stacking context above page surfaces.
+- Browser and runtime acceptance remain open until real routed pages (not only rendered fixtures) cover login/session/CSRF, forum, account and ACP flows.
 
 ## Maintenance release — 1.0.15 complete
 

@@ -29,6 +29,10 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringNotContainsString('class="nav-account-popover" role="menu"', $profile);
 
         self::assertStringContainsString('/* accessibility-regression-v1 */', $css);
+        self::assertStringContainsString('/* accessible-visually-hidden-v2 */', $css);
+        self::assertStringContainsString('.sr-only{', $css);
+        self::assertStringContainsString('clip-path:inset(50%)', $css);
+        self::assertStringContainsString('.nav-account-menu[open]{z-index:1400}', $css);
         self::assertStringContainsString('.skip-link:focus-visible', $css);
         self::assertStringContainsString('@media(pointer:coarse)', $css);
         self::assertStringContainsString('input:not([type="checkbox"]):not([type="radio"])', $css);

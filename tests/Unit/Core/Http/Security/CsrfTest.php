@@ -50,7 +50,13 @@ final class CsrfTest extends TestCase
             new HeaderBag(['X-CSRF-Token' => $token]),
             cookies: ['__Host-forwext_csrf' => $context],
         );
-        self::assertSame(200, $middleware->process($post, $terminal)->status());
+        $postResponse = $middleware->process($post, $terminal);
+        self::assertSame(200, $postResponse->status());
+        self::assertMatchesRegularExpression(
+            '/^v1\.[0-9]+\.[a-f0-9]{32}\.[a-f0-9]{64}$/',
+            $postResponse->body(),
+        );
+        self::assertNotSame('accepted', $postResponse->body());
 
         $invalid = new Request(
             HttpMethod::Post,
