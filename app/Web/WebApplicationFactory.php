@@ -35,6 +35,7 @@ use Forwext\App\Web\Auth\AccountSecurityHandler;
 use Forwext\App\Web\Auth\OAuthCallbackHandler;
 use Forwext\App\Web\Auth\OAuthStartHandler;
 use Forwext\App\Web\Auth\LoginHandler;
+use Forwext\App\Web\Auth\MfaEnrollmentHandler;
 use Forwext\App\Web\Auth\LogoutHandler;
 use Forwext\App\Web\Auth\PasswordResetHandler;
 use Forwext\App\Web\Auth\PasswordResetRequestHandler;
@@ -214,6 +215,7 @@ use Forwext\Core\Auth\Login\DatabaseAuthenticationRateLimiter;
 use Forwext\Core\Auth\Login\DatabaseLoginHistoryRecorder;
 use Forwext\Core\Auth\Mfa\Challenge\MfaChallengeStore;
 use Forwext\Core\Auth\Mfa\MfaFactorAvailability;
+use Forwext\Core\Auth\Mfa\Enrollment\PendingMfaEnrollmentService;
 use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaPolicyResolver;
 use Forwext\Core\Auth\Mfa\Policy\DatabaseMfaUserGroupProvider;
 use Forwext\Core\Auth\Mfa\Login\DatabaseMfaLoginGate;
@@ -566,12 +568,13 @@ final readonly class WebApplicationFactory
             $database,
             $config->requireInt('mfa.challenge_ttl_seconds'),
         );
+        $mfaFactorAvailability = new MfaFactorAvailability($database);
         $mfaLoginGate = new DatabaseMfaLoginGate(
             new DatabaseMfaPolicyResolver(
                 $database,
                 new DatabaseMfaUserGroupProvider(new DatabaseUserAccessAssignmentProvider($database)),
             ),
-            new MfaFactorAvailability($database),
+            $mfaFactorAvailability,
             $trustedDevices,
             $mfaChallenges,
         );
@@ -626,6 +629,14 @@ final readonly class WebApplicationFactory
             $rememberTokens,
             $trustedDevices,
             $loginHistory,
+            availability: $mfaFactorAvailability,
+        );
+        $mfaEnrollment = new PendingMfaEnrollmentService(
+            $mfaChallenges,
+            $mfaFactorAvailability,
+            $totp,
+            $recoveryCodes,
+            $passkeys,
         );
         $authentication = new AuthenticationService(
             $users,
@@ -775,6 +786,15 @@ final readonly class WebApplicationFactory
             $config->requireInt('profile_url.maximum_changes_per_window'),
         );
         $basePath = $this->basePath($config);
+        $mfaEnrollmentHandler = new MfaEnrollmentHandler(
+            $mfaEnrollment,
+            $mfaCompletion,
+            $mfaChallenges,
+            $users,
+            $basePath,
+            $config->requireString('authentication.session.cookie_name'),
+            $config->requireInt('authentication.session.ttl_seconds'),
+        );
         $oauthStartHandler = new OAuthStartHandler(
             $oauthService,
             $viewerResolver,
@@ -1579,6 +1599,13 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get, HttpMethod::Post],
             new PathTemplate('/reset-password'),
             $passwordResetHandler,
+            [$authCsrf],
+        ));
+        $routes->add(new Route(
+            'auth.mfa.enroll',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/mfa/enroll'),
+            $mfaEnrollmentHandler,
             [$authCsrf],
         ));
         $routes->add(new Route(
