@@ -78,6 +78,7 @@ final class ProfileHtml
             'marketplace' => true,
             'faq' => true,
             'account.own' => true,
+            'security.own' => true,
             'conversations.own' => true,
             'referrals.own' => true,
             'subscriptions.own' => true,
@@ -140,6 +141,7 @@ final class ProfileHtml
         $accountNav = '';
         foreach ([
             'account.own' => ['Hesap merkezi', '/account'],
+            'security.own' => ['Güvenlik', '/account/security'],
             'conversations.own' => ['Özel mesajlar', '/account/conversations'],
             'referrals.own' => ['Davetlerim', '/account/referrals'],
             'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
