@@ -9,7 +9,7 @@ import {
 } from "@/lib/page-utils";
 
 export const metadata: Metadata = {
-  title: "Konuşmalar",
+  title: "Özel Mesajlar",
   robots: { index: false, follow: false },
 };
 
@@ -32,14 +32,18 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
           <p>Destek ve hata bildirimi konuşma özetleri.</p>
         </section>
         {result.items.length === 0 ? (
-          <div className="empty">Konuşma bulunmuyor.</div>
+          <div className="empty">Henüz özel konuşman yok.</div>
         ) : (
           <div className="stack">
             {result.items.map((conversation) => (
-              <ForwextSurface heading={conversation.title} key={conversation.id}>
+              <ForwextSurface heading={conversation.other_username} key={conversation.id}>
+                <p>{conversation.preview || "Henüz mesaj yok."}</p>
                 <div className="meta">
-                  <span>{conversation.type}</span>
-                  <span>{conversation.status}</span>
+                  {conversation.unread_count > 0 ? (
+                    <strong>{conversation.unread_count} okunmamış</strong>
+                  ) : (
+                    <span>Okundu</span>
+                  )}
                   <time dateTime={conversation.updated_at}>{formatDate(conversation.updated_at)}</time>
                 </div>
               </ForwextSurface>
