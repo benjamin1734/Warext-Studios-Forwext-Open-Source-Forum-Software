@@ -36,6 +36,7 @@ final readonly class LoginHandler implements RequestHandlerInterface
         private string $sessionCookieName,
         private int $sessionTtlSeconds,
         private ?MfaLoginCompletionService $mfaCompletion = null,
+        private array $oauthProviders = [],
     ) {
         if ($sessionCookieName === '' || $sessionTtlSeconds < 300) {
             throw new InvalidArgumentException('Login handler session configuration is invalid.');
@@ -161,6 +162,18 @@ final readonly class LoginHandler implements RequestHandlerInterface
         }
 
         $action = self::e($this->basePath->prepend('/login'));
+        $oauth = '';
+        foreach ($this->oauthProviders as $provider => $label) {
+            if (!is_string($provider) || !is_string($label) || !in_array($provider, ['google','discord'], true)) {
+                continue;
+            }
+            $oauth .= '<a class="fx-btn auth-oauth-button auth-oauth-button--' . self::e($provider) . '" href="'
+                . self::e($this->basePath->prepend('/oauth/' . $provider . '/start')) . '">'
+                . self::e($label) . ' ile devam et</a>';
+        }
+        if ($oauth !== '') {
+            $oauth = '<div class="auth-oauth"><span>veya</span><div class="auth-oauth-actions">' . $oauth . '</div></div>';
+        }
         $html = '<section class="auth-entry"><div class="auth-entry-card card">'
             . '<div class="auth-entry-copy"><span class="forum-eyebrow">HESAP</span><h1>Giriş yap</h1>'
             . '<p>Forwext hesabınla forumdaki kişisel ve etkileşimli alanlara eriş.</p></div>'
@@ -174,7 +187,7 @@ final readonly class LoginHandler implements RequestHandlerInterface
             . '<label><span>Parola</span><input type="password" name="password" autocomplete="current-password" '
             . 'maxlength="1024" required></label>'
             . '<button class="fx-btn fx-btn--primary auth-entry-submit" type="submit">Giriş yap</button>'
-            . '</form>'
+            . '</form>' . $oauth
             . '<div class="auth-entry-links"><a href="' . self::e($this->basePath->prepend('/forgot-password'))
             . '">Parolamı unuttum</a><a href="' . self::e($this->basePath->prepend('/register'))
             . '">Kayıt ol</a></div></div></section>';
