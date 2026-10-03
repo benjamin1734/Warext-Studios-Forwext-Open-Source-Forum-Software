@@ -152,15 +152,22 @@ try {
 
   const favorite = page.getByRole("button", { name: "Favoriye ekle" }).first();
   if (!(await favorite.count())) fail("admin: no CSRF-protected favorite action was rendered");
-  const [favoriteResponse] = await Promise.all([
+  const [favoriteResponse, redirectedAdminResponse] = await Promise.all([
     page.waitForResponse((candidate) => {
       const url = new URL(candidate.url());
       return candidate.request().method() === "POST" && url.pathname === "/admin";
     }),
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "GET" && url.pathname === "/admin";
+    }),
     favorite.click(),
   ]);
-  if (favoriteResponse.status() !== 200) {
-    fail(`admin POST: favorite mutation returned HTTP ${favoriteResponse.status()}`);
+  if (favoriteResponse.status() !== 303) {
+    fail(`admin POST: favorite mutation returned HTTP ${favoriteResponse.status()} instead of 303`);
+  }
+  if (redirectedAdminResponse.status() !== 200) {
+    fail(`admin POST redirect: dashboard returned HTTP ${redirectedAdminResponse.status()}`);
   }
   await page.waitForLoadState("domcontentloaded");
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
