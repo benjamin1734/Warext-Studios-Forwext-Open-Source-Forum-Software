@@ -91,10 +91,11 @@ final readonly class CreateMinecraftServerVoting implements Migration
             . 'WHERE CONSTRAINT_SCHEMA=DATABASE() AND CONSTRAINT_NAME IN ('
             . "'fk_forwext_minecraft_server_vote_server','fk_forwext_minecraft_server_vote_user')",
         ));
-        $dailyUnique = (int) $context->fetchValue(new CompiledQuery(
+        $dailyUniqueColumns = (int) $context->fetchValue(new CompiledQuery(
             'SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() '
             . "AND TABLE_NAME='forwext_minecraft_server_votes' "
-            . "AND INDEX_NAME='uq_forwext_minecraft_server_vote_daily' AND NON_UNIQUE=0",
+            . "AND INDEX_NAME='uq_forwext_minecraft_server_vote_daily' AND NON_UNIQUE=0 "
+            . "AND COLUMN_NAME IN ('server_id','voter_user_id','vote_day')",
         ));
         $permission = (int) $context->fetchValue(new CompiledQuery(
             "SELECT COUNT(*) FROM forwext_permissions "
@@ -108,7 +109,7 @@ final readonly class CreateMinecraftServerVoting implements Migration
 
         return $table === 1
             && $foreignKeys === 2
-            && $dailyUnique === 1
+            && $dailyUniqueColumns === 3
             && $permission === 1
             && $templateRules === 5
             ? MigrationVerification::passed()

@@ -50,7 +50,7 @@ final class MinecraftServerVotingMigrationTest extends TestCase
     public function testVerificationRequiresTableForeignKeysUniqueIndexPermissionAndTemplates(): void
     {
         $database = new MinecraftServerVotingRecordingDatabase();
-        $database->fetchValues = [1, 2, 1, 1, 5];
+        $database->fetchValues = [1, 2, 3, 1, 5];
 
         self::assertTrue(
             (new CreateMinecraftServerVoting())->verify(new MigrationContext($database))->isPassed(),
