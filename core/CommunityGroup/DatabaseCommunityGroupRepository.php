@@ -54,7 +54,7 @@ final readonly class DatabaseCommunityGroupRepository implements CommunityGroupR
             . ' INNER JOIN forwext_group_members mine ON mine.group_id=g.group_id AND mine.user_id=:user_id '
             . "WHERE mine.state IN ('active','pending') "
             . 'GROUP BY g.group_id,g.owner_user_id,g.slug,g.name,g.tagline,g.description,g.join_policy,g.state,'
-            . 'g.created_at_utc,g.updated_at_utc '
+            . 'g.created_at_utc,g.updated_at_utc,mine.role_key,mine.state '
             . "ORDER BY (mine.role_key='owner') DESC,(mine.state='active') DESC,g.updated_at_utc DESC,g.group_id DESC "
             . 'LIMIT ' . $limit,
             ['user_id'=>$userId->value()],
