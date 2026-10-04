@@ -64,8 +64,9 @@ Final verification at 969f157 is green across PHP 8.4/8.5, release contract, sec
 
 08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces. The previously absent clans/groups family now has a first-party module, group/member persistence, permission defaults, shared navigation, /groups, /groups/mine and /groups/{id}, real create/join/request/leave/member moderation flows, and responsive UI. Owner membership is immutable through member actions; moderators can handle ordinary members while moderator role changes remain owner/global-moderator authority.
-Qualification pending: the groups foundation must pass the full PHP/DB/security/performance/real-browser/package gate.
-Remaining Phase 8 gap after groups qualification: compare and raise portfolio/FAQ/referral/bug visual density, list/detail/form states and responsive behavior against the v5 references.
+Portfolio browse density implemented: the public route accepts whitelisted category selection and an explicit featured-only state, filters the bounded authoritative published project set, renders a compact filter/result toolbar, and enriches cards with real tags, media counts and update dates. Responsive/coarse-pointer CSS keeps the filter bar and controls usable without inventing project metadata.
+Qualification pending: the groups foundation and portfolio browse-density slice must pass the full PHP/DB/security/performance/real-browser/package gate.
+Remaining Phase 8 gap after qualification: raise portfolio detail/manage plus FAQ/referral/bug visual density, list/detail/form states and responsive behavior against the v5 references.
 
 09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
 Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.
