@@ -41,7 +41,8 @@ Phase 4 verification: security, performance/observability, database migration sm
 
 05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
-Gap: privacy/preferences/signature/reactions/style controls are fragmented or absent as dedicated account surfaces.
+Current Phase 5 slice: a first-class public staff directory is backed by authoritative staff-role assignments, active-account state and public profile visibility; member navigation exposes staff and online directory views; bounded username search/pagination and live-route acceptance are included.
+Gap: privacy/preferences/signature/reactions/style controls remain fragmented or absent as dedicated account surfaces; member/profile/account density and responsive comparison still require completion.
 
 06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
 Current: DM inbox/detail/start/reply and notification inbox/realtime/settings exist.
