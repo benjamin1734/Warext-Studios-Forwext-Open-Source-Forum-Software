@@ -353,7 +353,7 @@ final class MinecraftServerHtml
         $rows = '';
         foreach ($servers as $server) {
             $href = self::e($basePath->prepend(
-                '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
+                '/servers/' . rawurlencode($server->serverId->value()) . '/edit',
             ));
             $rows .= '<article class="minecraft-manage-row"><div><strong>' . self::e($server->name)
                 . '</strong><span>' . self::e($server->address()) . '</span></div><div class="minecraft-manage-row-meta">'
@@ -425,6 +425,10 @@ final class MinecraftServerHtml
             $headActions .= '<a class="fx-btn" href="'
                 . self::e($basePath->prepend($serverBase . '/vote-settings')) . '">Oy entegrasyonu</a>';
         }
+        if ($canManageOwnership) {
+            $headActions .= '<a class="fx-btn" href="'
+                . self::e($basePath->prepend($serverBase . '/transfer')) . '">Sahiplik</a>';
+        }
         $headActions .= '</div>';
 
         $body = '<section class="minecraft-server-page minecraft-manage-page discovery-page">'
@@ -478,7 +482,7 @@ final class MinecraftServerHtml
                 . '<input type="hidden" name="action" value="transfer">'
                 . '<label><span>Yeni sahip kullanıcı adı</span><input name="target_username" maxlength="64" required></label>'
                 . '<button class="fx-btn" type="submit">Sahipliği aktar</button></form>'
-                . '<form action="' . $action . '" method="post">'
+                . '<form action="' . $transferAction . '" method="post">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
                 . '<input type="hidden" name="action" value="release">'
                 . '<button class="fx-btn fx-btn--danger" type="submit">Sahipliği bırak</button></form></div></section>';
@@ -612,7 +616,7 @@ final class MinecraftServerHtml
 
         $body = '<section class="minecraft-server-page minecraft-vote-settings-page discovery-page">'
             . '<header class="surface-head"><div><a class="surface-back-link" href="'
-            . self::e($basePath->prepend($serverBase . '/manage')) . '">← Sunucu yönetimi</a>'
+            . self::e($basePath->prepend($serverBase . '/edit')) . '">← Sunucu yönetimi</a>'
             . '<span class="forum-eyebrow">MINECRAFT · OY ENTEGRASYONU</span><h1>' . self::e($server->name)
             . '</h1><p>Web oylarını sunucu tarafı entegrasyonuna güvenli bearer token ile aktar.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">Ekip</a></header>'
