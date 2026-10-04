@@ -58,7 +58,11 @@ final readonly class ProfileContentHandler implements RequestHandlerInterface
             return Response::text('Not Found', 404);
         }
 
-        $page = self::page($request);
+        try {
+            $page = self::page($request);
+        } catch (InvalidArgumentException) {
+            return Response::text('Bad Request', 400)->withHeader('Cache-Control', 'private, no-store');
+        }
         $pageSize = 20;
         $items = $type === UserForumContentType::Thread
             ? $this->content->threads($viewerId, $user->id(), $pageSize + 1, ($page - 1) * $pageSize)
