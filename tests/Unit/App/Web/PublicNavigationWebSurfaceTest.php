@@ -85,9 +85,9 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         $realtime = (string) file_get_contents($root . '/public/assets/notification-realtime.js');
 
         self::assertStringContainsString("previewRequested", $conversation);
-        self::assertStringContainsString("Response::json(['items' => \\$items])", $conversation);
+        self::assertStringContainsString("Response::json(['items' => \$items])", $conversation);
         self::assertStringContainsString("previewRequested", $notifications);
-        self::assertStringContainsString("'unread_count' => \\$this->inbox->unreadCount(\\$actor)", $notifications);
+        self::assertStringContainsString("'unread_count' => \$this->inbox->unreadCount(\$actor)", $notifications);
         self::assertStringContainsString('credentials: "same-origin"', $navigation);
         self::assertStringContainsString('url.origin !== window.location.origin', $navigation);
         self::assertStringContainsString('title.textContent =', $navigation);
