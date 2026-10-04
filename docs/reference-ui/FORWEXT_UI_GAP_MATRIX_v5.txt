@@ -25,12 +25,12 @@ Implemented in the current Phase 2 slice: the existing permission-aware ThreadDi
 Forum-index density is now expanded with visible category forum counts and a compact authenticated discovery sidebar backed only by the new first-class discovery routes.
 Phase 2 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility, release contract and installation package all passed on main commit d19dcff8.
 
-03 THREAD LIST / SEARCH / WATCH FLOWS — IN PROGRESS
+03 THREAD LIST / SEARCH / WATCH FLOWS — VERIFIED
 Current: forum view, permission-aware search, persisted thread/forum read state and persisted thread/forum watch state exist.
 Implemented in Phase 3: no-reply, started-by-viewer and participated-by-viewer modes extend the existing permission-aware thread discovery repository; watched threads/forums are first-class account surfaces filtered through current forum permissions and moderation state; forum/thread pages expose CSRF-protected watch notification modes; forum pages expose the existing monotonic mark-read watermark as a real action.
 Current second slice: authenticated member profiles expose Konuları/Mesajları routes backed by the authoritative thread/post tables. Target users are resolved server-side from username, profile visibility is enforced, and result rows are constrained to the viewer's current forum.view search scopes with visible moderation state before rendering.
-Verification pending: full PHP 8.4/8.5, Chromium live-route/responsive/accessibility, security, DB, performance and package qualification for the combined Phase 3 surface.
-Next: if the full gate is green, mark Phase 3 VERIFIED and move to Phase 4 thread-view/editor density.
+Phase 3 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility, release contract and installation package all passed on main commit d885af3f.
+Next: Phase 4 thread-view/editor density.
 
 04 THREAD VIEW / EDITOR — IN PROGRESS
 Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention and spellcheck infrastructure exists.
