@@ -38,7 +38,7 @@ final readonly class CreateMinecraftServerDirectory implements Migration
         $context->execute(new CompiledQuery(
             'CREATE TABLE IF NOT EXISTS forwext_minecraft_servers ('
             . 'server_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
-            . 'owner_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
+            . 'owner_user_id CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,'
             . 'slug VARCHAR(120) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,'
             . 'name VARCHAR(120) NOT NULL,'
             . "summary VARCHAR(240) NOT NULL DEFAULT '',"
@@ -60,7 +60,7 @@ final readonly class CreateMinecraftServerDirectory implements Migration
             . '(listing_state,verification_state,edition,updated_at_utc,server_id),'
             . 'KEY idx_forwext_minecraft_server_owner (owner_user_id,listing_state,updated_at_utc),'
             . 'CONSTRAINT fk_forwext_minecraft_server_owner FOREIGN KEY (owner_user_id) '
-            . 'REFERENCES forwext_users (user_id) ON DELETE RESTRICT'
+            . 'REFERENCES forwext_users (user_id) ON DELETE SET NULL'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
 
