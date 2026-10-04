@@ -29,7 +29,10 @@ final class ProfileSettingsWebSurfaceTest extends TestCase
         self::assertStringContainsString("'profile-settings'", $factory);
         self::assertStringContainsString("'forwext.csrf.profile-settings.v1'", $factory);
 
-        self::assertStringContainsString('ProfileVisibility::from($profileVisibility)', $handler);
+        self::assertStringContainsString('$profile->profileVisibility', $handler);
+        self::assertStringContainsString('$profile->aboutVisibility', $handler);
+        self::assertStringContainsString('$profile->socialVisibility', $handler);
+        self::assertStringContainsString('$profile->mediaVisibility', $handler);
         self::assertStringContainsString('$profile->socialLinks', $handler);
         self::assertStringContainsString('$profile->tabs', $handler);
         self::assertStringContainsString('ProfileMediaKind::Avatar', $handler);
@@ -38,7 +41,7 @@ final class ProfileSettingsWebSurfaceTest extends TestCase
         self::assertStringContainsString('X-Robots-Tag', $handler);
     }
 
-    public function testProfileSettingsHtmlExposesPrivacyAboutAndMediaControls(): void
+    public function testProfileSettingsHtmlOwnsAboutAndMediaButLinksPrivacyControls(): void
     {
         $profile = new UserProfile(
             UserId::fromStored(str_repeat('a', 32)),
@@ -64,12 +67,12 @@ final class ProfileSettingsWebSurfaceTest extends TestCase
         self::assertStringContainsString('/community/account/profile', $html);
         self::assertStringContainsString('/community/members/forwext-user', $html);
         self::assertStringContainsString('name="about"', $html);
-        self::assertStringContainsString('name="profile_visibility"', $html);
-        self::assertStringContainsString('name="about_visibility"', $html);
-        self::assertStringContainsString('name="social_visibility"', $html);
-        self::assertStringContainsString('name="media_visibility"', $html);
-        self::assertStringContainsString('value="members" selected', $html);
-        self::assertStringContainsString('value="private" selected', $html);
+        self::assertStringNotContainsString('name="profile_visibility"', $html);
+        self::assertStringNotContainsString('name="about_visibility"', $html);
+        self::assertStringNotContainsString('name="social_visibility"', $html);
+        self::assertStringNotContainsString('name="media_visibility"', $html);
+        self::assertStringContainsString('/community/account/privacy', $html);
+        self::assertStringContainsString('Gizlilik ayarları', $html);
         self::assertStringContainsString('value="upload_avatar"', $html);
         self::assertStringContainsString('value="upload_banner"', $html);
         self::assertStringContainsString('accept="image/jpeg,image/png,image/webp"', $html);
@@ -85,9 +88,12 @@ final class ProfileSettingsWebSurfaceTest extends TestCase
             . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'/account/profile'", $dashboard);
-        self::assertStringContainsString('Profil ve Gizlilik', $dashboard);
+        self::assertStringContainsString('Profil ve Kimlik', $dashboard);
+        self::assertStringContainsString("'/account/privacy'", $dashboard);
         self::assertStringContainsString("prepend('/account/profile')", $profile);
-        self::assertStringContainsString('Profil ve gizlilik', $profile);
+        self::assertStringContainsString('Profil ve kimlik', $profile);
+        self::assertStringContainsString("prepend('/account/privacy')", $profile);
+        self::assertStringContainsString('>Gizlilik</a>', $profile);
         self::assertStringContainsString('.profile-settings-layout{', $css);
         self::assertStringContainsString('.profile-media-setting-card{', $css);
     }
