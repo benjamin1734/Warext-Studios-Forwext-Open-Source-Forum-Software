@@ -32,6 +32,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             '/community/account/conversations',
             '/community/account/notifications',
             '/community/account/notification-settings',
+            '/community/account/preferences',
             '/community/account/profile',
             '/community/account/profile-url',
             '/community/account/profile-activity',
