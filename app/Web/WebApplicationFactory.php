@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Account\AccountDashboardHandler;
+use Forwext\App\Web\Account\AccountPrivacyHandler;
 use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
@@ -2487,6 +2488,11 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'profile.comment.delete', [HttpMethod::Delete], new PathTemplate('/profile-comments/{commentId}'),
             new ProfileActivityDeleteHandler($profileActivity, $viewerResolver, true), [$profileActivityCsrf],
+        ));
+        $routes->add(new Route(
+            'account.privacy', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/account/privacy'),
+            new AccountPrivacyHandler($viewerResolver, $profileService, $presence, $basePath),
+            [$profileSettingsCsrf],
         ));
         $routes->add(new Route(
             'account.profile-settings', [HttpMethod::Get, HttpMethod::Post], new PathTemplate('/account/profile'),
