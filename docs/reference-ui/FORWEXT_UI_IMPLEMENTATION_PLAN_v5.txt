@@ -17,12 +17,12 @@ PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — VERIFIED
 4. [DONE] Reuse the authorized DM/alert inbox handlers for lazy recent-item previews; no duplicated inbox source of truth.
 5. [DONE] Group account tools, verify exact account active state, add authenticated mobile coverage and exercise lazy message/alert previews in live browser acceptance; PHP 8.4/8.5, Chromium, security, DB, performance and package/installer qualification passed.
 
-PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
+PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — VERIFIED
 - [DONE] Expose existing permission-aware new, unread, trending, featured and recent thread discovery as real routed pages.
 - [DONE] Connect forum-home and "Neler yeni?" navigation to the discovery routes with compact list rendering.
 - [DONE] Add profile-post discovery by reusing the existing activity-feed repository/service with an enum-bound SQL type filter and the same profile visibility/moderation rules.
 - [DONE] Densify the forum index with real category counts and a compact authenticated discovery sidebar linking the new/unread/trending/featured/profile-post flows.
-- [VERIFYING] Cover the complete Phase 2 discovery/index slice in PHP 8.4/8.5 and live Chromium acceptance.
+- [DONE] Cover the complete Phase 2 discovery/index slice in PHP 8.4/8.5 and live Chromium acceptance; full Phase 2 qualification passed.
 
 PHASE 3 — THREAD LIST / SEARCH / WATCH — VERIFIED
 - [DONE] Add no-reply, current-user started-thread and participated-thread discovery modes on the existing permission-aware repository.
@@ -36,8 +36,11 @@ PHASE 4 — THREAD VIEW / EDITOR — IN PROGRESS
 - [DONE] Preserve existing author/content separation, reactions, bookmarks, attachments, editor preview, quote, mention, spellcheck and attachment staging.
 - [DONE] Group thread header actions and compact post footer/social controls without replacing existing backend services.
 - [DONE] Upgrade long-thread navigation with previous/next, first/last context and bounded ellipsis windows.
-- [VERIFYING] Exercise the new header/footer/pagination hooks in PHP source contracts and responsive browser fixtures.
-- [NEXT] Review author identity/banner/badge richness and final editor/thread visual polish, then pass the Phase 4 CI gate.
+- [DONE] Exercise the header/footer/pagination hooks in PHP source contracts and responsive browser fixtures; full first-slice CI passed on a480d81b.
+- [DONE] Enrich author cards with real thread-starter state and existing member-content links without exposing internal group data or inventing display roles.
+- [DONE] Present locked/reply-disabled/reply-permission states explicitly and add a compact quick-editor capability summary backed only by existing editor features.
+- [VERIFYING] Run source contracts, responsive browser fixtures and the complete Phase 4 CI gate for the final polish slice.
+- [NEXT] If green, mark Phase 4 VERIFIED and move to Phase 5 members/profile/account.
 
 PHASE 5 — MEMBERS / PROFILE / ACCOUNT
 - Member directory/staff/current visitors.
