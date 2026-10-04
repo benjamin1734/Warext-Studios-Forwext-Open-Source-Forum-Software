@@ -65,7 +65,7 @@ final class ResponsiveWebSurfaceTest extends TestCase
 
         $css = (string) file_get_contents($root . '/public/assets/site-components.css');
         self::assertStringContainsString('overscroll-behavior:contain', $css);
-        self::assertStringContainsString('visibility:hidden', $css);
+        self::assertStringContainsString('pointer-events:none', $css);
         self::assertStringNotContainsString('transition:max-height 220ms ease', $css);
     }
 
