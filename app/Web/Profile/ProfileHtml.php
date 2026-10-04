@@ -66,7 +66,9 @@ final class ProfileHtml
                 ? $navItem('activity', 'Neler yeni?', '/activity', ' data-nav-section-link="whatsnew"')
                 : '')
             . $visibleNavItem('marketplace', 'Marketplace', '/marketplace', ' data-nav-section-link="marketplace"')
-            . $visibleNavItem('members', 'Üyeler', '/members', ' data-nav-section-link="members"');
+            . $visibleNavItem('members', 'Üyeler', '/members', ' data-nav-section-link="members"')
+            . $visibleNavItem('portfolio', 'Portfolyo', '/portfolio', ' data-nav-section-link="portfolio"')
+            . $visibleNavItem('faq', 'SSS', '/faq', ' data-nav-section-link="faq"');
 
         $knownKeys = [
             'forums' => true,
@@ -93,12 +95,7 @@ final class ProfileHtml
             }
         }
 
-        $moreNav = $visibleNavItem('faq', 'SSS', '/faq');
-        if (!isset($visibleNavigation['marketplace'])) {
-            $moreNav .= $visibleNavItem('portfolio', 'Portfolyo', '/portfolio')
-                . $visibleNavItem('giveaways', 'Çekilişler', '/giveaways');
-        }
-        $moreNav .= $extraNavigation;
+        $moreNav = $visibleNavItem('giveaways', 'Çekilişler', '/giveaways') . $extraNavigation;
         if ($moreNav !== '') {
             $primaryNav .= '<details class="nav-primary-menu" data-nav-section-link="more">'
                 . '<summary>Diğer <span aria-hidden="true">⌄</span></summary>'
@@ -118,9 +115,6 @@ final class ProfileHtml
             : '';
 
         $marketplaceSubNav = $visibleNavItem('marketplace', 'İlanlar', '/marketplace')
-            . (isset($visibleNavigation['portfolio'])
-                ? $navItem('marketplace.portfolio', 'Portfolyo', '/portfolio')
-                : '')
             . (isset($visibleNavigation['giveaways'])
                 ? $navItem('marketplace.giveaways', 'Çekilişler', '/giveaways')
                 : '');
@@ -133,6 +127,14 @@ final class ProfileHtml
                 ? $navItem('members.stats', 'İstatistikler', '/stats')
                 : '');
 
+        $portfolioSubNav = $visibleNavItem('portfolio', 'Portfolyo', '/portfolio')
+            . (isset($visibleNavigation['giveaways'])
+                ? $navItem('portfolio.giveaways', 'Çekilişler', '/giveaways')
+                : '');
+
+        $faqSubNav = $visibleNavItem('faq', 'SSS', '/faq')
+            . $visibleNavItem('search', 'Toplulukta ara', '/search');
+
         $homeSubNav = $visibleNavItem('forums', 'Forumlar', '/forums')
             . $visibleNavItem('search', 'Ara', '/search')
             . $visibleNavItem('faq', 'SSS', '/faq');
@@ -141,46 +143,63 @@ final class ProfileHtml
         $accountNav = '';
         foreach ([
             'account.own' => ['Hesap merkezi', '/account'],
-            'security.own' => ['Güvenlik', '/account/security'],
+            'security.own' => ['Şifre ve güvenlik', '/account/security'],
             'conversations.own' => ['Özel mesajlar', '/account/conversations'],
             'referrals.own' => ['Davetlerim', '/account/referrals'],
             'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
             'bugs.mine' => ['Hata bildirimlerim', '/bugs'],
         ] as $key => [$label, $path]) {
             if (isset($visibleNavigation[$key])) {
-                $accountNav .= $navItem($key, $label, $path);
+                $accountNav .= $navItem($key, $label, $path, ' class="nav-account-link"');
                 $accountSubNav .= $navItem('sub.' . $key, $label, $path);
             }
         }
 
         $conversationNav = '';
         if (isset($visibleNavigation['conversations.own'])) {
-            $conversationNav = '<a class="nav-icon-link nav-icon-link--messages" data-nav-key="conversations.own" href="'
-                . $navHref('/account/conversations') . '" aria-label="Özel mesajlar" title="Özel mesajlar">'
+            $conversationNav = '<details class="nav-tool-menu nav-tool-menu--messages">'
+                . '<summary class="nav-icon-link nav-icon-link--messages" aria-label="Özel mesajlar" title="Özel mesajlar">'
                 . '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 3v-3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm1.1 3.2 6.9 4.6 6.9-4.6-1-1.5L12 10.6 6.1 6.7l-1 1.5Z"/></svg>'
-                . '<span class="sr-only">Özel mesajlar</span></a>';
+                . '<span class="sr-only">Özel mesajlar</span></summary>'
+                . '<div class="nav-tool-popover" aria-label="Özel mesaj seçenekleri">'
+                . '<div class="nav-popover-title"><strong>Özel mesajlar</strong><span>Konuşmalarını ve yeni mesajlarını yönet.</span></div>'
+                . '<a class="nav-popover-cta" data-nav-key="conversations.own" href="' . $navHref('/account/conversations') . '">Tüm mesajları göster</a>'
+                . '</div></details>';
         }
 
         $notificationNav = '';
         if (isset($visibleNavigation['notifications.own'])) {
-            $notificationNav = '<a class="nav-icon-link nav-icon-link--alerts" data-nav-key="notifications.own" href="'
-                . $navHref('/account/notifications') . '" aria-label="Bildirimler" title="Bildirimler">'
+            $notificationNav = '<details class="nav-tool-menu nav-tool-menu--alerts">'
+                . '<summary class="nav-icon-link nav-icon-link--alerts" aria-label="Bildirimler" title="Bildirimler">'
                 . '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.6 2.6 0 0 0 2.45-1.75h-4.9A2.6 2.6 0 0 0 12 22Zm7-5.25-1.4-1.65V10a5.62 5.62 0 0 0-4.35-5.48V3.7a1.25 1.25 0 1 0-2.5 0v.82A5.62 5.62 0 0 0 6.4 10v5.1L5 16.75V18h14v-1.25Z"/></svg>'
-                . '<span class="sr-only">Bildirimler</span></a>';
+                . '<span class="sr-only">Bildirimler</span></summary>'
+                . '<div class="nav-tool-popover" aria-label="Bildirim seçenekleri">'
+                . '<div class="nav-popover-title"><strong>Bildirimler</strong><span>Yeni hareketleri bildirim merkezinden takip et.</span></div>'
+                . '<a class="nav-popover-cta" data-nav-key="notifications.own" href="' . $navHref('/account/notifications') . '">Tüm bildirimleri göster</a>'
+                . '</div></details>';
         }
 
-        $searchIcon = '<a class="nav-icon-link nav-icon-link--search" data-nav-key="quick.search" href="'
-            . $navHref('/search') . '" aria-label="Ara" title="Ara">'
+        $searchIcon = '<details class="nav-search-menu">'
+            . '<summary class="nav-icon-link nav-icon-link--search" aria-label="Ara" title="Ara">'
             . '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 3.96 11.65L19.8 21l1.2-1.2-5.35-5.34A6.5 6.5 0 0 0 10.5 4Zm0 1.8a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Z"/></svg>'
-            . '<span class="sr-only">Ara</span></a>';
+            . '<span class="nav-tool-label" aria-hidden="true">Ara</span><span class="sr-only">Ara</span></summary>'
+            . '<div class="nav-search-popover" aria-label="Hızlı arama">'
+            . '<div class="nav-popover-title"><strong>Arama</strong><span>Forum, üye ve diğer içeriklerde ara.</span></div>'
+            . '<form class="nav-search-form" action="' . $navHref('/search') . '" method="get">'
+            . '<label><span class="sr-only">Arama sorgusu</span><input type="search" name="q" maxlength="500" placeholder="Ara..." autocomplete="off"></label>'
+            . '<button type="submit">Ara</button></form>'
+            . '<a class="nav-popover-cta" data-nav-key="quick.search" href="' . $navHref('/search') . '">Gelişmiş arama</a>'
+            . '</div></details>';
 
         if ($authenticated) {
             $userTools = '<div class="nav-user-tools nav-user-tools--member">'
                 . '<details class="nav-account-menu"><summary aria-label="Hesap menüsü">'
                 . '<span class="nav-user-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.25 0-7.5 2.14-7.5 5v1.5h15V19c0-2.86-3.25-5-7.5-5Z"/></svg></span>'
                 . '<span class="nav-account-label">Hesabım</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary>'
-                . '<div class="nav-account-popover" aria-label="Hesap seçenekleri">' . $accountNav
-                . '<a data-nav-key="auth.logout" href="' . $navHref('/logout') . '">Çıkış yap</a>'
+                . '<div class="nav-account-popover" aria-label="Hesap seçenekleri">'
+                . '<div class="nav-popover-title"><strong>Hesabın</strong><span>Profil, güvenlik ve topluluk tercihleri.</span></div>'
+                . '<div class="nav-account-grid">' . $accountNav . '</div>'
+                . '<div class="nav-popover-footer"><a data-nav-key="auth.logout" href="' . $navHref('/logout') . '">Çıkış yap</a></div>'
                 . '</div></details>' . $conversationNav . $notificationNav . $searchIcon . '</div>';
         } else {
             $userTools = '<div class="nav-user-tools nav-user-tools--guest">'
@@ -195,6 +214,8 @@ final class ProfileHtml
             . '<div class="nav-secondary-group" data-nav-section="whatsnew" hidden>' . $whatsNewSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="marketplace" hidden>' . $marketplaceSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="members" hidden>' . $membersSubNav . '</div>'
+            . '<div class="nav-secondary-group" data-nav-section="portfolio" hidden>' . $portfolioSubNav . '</div>'
+            . '<div class="nav-secondary-group" data-nav-section="faq" hidden>' . $faqSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="more" hidden>' . $moreNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="account" hidden>' . $accountSubNav . '</div>'
             . '</nav>';
@@ -275,7 +296,7 @@ final class ProfileHtml
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
             . '<div class="top-main"><div class="topin">'
-            . '<a class="brand" href="' . $home . '"><span class="brand-mark" aria-hidden="true">F</span>'
+            . '<a class="brand" href="' . $home . '" aria-label="Forwext ana sayfa">'
             . '<span class="brand-copy"><strong>Forwext</strong></span></a>'
             . '<button class="nav-toggle" type="button" data-forwext-nav-toggle aria-expanded="false" aria-controls="forwext-primary-navigation"><span aria-hidden="true">☰</span><span>Menü</span></button>'
             . '<div id="forwext-primary-navigation" class="nav-shell" data-forwext-primary-navigation data-mobile-open="0">'
