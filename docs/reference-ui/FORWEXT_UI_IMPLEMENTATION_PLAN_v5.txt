@@ -20,8 +20,9 @@ PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — IN PROGRESS
 PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 - [DONE] Expose existing permission-aware new, unread, trending, featured and recent thread discovery as real routed pages.
 - [DONE] Connect forum-home and "Neler yeni?" navigation to the discovery routes with compact list rendering.
-- [VERIFYING] Cover the first discovery slice in PHP 8.4/8.5 and live Chromium acceptance.
-- [NEXT] Add profile-post discovery and finish forum-index/sidebar density without duplicating existing activity/search sources.
+- [DONE] Add profile-post discovery by reusing the existing activity-feed repository/service with an enum-bound SQL type filter and the same profile visibility/moderation rules.
+- [VERIFYING] Cover the discovery slice in PHP 8.4/8.5 and live Chromium acceptance.
+- [NEXT] Finish forum-index/sidebar density without duplicating existing activity/search sources.
 
 PHASE 3 — THREAD LIST / SEARCH / WATCH
 - Watched threads/forums, no-reply, started-by-user, posts-by-user and mark-read flows.
