@@ -32,8 +32,6 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
             'forwext_minecraft_server_status',
             'uq_forwext_minecraft_server_slug',
             'fk_forwext_minecraft_server_owner',
-            'minecraft_server.create',
-            'minecraft_server.manage_any',
             'minecraft-servers',
         ] as $contract) {
             self::assertStringContainsString($contract, $sql);
@@ -45,6 +43,16 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
         );
         self::assertCount(10, $templateRules);
         self::assertStringContainsString('ON DELETE SET NULL', $sql);
+
+        $permissionKeys = [];
+        foreach ($database->executedQueries as $query) {
+            $permissionKey = $query->parameters['permission_key'] ?? null;
+            if (is_string($permissionKey)) {
+                $permissionKeys[$permissionKey] = true;
+            }
+        }
+        self::assertArrayHasKey('minecraft_server.create', $permissionKeys);
+        self::assertArrayHasKey('minecraft_server.manage_any', $permissionKeys);
     }
 
     public function testVerificationRequiresTablesForeignKeysPermissionsRulesAndUniqueSlug(): void
