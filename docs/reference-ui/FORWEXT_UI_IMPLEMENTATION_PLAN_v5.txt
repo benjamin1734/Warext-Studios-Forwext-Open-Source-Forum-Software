@@ -15,7 +15,7 @@ PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — IN PROGRESS
 2. [DONE] Expand account navigation to implemented account/profile/session/bookmark/relationship/notification/presence surfaces without inventing dead routes.
 3. [DONE] Make tool popovers denser and more usable with explicit headings, footer actions, keyboard-safe structure and mobile behavior.
 4. [DONE] Reuse the authorized DM/alert inbox handlers for lazy recent-item previews; no duplicated inbox source of truth.
-5. [IN PROGRESS] Extend shell regression and finish active-state/account-group polish across desktop and mobile.
+5. [VERIFYING] Group account tools, verify exact account active state, add authenticated mobile coverage and exercise lazy message/alert previews in live browser acceptance.
 
 PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW
 - Compact category/node rows, counts, last-post metadata, side widgets.
