@@ -149,6 +149,10 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . ProfileHtml::escape($this->basePath->prepend('/account/profile-url'))
                 . '">Özel profil URL’si</a></div>'
             : '';
+        $forumContentLinks = $viewerId === null ? '' : '<div class="profile-forum-content-actions">'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($memberPath . '/content/threads') . '">Konuları</a>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($memberPath . '/content/posts') . '">Mesajları</a>'
+            . '</div>';
         $relationshipControls = $this->relationshipControls($viewerId, $user->id());
         $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
         $body = '<article class="profile profile-reference-shell" data-forwext-background-scope="profile" data-forwext-background-id="'
@@ -157,7 +161,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             . $avatar . '<div class="identity profile-identity"><h1>' . $safeName
             . '</h1><div class="profile-identity-meta"><span>Forwext üyesi</span><span>Katılım · '
             . ProfileHtml::escape($user->createdAt()->format('d.m.Y')) . '</span></div>' . $profileSettings . '</div>'
-            . $relationshipControls . '</div>'
+            . $forumContentLinks . $relationshipControls . '</div>'
             . $music . $tabNav . '<div class="profile-content">' . $activityWall . $sections . '</div>'
             . '</div></article>';
 
