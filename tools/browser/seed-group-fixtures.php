@@ -34,7 +34,7 @@ $groupId = 'dddddddddddddddddddddddddddddddd';
 $database->execute(new CompiledQuery(
     'INSERT INTO forwext_users '
     . '(user_id,username,username_key,email,email_key,status,locale,timezone,version,created_at_utc,updated_at_utc) '
-    . "VALUES (:user_id,'Group Fixture Owner','group-fixture-owner','group-owner@forwext.test',"
+    . "VALUES (:user_id,'GroupFixtureOwner','groupfixtureowner','group-owner@forwext.test',"
     . "'group-owner@forwext.test','active','tr','Europe/Istanbul',1,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6)) "
     . 'ON DUPLICATE KEY UPDATE status=VALUES(status),updated_at_utc=UTC_TIMESTAMP(6)',
     ['user_id'=>$ownerId],
