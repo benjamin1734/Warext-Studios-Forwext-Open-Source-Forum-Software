@@ -84,6 +84,9 @@ final readonly class ThreadDiscoveryHandler implements RequestHandlerInterface
             'unread' => DiscoveryMode::Unread,
             'trending' => DiscoveryMode::Trending,
             'featured' => DiscoveryMode::Featured,
+            'no-replies' => DiscoveryMode::NoReplies,
+            'mine' => DiscoveryMode::StartedByViewer,
+            'participated' => DiscoveryMode::ParticipatedByViewer,
             'recent' => DiscoveryMode::RecentActivity,
             default => throw new InvalidArgumentException('Discovery mode is invalid.'),
         };
