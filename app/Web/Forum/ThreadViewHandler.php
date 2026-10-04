@@ -125,19 +125,19 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '</div><h1>' . self::e($thread->title()->value()) . '</h1><p>'
             . number_format(max(0, $posts['total'] - 1), 0, ',', '.') . ' yanıt · '
             . number_format($posts['total'], 0, ',', '.') . ' mesaj</p></div>'
-            . '<div class="thread-view-actions">';
+            . '<div class="thread-view-actions"><div class="thread-view-action-main">';
         $canReply = $this->canReply($actor, $thread, $forum);
         if ($canReply) {
             $body .= '<a class="fx-btn fx-btn--primary" href="#quick-reply">Yanıtla</a>';
         }
         $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
-            . '">Foruma dön</a>';
+            . '">Foruma dön</a></div>';
         if ($actor !== null && is_string($csrfToken) && $csrfToken !== '') {
-            $body .= DiscussionWatchHtml::form(
+            $body .= '<div class="thread-view-action-follow">' . DiscussionWatchHtml::form(
                 $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/watch'),
                 $csrfToken,
                 $this->discussionState->threadWatch($actor, $thread->id()),
-            );
+            ) . '</div>';
         }
         $body .= '</div></section>';
 
@@ -274,7 +274,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . number_format($post['position'], 0, ',', '.') . '</a></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
             . $this->renderAttachments($attachments)
-            . '<footer>' . $edited
+            . '<footer class="thread-post-footer"><div class="thread-post-footer-meta">' . $edited . '</div>'
             . $this->interactionControls($post, $actor, $canReply) . '</footer>'
             . '</div></article>';
     }
@@ -336,11 +336,11 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
 
         return '<div class="thread-post-interactions" data-thread-interactions data-post-id="' . $postId . '">'
             . ($canReply ? '<button type="button" class="fx-btn thread-quote-button" data-quote-post>Alıntıla</button>' : '')
-            . '<details class="thread-reaction-menu" data-reaction-menu><summary class="fx-btn">'
-            . 'Tepkiler <span class="thread-reaction-total" data-reaction-total></span></summary>'
+            . '<details class="thread-reaction-menu" data-reaction-menu><summary class="fx-btn" aria-label="Tepki seçenekleri">'
+            . 'Tepki <span class="thread-reaction-total" data-reaction-total></span></summary>'
             . '<div class="thread-reaction-popover"><div class="thread-reaction-counts" data-reaction-counts></div>'
             . '<div class="thread-reaction-options">' . $reactions . '</div></div></details>'
-            . '<details class="thread-bookmark-menu"><summary class="fx-btn">Yer imi</summary>'
+            . '<details class="thread-bookmark-menu"><summary class="fx-btn" aria-label="Mesajı kaydet">Kaydet</summary>'
             . '<form class="thread-bookmark-form" data-bookmark-form>'
             . '<label><span>Özel not</span><input name="note" maxlength="1000" autocomplete="off" '
             . 'placeholder="Yalnızca sen görürsün"></label>'
@@ -356,15 +356,34 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             return '';
         }
 
-        $html = '<nav class="pagination" aria-label="Konu mesaj sayfaları">';
-        $start = max(1, $page - 2);
-        $end = min($pages, $page + 2);
-        for ($current = $start; $current <= $end; $current++) {
-            $url = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()))
-                . ($current === 1 ? '' : '?page=' . $current);
-            $html .= '<a href="' . self::e($url) . '"'
-                . ($current === $page ? ' aria-current="page"' : '') . '>'
-                . $current . '</a>';
+        $base = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()));
+        $url = static fn (int $target): string => $target === 1 ? $base : $base . '?page=' . $target;
+        $html = '<nav class="pagination thread-pagination-nav" aria-label="Konu mesaj sayfaları">';
+
+        if ($page > 1) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url($page - 1)) . '" rel="prev">← Önceki</a>';
+        }
+
+        $targets = [1 => true, $pages => true];
+        for ($candidate = max(1, $page - 2); $candidate <= min($pages, $page + 2); $candidate++) {
+            $targets[$candidate] = true;
+        }
+        $targets = array_keys($targets);
+        sort($targets, SORT_NUMERIC);
+
+        $previous = null;
+        foreach ($targets as $target) {
+            if ($previous !== null && $target > $previous + 1) {
+                $html .= '<span class="pagination-gap" aria-hidden="true">…</span>';
+            }
+            $html .= '<a href="' . self::e($url($target)) . '"'
+                . ($target === $page ? ' aria-current="page"' : '') . '>'
+                . number_format($target, 0, ',', '.') . '</a>';
+            $previous = $target;
+        }
+
+        if ($page < $pages) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url($page + 1)) . '" rel="next">Sonraki →</a>';
         }
 
         return $html . '</nav>';
