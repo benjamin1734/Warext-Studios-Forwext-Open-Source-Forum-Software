@@ -69,7 +69,8 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         self::assertSame(1, substr_count($member, 'href="/community/account/watched/threads"'));
         self::assertSame(1, substr_count($member, 'href="/community/account/watched/forums"'));
         self::assertStringContainsString('href="/community/account/notification-settings"', $member);
-        self::assertStringContainsString('href="/community/account/presence"', $member);
+        self::assertStringContainsString('href="/community/account/privacy"', $member);
+        self::assertStringNotContainsString('href="/community/account/presence"', $member);
         self::assertStringContainsString('/community/account/conversations#new-conversation', $member);
         self::assertStringContainsString('data-nav-preview="messages"', $member);
         self::assertStringContainsString('data-preview-url="/community/account/conversations?preview=1"', $member);
