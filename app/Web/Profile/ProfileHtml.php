@@ -180,6 +180,7 @@ final class ProfileHtml
                 'items' => [
                     'account.own' => ['Hesap merkezi', '/account'],
                     'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
+                    'preferences.own' => ['Tercihler ve gizlilik', '/account/preferences'],
                     'security.own' => ['Güvenlik', '/account/security'],
                     'sessions.own' => ['Oturumlar', '/account/sessions'],
                 ],
