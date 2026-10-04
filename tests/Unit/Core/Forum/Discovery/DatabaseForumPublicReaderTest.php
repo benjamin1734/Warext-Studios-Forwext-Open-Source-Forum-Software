@@ -53,6 +53,42 @@ final class DatabaseForumPublicReaderTest extends TestCase
         }
     }
 
+    public function testPostListingIncludesPrimaryGroupWithoutExtraQueries(): void
+    {
+        $database = new RecordingForumPublicQueryExecutor(
+            rowBatches: [[[
+                'post_id' => 'cccccccccccccccccccccccccccccccc',
+                'position' => 2,
+                'body_source' => 'Yanıt',
+                'created_at_utc' => '2026-10-04 11:00:00.000000',
+                'updated_at_utc' => '2026-10-04 11:05:00.000000',
+                'author_user_id' => 'dddddddddddddddddddddddddddddddd',
+                'author_username' => 'author',
+                'author_group_name' => 'Aktif Üye',
+            ]]],
+            values: [1],
+        );
+        $reader = new DatabaseForumPublicReader($database);
+
+        $page = $reader->posts(
+            EntityId::fromString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+            1,
+            20,
+        );
+
+        self::assertSame('Aktif Üye', $page['rows'][0]['author_group_name']);
+        self::assertCount(2, $database->queries);
+        self::assertStringContainsString(
+            'LEFT JOIN forwext_user_primary_groups pg ON pg.user_id=p.author_user_id',
+            $database->queries[1]->sql,
+        );
+        self::assertStringContainsString(
+            'LEFT JOIN forwext_user_groups g ON g.group_id=pg.group_id',
+            $database->queries[1]->sql,
+        );
+        self::assertStringContainsString('g.name AS author_group_name', $database->queries[1]->sql);
+    }
+
     public function testThreadListingUsesBoundForumIdAndVisiblePosts(): void
     {
         $database = new RecordingForumPublicQueryExecutor(
