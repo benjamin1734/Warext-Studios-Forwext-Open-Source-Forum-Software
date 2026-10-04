@@ -327,6 +327,38 @@ try {
   }
   await assertHealthyDocument("minecraft servers");
 
+  response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft server compare: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Sunucu Karşılaştırma", exact: true }).waitFor();
+  const serverCompareState = await page.evaluate(() => ({
+    forms: document.querySelectorAll(".minecraft-compare-form").length,
+    options: document.querySelectorAll(".minecraft-compare-option").length,
+    emptyStates: document.querySelectorAll(".minecraft-compare-form .surface-empty").length,
+  }));
+  if (
+    serverCompareState.forms !== 1
+    || (serverCompareState.options === 0 && serverCompareState.emptyStates !== 1)
+  ) {
+    fail(`minecraft server compare: form contract failed ${JSON.stringify(serverCompareState)}`);
+  }
+  await assertHealthyDocument("minecraft server compare");
+
+  response = await page.goto(baseUrl + "/servers/seasons", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft server seasons: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Sunucu Sezonları", exact: true }).waitFor();
+  const serverSeasonState = await page.evaluate(() => ({
+    filters: document.querySelectorAll(".minecraft-season-tabs a").length,
+    rows: document.querySelectorAll(".minecraft-season-row").length,
+    emptyStates: document.querySelectorAll(".minecraft-season-empty").length,
+  }));
+  if (
+    serverSeasonState.filters !== 4
+    || (serverSeasonState.rows === 0 && serverSeasonState.emptyStates !== 1)
+  ) {
+    fail(`minecraft server seasons: route contract failed ${JSON.stringify(serverSeasonState)}`);
+  }
+  await assertHealthyDocument("minecraft server seasons");
+
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);

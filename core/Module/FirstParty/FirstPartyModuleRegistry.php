@@ -286,6 +286,8 @@ final readonly class FirstPartyModuleRegistry
                     self::flag('directory_enabled', 'Sunucu dizini', 'Public Minecraft sunucu dizinini etkinleştirir.', true, $globalGroup),
                 ],
                 purgeTables:[
+                    'forwext_minecraft_server_season_entries',
+                    'forwext_minecraft_server_seasons',
                     'forwext_minecraft_server_status',
                     'forwext_minecraft_servers',
                 ],

@@ -6,6 +6,7 @@ namespace Forwext\App\Web\MinecraftServer;
 
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Minecraft\Server\MinecraftServer;
+use Forwext\Core\Minecraft\Server\MinecraftServerSeason;
 use Forwext\Core\Routing\BasePath;
 
 final class MinecraftServerHtml
@@ -99,6 +100,166 @@ final class MinecraftServerHtml
         $body .= '</section></div></section>';
 
         return ProfileHtml::page($server->name, $body, $basePath, authenticated:$authenticated);
+    }
+
+    /**
+     * @param list<MinecraftServer> $candidates
+     * @param list<MinecraftServer> $comparison
+     * @param list<string> $selectedIds
+     */
+    public static function comparison(
+        array $candidates,
+        array $comparison,
+        array $selectedIds,
+        ?string $warning,
+        BasePath $basePath,
+        bool $authenticated,
+    ): string {
+        $selected = array_fill_keys($selectedIds, true);
+        $options = '';
+        foreach ($candidates as $server) {
+            $id = $server->serverId->value();
+            $options .= '<label class="minecraft-compare-option"><input type="checkbox" name="server[]" value="'
+                . self::e($id) . '"' . (isset($selected[$id]) ? ' checked' : '') . '>'
+                . '<span class="minecraft-server-icon" aria-hidden="true">' . self::e(self::initial($server->name)) . '</span>'
+                . '<span><strong>' . self::e($server->name) . '</strong><small>'
+                . self::e(strtoupper($server->edition) . ' · ' . ($server->versionLabel !== '' ? $server->versionLabel : 'Sürüm yok'))
+                . '</small></span></label>';
+        }
+        if ($options === '') {
+            $options = '<div class="surface-empty"><strong>Karşılaştırılabilir sunucu bulunmuyor.</strong>'
+                . '<span>Yayınlanmış sunucular burada seçilebilir.</span></div>';
+        }
+
+        $notice = $warning === null
+            ? ''
+            : '<div class="surface-notice" role="status">' . self::e($warning) . '</div>';
+
+        $result = '';
+        if ($comparison !== []) {
+            $cards = '';
+            foreach ($comparison as $server) {
+                $href = self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value())));
+                $cards .= '<article class="surface-panel minecraft-compare-card">'
+                    . '<header><span class="minecraft-server-icon" aria-hidden="true">' . self::e(self::initial($server->name))
+                    . '</span><div><h2><a href="' . $href . '">' . self::e($server->name) . '</a></h2><small>'
+                    . self::e($server->address()) . '</small></div></header><dl>'
+                    . self::fact('Doğrulama', $server->verified() ? 'Doğrulandı' : 'Doğrulanmadı')
+                    . self::fact('Durum', self::statusLabel($server))
+                    . self::fact('Oyuncular', self::players($server))
+                    . self::fact('Edition', strtoupper($server->edition))
+                    . self::fact('Sürüm', $server->versionLabel !== '' ? $server->versionLabel : 'Belirtilmedi')
+                    . self::fact('Oyun modu', $server->gameMode !== '' ? $server->gameMode : 'Belirtilmedi')
+                    . self::fact('Gecikme', $server->latencyMs === null ? '—' : $server->latencyMs . ' ms')
+                    . '</dl></article>';
+            }
+            $result = '<section class="minecraft-compare-results"><h2>Karşılaştırma</h2>'
+                . '<div class="minecraft-compare-grid">' . $cards . '</div></section>';
+        }
+
+        $body = '<section class="minecraft-server-page minecraft-compare-page discovery-page">'
+            . '<header class="surface-head"><div><span class="forum-eyebrow">MINECRAFT</span>'
+            . '<h1>Sunucu Karşılaştırma</h1><p>İki ile dört yayınlanmış sunucuyu aynı ölçütlerle karşılaştır.</p></div></header>'
+            . $notice
+            . '<form class="surface-panel minecraft-compare-form" action="'
+            . self::e($basePath->prepend('/servers/compare')) . '" method="get">'
+            . '<div class="minecraft-compare-form-head"><div><h2>Sunucuları seç</h2>'
+            . '<p>En fazla dört sunucu seçebilirsin.</p></div>'
+            . '<button class="fx-btn fx-btn--primary" type="submit">Karşılaştır</button></div>'
+            . '<div class="minecraft-compare-options">' . $options . '</div></form>'
+            . $result . '</section>';
+
+        return ProfileHtml::page('Sunucu Karşılaştırma', $body, $basePath, authenticated:$authenticated);
+    }
+
+    /** @param list<MinecraftServerSeason> $seasons */
+    public static function seasons(
+        array $seasons,
+        ?string $state,
+        int $page,
+        bool $hasMore,
+        BasePath $basePath,
+        bool $authenticated,
+    ): string {
+        $rows = '';
+        foreach ($seasons as $season) {
+            $rows .= self::seasonRow($season);
+        }
+        if ($rows === '') {
+            $rows = '<div class="surface-empty minecraft-season-empty"><strong>Sezon bulunmuyor.</strong>'
+                . '<span>Bu filtrede yayınlanmış sezon kaydı yok.</span></div>';
+        }
+
+        $tabs = '<nav class="surface-tabs minecraft-season-tabs" aria-label="Sezon filtreleri">'
+            . self::seasonTab('Tümü', null, $state, $basePath)
+            . self::seasonTab('Aktif', 'active', $state, $basePath)
+            . self::seasonTab('Yaklaşan', 'upcoming', $state, $basePath)
+            . self::seasonTab('Tamamlanan', 'closed', $state, $basePath)
+            . '</nav>';
+
+        $pagination = self::seasonPagination($page, $hasMore, $state, $basePath);
+        $body = '<section class="minecraft-server-page minecraft-season-page discovery-page">'
+            . '<header class="surface-head"><div><span class="forum-eyebrow">MINECRAFT</span>'
+            . '<h1>Sunucu Sezonları</h1><p>Topluluk sunucularının dönemsel sezonlarını ve katılım yoğunluğunu takip et.</p></div></header>'
+            . $tabs . '<section class="surface-panel minecraft-season-list">' . $rows . $pagination . '</section></section>';
+
+        return ProfileHtml::page('Sunucu Sezonları', $body, $basePath, authenticated:$authenticated);
+    }
+
+    private static function seasonRow(MinecraftServerSeason $season): string
+    {
+        $state = match ($season->state) {
+            'active' => 'Aktif',
+            'upcoming' => 'Yaklaşan',
+            default => 'Tamamlandı',
+        };
+        return '<article class="minecraft-season-row is-' . self::e($season->state) . '"><div>'
+            . '<div class="minecraft-season-title"><strong>' . self::e($season->name)
+            . '</strong><span>' . self::e($state) . '</span></div>'
+            . '<p>' . self::e($season->summary) . '</p></div><div class="minecraft-season-meta">'
+            . '<span>' . self::e($season->startsAt->format('d.m.Y')) . ' – '
+            . self::e($season->endsAt->format('d.m.Y')) . '</span>'
+            . '<strong>' . $season->serverCount . ' sunucu</strong></div></article>';
+    }
+
+    private static function seasonTab(
+        string $label,
+        ?string $value,
+        ?string $active,
+        BasePath $basePath,
+    ): string {
+        $path = '/servers/seasons' . ($value === null ? '' : '?state=' . rawurlencode($value));
+        return '<a href="' . self::e($basePath->prepend($path)) . '"'
+            . ($active === $value ? ' aria-current="page"' : '') . '>' . self::e($label) . '</a>';
+    }
+
+    private static function seasonPagination(
+        int $page,
+        bool $hasMore,
+        ?string $state,
+        BasePath $basePath,
+    ): string {
+        if ($page === 1 && !$hasMore) {
+            return '';
+        }
+        $html = '<nav class="surface-pagination" aria-label="Sezon sayfaları">';
+        if ($page > 1) {
+            $html .= '<a href="' . self::e(self::seasonPageUrl($page - 1, $state, $basePath)) . '">← Önceki</a>';
+        }
+        $html .= '<span aria-current="page">Sayfa ' . $page . '</span>';
+        if ($hasMore) {
+            $html .= '<a href="' . self::e(self::seasonPageUrl($page + 1, $state, $basePath)) . '">Sonraki →</a>';
+        }
+        return $html . '</nav>';
+    }
+
+    private static function seasonPageUrl(int $page, ?string $state, BasePath $basePath): string
+    {
+        $params = ['page'=>$page];
+        if ($state !== null) {
+            $params['state'] = $state;
+        }
+        return $basePath->prepend('/servers/seasons?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986));
     }
 
     private static function directoryRow(MinecraftServer $server, BasePath $basePath): string

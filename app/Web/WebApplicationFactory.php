@@ -112,6 +112,8 @@ use Forwext\App\Web\Marketplace\MarketplaceOrdersHandler;
 use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerDirectoryHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerDetailHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerCompareHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerSeasonsHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
 use Forwext\App\Web\Payment\PaymentManageHandler;
 use Forwext\App\Web\Payment\PaymentWebhookHandler;
@@ -1901,6 +1903,18 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/servers'),
             new MinecraftServerDirectoryHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.compare',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/compare'),
+            new MinecraftServerCompareHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.seasons',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/seasons'),
+            new MinecraftServerSeasonsHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'server.detail',

@@ -17,4 +17,10 @@ interface MinecraftServerRepository
     ): array;
 
     public function publicById(EntityId $serverId): ?MinecraftServer;
+
+    /** @param list<EntityId> $serverIds @return list<MinecraftServer> */
+    public function publicByIds(array $serverIds): array;
+
+    /** @return list<MinecraftServerSeason> */
+    public function publicSeasons(?string $state = null, int $limit = 30, int $offset = 0): array;
 }

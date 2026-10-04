@@ -142,7 +142,9 @@ final class ProfileHtml
                 ? $navItem('marketplace.giveaways', 'Çekilişler', '/giveaways')
                 : '');
 
-        $serversSubNav = $visibleNavItem('servers', 'Sunucu dizini', '/servers');
+        $serversSubNav = $visibleNavItem('servers', 'Sunucu dizini', '/servers')
+            . $navItem('servers.compare', 'Karşılaştır', '/servers/compare')
+            . $navItem('servers.seasons', 'Sezonlar', '/servers/seasons');
 
         $membersSubNav = $visibleNavItem('members', 'Kayıtlı üyeler', '/members')
             . (isset($visibleNavigation['members.online'])
