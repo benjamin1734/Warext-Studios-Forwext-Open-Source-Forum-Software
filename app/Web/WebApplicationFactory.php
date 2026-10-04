@@ -142,6 +142,7 @@ use Forwext\App\Web\Social\RelationshipAccountHandler;
 use Forwext\App\Web\Social\PostReactionHandler;
 use Forwext\App\Web\Social\UserRelationshipHandler;
 use Forwext\App\Web\Search\SearchHandler;
+use Forwext\App\Web\Search\ThreadDiscoveryHandler;
 use Forwext\App\Web\Faq\FaqArticleHandler;
 use Forwext\App\Web\Faq\FaqArticleIdHandler;
 use Forwext\App\Web\Faq\FaqIndexHandler;
@@ -444,6 +445,8 @@ use Forwext\Core\Security\Secret\SecretKey;
 use Forwext\Core\Security\Secret\SecretStore;
 use Forwext\Core\Search\Access\ForumSearchAccessScopeProvider;
 use Forwext\Core\Search\Access\PublicSearchAccessScopeProvider;
+use Forwext\Core\Search\Discovery\DatabaseThreadDiscoveryRepository;
+use Forwext\Core\Search\Discovery\ThreadDiscoveryService;
 use Forwext\Core\Search\Lifecycle\CoreSearchContentSources;
 use Forwext\Core\Search\Lifecycle\DatabaseSearchIndexChangeStore;
 use Forwext\Core\Search\Lifecycle\SearchIndexLifecycleService;
@@ -1370,6 +1373,11 @@ final readonly class WebApplicationFactory
             ],
             new SavedSearchQueryRegistry(),
         );
+        $threadDiscovery = new ThreadDiscoveryService(
+            new DatabaseThreadDiscoveryRepository($database),
+            $authorizer,
+            [$forumScopeProvider],
+        );
         $quotes = new CrossThreadQuoteService($posts, $threads, $users);
         $linkPreviews = new LinkPreviewService(
             new LinkPreviewUrlPolicy(new NativeHostAddressResolver()),
@@ -2262,6 +2270,24 @@ final readonly class WebApplicationFactory
             new PathTemplate('/portfolio/{projectId}', ['projectId'=>'[0-9a-f]{32}']),
             new PortfolioProjectHandler($portfolio, $viewerResolver, $basePath),
             [$portfolioCsrf],
+        ));
+        $threadDiscoveryHandler = new ThreadDiscoveryHandler(
+            $threadDiscovery,
+            $viewerResolver,
+            $basePath,
+            new DateTimeZone($config->requireString('site.timezone')),
+        );
+        $routes->add(new Route(
+            'activity.threads',
+            [HttpMethod::Get],
+            new PathTemplate('/activity/threads'),
+            $threadDiscoveryHandler,
+        ));
+        $routes->add(new Route(
+            'activity.threads.mode',
+            [HttpMethod::Get],
+            new PathTemplate('/activity/threads/{mode}', ['mode'=>'new|unread|trending|featured|recent']),
+            $threadDiscoveryHandler,
         ));
         $routes->add(new Route(
             'search.index',
