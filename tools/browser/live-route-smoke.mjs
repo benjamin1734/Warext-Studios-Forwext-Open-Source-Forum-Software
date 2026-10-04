@@ -592,6 +592,179 @@ try {
     await assertHealthyDocument("minecraft server vote integration");
   }
 
+  response = await page.goto(baseUrl + "/portfolio?category=general&featured=1", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio: dense browse route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Portfolyo", exact: true }).waitFor();
+  const portfolioBrowseState = await page.evaluate(() => ({
+    browseBars: document.querySelectorAll(".portfolio-browse-bar").length,
+    activeCategory: document.querySelectorAll(".portfolio-filter-tab.is-active").length,
+    activeFeatured: document.querySelectorAll(".portfolio-featured-toggle.is-active").length,
+    cards: document.querySelectorAll(".portfolio-card").length,
+    tagGroups: document.querySelectorAll(".portfolio-card-tags").length,
+    footers: document.querySelectorAll(".portfolio-card-footer").length,
+  }));
+  if (
+    portfolioBrowseState.browseBars !== 1
+    || portfolioBrowseState.activeCategory !== 1
+    || portfolioBrowseState.activeFeatured !== 1
+    || portfolioBrowseState.cards < 1
+    || portfolioBrowseState.tagGroups < 1
+    || portfolioBrowseState.footers < 1
+  ) {
+    fail(`portfolio: browse density contract failed ${JSON.stringify(portfolioBrowseState)}`);
+  }
+  await assertHealthyDocument("portfolio browse");
+
+  response = await page.goto(baseUrl + "/portfolio/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio detail: fixture route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Phase 8 Tarayıcı Projesi", exact: true }).waitFor();
+  const portfolioDetailState = await page.evaluate(() => ({
+    mainGrid: document.querySelectorAll(".portfolio-project-main-grid").length,
+    contentHeads: document.querySelectorAll(".portfolio-project-content-head").length,
+    engagement: document.querySelectorAll(".portfolio-engagement").length,
+    comments: document.querySelectorAll(".portfolio-comments").length,
+  }));
+  if (
+    portfolioDetailState.mainGrid !== 1
+    || portfolioDetailState.contentHeads !== 1
+    || portfolioDetailState.engagement !== 1
+    || portfolioDetailState.comments !== 1
+  ) {
+    fail(`portfolio detail: density contract failed ${JSON.stringify(portfolioDetailState)}`);
+  }
+  await assertHealthyDocument("portfolio detail");
+
+  response = await page.goto(baseUrl + "/portfolio/manage?project=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio manage: fixture route did not return HTTP 200");
+  const portfolioManageState = await page.evaluate(() => ({
+    grids: document.querySelectorAll(".portfolio-manage-grid").length,
+    summaries: document.querySelectorAll(".portfolio-manage-summary").length,
+    mediaSections: document.querySelectorAll(".module-manage-section").length,
+  }));
+  if (portfolioManageState.grids !== 1 || portfolioManageState.summaries !== 1 || portfolioManageState.mediaSections < 1) {
+    fail(`portfolio manage: density contract failed ${JSON.stringify(portfolioManageState)}`);
+  }
+  await assertHealthyDocument("portfolio manage");
+
+  response = await page.goto(baseUrl + "/faq?lang=tr", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("faq: dense browse route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Sık Sorulan Sorular", exact: true }).waitFor();
+  const faqBrowseState = await page.evaluate(() => ({
+    overviews: document.querySelectorAll(".faq-overview").length,
+    activeTabs: document.querySelectorAll(".faq-tab.is-active").length,
+    categoryHeads: document.querySelectorAll(".faq-category-head").length,
+    rows: document.querySelectorAll(".faq-row").length,
+    tagGroups: document.querySelectorAll(".faq-row-tags").length,
+  }));
+  if (
+    faqBrowseState.overviews !== 1
+    || faqBrowseState.activeTabs !== 1
+    || faqBrowseState.categoryHeads < 1
+    || faqBrowseState.rows < 1
+    || faqBrowseState.tagGroups < 1
+  ) {
+    fail(`faq: browse density contract failed ${JSON.stringify(faqBrowseState)}`);
+  }
+  await assertHealthyDocument("faq browse");
+
+  response = await page.goto(baseUrl + "/faq/tr/phase8-browser-faq", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("faq article: fixture route did not return HTTP 200");
+  const faqArticleState = await page.evaluate(() => ({
+    grids: document.querySelectorAll(".faq-article-grid").length,
+    answers: document.querySelectorAll(".faq-answer").length,
+    tagGroups: document.querySelectorAll(".faq-article-tags").length,
+    feedbackPanels: document.querySelectorAll(".faq-feedback-panel").length,
+    feedbackActions: document.querySelectorAll(".faq-feedback-actions").length,
+  }));
+  if (
+    faqArticleState.grids !== 1
+    || faqArticleState.answers !== 1
+    || faqArticleState.tagGroups !== 1
+    || faqArticleState.feedbackPanels !== 1
+    || faqArticleState.feedbackActions !== 1
+  ) {
+    fail(`faq article: density contract failed ${JSON.stringify(faqArticleState)}`);
+  }
+  await assertHealthyDocument("faq article");
+
+  response = await page.goto(baseUrl + "/account/referrals", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("referrals account: route did not return HTTP 200");
+  const referralAccountState = await page.evaluate(() => ({
+    accounts: document.querySelectorAll(".referral-account").length,
+    stats: document.querySelectorAll(".referral-stats").length,
+    panels: document.querySelectorAll(".referral-panel").length,
+  }));
+  if (referralAccountState.accounts !== 1 || referralAccountState.stats !== 1 || referralAccountState.panels < 1) {
+    fail(`referrals account: density contract failed ${JSON.stringify(referralAccountState)}`);
+  }
+  await assertHealthyDocument("referrals account");
+
+  response = await page.goto(baseUrl + "/referrals/manage", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("referrals manage: route did not return HTTP 200");
+  const referralManageState = await page.evaluate(() => ({
+    pages: document.querySelectorAll(".referral-manage-page").length,
+    stats: document.querySelectorAll(".referral-manage-stats").length,
+    qualifications: document.querySelectorAll(".referral-qualification-panel").length,
+    campaigns: document.querySelectorAll(".referral-campaign-editor").length,
+    reviews: document.querySelectorAll(".referral-review-panel").length,
+  }));
+  if (
+    referralManageState.pages !== 1
+    || referralManageState.stats !== 1
+    || referralManageState.qualifications !== 1
+    || referralManageState.campaigns < 1
+    || referralManageState.reviews !== 1
+  ) {
+    fail(`referrals manage: density contract failed ${JSON.stringify(referralManageState)}`);
+  }
+  await assertHealthyDocument("referrals manage");
+
+  response = await page.goto(baseUrl + "/bugs", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("bugs: personal report route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Hata Bildirimlerim", exact: true }).waitFor();
+  const bugListState = await page.evaluate(() => ({
+    overviews: document.querySelectorAll(".bug-list-overview").length,
+    stats: document.querySelectorAll(".bug-list-stat").length,
+    panels: document.querySelectorAll(".bug-list-panel").length,
+    rows: document.querySelectorAll(".bug-report-row").length,
+    badgeGroups: document.querySelectorAll(".bug-report-row-badges").length,
+  }));
+  if (
+    bugListState.overviews !== 1
+    || bugListState.stats !== 4
+    || bugListState.panels !== 1
+    || bugListState.rows < 1
+    || bugListState.badgeGroups < 1
+  ) {
+    fail(`bugs: list density contract failed ${JSON.stringify(bugListState)}`);
+  }
+  await assertHealthyDocument("bugs list");
+
+  response = await page.goto(baseUrl + "/bugs/abababababababababababababababab", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("bug detail: fixture route did not return HTTP 200");
+  const bugDetailState = await page.evaluate(() => ({
+    primary: document.querySelectorAll(".bug-detail-primary-grid").length,
+    secondary: document.querySelectorAll(".bug-detail-secondary-grid").length,
+    conversations: document.querySelectorAll(".ticket-conversation").length,
+  }));
+  if (bugDetailState.primary !== 1 || bugDetailState.secondary !== 1 || bugDetailState.conversations !== 1) {
+    fail(`bug detail: density contract failed ${JSON.stringify(bugDetailState)}`);
+  }
+  await assertHealthyDocument("bug detail");
+
+  response = await page.goto(baseUrl + "/bugs/report", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("bug report form: route did not return HTTP 200");
+  const bugFormState = await page.evaluate(() => ({
+    grids: document.querySelectorAll(".bug-form-grid").length,
+    forms: document.querySelectorAll(".bug-form-panel .support-intake-form").length,
+    guidance: document.querySelectorAll(".bug-form-guidance").length,
+    checklist: document.querySelectorAll(".bug-form-checklist").length,
+  }));
+  if (bugFormState.grids !== 1 || bugFormState.forms !== 1 || bugFormState.guidance !== 1 || bugFormState.checklist !== 1) {
+    fail(`bug report form: density contract failed ${JSON.stringify(bugFormState)}`);
+  }
+  await assertHealthyDocument("bug report form");
+
   response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("community groups: directory route did not return HTTP 200");
   await page.getByRole("heading", { name: "Klanlar & Gruplar", exact: true }).waitFor();
@@ -854,6 +1027,111 @@ try {
   await assertHealthyDocument("member profile");
 
   await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/portfolio?category=general&featured=1", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio mobile: browse route did not return HTTP 200");
+  const portfolioMobileState = await page.evaluate(() => {
+    const browse = document.querySelector(".portfolio-browse-bar");
+    return {
+      columns: browse instanceof HTMLElement ? getComputedStyle(browse).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: browse instanceof HTMLElement ? Math.round(browse.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (portfolioMobileState.columns !== 1 || portfolioMobileState.width > portfolioMobileState.viewportWidth) {
+    fail(`portfolio mobile: browse responsive contract failed ${JSON.stringify(portfolioMobileState)}`);
+  }
+  await assertHealthyDocument("portfolio mobile");
+
+  response = await page.goto(baseUrl + "/portfolio/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio detail mobile: route did not return HTTP 200");
+  const portfolioDetailMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".portfolio-project-main-grid");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (portfolioDetailMobileState.columns !== 1 || portfolioDetailMobileState.width > portfolioDetailMobileState.viewportWidth) {
+    fail(`portfolio detail mobile: responsive contract failed ${JSON.stringify(portfolioDetailMobileState)}`);
+  }
+  await assertHealthyDocument("portfolio detail mobile");
+
+  response = await page.goto(baseUrl + "/portfolio/manage?project=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("portfolio manage mobile: route did not return HTTP 200");
+  const portfolioManageMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".portfolio-manage-grid");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (portfolioManageMobileState.columns !== 1 || portfolioManageMobileState.width > portfolioManageMobileState.viewportWidth) {
+    fail(`portfolio manage mobile: responsive contract failed ${JSON.stringify(portfolioManageMobileState)}`);
+  }
+  await assertHealthyDocument("portfolio manage mobile");
+
+  response = await page.goto(baseUrl + "/faq?lang=tr", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("faq mobile: route did not return HTTP 200");
+  const faqMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".faq-overview");
+    return {
+      columns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: overview instanceof HTMLElement ? Math.round(overview.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (faqMobileState.columns !== 1 || faqMobileState.width > faqMobileState.viewportWidth) {
+    fail(`faq mobile: responsive contract failed ${JSON.stringify(faqMobileState)}`);
+  }
+  await assertHealthyDocument("faq mobile");
+
+  response = await page.goto(baseUrl + "/referrals/manage", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("referrals manage mobile: route did not return HTTP 200");
+  const referralMobileState = await page.evaluate(() => {
+    const qualification = document.querySelector(".referral-qualification-panel");
+    return {
+      columns: qualification instanceof HTMLElement ? getComputedStyle(qualification).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: qualification instanceof HTMLElement ? Math.round(qualification.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (referralMobileState.columns !== 1 || referralMobileState.width > referralMobileState.viewportWidth) {
+    fail(`referrals manage mobile: responsive contract failed ${JSON.stringify(referralMobileState)}`);
+  }
+  await assertHealthyDocument("referrals manage mobile");
+
+  response = await page.goto(baseUrl + "/bugs", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("bugs mobile: route did not return HTTP 200");
+  const bugListMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".bug-list-overview");
+    return {
+      columns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: overview instanceof HTMLElement ? Math.round(overview.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (bugListMobileState.columns !== 2 || bugListMobileState.width > bugListMobileState.viewportWidth) {
+    fail(`bugs mobile: list responsive contract failed ${JSON.stringify(bugListMobileState)}`);
+  }
+  await assertHealthyDocument("bugs mobile");
+
+  response = await page.goto(baseUrl + "/bugs/report", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("bug report form mobile: route did not return HTTP 200");
+  const bugFormMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".bug-form-grid");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (bugFormMobileState.columns !== 1 || bugFormMobileState.width > bugFormMobileState.viewportWidth) {
+    fail(`bug report form mobile: responsive contract failed ${JSON.stringify(bugFormMobileState)}`);
+  }
+  await assertHealthyDocument("bug report form mobile");
+
   response = await page.goto(baseUrl + "/members/ci-admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("member profile mobile: real route did not return HTTP 200");
   const memberProfileMobileState = await page.evaluate(() => {
