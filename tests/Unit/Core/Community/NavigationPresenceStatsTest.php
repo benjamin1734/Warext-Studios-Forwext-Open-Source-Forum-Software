@@ -32,7 +32,7 @@ final class NavigationPresenceStatsTest extends TestCase
         ));
 
         self::assertSame(
-            ['forums', 'search', 'marketplace', 'members', 'members.online', 'members.staff', 'portfolio', 'faq'],
+            ['forums', 'search', 'marketplace', 'servers', 'members', 'members.online', 'members.staff', 'portfolio', 'faq'],
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
         );
         self::assertContains(
