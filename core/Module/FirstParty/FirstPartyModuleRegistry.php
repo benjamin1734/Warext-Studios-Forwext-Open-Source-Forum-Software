@@ -278,6 +278,19 @@ final readonly class FirstPartyModuleRegistry
                 ],
             ),
             new FirstPartyModuleDefinition(
+                'groups',
+                'Clans / Groups',
+                'Topluluk klanları ve grupları, üyelik ve moderasyon yaşam döngüsü.',
+                routePrefixes:['group.'],
+                settings:[
+                    self::flag('creation_enabled', 'Grup oluşturma', 'Yeni klan veya grup oluşturulmasına izin verir.', true, $globalGroup),
+                ],
+                purgeTables:[
+                    'forwext_group_members',
+                    'forwext_groups',
+                ],
+            ),
+            new FirstPartyModuleDefinition(
                 'minecraft-servers',
                 'Minecraft Servers',
                 'Minecraft sunucu dizini, durum, oy, yönetim, ekip ve sahiplik yaşam döngüsü.',
