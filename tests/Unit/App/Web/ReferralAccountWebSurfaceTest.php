@@ -20,6 +20,14 @@ final class ReferralAccountWebSurfaceTest extends TestCase
         self::assertStringContainsString('class="referral-campaign"',$html);
         self::assertStringContainsString('class="referral-reward-row"',$html);
         self::assertStringContainsString('public static function manage',$html);
+        self::assertStringContainsString('referral-manage-page discovery-page',$html);
+        self::assertStringContainsString('surface-head referral-manage-head',$html);
+        self::assertStringContainsString('surface-panel referral-qualification-panel',$html);
+        self::assertStringContainsString('class="referral-campaign-editor"',$html);
+        self::assertStringContainsString('class="referral-review-row"',$html);
+        self::assertStringContainsString('class="referral-review-actions"',$html);
         self::assertStringContainsString('.referral-stats',$css);
+        self::assertStringContainsString('.referral-qualification-panel',$css);
+        self::assertStringContainsString('.referral-review-row',$css);
     }
 }

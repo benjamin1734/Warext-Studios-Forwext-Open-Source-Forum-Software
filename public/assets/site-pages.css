@@ -3582,3 +3582,66 @@ html,body{max-width:100%;overflow-x:clip}
 @media(pointer:coarse){
   .faq-tab,.faq-feedback-actions .fx-btn,.faq-article-head>.fx-btn{min-height:44px}
 }
+
+
+/* referral-management-density-v2 */
+.referral-manage-page{display:grid;gap:10px}
+.referral-manage-head>.fx-btn{flex:0 0 auto;min-height:34px;padding:7px 10px;font-size:10.5px}
+.referral-qualification-panel{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:4px
+}
+.referral-qualification-panel>div{min-width:0}.referral-qualification-panel h2{margin:0;font-size:12.5px}
+.referral-qualification-panel p{margin:3px 0 0;color:var(--muted);font-size:9px;line-height:1.45}
+.referral-qualification-panel form{margin:0}
+.referral-manage-panel,.referral-review-panel{padding:0;overflow:hidden}
+.referral-manage-panel>header,.referral-review-panel>header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 13px;
+  border-bottom:1px solid var(--line);background:var(--panel2)
+}
+.referral-manage-panel>header h2,.referral-review-panel>header h2{margin:0;font-size:13px}
+.referral-manage-panel>header p,.referral-review-panel>header p{margin:3px 0 0;color:var(--muted);font-size:9px}
+.referral-manage-panel>header>span,.referral-review-panel>header>span{
+  flex:0 0 auto;padding:2px 6px;border:1px solid var(--line);border-radius:3px;color:var(--muted);font-size:8.5px;font-weight:700
+}
+.referral-manage-list,.referral-review-list{display:grid}
+.referral-campaign-editor{border-bottom:1px solid var(--line)}
+.referral-campaign-editor:last-child{border-bottom:0}
+.referral-campaign-editor>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;
+  cursor:pointer;list-style:none
+}
+.referral-campaign-editor>summary::-webkit-details-marker{display:none}
+.referral-campaign-editor[open]>summary{background:color-mix(in srgb,var(--accent) 3%,var(--panel2));border-bottom:1px solid var(--line)}
+.referral-campaign-editor>summary>div{min-width:0;display:grid;gap:2px}
+.referral-campaign-editor>summary span{color:var(--accent);font-size:8px;font-weight:800;letter-spacing:.05em}
+.referral-campaign-editor>summary strong{font-size:10.5px;overflow-wrap:anywhere}
+.referral-campaign-editor>summary small{color:var(--muted);font-size:8.5px;text-align:right}
+.referral-campaign-form{margin:0;padding:12px 13px}
+.referral-campaign-active{align-self:end;min-height:36px;display:flex!important;align-items:center;gap:6px}
+.referral-review-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:10px 13px;border-bottom:1px solid var(--line)
+}
+.referral-review-row:last-child{border-bottom:0}
+.referral-review-copy{min-width:0;display:grid;gap:3px}
+.referral-review-copy>span{color:var(--accent);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.referral-review-copy strong{font-size:10px;overflow-wrap:anywhere}
+.referral-review-copy small{color:var(--muted);font-size:8.5px;overflow-wrap:anywhere}
+.referral-review-actions{display:flex;align-items:center;gap:5px;margin:0}
+.referral-review-actions .fx-btn{min-height:31px;padding:5px 8px;font-size:8.5px}
+@media(max-width:820px){
+  .referral-qualification-panel{grid-template-columns:1fr}
+  .referral-qualification-panel .fx-btn{width:100%;justify-content:center}
+}
+@media(max-width:700px){
+  .referral-manage-head>.fx-btn{width:100%;justify-content:center}
+  .referral-campaign-editor>summary{display:grid}
+  .referral-campaign-editor>summary small{text-align:left}
+  .referral-review-row{grid-template-columns:1fr}
+  .referral-review-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .referral-review-actions .fx-btn{width:100%;justify-content:center}
+}
+@media(pointer:coarse){
+  .referral-manage-page .fx-btn,.referral-campaign-editor>summary{min-height:44px}
+}

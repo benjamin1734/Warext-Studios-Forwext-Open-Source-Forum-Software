@@ -81,8 +81,9 @@ PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 - [DONE] Groups browser acceptance is wired to deterministic post-install fixture data and covers create, approval-request, moderation approval and leave lifecycles so reference routes cannot pass only on empty-state rendering.
 - [DONE] Portfolio browse-density slice: category and featured filters are backed by bounded public project data; the browse toolbar exposes current filter state, cards show real tag/media/update metadata, and coarse-pointer/mobile controls preserve usable touch targets without adding fake data.
 - [DONE] FAQ public-density slice: category/article totals, active language state, compact category headers, real tag chips and a dedicated helpfulness panel reuse the existing FAQ service, vote persistence and CSRF flow while improving desktop/mobile hierarchy.
-- [NEXT] Qualify the groups foundation plus portfolio/FAQ density slices across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates.
-- [NEXT] Then raise referral/bug surfaces plus portfolio detail/manage states to the same v5 shell/list/form density and flow standard.
+- [DONE] Referral management-density slice: campaign editing, due-qualification processing and anti-fraud review now use a dedicated responsive management workspace while preserving the existing campaign, attribution, decision and CSRF flows.
+- [NEXT] Qualify the groups foundation plus portfolio/FAQ/referral density slices across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates.
+- [NEXT] Then raise bug-report surfaces plus portfolio detail/manage states to the same v5 shell/list/form density and flow standard.
 
 PHASE 9 — MODERATION / INDEPENDENT AUDIT
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
