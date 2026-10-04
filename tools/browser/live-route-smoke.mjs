@@ -666,6 +666,43 @@ try {
   }
   await assertHealthyDocument("minecraft servers mobile");
 
+  if (firstServerHref) {
+    const mobileServerUrl = new URL(firstServerHref, baseUrl).toString().replace(/\/$/, "");
+    response = await page.goto(mobileServerUrl + "/updates", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server updates mobile: real route did not return HTTP 200");
+    const updateMobileState = await page.evaluate(() => ({
+      width: document.querySelector(".minecraft-update-list") instanceof HTMLElement
+        ? Math.round(document.querySelector(".minecraft-update-list").getBoundingClientRect().width)
+        : 0,
+      viewportWidth: window.innerWidth,
+    }));
+    if (updateMobileState.width > updateMobileState.viewportWidth) {
+      fail(`minecraft server updates mobile: overflow contract failed ${JSON.stringify(updateMobileState)}`);
+    }
+    await assertHealthyDocument("minecraft server updates mobile");
+
+    response = await page.goto(mobileServerUrl + "/statistics", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server statistics mobile: real route did not return HTTP 200");
+    const statisticsMobileState = await page.evaluate(() => {
+      const grid = document.querySelector(".minecraft-stat-grid");
+      const trend = document.querySelector(".minecraft-vote-trend");
+      return {
+        columns: grid instanceof HTMLElement
+          ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        trendWidth: trend instanceof HTMLElement ? Math.round(trend.getBoundingClientRect().width) : 0,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    if (
+      statisticsMobileState.columns !== 1
+      || statisticsMobileState.trendWidth > statisticsMobileState.viewportWidth
+    ) {
+      fail(`minecraft server statistics mobile: responsive contract failed ${JSON.stringify(statisticsMobileState)}`);
+    }
+    await assertHealthyDocument("minecraft server statistics mobile");
+  }
+
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server management mobile: real route did not return HTTP 200");
   const serverManagementMobileState = await page.evaluate(() => {
