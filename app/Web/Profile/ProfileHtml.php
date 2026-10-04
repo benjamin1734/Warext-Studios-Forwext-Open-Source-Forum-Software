@@ -143,7 +143,7 @@ final class ProfileHtml
         $accountNav = '';
         foreach ([
             'account.own' => ['Hesap merkezi', '/account'],
-            'security.own' => ['Şifre ve güvenlik', '/account/security'],
+            'security.own' => ['Güvenlik', '/account/security'],
             'conversations.own' => ['Özel mesajlar', '/account/conversations'],
             'referrals.own' => ['Davetlerim', '/account/referrals'],
             'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
