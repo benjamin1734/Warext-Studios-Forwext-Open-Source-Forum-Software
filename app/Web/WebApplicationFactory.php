@@ -1938,6 +1938,7 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/manage', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.claim',
