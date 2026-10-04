@@ -39,8 +39,8 @@ PHASE 4 — THREAD VIEW / EDITOR — VERIFIED
 - [DONE] Exercise the header/footer/pagination hooks in PHP source contracts and responsive browser fixtures; full first-slice CI passed on a480d81b.
 - [DONE] Enrich author cards with real thread-starter state and existing member-content links without exposing internal group data or inventing display roles.
 - [DONE] Present locked/reply-disabled/reply-permission states explicitly and add a compact quick-editor capability summary backed only by existing editor features.
-- [VERIFYING] Run source contracts, responsive browser fixtures and the complete Phase 4 CI gate for the final polish slice.
-- [NEXT] If green, mark Phase 4 VERIFIED and move to Phase 5 members/profile/account.
+- [DONE] Source contracts, responsive browser fixtures and the complete Phase 4 CI gate passed on main commit a5f81099.
+- [DONE] Phase 4 is VERIFIED; execution moved to Phase 5 members/profile/account.
 
 PHASE 5 — MEMBERS / PROFILE / ACCOUNT
 - Member directory/staff/current visitors.
