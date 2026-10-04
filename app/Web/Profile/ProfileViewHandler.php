@@ -110,10 +110,11 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 'marketplace' => 'Marketplace',
                 default => 'Hakkımda',
             };
-            $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
+            $tabNav .= '<a href="#' . ProfileHtml::escape($tab->key) . '" aria-controls="'
+                . ProfileHtml::escape($tab->key) . '">' . $label . '</a>';
         }
         if ($activityWall !== '') {
-            $tabNav .= '<a href="#activity">Profil Akışı</a>';
+            $tabNav .= '<a href="#activity" aria-controls="activity">Profil Akışı</a>';
         }
         $tabNav = $tabNav === ''
             ? ''
@@ -126,6 +127,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                     $profile,
                     $viewerId,
                     $user->createdAt()->format('Y-m-d'),
+                    count($visibleTabs),
                 );
             } elseif ($tab->key === 'portfolio') {
                 $sections .= $this->portfolioSection($profile, $viewerId);
@@ -149,11 +151,14 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
                 . ProfileHtml::escape($this->basePath->prepend('/account/profile-url'))
                 . '">Özel profil URL’si</a></div>'
             : '';
-        $forumContentLinks = $viewerId === null ? '' : '<div class="profile-forum-content-actions">'
+        $forumContentLinks = $viewerId === null ? '' : '<nav class="profile-forum-content-actions" aria-label="Üye içeriği">'
             . '<a class="fx-btn" href="' . ProfileHtml::escape($memberPath . '/content/threads') . '">Konuları</a>'
             . '<a class="fx-btn" href="' . ProfileHtml::escape($memberPath . '/content/posts') . '">Mesajları</a>'
-            . '</div>';
+            . '</nav>';
         $relationshipControls = $this->relationshipControls($viewerId, $user->id());
+        $profileHeadActions = $forumContentLinks === '' && $relationshipControls === ''
+            ? ''
+            : '<div class="profile-head-actions">' . $forumContentLinks . $relationshipControls . '</div>';
         $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
         $body = '<article class="profile profile-reference-shell" data-forwext-background-scope="profile" data-forwext-background-id="'
             . ProfileHtml::escape($profile->userId->value()) . '">' . $banner
@@ -161,7 +166,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             . $avatar . '<div class="identity profile-identity"><h1>' . $safeName
             . '</h1><div class="profile-identity-meta"><span>Forwext üyesi</span><span>Katılım · '
             . ProfileHtml::escape($user->createdAt()->format('d.m.Y')) . '</span></div>' . $profileSettings . '</div>'
-            . $forumContentLinks . $relationshipControls . '</div>'
+            . $profileHeadActions . '</div>'
             . $music . $tabNav . '<div class="profile-content">' . $activityWall . $sections . '</div>'
             . '</div></article>';
 
@@ -205,9 +210,18 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         return $tabs;
     }
 
-    private function overviewSection(UserProfile $profile, ?EntityId $viewerId, string $joined): string
-    {
-        $content = '<div class="muted">Katılım tarihi: ' . ProfileHtml::escape($joined) . '</div>';
+    private function overviewSection(
+        UserProfile $profile,
+        ?EntityId $viewerId,
+        string $joined,
+        int $visibleSectionCount,
+    ): string {
+        $safeJoined = ProfileHtml::escape($joined);
+        $content = '<dl class="profile-overview-facts">'
+            . '<div><dt>Katılım tarihi</dt><dd><time datetime="' . $safeJoined . '">' . $safeJoined . '</time></dd></div>'
+            . '<div><dt>Görüntülenebilir bölümler</dt><dd>' . $visibleSectionCount . '</dd></div>'
+            . '</dl>';
+
         if ($this->accessPolicy->canViewSection($profile, $profile->socialVisibility, $viewerId)) {
             $links = $this->socialLinks($profile, $viewerId);
             if ($links !== '') {
@@ -216,7 +230,8 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             }
         }
 
-        return '<section class="profile-section" id="overview"><header><h2>Genel Bakış</h2></header><div class="profile-section-body">' . $content . '</div></section>';
+        return '<section class="profile-section" id="overview"><header><h2>Genel Bakış</h2></header>'
+            . '<div class="profile-section-body">' . $content . '</div></section>';
     }
 
     private function portfolioSection(UserProfile $profile, ?EntityId $viewerId): string
