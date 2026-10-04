@@ -17,11 +17,11 @@ final class DiscussionWatchHtml
         $selected = $current ?? WatchNotificationMode::None;
         $options = '';
         foreach ([
-            WatchNotificationMode::None => 'Takip etme',
-            WatchNotificationMode::InApp => 'Uygulama içi',
-            WatchNotificationMode::Email => 'E-posta',
-            WatchNotificationMode::InAppEmail => 'Uygulama içi + e-posta',
-        ] as $mode => $label) {
+            [WatchNotificationMode::None, 'Takip etme'],
+            [WatchNotificationMode::InApp, 'Uygulama içi'],
+            [WatchNotificationMode::Email, 'E-posta'],
+            [WatchNotificationMode::InAppEmail, 'Uygulama içi + e-posta'],
+        ] as [$mode, $label]) {
             $options .= '<option value="' . self::e($mode->value) . '"'
                 . ($selected === $mode ? ' selected' : '') . '>' . self::e($label) . '</option>';
         }
