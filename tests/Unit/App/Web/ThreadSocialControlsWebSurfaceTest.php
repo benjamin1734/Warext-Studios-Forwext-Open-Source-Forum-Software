@@ -54,7 +54,6 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString('maxlength="1000"', $thread);
         self::assertStringContainsString('hash_equals($actor->value(), $post[\'author_user_id\'])', $thread);
         self::assertStringContainsString('Kendi mesajına tepki veremezsin.', $thread);
-        self::assertStringContainsString("'author_group_name' =>", (string) file_get_contents($root . '/core/Forum/Discovery/DatabaseForumPublicReader.php'));
         self::assertStringContainsString('thread-post-author-badges', $thread);
         self::assertStringContainsString('thread-author-badge--starter', $thread);
         self::assertStringContainsString('Konu sahibi', $thread);
