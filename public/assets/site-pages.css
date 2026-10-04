@@ -3687,3 +3687,36 @@ html,body{max-width:100%;overflow-x:clip}
 }
 @media(max-width:520px){.bug-list-overview{grid-template-columns:1fr 1fr}}
 @media(pointer:coarse){.bug-list-page .fx-btn,.bug-form-page .fx-btn,.bug-detail-page .fx-btn{min-height:44px}}
+
+
+/* portfolio-detail-manage-density-v2 */
+.portfolio-project-main-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,.34fr);gap:10px;align-items:start}
+.portfolio-project-content{padding:0;overflow:hidden}
+.portfolio-project-content-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.portfolio-project-content-head>div{min-width:0}.portfolio-project-content-head h2{margin:0;font-size:13.5px}
+.portfolio-project-content-head p{margin:3px 0 0;color:var(--muted);font-size:8.5px}
+.portfolio-project-content-head>span{flex:0 0 auto;padding:2px 6px;border:1px solid var(--line);border-radius:3px;color:var(--accent);font-size:8px;font-weight:800}
+.portfolio-project-content>.about{padding:12px 13px}
+.portfolio-project-content>.portfolio-project-tags{padding:0 13px 11px}
+.portfolio-project-content>.portfolio-project-meta{margin:0 13px 12px}
+.portfolio-project-main-grid>.portfolio-engagement{align-self:start}
+.portfolio-comments>header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.portfolio-manage-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.3fr);gap:10px;align-items:start}
+.portfolio-manage-summary{display:grid;gap:10px;padding:12px;border-radius:4px;position:sticky;top:86px}
+.portfolio-manage-summary h2{margin:2px 0 0;font-size:13px}
+.portfolio-manage-summary dl{display:grid;gap:0;margin:0}
+.portfolio-manage-summary dl>div{display:grid;grid-template-columns:minmax(72px,.7fr) minmax(0,1.3fr);gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.portfolio-manage-summary dt{color:var(--muted);font-size:8.5px}.portfolio-manage-summary dd{margin:0;font-size:9px;font-weight:700;overflow-wrap:anywhere}
+.portfolio-manage-summary>p{margin:0;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);color:var(--muted);font-size:8.5px;line-height:1.45}
+.module-manage-section .portfolio-media figure>form{margin:6px 0 0}.module-manage-section .portfolio-media figure>form .fx-btn{width:100%;justify-content:center}
+@media(max-width:900px){
+  .portfolio-project-main-grid,.portfolio-manage-grid{grid-template-columns:1fr}
+  .portfolio-manage-summary{position:static;grid-row:1}
+}
+@media(max-width:700px){
+  .portfolio-project-content-head{display:grid}
+  .portfolio-project-content-head>span{justify-self:start}
+}
+@media(pointer:coarse){
+  .portfolio-project-page .fx-btn,.portfolio-project .fx-btn,.portfolio-manage-grid .fx-btn{min-height:44px}
+}
