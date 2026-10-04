@@ -43,6 +43,18 @@ final class AdminNavigationRegistryTest extends TestCase
         }
     }
 
+    public function testAcpManagerCanReachPublicNavigationManagement(): void
+    {
+        $actor = EntityId::fromString('user:admin-navigation');
+        $registry = AdminNavigationRegistry::withCoreDefaults(
+            $this->authorizer($actor, ['acp.manage']),
+        );
+
+        $item = $registry->accessible($actor, 'admin.navigation');
+        self::assertNotNull($item);
+        self::assertSame('/admin/navigation', $item->path);
+    }
+
     public function testAnyOfPermissionMakesSharedSurfaceVisible(): void
     {
         $actor = EntityId::fromString('user:admin-navigation');
