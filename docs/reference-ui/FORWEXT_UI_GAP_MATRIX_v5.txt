@@ -16,7 +16,8 @@ Design gap: shell density is now closer to the v5 reference set, but active-stat
 Function gap: the major shared-shell gaps are reduced; dedicated advanced account surfaces and later DM management states remain outside this phase.
 Permission gap: no client-side authorization issue observed; the lazy previews reuse the existing authorized inbox handlers and do not introduce a second data source.
 Implemented in Phase 1: the member account menu exposes existing profile, session, bookmark, relationship, notification-setting and presence routes; message/alert tool panels include compact shortcuts and lazy recent-item previews; direct-message compose has a stable anchor; the visible alert trigger receives realtime unread state; preview rendering uses same-origin fetches and textContent-only DOM insertion.
-Next: verify the shell preview slice in PHP 8.4/8.5, Chromium responsive/accessibility and package CI, then finish remaining active-state/account-group polish before Phase 2.
+Current final Phase 1 slice: account tools are grouped into compact Account/Communication/Community/Other sections; mobile account links retain >=44px touch targets; live browser acceptance verifies message/alert previews and exact active account navigation; representative browser coverage now includes an authenticated 390px mobile case.
+Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package CI for this final slice. When green, Phase 1 can be marked VERIFIED and execution moves to Phase 2 forum/discovery gaps.
 
 02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
