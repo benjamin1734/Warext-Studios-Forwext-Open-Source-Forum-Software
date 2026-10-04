@@ -24,31 +24,51 @@ final class FaqHtml
         ?string $language,
         bool $authenticated,
     ): string {
-        $tabs = '<nav class="tabs surface-tabs faq-tabs" aria-label="SSS dilleri"><a href="' . self::e($basePath->prepend('/faq')) . '">Tümü</a>';
+        $articleCount = 0;
         $languages = [];
         foreach ($categories as $category) {
             $languages[$category->language] = true;
+            $articleCount += count($articles[$category->key] ?? []);
         }
+
+        $tabs = '<nav class="faq-tabs" aria-label="SSS dilleri">';
+        $allClass = $language === null ? 'faq-tab is-active' : 'faq-tab';
+        $allCurrent = $language === null ? ' aria-current="page"' : '';
+        $tabs .= '<a class="' . $allClass . '" href="' . self::e($basePath->prepend('/faq')) . '"'
+            . $allCurrent . '>Tümü</a>';
         foreach (array_keys($languages) as $lang) {
-            $tabs .= '<a href="' . self::e($basePath->prepend('/faq?lang=' . rawurlencode($lang))) . '">'
-                . self::e($lang) . '</a>';
+            $active = $language === $lang;
+            $tabs .= '<a class="faq-tab' . ($active ? ' is-active' : '') . '" href="'
+                . self::e($basePath->prepend('/faq?lang=' . rawurlencode($lang))) . '"'
+                . ($active ? ' aria-current="page"' : '') . '>' . self::e($lang) . '</a>';
         }
         $tabs .= '</nav>';
 
         $body = '<section class="faq-index discovery-page"><header class="surface-head faq-head"><div>'
             . '<span class="forum-eyebrow">YARDIM</span><h1>Sık Sorulan Sorular</h1>'
-            . '<p>Kategoriye göre sık sorulan sorular ve çözümler.</p></div></header>' . $tabs;
+            . '<p>Kategoriye göre sık sorulan sorular ve çözümler.</p></div></header>'
+            . '<section class="surface-panel faq-overview"><div class="faq-overview-stats">'
+            . '<span><strong>' . count($categories) . '</strong> kategori</span>'
+            . '<span><strong>' . $articleCount . '</strong> makale</span>'
+            . ($language === null ? '' : '<span>Dil · <strong>' . self::e($language) . '</strong></span>')
+            . '</div>' . $tabs . '</section>';
+
         if ($categories === []) {
-            $body .= '<div class="empty">Bu görünürlük ve dil için SSS içeriği bulunmuyor.</div>';
+            $body .= '<section class="surface-panel"><div class="surface-empty">'
+                . '<strong>SSS içeriği bulunamadı.</strong>'
+                . '<span>Bu görünürlük veya dil için yayımlanmış içerik yok.</span></div></section>';
         }
+
         foreach ($categories as $category) {
-            $body .= '<section class="surface-panel faq-category"><h2>' . self::e($category->label) . '</h2>';
-            if ($category->description !== '') {
-                $body .= '<p class="muted">' . self::e($category->description) . '</p>';
-            }
             $items = $articles[$category->key] ?? [];
+            $body .= '<section class="surface-panel faq-category"><header class="faq-category-head"><div>'
+                . '<h2>' . self::e($category->label) . '</h2>'
+                . ($category->description === '' ? '' : '<p>' . self::e($category->description) . '</p>')
+                . '</div><span>' . count($items) . ' soru</span></header>';
+
             if ($items === []) {
-                $body .= '<p class="muted">Bu kategoride yayımlanmış soru bulunmuyor.</p>';
+                $body .= '<div class="surface-empty faq-category-empty"><strong>Henüz soru yok.</strong>'
+                    . '<span>Bu kategoride yayımlanmış bir SSS makalesi bulunmuyor.</span></div>';
             } else {
                 foreach ($items as $article) {
                     $href = $basePath->prepend(
@@ -58,7 +78,14 @@ final class FaqHtml
                         . '<span class="faq-row-language">' . self::e($article->language) . '</span>'
                         . '<strong>' . self::e($article->question) . '</strong>';
                     if ($article->tags !== []) {
-                        $body .= '<small>' . self::e(implode(' · ', $article->tags)) . '</small>';
+                        $body .= '<span class="faq-row-tags">';
+                        foreach (array_slice($article->tags, 0, 4) as $tag) {
+                            $body .= '<small>#' . self::e($tag) . '</small>';
+                        }
+                        if (count($article->tags) > 4) {
+                            $body .= '<small>+' . (count($article->tags) - 4) . '</small>';
+                        }
+                        $body .= '</span>';
                     }
                     $body .= '</div><span class="faq-row-arrow" aria-hidden="true">→</span></a>';
                 }
@@ -96,28 +123,36 @@ final class FaqHtml
             . '<span class="forum-eyebrow">' . self::e($view->category->label) . ' · ' . self::e($article->language)
             . '</span><h1>' . self::e($article->question) . '</h1></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/faq')) . '">SSS’ye dön</a></header>'
-            . '<section class="surface-panel faq-answer"><div class="about">'
+            . '<div class="faq-article-grid"><section class="surface-panel faq-answer"><div class="about">'
             . nl2br(self::e($article->answer), false) . '</div>';
+
         if ($article->tags !== []) {
-            $body .= '<p class="muted">Etiketler: ' . self::e(implode(', ', $article->tags)) . '</p>';
+            $body .= '<div class="faq-article-tags" aria-label="Etiketler">';
+            foreach ($article->tags as $tag) {
+                $body .= '<span>#' . self::e($tag) . '</span>';
+            }
+            $body .= '</div>';
         }
-        $body .= '<hr><p class="muted">' . self::e($analytics) . '</p>';
+        $body .= '</section><aside class="surface-panel faq-feedback-panel"><div class="faq-feedback-summary">'
+            . '<span>Bu içerik yardımcı oldu mu?</span><strong>' . self::e($analytics) . '</strong></div>';
+
         if ($voted) {
-            $body .= '<div class="notice success">Değerlendirmeniz kaydedildi.</div>';
+            $body .= '<div class="notification-settings-notice" role="status">Değerlendirmeniz kaydedildi.</div>';
         }
+
         if ($authenticated && $csrfToken !== null) {
             $action = $basePath->prepend(
                 '/faq/' . rawurlencode($article->language) . '/' . rawurlencode($article->slug),
             );
-            $body .= '<form method="post" action="' . self::e($action) . '" class="presence-settings">'
+            $body .= '<form method="post" action="' . self::e($action) . '" class="faq-feedback-actions">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
-                . '<span>Bu cevap faydalı mıydı?</span>'
-                . '<button type="submit" name="helpful" value="1">Evet</button>'
-                . '<button type="submit" name="helpful" value="0">Hayır</button></form>';
+                . '<button class="fx-btn fx-btn--primary" type="submit" name="helpful" value="1">Evet, faydalı</button>'
+                . '<button class="fx-btn" type="submit" name="helpful" value="0">Hayır</button></form>';
         } else {
-            $body .= '<p class="muted">Faydalı değerlendirmesi yapmak için oturum açın.</p>';
+            $body .= '<p class="muted faq-feedback-login">Değerlendirme yapmak için oturum açın.</p>';
         }
-        $body .= '</section></article>';
+
+        $body .= '</aside></div></article>';
 
         return ProfileHtml::page(
             $article->seoTitle ?? $article->question,
