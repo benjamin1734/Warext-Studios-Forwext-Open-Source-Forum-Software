@@ -843,6 +843,95 @@ a.forum-thread-author:hover{color:var(--text)}
   .thread-pagination-nav>.pagination-edge{width:100%}
 }
 
+/* thread-author-editor-polish-v1 */
+.thread-post.is-thread-starter{
+  border-color:color-mix(in srgb,var(--accent) 28%,var(--line));
+}
+.thread-post-author-badges{
+  display:flex;
+  justify-content:center;
+  gap:4px;
+  flex-wrap:wrap;
+  margin-top:5px;
+}
+.thread-author-badge{
+  min-height:20px;
+  display:inline-flex;
+  align-items:center;
+  padding:3px 6px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel);
+  color:var(--muted);
+  font-size:8.75px;
+  font-weight:760;
+  line-height:1.2;
+}
+.thread-author-badge--starter{
+  border-color:color-mix(in srgb,var(--accent) 36%,var(--line));
+  background:color-mix(in srgb,var(--accent) 9%,var(--panel));
+  color:var(--accent);
+}
+.thread-post-author-links{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:7px;
+}
+.thread-post-author-links a{
+  color:var(--muted);
+  text-decoration:none;
+  font-size:8.75px;
+  font-weight:650;
+}
+.thread-post-author-links a:hover,
+.thread-post-author-links a:focus-visible{
+  color:var(--accent);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.thread-state-strip{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:8px 0 10px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-left:3px solid color-mix(in srgb,var(--muted) 55%,var(--line));
+  border-radius:6px;
+  background:color-mix(in srgb,var(--panel2) 72%,var(--panel));
+  color:var(--muted);
+  font-size:10.5px;
+}
+.thread-state-strip strong{flex:0 0 auto;color:var(--text);font-size:10.5px}
+.thread-state-strip--locked{border-left-color:var(--accent)}
+.thread-quick-reply-capabilities{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin:-4px 0 9px;
+}
+.thread-quick-reply-capabilities span{
+  display:inline-flex;
+  align-items:center;
+  min-height:23px;
+  padding:3px 7px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel2);
+  color:var(--muted);
+  font-size:8.75px;
+  font-weight:650;
+}
+@media(max-width:700px){
+  .thread-post-author-badges,
+  .thread-post-author-links{justify-content:flex-start}
+  .thread-state-strip{display:grid;gap:3px}
+  .thread-quick-reply-capabilities{margin-top:-2px}
+}
+
 /* thread-social-controls-v2 */
 .thread-post-interactions details{position:relative}
 .thread-post-interactions summary{list-style:none;cursor:pointer}
