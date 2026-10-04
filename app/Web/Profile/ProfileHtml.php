@@ -14,7 +14,9 @@ use Forwext\Core\Ui\Appearance\Background\BackgroundRegistry;
 use Forwext\Core\Ui\Appearance\ComponentAppearanceRegistry;
 use Forwext\Core\Ui\Responsive\ResponsiveCssCompiler;
 use Forwext\Core\Ui\Responsive\ResponsiveRegistry;
+use Forwext\Core\Ui\Navigation\NavigationPlacement;
 use Forwext\Core\Ui\Navigation\NavigationRegistry;
+use Forwext\Core\Ui\Navigation\NavigationRuntime;
 use Forwext\Core\Ui\Widget\WidgetContext;
 use Forwext\Core\Ui\Widget\WidgetRegistry;
 use Forwext\Core\Ui\Widget\WidgetRenderService;
@@ -34,9 +36,10 @@ final class ProfileHtml
     ): string {
         $safeTitle = self::escape($title);
         $home = self::escape($basePath->prepend('/'));
-        $navigation ??= NavigationRegistry::withCoreDefaults();
+        $navigation ??= NavigationRuntime::registry();
+        $visibleItems = $navigation->visible($authenticated);
         $visibleNavigation = [];
-        foreach ($navigation->visible($authenticated) as $item) {
+        foreach ($visibleItems as $item) {
             $visibleNavigation[$item->key] = $item;
         }
 
@@ -60,42 +63,52 @@ final class ProfileHtml
             return $navItem($key, $item->label ?: $fallbackLabel, $item->path ?: $fallbackPath, $extra);
         };
 
-        $primaryNav = $navItem('home', 'Ana Sayfa', '/', ' data-nav-section-link="home"')
-            . $visibleNavItem('forums', 'Forumlar', '/forums', ' data-nav-section-link="forums"')
-            . ($authenticated
-                ? $navItem('activity', 'Neler yeni?', '/activity', ' data-nav-section-link="whatsnew"')
-                : '')
-            . $visibleNavItem('marketplace', 'Marketplace', '/marketplace', ' data-nav-section-link="marketplace"')
-            . $visibleNavItem('members', 'Üyeler', '/members', ' data-nav-section-link="members"')
-            . $visibleNavItem('portfolio', 'Portfolyo', '/portfolio', ' data-nav-section-link="portfolio"')
-            . $visibleNavItem('faq', 'SSS', '/faq', ' data-nav-section-link="faq"');
-
-        $knownKeys = [
-            'forums' => true,
-            'search' => true,
-            'members' => true,
-            'members.online' => true,
-            'portfolio' => true,
-            'giveaways' => true,
-            'marketplace' => true,
-            'faq' => true,
-            'account.own' => true,
-            'security.own' => true,
-            'conversations.own' => true,
-            'referrals.own' => true,
-            'subscriptions.own' => true,
-            'notifications.own' => true,
-            'bugs.mine' => true,
-            'forum.stats' => true,
+        $sectionByKey = [
+            'forums' => 'forums',
+            'marketplace' => 'marketplace',
+            'members' => 'members',
+            'portfolio' => 'portfolio',
+            'faq' => 'faq',
         ];
-        $extraNavigation = '';
-        foreach ($visibleNavigation as $item) {
-            if (!isset($knownKeys[$item->key])) {
-                $extraNavigation .= $navItem($item->key, $item->label, $item->path);
+        $primaryNav = $navItem('home', 'Ana Sayfa', '/', ' data-nav-section-link="home"');
+        $activityInserted = false;
+        foreach ($visibleItems as $item) {
+            if ($item->placement !== NavigationPlacement::Primary) {
+                continue;
+            }
+            $sectionKey = $sectionByKey[$item->key]
+                ?? 'custom-' . preg_replace('/[^a-z0-9_-]+/i', '-', $item->key);
+            $primaryNav .= $navItem(
+                $item->key,
+                $item->label,
+                $item->path,
+                ' data-nav-section-link="' . self::escape($sectionKey) . '"',
+            );
+            if ($authenticated && $item->key === 'forums') {
+                $primaryNav .= $navItem(
+                    'activity',
+                    'Neler yeni?',
+                    '/activity',
+                    ' data-nav-section-link="whatsnew"',
+                );
+                $activityInserted = true;
             }
         }
+        if ($authenticated && !$activityInserted) {
+            $primaryNav .= $navItem(
+                'activity',
+                'Neler yeni?',
+                '/activity',
+                ' data-nav-section-link="whatsnew"',
+            );
+        }
 
-        $moreNav = $visibleNavItem('giveaways', 'Çekilişler', '/giveaways') . $extraNavigation;
+        $moreNav = '';
+        foreach ($visibleItems as $item) {
+            if ($item->placement === NavigationPlacement::More) {
+                $moreNav .= $navItem($item->key, $item->label, $item->path);
+            }
+        }
         if ($moreNav !== '') {
             $primaryNav .= '<details class="nav-primary-menu" data-nav-section-link="more">'
                 . '<summary>Diğer <span aria-hidden="true">⌄</span></summary>'
