@@ -116,6 +116,7 @@ use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
 use Forwext\App\Web\Profile\MemberDirectoryHandler;
+use Forwext\App\Web\Profile\StaffDirectoryHandler;
 use Forwext\App\Web\Profile\ProfileActivityCsrfTokenHandler;
 use Forwext\App\Web\Profile\ProfileActivityDeleteHandler;
 use Forwext\App\Web\Profile\ProfileActivitySettingsHandler;
@@ -2588,6 +2589,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/members/online'),
             new OnlineUsersHandler($presence, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'members.staff',
+            [HttpMethod::Get],
+            new PathTemplate('/members/staff'),
+            new StaffDirectoryHandler(new ProfileDirectoryReader($database), $basePath),
         ));
         $routes->add(new Route(
             'forum.stats',
