@@ -144,10 +144,11 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             $select .= ',NULL AS last_vote_at,0 AS voted_today';
         } else {
             UserId::assert($voterUserId);
-            $parameters['voter_user_id'] = $voterUserId->value();
+            $parameters['voter_last'] = $voterUserId->value();
+            $parameters['voter_today'] = $voterUserId->value();
             $parameters['vote_day'] = $now->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
-            $select .= ',MAX(CASE WHEN voter_user_id=:voter_user_id THEN created_at_utc ELSE NULL END) AS last_vote_at'
-                . ',COALESCE(SUM(CASE WHEN voter_user_id=:voter_user_id AND vote_day=:vote_day THEN 1 ELSE 0 END),0) '
+            $select .= ',MAX(CASE WHEN voter_user_id=:voter_last THEN created_at_utc ELSE NULL END) AS last_vote_at'
+                . ',COALESCE(SUM(CASE WHEN voter_user_id=:voter_today AND vote_day=:vote_day THEN 1 ELSE 0 END),0) '
                 . 'AS voted_today';
         }
         $row = $this->database->fetchOne(new CompiledQuery(
