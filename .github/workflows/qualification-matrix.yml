@@ -155,7 +155,11 @@ jobs:
           FORWEXT_TEST_DB_USER: root
           FORWEXT_TEST_DB_PASSWORD: root
           FORWEXT_TEST_CANONICAL_URL: http://localhost:8124
-        run: php tools/quality/smoke-post-install-web.php
+        shell: bash
+        run: |
+          set -euo pipefail
+          php tools/quality/smoke-post-install-web.php
+          php tools/browser/seed-minecraft-fixtures.php
 
       - name: Start real Forwext runtime
         shell: bash
