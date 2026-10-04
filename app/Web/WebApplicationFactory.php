@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Account\AccountDashboardHandler;
+use Forwext\App\Web\Account\AccountPreferencesHandler;
 use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
@@ -1564,6 +1565,7 @@ final readonly class WebApplicationFactory
         $conversationCsrf = $this->conversationCsrfMiddleware($config);
         $profileActivityCsrf = $this->profileActivityCsrfMiddleware($config);
         $profileSettingsCsrf = $this->profileSettingsCsrfMiddleware($config);
+        $accountPreferencesCsrf = $this->accountPreferencesCsrfMiddleware($config);
         $notificationInboxCsrf = $this->notificationInboxCsrfMiddleware($config);
         $notificationSoundCsrf = $this->notificationSoundCsrfMiddleware($config);
         $spellcheckDictionaryCsrf = $this->spellcheckDictionaryCsrfMiddleware($config);
@@ -1664,6 +1666,19 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/account'),
             new AccountDashboardHandler($viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'account.preferences',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/account/preferences'),
+            new AccountPreferencesHandler(
+                $viewerResolver,
+                $profileService,
+                $presence,
+                $notificationSound,
+                $basePath,
+            ),
+            [$accountPreferencesCsrf],
         ));
         $routes->add(new Route(
             'account.sessions',
@@ -3268,6 +3283,11 @@ final readonly class WebApplicationFactory
     private function profileSettingsCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'profile-settings', 'forwext.csrf.profile-settings.v1');
+    }
+
+    private function accountPreferencesCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'account-preferences', 'forwext.csrf.account-preferences.v1');
     }
 
     private function notificationInboxCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
