@@ -69,6 +69,8 @@ final class ResponsiveWebSurfaceTest extends TestCase
         self::assertStringContainsString('position:fixed', $css);
         self::assertStringContainsString('z-index:2600', $css);
         self::assertStringContainsString('max-height:min(calc(100dvh - 66px),720px)', $css);
+        self::assertStringContainsString('body.forwext-nav-open #main-content', $css);
+        self::assertStringContainsString('pointer-events:none', $css);
         self::assertStringNotContainsString('transition:max-height 220ms ease', $css);
     }
 
