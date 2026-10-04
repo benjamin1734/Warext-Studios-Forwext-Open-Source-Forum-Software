@@ -21,7 +21,9 @@ Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package
 
 02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
-Gap: dedicated new-post/featured/profile-post/watch/no-reply discovery flows and denser side modules are not all first-class routes.
+Implemented in the first Phase 2 slice: the existing permission-aware ThreadDiscoveryService is exposed through /activity/threads and mode routes for new, unread, trending, featured and recent thread activity; navigation and forum-home entry points use these real routes; the compact list surface reuses forum search scopes and adds live-route browser acceptance.
+Gap: profile-post discovery, richer forum-index side modules and later watched/no-reply flows are not all first-class routes yet. Watched/no-reply remain Phase 3 work.
+Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package CI for the thread-discovery slice, then continue with profile-post discovery and forum-index density.
 
 03 THREAD LIST / SEARCH / WATCH FLOWS — IN PROGRESS
 Current: forum view and permission-aware search exist.
