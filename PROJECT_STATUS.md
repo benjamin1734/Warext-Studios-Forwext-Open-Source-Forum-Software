@@ -8,11 +8,25 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.16
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance release 1.0.16 complete
+CURRENT_STEP = reference-driven UI rebuild / R1 shell complete
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = keep roadmap scope closed unless new verified production defects or approved feature work are reported
+NEXT_STEP = R2 rebuild forum index, forum view and thread surfaces from the supplied XenForo reference set while preserving Forwext permissions, routes and domain behavior
 ```
+
+## Reference-driven UI rebuild — R1 shell complete — 2026-10-04
+
+- The user-supplied XenForo frontend/ACP screenshots are now the binding visual/interaction reference set for the new product-quality pass; Forwext keeps its own branding, routes, permissions and domain behavior.
+- Replaced the oversized/soft visual treatment with a denser community-product geometry: 1200px shell, tighter content width/gutters, smaller radii, restrained shadows and no decorative page glow.
+- Primary navigation now promotes core Portfolio and FAQ destinations instead of hiding them behind a generic overflow menu; each receives an explicit active secondary-navigation section.
+- Account navigation was rebuilt as a structured two-column popover with a compact heading/footer while keeping the existing permission-aware registry authoritative.
+- Direct-message and notification controls now use accessible tool popovers with honest navigation actions rather than fabricated live content.
+- Search now opens a real quick-search popover backed by the existing `/search?q=` contract, with direct access to the advanced search surface.
+- Desktop account/tool/search popovers use the existing browser top-layer enhancement with per-surface widths and viewport-safe positioning; mobile retains in-panel progressive enhancement.
+- Responsive navigation tests now lock the new Portfolio/FAQ section ownership, tool/search popovers and keyboard search-focus behavior.
+- Initial CI exposed two legacy-contract mismatches (the established `Güvenlik` label and responsive ownership marker); both were corrected immediately.
+- Validated implementation head `e55f012300375559aa6021f50d435dda93011bd4`: PHP 8.4/8.5 qualification, Chromium responsive + real-route accessibility, release contract, package build, security/advisory checks, MySQL 8.4, MariaDB 10.11 and shared-hosting performance all passed.
+- R2 proceeds to the forum index / forum view / thread surfaces rather than adding unrelated features.
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
 
