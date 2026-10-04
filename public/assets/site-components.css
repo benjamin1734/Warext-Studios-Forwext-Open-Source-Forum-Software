@@ -899,6 +899,7 @@ select:focus{
   .forum-home-layout{grid-template-columns:minmax(0,1fr) 285px}
 }
 
+/* navigation-responsive-ownership-v2 */
 @media(max-width:920px){
   .layout-shell{grid-template-columns:1fr}
   .layout-sidebar{order:2}
