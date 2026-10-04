@@ -133,7 +133,7 @@ final class NavigationRegistry
         $registry->register(new NavigationItem(
             'presence.own',
             'Çevrimiçi görünürlük',
-            '/account/presence',
+            '/account/preferences#presence',
             269,
             NavigationAudience::Member,
             placement: NavigationPlacement::Utility,

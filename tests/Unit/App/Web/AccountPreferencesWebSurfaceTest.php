@@ -26,6 +26,7 @@ final class AccountPreferencesWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'account.preferences'", $factory);
         self::assertStringContainsString("new PathTemplate('/account/preferences')", $factory);
+        self::assertStringContainsString("new PathTemplate('/account/presence')", $factory);
         self::assertStringContainsString('new AccountPreferencesHandler(', $factory);
         self::assertStringContainsString('$accountPreferencesCsrf', $factory);
         self::assertStringContainsString("'account-preferences'", $factory);
@@ -82,6 +83,7 @@ final class AccountPreferencesWebSurfaceTest extends TestCase
         self::assertStringContainsString('/community/account/relationships', $html);
         self::assertStringContainsString('name="action" value="save_presence"', $html);
         self::assertStringContainsString('name="presence_visibility"', $html);
+        self::assertStringContainsString('id="presence"', $html);
         self::assertStringContainsString('value="members" selected', $html);
         self::assertStringContainsString('72%', $html);
         self::assertStringContainsString('soft', $html);

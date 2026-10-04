@@ -57,7 +57,7 @@ final class AccountPreferencesHtml
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/profile')) . '">Düzenle</a></header>'
             . '<div class="account-preference-summary">' . $privacyRows . '</div></section>';
 
-        $content .= '<section class="surface-panel account-preference-card"><header><div><h2>Çevrimiçi görünürlük</h2>'
+        $content .= '<section class="surface-panel account-preference-card" id="presence"><header><div><h2>Çevrimiçi görünürlük</h2>'
             . '<p>Aktif olduğunda kimlerin seni çevrimiçi görebileceğini belirle.</p></div></header>'
             . '<form class="account-presence-preference-form" method="post" action="'
             . self::e($basePath->prepend('/account/preferences')) . '">'
