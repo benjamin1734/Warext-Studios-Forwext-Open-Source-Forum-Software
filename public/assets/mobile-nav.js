@@ -27,6 +27,119 @@
     typeof HTMLElement.prototype.showPopover === "function"
     && typeof HTMLElement.prototype.hidePopover === "function";
 
+  const previewStatus = (label) => {
+    const status = document.createElement("span");
+    status.className = "nav-preview-status";
+    status.textContent = label;
+    return status;
+  };
+
+  const safePreviewHref = (value) => {
+    if (typeof value !== "string" || value === "") return null;
+    try {
+      const url = new URL(value, window.location.href);
+      return url.origin === window.location.origin ? url.href : null;
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const previewRow = (item, kind) => {
+    if (!item || typeof item !== "object") return null;
+    const href = safePreviewHref(item.href);
+    if (!href) return null;
+
+    const link = document.createElement("a");
+    link.className = "nav-preview-row";
+    link.href = href;
+
+    const copy = document.createElement("span");
+    copy.className = "nav-preview-copy";
+    const title = document.createElement("strong");
+    title.textContent = kind === "messages"
+      ? String(item.username ?? "Üye")
+      : String(item.title ?? "Bildirim");
+    const preview = document.createElement("span");
+    preview.className = "nav-preview-text";
+    preview.textContent = String(item.preview ?? "");
+    copy.append(title, preview);
+
+    const meta = document.createElement("span");
+    meta.className = "nav-preview-meta";
+    const time = document.createElement("time");
+    time.textContent = String(item.updated_label ?? "");
+    meta.appendChild(time);
+
+    const unread = kind === "messages"
+      ? Number(item.unread_count ?? 0)
+      : item.unread === true ? 1 : 0;
+    if (Number.isFinite(unread) && unread > 0) {
+      const badge = document.createElement("span");
+      badge.className = "nav-preview-badge";
+      badge.textContent = kind === "messages" && unread > 1 ? String(Math.min(99, unread)) : "Yeni";
+      meta.appendChild(badge);
+      link.classList.add("is-unread");
+    }
+
+    link.append(copy, meta);
+    return link;
+  };
+
+  const loadToolPreview = async (details) => {
+    if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+    const host = details.querySelector("[data-nav-preview][data-preview-url]");
+    if (!(host instanceof HTMLElement) || host.dataset.loaded === "1" || host.dataset.loading === "1") return;
+
+    const endpoint = host.dataset.previewUrl;
+    const kind = host.dataset.navPreview;
+    if (!endpoint || (kind !== "messages" && kind !== "alerts")) return;
+
+    let url;
+    try {
+      url = new URL(endpoint, window.location.href);
+    } catch (_error) {
+      return;
+    }
+    if (url.origin !== window.location.origin) return;
+
+    host.hidden = false;
+    host.dataset.loading = "1";
+    host.replaceChildren(previewStatus("Yükleniyor…"));
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("tool_preview_fetch_failed");
+      const payload = await response.json();
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      const rows = items.map((item) => previewRow(item, kind)).filter(Boolean);
+
+      host.replaceChildren(...(rows.length > 0 ? rows : [previewStatus(
+        kind === "messages" ? "Henüz konuşma yok." : "Yeni bildirim yok.",
+      )]));
+      host.dataset.loaded = "1";
+
+      if (kind === "alerts" && Number.isFinite(Number(payload?.unread_count))) {
+        window.ForwextNotificationRealtime?.updateUnreadBadge?.(Number(payload.unread_count));
+      }
+    } catch (_error) {
+      host.replaceChildren(previewStatus("Önizleme şu anda kullanılamıyor."));
+    } finally {
+      delete host.dataset.loading;
+    }
+  };
+
+  for (const details of header.querySelectorAll(".nav-tool-menu")) {
+    if (!(details instanceof HTMLDetailsElement)) continue;
+    details.addEventListener("toggle", () => {
+      if (details.open) void loadToolPreview(details);
+    });
+  }
+
   const positionTopLayerMenu = (details, popover) => {
     const summary = details.querySelector(":scope > summary");
     if (!(summary instanceof HTMLElement) || !(popover instanceof HTMLElement)) return;

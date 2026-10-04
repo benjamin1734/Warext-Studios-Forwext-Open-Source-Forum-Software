@@ -186,14 +186,16 @@ final class ProfileHtml
                 . '<div class="nav-tool-actions">'
                 . '<a data-nav-key="conversations.own" href="' . $navHref('/account/conversations') . '"><strong>Mesaj kutusu</strong><span>Tüm konuşmalar</span></a>'
                 . '<a href="' . $navHref('/account/conversations#new-conversation') . '"><strong>Yeni konuşma</strong><span>Bir üyeye mesaj gönder</span></a>'
-                . '</div><a class="nav-popover-cta" href="' . $navHref('/account/conversations') . '">Tüm mesajları göster</a>'
+                . '</div><div class="nav-preview-list" data-nav-preview="messages" data-preview-url="'
+                . $navHref('/account/conversations?preview=1') . '" hidden></div>'
+                . '<a class="nav-popover-cta" href="' . $navHref('/account/conversations') . '">Tüm mesajları göster</a>'
                 . '</div></details>';
         }
 
         $notificationNav = '';
         if (isset($visibleNavigation['notifications.own'])) {
             $notificationNav = '<details class="nav-tool-menu nav-tool-menu--alerts">'
-                . '<summary class="nav-icon-link nav-icon-link--alerts" aria-label="Bildirimler" title="Bildirimler">'
+                . '<summary class="nav-icon-link nav-icon-link--alerts" data-notification-nav-trigger aria-label="Bildirimler" title="Bildirimler">'
                 . '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.6 2.6 0 0 0 2.45-1.75h-4.9A2.6 2.6 0 0 0 12 22Zm7-5.25-1.4-1.65V10a5.62 5.62 0 0 0-4.35-5.48V3.7a1.25 1.25 0 1 0-2.5 0v.82A5.62 5.62 0 0 0 6.4 10v5.1L5 16.75V18h14v-1.25Z"/></svg>'
                 . '<span class="sr-only">Bildirimler</span></summary>'
                 . '<div class="nav-tool-popover" aria-label="Bildirim seçenekleri">'
@@ -201,7 +203,9 @@ final class ProfileHtml
                 . '<div class="nav-tool-actions">'
                 . '<a data-nav-key="notifications.own" href="' . $navHref('/account/notifications') . '"><strong>Bildirim merkezi</strong><span>Tüm hareketler</span></a>'
                 . '<a href="' . $navHref('/account/notification-settings') . '"><strong>Bildirim ayarları</strong><span>Ses ve tercihleri yönet</span></a>'
-                . '</div><a class="nav-popover-cta" href="' . $navHref('/account/notifications') . '">Tüm bildirimleri göster</a>'
+                . '</div><div class="nav-preview-list" data-nav-preview="alerts" data-preview-url="'
+                . $navHref('/account/notifications?preview=1') . '" hidden></div>'
+                . '<a class="nav-popover-cta" href="' . $navHref('/account/notifications') . '">Tüm bildirimleri göster</a>'
                 . '</div></details>';
         }
 

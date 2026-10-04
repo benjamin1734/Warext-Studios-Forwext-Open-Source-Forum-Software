@@ -25,23 +25,24 @@
   const safeInt = (value, fallback = 0) => Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : fallback;
 
   const updateUnreadBadge = (value) => {
-    const link = document.querySelector('[data-nav-key="notifications.own"]');
-    if (!(link instanceof HTMLElement)) return;
+    const trigger = document.querySelector('[data-notification-nav-trigger]')
+      ?? document.querySelector('[data-nav-key="notifications.own"]');
+    if (!(trigger instanceof HTMLElement)) return;
     const count = safeInt(value, 0);
-    let badge = link.querySelector('.nav-notification-badge');
+    let badge = trigger.querySelector('.nav-notification-badge');
     if (count < 1) {
       badge?.remove();
-      link.removeAttribute('aria-label');
+      trigger.setAttribute('aria-label', 'Bildirimler');
       return;
     }
     if (!(badge instanceof HTMLElement)) {
       badge = document.createElement('span');
       badge.className = 'nav-notification-badge';
       badge.setAttribute('aria-hidden', 'true');
-      link.appendChild(badge);
+      trigger.appendChild(badge);
     }
     badge.textContent = count > 99 ? '99+' : String(count);
-    link.setAttribute('aria-label', `Bildirimler, ${count} okunmamış`);
+    trigger.setAttribute('aria-label', `Bildirimler, ${count} okunmamış`);
   };
 
   const ensureLiveRegion = () => {
@@ -230,6 +231,10 @@
     try { state.socket?.close(); } catch (_) {}
   });
 
-  window.ForwextNotificationRealtime = Object.freeze({ bootstrap, fetchNow: () => fetchBatch(false) });
+  window.ForwextNotificationRealtime = Object.freeze({
+    bootstrap,
+    fetchNow: () => fetchBatch(false),
+    updateUnreadBadge,
+  });
   bootstrap();
 })();

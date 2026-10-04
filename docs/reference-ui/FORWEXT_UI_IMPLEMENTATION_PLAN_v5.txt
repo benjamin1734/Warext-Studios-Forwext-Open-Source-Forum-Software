@@ -11,11 +11,11 @@ PHASE 0 — COMPLETE REFERENCE INGESTION — VERIFIED
 - Persistent index, page map, gap matrix and this implementation plan created.
 
 PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — IN PROGRESS
-1. Keep Forwext-only naming in repository comments and documentation.
-2. Expand account navigation to implemented account/profile/session/bookmark/relationship/notification/presence surfaces without inventing dead routes.
-3. Make tool popovers denser and more usable with explicit headings, footer actions, keyboard-safe structure and mobile behavior.
-4. Add repository-backed DM/alert preview view models only after a single source of truth is identified; no duplicated inbox logic in templates.
-5. Extend shell browser regression for new account/tool entries and active-state behavior.
+1. [DONE] Keep Forwext-only naming in repository comments and documentation.
+2. [DONE] Expand account navigation to implemented account/profile/session/bookmark/relationship/notification/presence surfaces without inventing dead routes.
+3. [DONE] Make tool popovers denser and more usable with explicit headings, footer actions, keyboard-safe structure and mobile behavior.
+4. [DONE] Reuse the authorized DM/alert inbox handlers for lazy recent-item previews; no duplicated inbox source of truth.
+5. [IN PROGRESS] Extend shell regression and finish active-state/account-group polish across desktop and mobile.
 
 PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW
 - Compact category/node rows, counts, last-post metadata, side widgets.

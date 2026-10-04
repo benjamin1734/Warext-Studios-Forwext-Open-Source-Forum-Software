@@ -59,6 +59,10 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
                 return $this->mutate($request, $actor, $service, is_string($conversationValue) ? $conversationValue : null);
             }
 
+            if ($conversationValue === null && self::previewRequested($request)) {
+                return $this->preview($service);
+            }
+
             $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (!is_string($csrf) || $csrf === '') {
                 return Response::text('Internal Server Error', 500)->withHeader('Cache-Control', 'no-store');
@@ -101,6 +105,26 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
         } catch (InvalidArgumentException|ValueError) {
             return Response::text('Bad Request', 400)->withHeader('Cache-Control', 'no-store');
         }
+    }
+
+    private function preview(DirectConversationService $service): Response
+    {
+        $items = [];
+        foreach ($service->inbox(4, 0) as $summary) {
+            $items[] = [
+                'href' => $this->basePath->prepend(
+                    '/account/conversations/' . rawurlencode($summary->conversationId->value()),
+                ),
+                'username' => $summary->otherUsername,
+                'preview' => self::compactText($summary->lastMessageBody),
+                'updated_label' => $summary->updatedAt->setTimezone($this->timezone)->format('d.m.Y H:i'),
+                'unread_count' => $summary->unreadCount,
+            ];
+        }
+
+        return Response::json(['items' => $items])
+            ->withHeader('Cache-Control', 'private, no-store')
+            ->withHeader('X-Robots-Tag', 'noindex,nofollow');
     }
 
     private function mutate(
@@ -146,6 +170,21 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
                 $this->basePath->prepend('/account/conversations/' . rawurlencode($conversationId->value())),
             )
             ->withHeader('Cache-Control', 'no-store');
+    }
+
+    private static function previewRequested(Request $request): bool
+    {
+        return ($request->query()['preview'] ?? null) === '1';
+    }
+
+    private static function compactText(string $value): string
+    {
+        $value = trim((string) preg_replace('/\\s+/u', ' ', $value));
+        if (preg_match('/^(.{0,160})/us', $value, $match) !== 1) {
+            return $value;
+        }
+        $preview = $match[1];
+        return $preview === $value ? $preview : $preview . '…';
     }
 
     private static function page(Request $request): int

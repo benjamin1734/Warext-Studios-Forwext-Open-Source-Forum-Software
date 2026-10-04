@@ -12,11 +12,11 @@ STATUS LEGEND
 
 01 GLOBAL SHELL / NAV / SEARCH / ACCOUNT / ALERTS / DM — IN PROGRESS
 Backend/current: shared ProfileHtml shell, managed navigation registry, search, direct conversations, notification inbox/realtime and account routes exist. Keyboard Escape, mobile focus trapping and active-section logic exist.
-Design gap: shell is still less information-dense than the v5 reference set; account/tool popovers are mostly jump-off panels rather than compact summaries; account sub-navigation exposes only a subset of implemented account surfaces.
-Function gap: message popup has no recent conversation preview/unread count; alert popup has no recent alert preview/unread count; shell does not expose all implemented account tools.
-Permission gap: no client-side authorization issue observed; server-side route handlers remain authoritative.
-Implemented in the first Phase 1 slice: the shared member account menu now exposes existing profile, session, bookmark, relationship, notification-setting and presence routes; message/alert tool panels gained compact shortcut structure; direct-message compose has a stable anchor; shell tests cover the added member-only links.
-Next: add repository-backed recent-message and recent-alert preview view models without duplicating inbox logic or authorization.
+Design gap: shell density is now closer to the v5 reference set, but active-state polish, account grouping and final responsive comparison remain.
+Function gap: the major shared-shell gaps are reduced; dedicated advanced account surfaces and later DM management states remain outside this phase.
+Permission gap: no client-side authorization issue observed; the lazy previews reuse the existing authorized inbox handlers and do not introduce a second data source.
+Implemented in Phase 1: the member account menu exposes existing profile, session, bookmark, relationship, notification-setting and presence routes; message/alert tool panels include compact shortcuts and lazy recent-item previews; direct-message compose has a stable anchor; the visible alert trigger receives realtime unread state; preview rendering uses same-origin fetches and textContent-only DOM insertion.
+Next: verify the shell preview slice in PHP 8.4/8.5, Chromium responsive/accessibility and package CI, then finish remaining active-state/account-group polish before Phase 2.
 
 02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.

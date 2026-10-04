@@ -42,6 +42,10 @@ final readonly class NotificationInboxHandler implements RequestHandlerInterface
                 return $this->mutate($actor, $request);
             }
 
+            if (self::previewRequested($request)) {
+                return $this->preview($actor);
+            }
+
             $page = $this->page($request->query()['page'] ?? null);
             $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (!is_string($csrf) || $csrf === '') {
@@ -75,6 +79,28 @@ final readonly class NotificationInboxHandler implements RequestHandlerInterface
         }
     }
 
+    private function preview(EntityId $actor): Response
+    {
+        $items = [];
+        foreach ($this->inbox->inbox($actor, 4, 0) as $notification) {
+            $items[] = [
+                'title' => $notification->title,
+                'preview' => self::compactText($notification->body),
+                'category' => $notification->categoryKey,
+                'href' => $this->basePath->prepend('/account/notifications'),
+                'updated_label' => $notification->updatedAt->setTimezone($this->timezone)->format('d.m.Y H:i'),
+                'unread' => $notification->readAt === null,
+                'occurrences' => $notification->occurrences,
+            ];
+        }
+
+        return Response::json([
+            'unread_count' => $this->inbox->unreadCount($actor),
+            'items' => $items,
+        ])->withHeader('Cache-Control', 'private, no-store')
+            ->withHeader('X-Robots-Tag', 'noindex,nofollow');
+    }
+
     private function mutate(EntityId $actor, Request $request): Response
     {
         $body = $request->parsedBody();
@@ -93,6 +119,21 @@ final readonly class NotificationInboxHandler implements RequestHandlerInterface
             $this->basePath->prepend('/account/notifications?page=' . $page),
             303,
         )->withHeader('Cache-Control', 'no-store');
+    }
+
+    private static function previewRequested(Request $request): bool
+    {
+        return ($request->query()['preview'] ?? null) === '1';
+    }
+
+    private static function compactText(string $value): string
+    {
+        $value = trim((string) preg_replace('/\\s+/u', ' ', $value));
+        if (preg_match('/^(.{0,160})/us', $value, $match) !== 1) {
+            return $value;
+        }
+        $preview = $match[1];
+        return $preview === $value ? $preview : $preview . '…';
     }
 
     private function page(mixed $raw): int

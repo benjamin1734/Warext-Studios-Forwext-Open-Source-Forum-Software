@@ -67,7 +67,32 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         self::assertStringContainsString('href="/community/account/notification-settings"', $member);
         self::assertStringContainsString('href="/community/account/presence"', $member);
         self::assertStringContainsString('/community/account/conversations#new-conversation', $member);
+        self::assertStringContainsString('data-nav-preview="messages"', $member);
+        self::assertStringContainsString('data-preview-url="/community/account/conversations?preview=1"', $member);
+        self::assertStringContainsString('data-nav-preview="alerts"', $member);
+        self::assertStringContainsString('data-preview-url="/community/account/notifications?preview=1"', $member);
+        self::assertStringContainsString('data-notification-nav-trigger', $member);
         self::assertStringNotContainsString('href="/community/account/profile"', $guest);
+        self::assertStringNotContainsString('data-nav-preview="messages"', $guest);
+    }
+
+    public function testMemberToolPreviewsReuseAuthorizedInboxEndpointsAndSafeDomRendering(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $conversation = (string) file_get_contents($root . '/app/Web/Conversation/DirectConversationHandler.php');
+        $notifications = (string) file_get_contents($root . '/app/Web/Notification/NotificationInboxHandler.php');
+        $navigation = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
+        $realtime = (string) file_get_contents($root . '/public/assets/notification-realtime.js');
+
+        self::assertStringContainsString("previewRequested", $conversation);
+        self::assertStringContainsString("Response::json(['items' => \$items])", $conversation);
+        self::assertStringContainsString("previewRequested", $notifications);
+        self::assertStringContainsString("'unread_count' => \$this->inbox->unreadCount(\$actor)", $notifications);
+        self::assertStringContainsString('credentials: "same-origin"', $navigation);
+        self::assertStringContainsString('url.origin !== window.location.origin', $navigation);
+        self::assertStringContainsString('title.textContent =', $navigation);
+        self::assertStringNotContainsString('.innerHTML =', $navigation);
+        self::assertStringContainsString('[data-notification-nav-trigger]', $realtime);
     }
 
     public function testNavigationManagerSurfaceIsServerRenderedAndHasNoInlineScript(): void
