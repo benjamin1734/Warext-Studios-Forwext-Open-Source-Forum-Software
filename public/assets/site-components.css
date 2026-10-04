@@ -2210,28 +2210,29 @@ body.forwext-nav-open{overflow:hidden}
     left:0;
     right:0;
     top:calc(100% + 4px);
-    max-height:0;
+    max-height:min(76vh,720px);
     display:grid;
     gap:7px;
-    padding:0;
-    overflow:hidden;
-    border:0 solid var(--line);
+    padding:7px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+    border:1px solid var(--line);
     border-radius:5px;
     background:var(--panel);
     opacity:0;
+    visibility:hidden;
     transform:translateY(-4px);
     pointer-events:none;
-    transition:max-height 220ms ease,opacity var(--fx-transition),transform var(--fx-transition),padding var(--fx-transition),border-width var(--fx-transition);
+    box-shadow:0 16px 38px rgba(0,0,0,.32);
+    transition:opacity var(--fx-transition),transform var(--fx-transition),visibility 0s linear var(--fx-transition);
   }
   .nav-shell[data-mobile-open="1"]{
-    max-height:min(76vh,720px);
-    padding:7px;
-    overflow-y:auto;
-    border-width:1px;
     opacity:1;
+    visibility:visible;
     transform:translateY(0);
     pointer-events:auto;
-    box-shadow:0 16px 38px rgba(0,0,0,.32);
+    transition:opacity var(--fx-transition),transform var(--fx-transition),visibility 0s linear 0s;
   }
   .nav-primary{display:grid;overflow:visible}
   .nav-primary>a,.nav-primary-menu>summary{min-height:42px;padding:8px 10px;border-radius:3px}
