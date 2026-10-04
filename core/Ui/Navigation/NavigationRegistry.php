@@ -11,30 +11,56 @@ final class NavigationRegistry
     /** @var array<string, NavigationItem> */
     private array $items = [];
 
-    /** @param iterable<NavigationContributor> $contributors */
-    public static function withCoreDefaults(iterable $contributors = []): self
+    /**
+     * @param iterable<NavigationContributor> $contributors
+     * @param array<string,mixed> $managed
+     */
+    public static function withCoreDefaults(iterable $contributors = [], array $managed = []): self
     {
         $registry = new self();
-        $registry->register(new NavigationItem('forums', 'Forumlar', '/forums', 50));
-        $registry->register(new NavigationItem('search', 'Ara', '/search', 100));
-        $registry->register(new NavigationItem('members', 'Üyeler', '/members', 200));
-        $registry->register(new NavigationItem('members.online', 'Çevrimiçi', '/members/online', 210));
-        $registry->register(new NavigationItem('portfolio', 'Portfolyo', '/portfolio', 230));
+        $registry->register(new NavigationItem(
+            'forums', 'Forumlar', '/forums', 50,
+            placement: NavigationPlacement::Primary,
+        ));
+        $registry->register(new NavigationItem(
+            'search', 'Ara', '/search', 100,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'members', 'Üyeler', '/members', 200,
+            placement: NavigationPlacement::Primary,
+        ));
+        $registry->register(new NavigationItem(
+            'members.online', 'Çevrimiçi', '/members/online', 210,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'portfolio', 'Portfolyo', '/portfolio', 230,
+            placement: NavigationPlacement::Primary,
+        ));
         $registry->register(new NavigationItem(
             'giveaways',
             'Çekilişler',
             '/giveaways',
             240,
             NavigationAudience::Member,
+            placement: NavigationPlacement::More,
         ));
-        $registry->register(new NavigationItem('marketplace', 'Marketplace', '/marketplace', 245));
-        $registry->register(new NavigationItem('faq', 'SSS', '/faq', 250));
+        $registry->register(new NavigationItem(
+            'marketplace', 'Marketplace', '/marketplace', 245,
+            placement: NavigationPlacement::Primary,
+        ));
+        $registry->register(new NavigationItem(
+            'faq', 'SSS', '/faq', 250,
+            placement: NavigationPlacement::Primary,
+        ));
         $registry->register(new NavigationItem(
             'account.own',
             'Hesabım',
             '/account',
             255,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'security.own',
@@ -42,6 +68,7 @@ final class NavigationRegistry
             '/account/security',
             256,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'conversations.own',
@@ -49,6 +76,7 @@ final class NavigationRegistry
             '/account/conversations',
             257,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'referrals.own',
@@ -56,6 +84,7 @@ final class NavigationRegistry
             '/account/referrals',
             260,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'subscriptions.own',
@@ -63,6 +92,7 @@ final class NavigationRegistry
             '/account/upgrades',
             265,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'notifications.own',
@@ -70,6 +100,7 @@ final class NavigationRegistry
             '/account/notifications',
             268,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'bugs.mine',
@@ -77,6 +108,7 @@ final class NavigationRegistry
             '/bugs',
             270,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
             'forum.stats',
@@ -84,11 +116,14 @@ final class NavigationRegistry
             '/stats',
             300,
             NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
         ));
 
         foreach ($contributors as $contributor) {
             $contributor->registerNavigation($registry);
         }
+
+        $registry->applyManagedConfiguration($managed);
 
         return $registry;
     }
@@ -118,6 +153,15 @@ final class NavigationRegistry
     }
 
     /** @return list<NavigationItem> */
+    public function all(): array
+    {
+        $items = array_values($this->items);
+        self::sort($items);
+
+        return $items;
+    }
+
+    /** @return list<NavigationItem> */
     public function visible(bool $authenticated): array
     {
         $items = array_values(array_filter(
@@ -125,12 +169,82 @@ final class NavigationRegistry
             static fn (NavigationItem $item): bool => $authenticated
                 || $item->audience === NavigationAudience::Public,
         ));
+        self::sort($items);
+
+        return $items;
+    }
+
+    /** @param array<string,mixed> $managed */
+    private function applyManagedConfiguration(array $managed): void
+    {
+        foreach ($managed as $key => $definition) {
+            if (!is_string($key) || !is_array($definition)) {
+                continue;
+            }
+
+            $existing = $this->items[$key] ?? null;
+            if ($existing === null && !str_starts_with($key, 'custom.')) {
+                continue;
+            }
+
+            $enabled = $definition['enabled'] ?? true;
+            if (!is_bool($enabled)) {
+                continue;
+            }
+            if (!$enabled) {
+                if ($existing !== null) {
+                    unset($this->items[$key]);
+                }
+                continue;
+            }
+
+            $label = $definition['label'] ?? $existing?->label;
+            $path = $definition['path'] ?? $existing?->path;
+            $order = $definition['order'] ?? $existing?->order ?? 500;
+            $audienceRaw = $definition['audience'] ?? $existing?->audience->value ?? NavigationAudience::Public->value;
+            $placementRaw = $definition['placement'] ?? $existing?->placement->value ?? NavigationPlacement::More->value;
+
+            if (
+                !is_string($label)
+                || !is_string($path)
+                || !is_int($order)
+                || !is_string($audienceRaw)
+                || !is_string($placementRaw)
+            ) {
+                continue;
+            }
+
+            $audience = NavigationAudience::tryFrom($audienceRaw);
+            $placement = NavigationPlacement::tryFrom($placementRaw);
+            if ($audience === null || $placement === null) {
+                continue;
+            }
+
+            try {
+                $this->items[$key] = new NavigationItem(
+                    $key,
+                    $label,
+                    $path,
+                    $order,
+                    $audience,
+                    $existing?->moduleKey,
+                    $existing?->addonKey,
+                    $placement,
+                );
+            } catch (InvalidArgumentException) {
+                // Corrupt generated navigation configuration must not take down the public site.
+                continue;
+            }
+        }
+    }
+
+    /** @param list<NavigationItem> $items */
+    private static function sort(array &$items): void
+    {
         usort(
             $items,
             static fn (NavigationItem $left, NavigationItem $right): int =>
                 [$left->order, $left->label, $left->key] <=> [$right->order, $right->label, $right->key],
         );
-
-        return $items;
     }
 }
