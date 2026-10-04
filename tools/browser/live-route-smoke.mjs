@@ -213,6 +213,20 @@ try {
   }
   await assertHealthyDocument("account security");
 
+  response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
+  }
+  await page.getByRole("heading", { name: "Yeni profil gönderileri", exact: true }).waitFor();
+  const profileDiscoveryState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    panelCount: document.querySelectorAll(".activity-feed-panel").length,
+  }));
+  if (profileDiscoveryState.section !== "whatsnew" || profileDiscoveryState.panelCount !== 1) {
+    fail(`profile post discovery: active/layout contract failed ${JSON.stringify(profileDiscoveryState)}`);
+  }
+  await assertHealthyDocument("profile post discovery");
+
   response = await page.goto(baseUrl + "/activity/threads/featured", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`thread discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
