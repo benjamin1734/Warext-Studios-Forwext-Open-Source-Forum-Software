@@ -2455,3 +2455,31 @@ body.forwext-nav-open{overflow:hidden}
   .nav-tool-label{display:none}
 }
 
+
+
+/* member-directory-community-actions-v1 */
+.member-directory-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.member-staff-card{
+  border-color:color-mix(in srgb,var(--accent) 24%,var(--line));
+}
+.member-staff-card .member-directory-copy small{
+  color:color-mix(in srgb,var(--accent) 72%,var(--muted));
+}
+@media(max-width:520px){
+  .member-directory-head-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .member-directory-head-actions .fx-btn{
+    width:100%;
+    justify-content:center;
+    text-align:center;
+  }
+}

@@ -39,6 +39,8 @@ final class CommunityRouteWiringTest extends TestCase
 
         self::assertStringContainsString("new PathTemplate('/members/online')", $factory);
         self::assertStringContainsString('new OnlineUsersHandler(', $factory);
+        self::assertStringContainsString("new PathTemplate('/members/staff')", $factory);
+        self::assertStringContainsString('new StaffDirectoryHandler(', $factory);
         self::assertStringContainsString("new PathTemplate('/stats')", $factory);
         self::assertStringContainsString('new ForumStatsHandler(', $factory);
         self::assertStringContainsString("new PathTemplate('/account/presence/heartbeat')", $factory);

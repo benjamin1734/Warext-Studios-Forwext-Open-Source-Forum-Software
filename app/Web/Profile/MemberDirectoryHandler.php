@@ -59,8 +59,10 @@ final readonly class MemberDirectoryHandler implements RequestHandlerInterface
         $body = '<section class="member-directory-page discovery-page"><header class="surface-head member-directory-head">'
             . '<div><h1>Üyeler</h1>'
             . '<p>Herkese açık aktif profiller · ' . number_format($total, 0, ',', '.') . ' üye</p></div>'
+            . '<div class="member-directory-head-actions"><a class="fx-btn" href="'
+            . ProfileHtml::escape($this->basePath->prepend('/members/staff')) . '">Yetkili ekip</a>'
             . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members/online'))
-            . '">Çevrimiçi üyeler</a></header>'
+            . '">Çevrimiçi üyeler</a></div></header>'
             . '<section class="surface-panel member-directory-filter"><form class="member-directory-form" method="get" action="' . $action . '">'
             . '<label><span>Kullanıcı ara</span><input name="q" maxlength="64" value="'
             . ProfileHtml::escape($query) . '" placeholder="Kullanıcı adı"></label>'

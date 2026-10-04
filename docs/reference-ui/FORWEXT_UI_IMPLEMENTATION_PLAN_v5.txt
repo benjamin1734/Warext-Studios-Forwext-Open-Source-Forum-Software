@@ -32,19 +32,22 @@ PHASE 3 — THREAD LIST / SEARCH / WATCH — VERIFIED
 - [DONE] Cover watched routes, watch mutations, discovery filters and member content routes with PHP/source contracts plus live Chromium acceptance; full Phase 3 CI passed on d885af3f.
 - [DONE] Phase 3 full CI gate passed; execution moves to Phase 4 thread-view/editor density.
 
-PHASE 4 — THREAD VIEW / EDITOR — IN PROGRESS
+PHASE 4 — THREAD VIEW / EDITOR — VERIFIED
 - [DONE] Preserve existing author/content separation, reactions, bookmarks, attachments, editor preview, quote, mention, spellcheck and attachment staging.
 - [DONE] Group thread header actions and compact post footer/social controls without replacing existing backend services.
 - [DONE] Upgrade long-thread navigation with previous/next, first/last context and bounded ellipsis windows.
 - [DONE] Exercise the header/footer/pagination hooks in PHP source contracts and responsive browser fixtures; full first-slice CI passed on a480d81b.
 - [DONE] Enrich author cards with real thread-starter state and existing member-content links without exposing internal group data or inventing display roles.
 - [DONE] Present locked/reply-disabled/reply-permission states explicitly and add a compact quick-editor capability summary backed only by existing editor features.
-- [VERIFYING] Run source contracts, responsive browser fixtures and the complete Phase 4 CI gate for the final polish slice.
-- [NEXT] If green, mark Phase 4 VERIFIED and move to Phase 5 members/profile/account.
+- [DONE] Source contracts, responsive browser fixtures and the complete Phase 4 CI gate passed on main commit a5f81099.
+- [DONE] Phase 4 is VERIFIED; execution moved to Phase 5 members/profile/account.
 
-PHASE 5 — MEMBERS / PROFILE / ACCOUNT
-- Member directory/staff/current visitors.
-- Details/security/privacy/preferences/reactions/signature/follow/ignore/style controls using existing services where available.
+PHASE 5 — MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
+- [DONE] Preserve the existing public member directory and current-online presence surface.
+- [DONE] Add a public staff directory using authoritative staff-role assignments, active-user state and public profile visibility; expose it through member navigation with bounded search/pagination and live-route acceptance.
+- [NEXT] Consolidate account privacy/preferences around existing profile visibility, presence and notification services without introducing duplicate settings state.
+- [NEXT] Add or complete reactions/signature/style controls only where authoritative persistence and permission ownership exist.
+- [NEXT] Finish member/profile/account density, responsive/accessibility coverage and the complete Phase 5 CI gate.
 
 PHASE 6 — DM / ALERTS / ACTIVITY
 - Conversation management states, notification summaries and member activity/recent-content views.

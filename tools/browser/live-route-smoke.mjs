@@ -319,6 +319,23 @@ try {
   }
   await assertHealthyDocument("members");
 
+  response = await page.goto(baseUrl + "/members/staff", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("staff members: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Yetkili Ekip", exact: true }).waitFor();
+  const staffDirectoryState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    panelCount: document.querySelectorAll(".member-directory-results").length,
+    currentLinks: document.querySelectorAll("[data-forwext-subnav] a[aria-current='page']").length,
+  }));
+  if (
+    staffDirectoryState.section !== "members"
+    || staffDirectoryState.panelCount !== 1
+    || staffDirectoryState.currentLinks !== 1
+  ) {
+    fail(`staff members: active/layout contract failed ${JSON.stringify(staffDirectoryState)}`);
+  }
+  await assertHealthyDocument("staff members");
+
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail(`admin: real route returned HTTP ${response?.status() ?? "no response"}`);
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
