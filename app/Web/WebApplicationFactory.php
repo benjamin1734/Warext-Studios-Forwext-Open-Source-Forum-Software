@@ -122,6 +122,7 @@ use Forwext\App\Web\Profile\ProfileActivitySettingsHandler;
 use Forwext\App\Web\Profile\ProfileSettingsHandler;
 use Forwext\App\Web\Profile\ProfileActivityWallRenderer;
 use Forwext\App\Web\Profile\ProfileCommentsHandler;
+use Forwext\App\Web\Profile\ProfileContentHandler;
 use Forwext\App\Web\Profile\ProfileMediaHandler;
 use Forwext\App\Web\Profile\ProfileMusicHandler;
 use Forwext\App\Web\Profile\ProfilePostReactionHandler;
@@ -396,6 +397,7 @@ use Forwext\Core\Profile\Activity\DatabaseActivityFeedRepository;
 use Forwext\Core\Profile\Activity\DatabaseProfileActivityRepository;
 use Forwext\Core\Profile\Activity\ProfileActivityService;
 use Forwext\Core\Profile\DatabaseProfileStore;
+use Forwext\Core\Profile\Content\DatabaseUserForumContentReader;
 use Forwext\Core\Profile\Music\DatabaseProfileMusicStore;
 use Forwext\Core\Profile\Music\EngineProfileMusicPermissionResolver;
 use Forwext\Core\Profile\Music\ProfileMusicExternalPolicy;
@@ -1351,6 +1353,7 @@ final readonly class WebApplicationFactory
             $basePath,
             new DateTimeZone($config->requireString('site.timezone')),
         );
+        $profileForumContent = new DatabaseUserForumContentReader($database, $forumScopeProvider);
         $profilePage = new ProfileViewHandler(
             $users,
             $profileService,
@@ -2607,6 +2610,19 @@ final readonly class WebApplicationFactory
 
         $routes->add(new Route('members.index', [HttpMethod::Get], new PathTemplate('/members'), new MemberDirectoryHandler(new ProfileDirectoryReader($database), $basePath)));
         $routes->add(new Route('members.profile', [HttpMethod::Get], new PathTemplate('/members/{username}'), $profilePage));
+        $routes->add(new Route(
+            'members.profile-content',
+            [HttpMethod::Get],
+            new PathTemplate('/members/{username}/content/{kind}', ['kind'=>'threads|posts']),
+            new ProfileContentHandler(
+                $users,
+                $profileService,
+                $viewerResolver,
+                $profileForumContent,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+            ),
+        ));
         $routes->add(new Route('members.avatar', [HttpMethod::Get], new PathTemplate('/members/{username}/avatar'), new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Avatar)));
         $routes->add(new Route('members.banner', [HttpMethod::Get], new PathTemplate('/members/{username}/banner'), new ProfileMediaHandler($users, $mediaService, $viewerResolver, ProfileMediaKind::Banner)));
         $routes->add(new Route('members.music', [HttpMethod::Get], new PathTemplate('/members/{username}/music'), new ProfileMusicHandler($users, $musicService, $viewerResolver)));

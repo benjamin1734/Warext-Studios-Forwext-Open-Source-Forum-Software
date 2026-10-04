@@ -276,6 +276,30 @@ try {
     await assertHealthyDocument(`watched content ${watchedPath}`);
   }
 
+  for (const memberContentPath of [
+    "/members/ci-admin/content/threads",
+    "/members/ci-admin/content/posts",
+  ]) {
+    response = await page.goto(baseUrl + memberContentPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) {
+      fail(`member content: ${memberContentPath} returned HTTP ${response?.status() ?? "no response"}`);
+    }
+    await page.getByRole("heading", { name: "ci-admin", exact: true }).waitFor();
+    const memberContentState = await page.evaluate(() => ({
+      section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+      panelCount: document.querySelectorAll(".profile-forum-content-panel").length,
+      currentTabs: document.querySelectorAll(".profile-content-tabs a[aria-current='page']").length,
+    }));
+    if (
+      memberContentState.section !== "members"
+      || memberContentState.panelCount !== 1
+      || memberContentState.currentTabs !== 1
+    ) {
+      fail(`member content: active/layout contract failed ${JSON.stringify(memberContentState)}`);
+    }
+    await assertHealthyDocument(`member content ${memberContentPath}`);
+  }
+
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
   const subnavState = await page.evaluate(() => {
@@ -348,4 +372,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
