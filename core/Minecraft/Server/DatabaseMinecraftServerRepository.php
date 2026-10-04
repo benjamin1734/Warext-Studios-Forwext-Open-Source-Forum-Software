@@ -31,8 +31,13 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             $parameters['edition'] = $edition;
         }
         if ($query !== null) {
-            $where[] = '(s.name LIKE :query OR s.summary LIKE :query OR s.host LIKE :query OR s.game_mode LIKE :query)';
-            $parameters['query'] = '%' . $query . '%';
+            $where[] = '(s.name LIKE :query_name OR s.summary LIKE :query_summary '
+                . 'OR s.host LIKE :query_host OR s.game_mode LIKE :query_mode)';
+            $like = '%' . $query . '%';
+            $parameters['query_name'] = $like;
+            $parameters['query_summary'] = $like;
+            $parameters['query_host'] = $like;
+            $parameters['query_mode'] = $like;
         }
 
         $rows = $this->database->fetchAll(new CompiledQuery(
