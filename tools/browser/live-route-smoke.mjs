@@ -327,6 +327,34 @@ try {
   }
   await assertHealthyDocument("minecraft servers");
 
+  if (serverDirectoryState.listRows > 0) {
+    const firstServerHref = await page.locator(".minecraft-server-row a").first().getAttribute("href");
+    if (!firstServerHref) fail("minecraft server voting: published server row has no detail href");
+    response = await page.goto(new URL(firstServerHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server voting: detail route did not return HTTP 200");
+    const votePanel = page.locator(".minecraft-server-vote-panel");
+    if ((await votePanel.count()) !== 1) fail("minecraft server voting: vote summary panel is missing");
+    const voteButton = page.getByRole("button", { name: "Bugün oy ver", exact: true });
+    if ((await voteButton.count()) === 1) {
+      const [voteResponse] = await Promise.all([
+        page.waitForResponse((candidate) => {
+          const url = new URL(candidate.url());
+          return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote$/.test(url.pathname);
+        }),
+        voteButton.click(),
+      ]);
+      if (voteResponse.status() !== 303) {
+        fail(`minecraft server voting: vote POST returned HTTP ${voteResponse.status()} instead of 303`);
+      }
+      await page.waitForLoadState("domcontentloaded");
+      if (!new URL(page.url()).searchParams.has("vote")) {
+        fail("minecraft server voting: vote redirect status is missing");
+      }
+      await page.getByText("Oyun kaydedildi.", { exact: true }).waitFor();
+      await assertHealthyDocument("minecraft server voting");
+    }
+  }
+
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server compare: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Sunucu Karşılaştırma", exact: true }).waitFor();
@@ -684,4 +712,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory/management, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory/voting/management, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
