@@ -33,7 +33,8 @@ final class ProfileActivityWebSurfaceTest extends TestCase
         $online = (string) file_get_contents($root . '/app/Web/Community/OnlineUsersHandler.php');
 
         self::assertStringContainsString('surface-head activity-feed-head', $activity);
-        self::assertStringContainsString('<h1>Neler yeni?</h1>', $activity);
+        self::assertStringContainsString("string \$title = 'Neler yeni?'", $activity);
+        self::assertStringContainsString("'<div><h1>' . self::e(\$title) . '</h1>'", $activity);
         self::assertStringNotContainsString('forum-eyebrow">TOPLULUK', $activity . $members);
         self::assertStringContainsString('surface-pagination activity-pagination', $activity);
         self::assertStringContainsString('$routePath . \'?page=\'', $activity);
