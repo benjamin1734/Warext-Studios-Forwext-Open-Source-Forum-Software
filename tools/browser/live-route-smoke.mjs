@@ -327,8 +327,9 @@ try {
   }
   await assertHealthyDocument("minecraft servers");
 
+  let firstServerHref = null;
   if (serverDirectoryState.listRows > 0) {
-    const firstServerHref = await page.locator(".minecraft-server-row a").first().getAttribute("href");
+    firstServerHref = await page.locator(".minecraft-server-row a").first().getAttribute("href");
     if (!firstServerHref) fail("minecraft server voting: published server row has no detail href");
     response = await page.goto(new URL(firstServerHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server voting: detail route did not return HTTP 200");
@@ -353,6 +354,35 @@ try {
       await page.getByText("Oyun kaydedildi.", { exact: true }).waitFor();
       await assertHealthyDocument("minecraft server voting");
     }
+
+    const serverDetailUrl = new URL(firstServerHref, baseUrl);
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/updates", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server updates: real route did not return HTTP 200");
+    await page.getByRole("heading", { name: "Sunucu Güncellemeleri", exact: true }).waitFor();
+    const updateFeedState = await page.evaluate(() => ({
+      panels: document.querySelectorAll(".minecraft-update-list").length,
+      rows: document.querySelectorAll(".minecraft-update-row").length,
+      emptyStates: document.querySelectorAll(".minecraft-update-empty").length,
+    }));
+    if (
+      updateFeedState.panels !== 1
+      || (updateFeedState.rows === 0 && updateFeedState.emptyStates !== 1)
+    ) {
+      fail(`minecraft server updates: route contract failed ${JSON.stringify(updateFeedState)}`);
+    }
+    await assertHealthyDocument("minecraft server updates");
+
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/statistics", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server statistics: real route did not return HTTP 200");
+    await page.getByRole("heading", { name: "Sunucu İstatistikleri", exact: true }).waitFor();
+    const serverStatisticsState = await page.evaluate(() => ({
+      cards: document.querySelectorAll(".minecraft-stat-card").length,
+      trendRows: document.querySelectorAll(".minecraft-vote-trend li").length,
+    }));
+    if (serverStatisticsState.cards !== 6 || serverStatisticsState.trendRows !== 30) {
+      fail(`minecraft server statistics: metric contract failed ${JSON.stringify(serverStatisticsState)}`);
+    }
+    await assertHealthyDocument("minecraft server statistics");
   }
 
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
