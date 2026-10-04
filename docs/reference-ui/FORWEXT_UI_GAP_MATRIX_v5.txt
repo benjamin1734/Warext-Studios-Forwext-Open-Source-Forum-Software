@@ -70,7 +70,8 @@ Referral management density implemented: existing campaign-save, qualify-due and
 Bug-report density implemented: the personal list derives open/terminal/high-priority summaries from authoritative reports, rows expose real category/status/severity state, intake keeps existing secure upload and diagnostic collection while separating submission guidance, and the detail page groups existing conversation/workflow controls into responsive bug-specific layouts.
 Portfolio detail/manage density implemented: detail content and reactions now share a responsive primary grid with real project state/media/tag counts, while management exposes the same authoritative project summary beside the existing create/update form and retains the current media, category, moderation and CSRF flows.
 Phase 8 implementation gap: closed for groups, portfolio, FAQ, referrals and bug-report surfaces.
-Qualification pending: the complete Phase 8 surface must still pass PHP/DB/security/performance/real-browser/package gates and live-route comparison before Phase 8 can be marked VERIFIED.
+Qualification wiring: deterministic Phase 8 portfolio/FAQ/bug fixtures are installed after the real browser runtime, and Chromium now asserts the new portfolio, FAQ, referral and bug density surfaces on desktop plus 390px responsive layouts. Qualification and database workflows are pull-request observable as well as main-branch gates.
+Qualification pending: the new Phase 8 pull-request runs and the existing main package/installer gates must be green before Phase 8 can be marked VERIFIED.
 
 09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
 Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.
