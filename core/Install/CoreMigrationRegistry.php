@@ -28,6 +28,7 @@ use Forwext\Database\Migrations\Core\AddDirectConversationParticipantManagement;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerDirectory;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerSeasons;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerManagement;
+use Forwext\Database\Migrations\Core\CreateMinecraftServerVoting;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
@@ -212,6 +213,7 @@ final class CoreMigrationRegistry
             new CreateMinecraftServerDirectory(),
             new CreateMinecraftServerSeasons(),
             new CreateMinecraftServerManagement(),
+            new CreateMinecraftServerVoting(),
         ];
     }
 }

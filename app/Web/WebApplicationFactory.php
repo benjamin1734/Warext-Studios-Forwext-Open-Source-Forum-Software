@@ -114,6 +114,7 @@ use Forwext\App\Web\MinecraftServer\MinecraftServerDirectoryHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerDetailHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerCompareHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerSeasonsHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerVoteHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerManageHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerClaimHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
@@ -1936,6 +1937,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/claim', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerClaimHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.vote',
+            [HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/vote', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerVoteHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'server.detail',

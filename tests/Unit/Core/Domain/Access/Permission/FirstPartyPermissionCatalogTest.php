@@ -25,7 +25,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             FirstPartyPermissionCatalog::namespaces(),
         );
 
-        self::assertCount(130, $entries);
+        self::assertCount(131, $entries);
         self::assertCount(count($keys), array_unique($keys));
         self::assertSame([
             'acp',
@@ -85,6 +85,7 @@ final class FirstPartyPermissionCatalogTest extends TestCase
             'minecraft_server.claim',
             'minecraft_server.transfer',
             'minecraft_server.manage_any',
+            'minecraft_server.vote',
             'portfolio.comment.create',
             'portfolio.reaction.use',
             'marketplace.category.manage',

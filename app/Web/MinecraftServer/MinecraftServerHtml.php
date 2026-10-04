@@ -8,6 +8,7 @@ use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Minecraft\Server\MinecraftServer;
 use Forwext\Core\Minecraft\Server\MinecraftServerClaim;
 use Forwext\Core\Minecraft\Server\MinecraftServerSeason;
+use Forwext\Core\Minecraft\Server\MinecraftServerVoteSummary;
 use Forwext\Core\Routing\BasePath;
 
 final class MinecraftServerHtml
@@ -65,6 +66,10 @@ final class MinecraftServerHtml
         bool $authenticated,
         bool $canManage = false,
         bool $canClaim = false,
+        ?MinecraftServerVoteSummary $voteSummary = null,
+        bool $canVote = false,
+        ?string $csrf = null,
+        ?string $voteStatus = null,
     ): string
     {
         $status = self::statusLabel($server);
@@ -92,6 +97,34 @@ final class MinecraftServerHtml
                 . '">Sahipliği talep et</a>';
         }
 
+        $votePanel = '';
+        if ($voteSummary !== null) {
+            $notice = match ($voteStatus) {
+                'recorded' => '<div class="surface-notice" role="status">Oyun kaydedildi.</div>',
+                'already' => '<div class="surface-notice" role="status">Bugün bu sunucuya zaten oy verdin.</div>',
+                default => '',
+            };
+            $voteAction = '';
+            if ($canVote && $csrf !== null) {
+                $voteAction = '<form action="'
+                    . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/vote'))
+                    . '" method="post"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                    . '<button class="fx-btn fx-btn--primary" type="submit">Bugün oy ver</button></form>';
+            } elseif ($voteSummary->votedToday) {
+                $voteAction = '<span class="minecraft-vote-state is-done">Bugünkü oyun kaydedildi</span>';
+            } elseif (!$authenticated) {
+                $voteAction = '<a class="fx-btn" href="' . self::e($basePath->prepend('/login')) . '">Oy vermek için giriş yap</a>';
+            } else {
+                $voteAction = '<span class="minecraft-vote-state">Oy verme iznin bulunmuyor</span>';
+            }
+
+            $votePanel = $notice . '<section class="surface-panel minecraft-server-vote-panel"><div>'
+                . '<span class="forum-eyebrow">TOPLULUK OYU</span><h2>' . $voteSummary->totalVotes . ' oy</h2>'
+                . '<p>Son 30 gün: <strong>' . $voteSummary->votesLast30Days . '</strong>. '
+                . 'Her hesap aynı sunucuya UTC gününde bir kez oy verebilir.</p></div>'
+                . '<div class="minecraft-server-vote-action">' . $voteAction . '</div></section>';
+        }
+
         $body = '<section class="minecraft-server-page minecraft-server-detail discovery-page">'
             . '<header class="surface-head minecraft-server-detail-head"><div>'
             . '<a class="surface-back-link" href="' . self::e($basePath->prepend('/servers')) . '">← Sunucular</a>'
@@ -99,6 +132,7 @@ final class MinecraftServerHtml
             . self::e($server->versionLabel !== '' ? $server->versionLabel : 'Sürüm belirtilmedi') . '</span>'
             . '<h1>' . self::e($server->name) . '</h1><p>' . self::e($server->summary) . '</p></div>'
             . '<div class="minecraft-server-detail-actions">' . $verified . $links . '</div></header>'
+            . $votePanel
             . '<div class="minecraft-server-detail-grid"><section class="surface-panel minecraft-server-overview">'
             . '<h2>Sunucu bilgileri</h2><dl>'
             . self::fact('Adres', $server->address())

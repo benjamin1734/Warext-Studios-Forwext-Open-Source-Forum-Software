@@ -56,6 +56,7 @@ use Forwext\Database\Migrations\Core\CreateDirectConversationSystem;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerDirectory;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerSeasons;
 use Forwext\Database\Migrations\Core\CreateMinecraftServerManagement;
+use Forwext\Database\Migrations\Core\CreateMinecraftServerVoting;
 use Forwext\Database\Migrations\Core\AddDirectConversationParticipantManagement;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
@@ -133,6 +134,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateMinecraftServerDirectory::class, $classes);
         self::assertContains(CreateMinecraftServerSeasons::class, $classes);
         self::assertContains(CreateMinecraftServerManagement::class, $classes);
+        self::assertContains(CreateMinecraftServerVoting::class, $classes);
         self::assertContains(AddDirectConversationParticipantManagement::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);
         self::assertContains(CreateNotificationAlertTables::class, $classes);
