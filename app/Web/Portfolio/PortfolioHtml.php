@@ -23,6 +23,8 @@ final class PortfolioHtml
         BasePath $basePath,
         bool $authenticated,
         bool $canCreate,
+        ?string $selectedCategory = null,
+        bool $featuredOnly = false,
     ): string {
         $actions = $canCreate
             ? '<a class="fx-btn fx-btn--primary" href="' . self::e($basePath->prepend('/portfolio/manage'))
@@ -33,18 +35,53 @@ final class PortfolioHtml
             $categoryLabels[$category->key] = $category->label;
         }
 
+        $visibleProjects = array_values(array_filter(
+            $projects,
+            static fn (PortfolioProject $project): bool =>
+                ($selectedCategory === null || $project->categoryKey === $selectedCategory)
+                && (!$featuredOnly || $project->featured),
+        ));
+
+        $tabs = '<nav class="portfolio-filter-tabs" aria-label="Portfolyo kategorileri">';
+        $tabs .= self::filterLink(
+            $basePath,
+            'Tümü',
+            null,
+            $featuredOnly,
+            $selectedCategory === null,
+        );
+        foreach ($categories as $category) {
+            $tabs .= self::filterLink(
+                $basePath,
+                $category->label,
+                $category->key,
+                $featuredOnly,
+                $selectedCategory === $category->key,
+            );
+        }
+        $tabs .= '</nav>';
+
+        $featuredHref = self::portfolioPath($basePath, $selectedCategory, !$featuredOnly);
+        $featuredLabel = $featuredOnly ? 'Tüm projeleri göster' : 'Yalnız öne çıkanlar';
+        $featuredClass = $featuredOnly ? ' portfolio-featured-toggle is-active' : ' portfolio-featured-toggle';
+
         $body = '<section class="portfolio-index discovery-page"><header class="surface-head portfolio-head"><div>'
             . '<span class="forum-eyebrow">TOPLULUK</span><h1>Portfolyo</h1>'
             . '<p>Topluluk üyelerinin projelerini, çalışmalarını ve öne çıkan üretimlerini keşfet.</p></div>'
-            . $actions . '</header>';
+            . $actions . '</header>'
+            . '<section class="surface-panel portfolio-browse-bar"><div class="portfolio-browse-main">'
+            . $tabs
+            . '<span class="portfolio-result-count"><strong>' . count($visibleProjects) . '</strong> proje gösteriliyor</span>'
+            . '</div><a class="fx-btn' . $featuredClass . '" href="' . self::e($featuredHref) . '">'
+            . self::e($featuredLabel) . '</a></section>';
 
-        if ($projects === []) {
+        if ($visibleProjects === []) {
             $body .= '<section class="surface-panel portfolio-index-panel"><div class="surface-empty">'
-                . '<strong>Henüz yayımlanmış proje yok.</strong>'
-                . '<span>Topluluk üyeleri proje yayımladığında burada görünecek.</span></div></section>';
+                . '<strong>Bu filtrede yayımlanmış proje yok.</strong>'
+                . '<span>Kategori veya öne çıkan filtresini değiştirerek diğer çalışmaları görüntüleyebilirsin.</span></div></section>';
         } else {
             $body .= '<section class="surface-panel portfolio-index-panel"><div class="portfolio-grid">';
-            foreach ($projects as $project) {
+            foreach ($visibleProjects as $project) {
                 $body .= self::projectCard(
                     $project,
                     $categoryLabels[$project->categoryKey] ?? $project->categoryKey,
@@ -284,12 +321,57 @@ final class PortfolioHtml
                 . '" aria-label="' . self::e($project->title) . '"><span aria-hidden="true">◇</span></a>'
             : '<a class="portfolio-card-media" href="' . $href . '">' . $thumb . '</a>';
 
+        $tags = '';
+        if ($project->tags !== []) {
+            $tags = '<div class="portfolio-card-tags" aria-label="Etiketler">';
+            foreach (array_slice($project->tags, 0, 3) as $tag) {
+                $tags .= '<span>#' . self::e($tag) . '</span>';
+            }
+            if (count($project->tags) > 3) {
+                $tags .= '<span>+' . (count($project->tags) - 3) . '</span>';
+            }
+            $tags .= '</div>';
+        }
+
         return '<article class="portfolio-card">' . $mediaHtml . '<div class="portfolio-card-body">'
             . '<div class="portfolio-card-meta"><span>' . self::e($category) . '</span>'
             . ($project->featured ? '<span class="portfolio-card-featured">Öne çıkan</span>' : '') . '</div>'
             . '<h2><a href="' . $href . '">' . self::e($project->title) . '</a></h2>'
             . ($project->summary === '' ? '' : '<p>' . self::e($project->summary) . '</p>')
+            . $tags
+            . '<footer class="portfolio-card-footer"><span>Güncellendi · '
+            . self::e($project->updatedAt->format('Y-m-d')) . '</span><span>'
+            . count($project->media) . ' görsel</span></footer>'
             . '</div></article>';
+    }
+
+    private static function filterLink(
+        BasePath $basePath,
+        string $label,
+        ?string $category,
+        bool $featuredOnly,
+        bool $active,
+    ): string {
+        $class = $active ? 'portfolio-filter-tab is-active' : 'portfolio-filter-tab';
+        $current = $active ? ' aria-current="page"' : '';
+        return '<a class="' . $class . '" href="' . self::e(self::portfolioPath($basePath, $category, $featuredOnly))
+            . '"' . $current . '>' . self::e($label) . '</a>';
+    }
+
+    private static function portfolioPath(BasePath $basePath, ?string $category, bool $featuredOnly): string
+    {
+        $query = [];
+        if ($category !== null) {
+            $query['category'] = $category;
+        }
+        if ($featuredOnly) {
+            $query['featured'] = '1';
+        }
+        $path = '/portfolio';
+        if ($query !== []) {
+            $path .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        }
+        return $basePath->prepend($path);
     }
 
     private static function csrf(string $token): string

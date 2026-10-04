@@ -33,16 +33,27 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $html = (string) file_get_contents($root . '/app/Web/Portfolio/PortfolioHtml.php');
+        $handler = (string) file_get_contents($root . '/app/Web/Portfolio/PortfolioIndexHandler.php');
         $css = (string) file_get_contents($root . '/public/assets/site-components.css')
             . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString('portfolio-index discovery-page', $html);
         self::assertStringContainsString('surface-head portfolio-head', $html);
+        self::assertStringContainsString('surface-panel portfolio-browse-bar', $html);
+        self::assertStringContainsString('portfolio-filter-tabs', $html);
+        self::assertStringContainsString('portfolio-filter-tab', $html);
+        self::assertStringContainsString('portfolio-featured-toggle', $html);
         self::assertStringContainsString('surface-panel portfolio-index-panel', $html);
         self::assertStringContainsString('class="portfolio-card"', $html);
         self::assertStringContainsString('class="portfolio-card-body"', $html);
+        self::assertStringContainsString('portfolio-card-tags', $html);
+        self::assertStringContainsString('portfolio-card-footer', $html);
+        self::assertStringContainsString("\$query['category']", $handler);
+        self::assertStringContainsString("\$query['featured']", $handler);
         self::assertStringContainsString('.portfolio-grid', $css);
         self::assertStringContainsString('.portfolio-card-media', $css);
+        self::assertStringContainsString('.portfolio-browse-bar', $css);
+        self::assertStringContainsString('.portfolio-card-footer', $css);
         self::assertStringContainsString('portfolio-project discovery-page', $html);
         self::assertStringContainsString('surface-head portfolio-project-head', $html);
         self::assertStringContainsString('surface-panel portfolio-project-content', $html);
