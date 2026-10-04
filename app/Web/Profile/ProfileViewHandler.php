@@ -145,7 +145,9 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
         $profileSettings = $this->accessPolicy->canEdit($user->id(), $viewerId)
             ? '<div class="profile-settings-actions"><a class="profile-settings-link" href="'
                 . ProfileHtml::escape($this->basePath->prepend('/account/profile'))
-                . '">Profil ve gizlilik</a><a class="profile-settings-link" href="'
+                . '">Profil ve kimlik</a><a class="profile-settings-link" href="'
+                . ProfileHtml::escape($this->basePath->prepend('/account/privacy'))
+                . '">Gizlilik</a><a class="profile-settings-link" href="'
                 . ProfileHtml::escape($this->basePath->prepend('/account/profile-url'))
                 . '">Özel profil URL’si</a></div>'
             : '';
