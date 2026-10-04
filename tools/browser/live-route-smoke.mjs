@@ -195,6 +195,48 @@ try {
   }
   await page.keyboard.press("Escape");
 
+  response = await page.goto(baseUrl + "/account/preferences", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("account preferences: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Tercihler ve Gizlilik", exact: true }).waitFor();
+  const preferenceState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    preferenceCurrent: document.querySelector('[data-nav-key="preferences.own"]')?.getAttribute("aria-current") ?? "",
+    cards: document.querySelectorAll(".account-preference-card").length,
+    presenceForm: document.querySelectorAll('.account-presence-preference-form select[name="presence_visibility"]').length,
+  }));
+  if (
+    preferenceState.section !== "account"
+    || preferenceState.accountActive !== "1"
+    || preferenceState.preferenceCurrent !== "page"
+    || preferenceState.cards !== 4
+    || preferenceState.presenceForm !== 1
+  ) {
+    fail(`account preferences: active/layout contract failed ${JSON.stringify(preferenceState)}`);
+  }
+  await assertHealthyDocument("account preferences");
+
+  const visibilitySelect = page.locator('.account-presence-preference-form select[name="presence_visibility"]');
+  await visibilitySelect.selectOption("members");
+  const [preferencePost, preferenceRedirect] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/account/preferences";
+    }),
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "GET"
+        && url.pathname === "/account/preferences"
+        && url.searchParams.get("updated") === "presence";
+    }),
+    page.locator(".account-presence-preference-form button[type='submit']").click(),
+  ]);
+  if (preferencePost.status() !== 303 || preferenceRedirect.status() !== 200) {
+    fail(`account preferences: save flow returned POST ${preferencePost.status()} / GET ${preferenceRedirect.status()}`);
+  }
+  await page.getByRole("status").filter({ hasText: "Çevrimiçi görünürlük tercihin kaydedildi." }).waitFor();
+  await assertHealthyDocument("account preferences POST");
+
   response = await page.goto(baseUrl + "/account/security", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("account security: real route did not return HTTP 200");
   const accountActiveState = await page.evaluate(() => ({
