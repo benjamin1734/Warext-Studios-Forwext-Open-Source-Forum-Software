@@ -372,7 +372,7 @@ try {
     }
     await assertHealthyDocument("minecraft server updates");
 
-    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/statistics", { waitUntil: "domcontentloaded" });
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/stats", { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server statistics: real route did not return HTTP 200");
     await page.getByRole("heading", { name: "Sunucu İstatistikleri", exact: true }).waitFor();
     const serverStatisticsState = await page.evaluate(() => ({
@@ -451,6 +451,18 @@ try {
     if (!manageHref) fail("minecraft server integration: manageable row has no management href");
     response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server integration: management detail did not return HTTP 200");
+
+    const manageUrl = new URL(manageHref, baseUrl);
+    const manageBase = manageUrl.pathname.replace(/\/manage$/, "");
+    for (const [suffix, label] of [["/edit", "edit"], ["/transfer", "transfer"]]) {
+      response = await page.goto(new URL(manageBase + suffix, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+      if (!response || response.status() !== 200) {
+        fail(`minecraft server ${label}: canonical reference route did not return HTTP 200`);
+      }
+      await assertHealthyDocument(`minecraft server ${label}`);
+    }
+    response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: management detail reload failed");
 
     const settingsLink = page.locator('a[href$="/vote-settings"]').first();
     if ((await settingsLink.count()) === 1) {
@@ -767,7 +779,7 @@ try {
     }
     await assertHealthyDocument("minecraft server updates mobile");
 
-    response = await page.goto(mobileServerUrl + "/statistics", { waitUntil: "domcontentloaded" });
+    response = await page.goto(mobileServerUrl + "/stats", { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server statistics mobile: real route did not return HTTP 200");
     const statisticsMobileState = await page.evaluate(() => {
       const grid = document.querySelector(".minecraft-stat-grid");
