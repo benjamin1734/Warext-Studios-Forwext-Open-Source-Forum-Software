@@ -58,6 +58,26 @@ final class DatabaseNotificationRepositoryTest extends TestCase
         self::assertSame($notificationId->value(), $query->parameters['notification_id']);
     }
 
+    public function testMarkAllReadIsRecipientScopedAndOnlyTouchesVisibleUnreadRecords(): void
+    {
+        $database = new NotificationRecordingDatabase();
+        $database->executeResult = 3;
+        $repository = new DatabaseNotificationRepository($database);
+        $userId = UserId::fromStored(str_repeat('d', 32));
+
+        self::assertSame(3, $repository->markAllRead(
+            $userId,
+            new DateTimeImmutable('2026-09-17 12:05:00', new DateTimeZone('UTC')),
+        ));
+
+        self::assertCount(1, $database->executedQueries);
+        $query = $database->executedQueries[0];
+        self::assertStringContainsString('`recipient_user_id` = :recipient_user_id', $query->sql);
+        self::assertStringContainsString('`in_app_visible` = 1', $query->sql);
+        self::assertStringContainsString('`read_at_utc` IS NULL', $query->sql);
+        self::assertSame($userId->value(), $query->parameters['recipient_user_id']);
+    }
+
     public function testInboxQueryNeverReturnsEmailOnlyRecords(): void
     {
         $database = new NotificationRecordingDatabase();
