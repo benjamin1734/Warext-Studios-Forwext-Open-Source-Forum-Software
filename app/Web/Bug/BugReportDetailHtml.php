@@ -79,7 +79,8 @@ final class BugReportDetailHtml
 
         $conversation='<section class="surface-panel ticket-conversation"><header><h2>Yanıtlar ve ek bilgiler</h2></header><div class="ticket-message-list">';
         if($view->messages===[]){
-            $conversation.='<p class="muted">Henüz ek bilgi veya yetkili yanıtı yok.</p>';
+            $conversation.='<div class="surface-empty bug-conversation-empty"><strong>Henüz yanıt yok.</strong>'
+                .'<span>Ek bilgi veya yetkili yanıtı geldiğinde burada görünecek.</span></div>';
         }else{
             foreach($view->messages as $message){
                 $conversation.=self::message($message);
@@ -205,12 +206,13 @@ final class BugReportDetailHtml
         }
         $history.='</section>';
 
-        $body='<section class="ticket-detail-page discovery-page"><header class="surface-head ticket-detail-head"><div>'
+        $body='<section class="ticket-detail-page bug-detail-page discovery-page"><header class="surface-head ticket-detail-head"><div>'
             .'<span class="forum-eyebrow">HATA BİLDİRİMİ</span><h1>'.self::e($report->title).'</h1>'
             .'<p>Kayıt #'.self::e($report->reportId->value()).'</p></div>'
             .'<div class="ticket-detail-head-actions">'.$links.'</div></header>'
-            .$notice.'<section class="surface-panel ticket-meta-panel">'.$meta.'</section>'
-            .$details.$conversation.$reply.$status.$staffControls.$history.'</section>';
+            .$notice.'<section class="surface-panel ticket-meta-panel bug-meta-panel">'.$meta.'</section>'
+            .'<div class="bug-detail-primary-grid">'.$details.$conversation.'</div>'
+            .'<div class="bug-detail-secondary-grid">'.$reply.$status.$staffControls.$history.'</div></section>';
 
         return ProfileHtml::page('Hata bildirimi',$body,$basePath,authenticated:true);
     }
