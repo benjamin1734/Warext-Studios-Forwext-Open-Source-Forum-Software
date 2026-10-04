@@ -36,6 +36,12 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('forum-side-card--empty', $index);
         self::assertStringContainsString('class="forum-hero forum-page-head"', $index);
         self::assertStringContainsString('<h2>Gündem</h2>', $index);
+        self::assertStringContainsString('forum-side-card--discovery', $index);
+        self::assertStringContainsString("'/activity/threads/unread'", $index);
+        self::assertStringContainsString("'/activity/threads/trending'", $index);
+        self::assertStringContainsString("'/activity/threads/featured'", $index);
+        self::assertStringContainsString("'/activity/profile-posts'", $index);
+        self::assertStringContainsString("' forum</span>'", $index);
         self::assertStringContainsString('forum-side-card--stats', $index);
         self::assertStringContainsString('/* reference-forum-r2 */', $css);
     }
