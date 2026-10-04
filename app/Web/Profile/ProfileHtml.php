@@ -66,6 +66,7 @@ final class ProfileHtml
         $sectionByKey = [
             'forums' => 'forums',
             'marketplace' => 'marketplace',
+            'servers' => 'servers',
             'members' => 'members',
             'portfolio' => 'portfolio',
             'faq' => 'faq',
@@ -140,6 +141,8 @@ final class ProfileHtml
             . (isset($visibleNavigation['giveaways'])
                 ? $navItem('marketplace.giveaways', 'Çekilişler', '/giveaways')
                 : '');
+
+        $serversSubNav = $visibleNavItem('servers', 'Sunucu dizini', '/servers');
 
         $membersSubNav = $visibleNavItem('members', 'Kayıtlı üyeler', '/members')
             . (isset($visibleNavigation['members.online'])
@@ -298,6 +301,7 @@ final class ProfileHtml
             . '<div class="nav-secondary-group" data-nav-section="forums" hidden>' . $forumSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="whatsnew" hidden>' . $whatsNewSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="marketplace" hidden>' . $marketplaceSubNav . '</div>'
+            . '<div class="nav-secondary-group" data-nav-section="servers" hidden>' . $serversSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="members" hidden>' . $membersSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="portfolio" hidden>' . $portfolioSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="faq" hidden>' . $faqSubNav . '</div>'
