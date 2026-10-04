@@ -135,6 +135,55 @@ final class ThreadDiscoveryTest extends TestCase
         self::assertStringContainsString('`t`.`thread_id` DESC LIMIT 10 OFFSET 5', $executor->query->sql);
     }
 
+    public function testNoReplyAndViewerFiltersUseBoundActorQueries(): void
+    {
+        $userId = EntityId::fromString('99999999999999999999999999999999');
+        $forumIds = ['11111111111111111111111111111111'];
+        $now = new DateTimeImmutable('2026-09-17T20:00:00+00:00');
+
+        $noReplyExecutor = new RecordingDiscoveryExecutor([]);
+        (new DatabaseThreadDiscoveryRepository($noReplyExecutor))->discover(
+            $userId,
+            $forumIds,
+            DiscoveryMode::NoReplies,
+            $now,
+            20,
+            0,
+        );
+        self::assertNotNull($noReplyExecutor->query);
+        self::assertStringContainsString('HAVING `visible_post_count` <= 1', $noReplyExecutor->query->sql);
+        self::assertArrayNotHasKey('viewer_user_id', $noReplyExecutor->query->parameters);
+        self::assertArrayNotHasKey('participant_user_id', $noReplyExecutor->query->parameters);
+
+        $mineExecutor = new RecordingDiscoveryExecutor([]);
+        (new DatabaseThreadDiscoveryRepository($mineExecutor))->discover(
+            $userId,
+            $forumIds,
+            DiscoveryMode::StartedByViewer,
+            $now,
+            20,
+            0,
+        );
+        self::assertNotNull($mineExecutor->query);
+        self::assertStringContainsString('`t`.`author_user_id` = :viewer_user_id', $mineExecutor->query->sql);
+        self::assertSame($userId->value(), $mineExecutor->query->parameters['viewer_user_id'] ?? null);
+        self::assertArrayNotHasKey('participant_user_id', $mineExecutor->query->parameters);
+
+        $participatedExecutor = new RecordingDiscoveryExecutor([]);
+        (new DatabaseThreadDiscoveryRepository($participatedExecutor))->discover(
+            $userId,
+            $forumIds,
+            DiscoveryMode::ParticipatedByViewer,
+            $now,
+            20,
+            0,
+        );
+        self::assertNotNull($participatedExecutor->query);
+        self::assertStringContainsString('EXISTS (SELECT 1 FROM `forwext_posts` `vp`', $participatedExecutor->query->sql);
+        self::assertSame($userId->value(), $participatedExecutor->query->parameters['viewer_user_id'] ?? null);
+        self::assertSame($userId->value(), $participatedExecutor->query->parameters['participant_user_id'] ?? null);
+    }
+
     private static function authorizer(EntityId $userId, EntityId $groupId, bool $allow): PermissionAuthorizer
     {
         return new PermissionAuthorizer(
