@@ -187,6 +187,9 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString("'server.team'", $factory);
         self::assertStringContainsString("'server.vote-settings'", $factory);
         self::assertStringContainsString("'server.vote-feed'", $factory);
+        self::assertStringContainsString("$minecraftServerCsrf = $this->minecraftServerCsrfMiddleware($config);", $factory);
+        self::assertStringContainsString("forwext.csrf.minecraft-server.v1", $factory);
+        self::assertGreaterThanOrEqual(7, substr_count($factory, '[$minecraftServerCsrf]'));
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $team);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $settings);
         self::assertStringContainsString("minecraft_server.team.manage", $service);
@@ -198,6 +201,11 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('forwext_minecraft_server_team_members', $repository);
         self::assertStringContainsString('forwext_minecraft_server_vote_integrations', $repository);
         self::assertStringContainsString('hash_equals($stored, $tokenHash)', $repository);
+        self::assertStringContainsString("'team_member_saved'", $repository);
+        self::assertStringContainsString("'team_member_removed'", $repository);
+        self::assertStringContainsString("'vote_token_rotated'", $repository);
+        self::assertStringContainsString("'vote_integration_on'", $repository);
+        self::assertStringContainsString("'vote_integration_off'", $repository);
         self::assertStringContainsString("Authorization: Bearer TOKEN", $html);
         self::assertStringContainsString("preg_match('/^Bearer ", $feed);
         self::assertStringContainsString("'WWW-Authenticate'", $feed);
