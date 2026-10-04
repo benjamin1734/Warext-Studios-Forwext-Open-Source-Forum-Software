@@ -168,7 +168,6 @@ final class ProfileHtml
         $accountNav = '';
         $accountSubNavKeys = [
             'account.own',
-            'preferences.own',
             'profile.settings.own',
             'security.own',
             'conversations.own',
