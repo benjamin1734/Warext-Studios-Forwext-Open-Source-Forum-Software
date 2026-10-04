@@ -8,10 +8,10 @@ PLAN_VERSION = v2.0
 CURRENT_VERSION = 1.0.16
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = maintenance release 1.0.16
+CURRENT_STEP = maintenance release 1.0.16 complete
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = publish and verify immutable 1.0.16 full/update packages, then keep roadmap scope closed unless new verified production defects are reported
+NEXT_STEP = keep roadmap scope closed unless new verified production defects or approved feature work are reported
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -91,7 +91,7 @@ NEXT_STEP = publish and verify immutable 1.0.16 full/update packages, then keep 
 
 
 
-## Maintenance release — 1.0.16 release candidate
+## Maintenance release — 1.0.16 complete
 
 - Patch-only production UX hardening over immutable 1.0.15; no roadmap scope expansion.
 - Fixed guest-page notification realtime bootstrapping so public pages no longer issue unauthorized account requests or browser-console resource errors.
@@ -100,7 +100,10 @@ NEXT_STEP = publish and verify immutable 1.0.16 full/update packages, then keep 
 - Restored forum-index desktop grid/sidebar composition, sticky offset behavior, statistics layout and compact empty recent-activity presentation.
 - Replaced bare HTML 500 responses with a dependency-light branded Forwext error surface that exposes only a safe correlation/reference identifier; API/JSON contracts remain unchanged.
 - Corrected browser qualification to model 125% desktop zoom as responsive reflow and to ignore only intentional Chromium ERR_ABORTED navigation/realtime cancellations while still failing other request/console/page errors.
-- HEAD bf2a075fa3ad3f31de3769f7d49d60d59bed26c6 passes PHP 8.4/8.5 qualification, Chromium responsive + live-route acceptance, security/advisory checks, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and release-package contract checks.
+- Release commit `807cf081c73f0b7ffaa0c2363e03b25bb401c75b` passed PHP 8.4/8.5 qualification, Chromium responsive + live-route acceptance, security/advisory checks, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and release-package contract checks.
+- Release `v1.0.16` published successfully on 2026-10-04 as GitHub Release id `402876031`.
+- Published assets: `forwext-v1.0.16-full.zip` (4,106,772 bytes, SHA-256 `5d6b1f42ff9838e96f8afef68f19339e609924ad60f0a35886d8db7b87622b04`) and `forwext-v1.0.16-update.zip` (128,660 bytes, SHA-256 `ab4cecaea6925e510204be1b0049081610f2f9472df24fd1648393b896871ad1`), each with a SHA-256 companion asset.
+- Differential predecessor is immutable `v1.0.15`; full/update package publication completed successfully.
 
 ## Maintenance release — 1.0.15 complete
 
