@@ -62,6 +62,11 @@ final class ResponsiveWebSurfaceTest extends TestCase
         self::assertStringContainsString('aria-expanded', $script);
         self::assertStringContainsString('event.key === "Escape"', $script);
         self::assertStringContainsString('button.focus()', $script);
+
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css');
+        self::assertStringContainsString('overscroll-behavior:contain', $css);
+        self::assertStringContainsString('visibility:hidden', $css);
+        self::assertStringNotContainsString('transition:max-height 220ms ease', $css);
     }
 
     public function testModernFrontendSharesResponsiveManifest(): void
