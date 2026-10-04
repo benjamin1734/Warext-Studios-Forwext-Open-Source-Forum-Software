@@ -47,14 +47,14 @@ Verified Phase 5 density slice: member/staff directories use bounded first/curre
 Persistence boundary: signature/style preference storage and reaction-preference storage do not currently exist and were not fabricated.
 Phase 5 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility and installation package all passed on main commit 187952fd.
 
-06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
-Current: DM inbox/detail/start/reply, notification inbox/realtime/settings, and authenticated shell message/alert previews exist. The shell previews reuse the existing permission-aware preview endpoints rather than a duplicate source.
-Verified Phase 6 notification slice: recipient-scoped bulk notification read uses the existing inbox service/repository and dedicated CSRF-protected notification route; all main qualification workflows, including the installation package, passed on 8ee6410.
-Current Phase 6 DM slice: per-participant starred and left state is persisted through an additive installer migration; active membership gates inbox/detail/reply/management actions; the inbox exposes a real starred filter and CSRF-protected star/leave controls.
-Gap: the direct-message model remains authoritative for one-to-one participant pairs. Invite is not exposed because multi-participant membership is not represented; global lock is not exposed because creator/owner and lock semantics are not represented. Notification/DM final responsive/live-route qualification remains before Phase 6 can be VERIFIED.
+06 DIRECT MESSAGES / NOTIFICATIONS — VERIFIED
+Current: DM inbox/detail/start/reply/star/leave/filtering, notification inbox/realtime/settings/bulk-read, and authenticated shell message/alert previews are backed by authoritative persistence and permission-aware endpoints.
+Verification: real installed Chromium covers DM inbox, starred state, notification center and 390px reflow. The account secondary-nav overflow exposed by that run was fixed at 0134ef5. PHP 8.4/8.5, security, performance, migration smoke and installation package are green.
+Model boundary: invite/global lock controls are intentionally absent until multi-participant and owner/lock semantics exist.
 
-07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — NOT STARTED
-Repository scan found no server-directory implementation family. Required: directory, comparison, seasons, detail, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer, permissions and error states.
+07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — IN PROGRESS
+Current first slice: first-party module registration, additive server/status persistence, create/manage-any permission defaults, public repository/service, /servers and /servers/{id}, primary navigation, compact filtering/list/detail UI and responsive regression contracts are implemented on the Phase 7 branch.
+Gap: first slice still requires full CI/live-route verification. Comparison, seasons, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer and management states remain.
 
 08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces.
