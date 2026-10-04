@@ -39,15 +39,18 @@ Current final Phase 4 slice: author cards distinguish the real thread starter wi
 Moderation boundary: the public thread reader intentionally exposes only visible posts, so pending/rejected staff presentation is not fabricated here and remains owned by the moderation phase.
 Phase 4 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility, release contract and installation package all passed on main commit a5f81099.
 
-05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
-Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
-Verified Phase 5 member slice: the public staff directory is backed by authoritative staff-role assignments, active-account state and public profile visibility; member navigation exposes staff and online directory views; bounded username search/pagination and live-route acceptance are included. The complete CI gate passed on main commit 68317606.
-Current Phase 5 account slice: a unified preferences/privacy hub reads existing profile visibility, presence and notification-sound services without introducing duplicate storage; the only inline mutation is the existing presence visibility setting behind a dedicated CSRF scope. Existing profile, notification, security, session and relationship surfaces remain authoritative for their own settings.
-Gap: signature/style preference persistence does not currently exist and will not be fabricated; reaction actions exist but no reaction-preference store exists. Member/profile/account density and responsive comparison still require completion.
+05 MEMBERS / PROFILE / ACCOUNT — VERIFIED
+Current: member/staff/online directories, public profile, account dashboard/security/sessions, profile settings, bookmarks, relationships, presence and the unified preferences/privacy hub exist.
+Verified Phase 5 member slice: the public staff directory is backed by authoritative staff-role assignments, active-account state and public profile visibility; member navigation exposes staff and online directory views; bounded username search/pagination and live-route acceptance are included.
+Verified Phase 5 account slice: the preferences/privacy hub reads existing profile visibility, presence and notification-sound services without introducing duplicate storage; profile, notification, security, session and relationship surfaces remain authoritative for their own settings.
+Verified Phase 5 density slice: member/staff directories use bounded first/current/neighbor/last pagination and explicit focus states; online users expose real visible counts; the public profile groups existing content/relationship actions and shows only real viewer-visible facts. Desktop and 390px live-route coverage is included.
+Persistence boundary: signature/style preference storage and reaction-preference storage do not currently exist and were not fabricated.
+Phase 5 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility and installation package all passed on main commit 187952fd.
 
 06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
-Current: DM inbox/detail/start/reply and notification inbox/realtime/settings exist.
-Gap: DM star/leave/invite/lock states and shell previews are absent; alert popup lacks live summary.
+Current: DM inbox/detail/start/reply, notification inbox/realtime/settings, and authenticated shell message/alert previews exist. The shell previews reuse the existing permission-aware preview endpoints rather than a duplicate source.
+Current Phase 6 slice: recipient-scoped bulk notification read is being added through the existing inbox service/repository and dedicated CSRF-protected notification route.
+Gap: the current direct-message model is authoritative for one-to-one participant pairs and start/reply/read state. Star/leave/invite/lock management states are absent and must receive real persistence plus permission semantics before any controls are exposed. Notification/DM density and final responsive/live-route qualification remain.
 
 07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — NOT STARTED
 Repository scan found no server-directory implementation family. Required: directory, comparison, seasons, detail, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer, permissions and error states.
