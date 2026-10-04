@@ -124,6 +124,15 @@ final readonly class SystemOperationsService
         $this->audit->mutate($event, fn (): mixed => $this->generated->set('app.maintenance', $enabled));
     }
 
+    /** @return list<ScheduledTask> */
+    public function scheduledTasks(EntityId $actor): array
+    {
+        $this->requireAcp($actor);
+        $this->require($actor, self::JOB_PERMISSION);
+
+        return $this->scheduler->all();
+    }
+
     public function runScheduledTask(
         EntityId $actor,
         string $taskName,
