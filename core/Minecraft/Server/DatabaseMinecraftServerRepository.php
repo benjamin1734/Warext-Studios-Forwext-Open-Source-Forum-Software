@@ -219,24 +219,42 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         return array_map($this->hydrateUpdate(...), $rows);
     }
 
-    public function createUpdate(MinecraftServerUpdate $update): void
+    public function createUpdate(MinecraftServerUpdate $update, ?EntityId $requiredOwnerUserId = null): void
     {
-        $this->database->execute(new CompiledQuery(
-            'INSERT INTO forwext_minecraft_server_updates '
-            . '(update_id,server_id,author_user_id,title,body,state,created_at_utc,updated_at_utc) '
-            . 'VALUES (:update_id,:server_id,:author_user_id,:title,:body,:state,:created_at,:updated_at)',
-            [
-                'update_id'=>$update->updateId->value(),
-                'server_id'=>$update->serverId->value(),
-                'author_user_id'=>$update->authorUserId?->value(),
-                'title'=>$update->title,
-                'body'=>$update->body,
-                'state'=>$update->state,
-                'created_at'=>self::format($update->createdAt),
-                'updated_at'=>self::format($update->updatedAt),
-            ],
-            true,
-        ));
+        if ($requiredOwnerUserId !== null) {
+            UserId::assert($requiredOwnerUserId);
+        }
+        $this->database->transaction(function (TransactionalQueryExecutor $database) use ($update, $requiredOwnerUserId): void {
+            $row = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$update->serverId->value()],
+            ));
+            if ($row === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            if ($requiredOwnerUserId !== null) {
+                $storedOwner = $row['owner_user_id'] === null ? null : (string) $row['owner_user_id'];
+                if ($storedOwner === null || !hash_equals($storedOwner, $requiredOwnerUserId->value())) {
+                    throw new RuntimeException('Minecraft server ownership changed concurrently.');
+                }
+            }
+            $database->execute(new CompiledQuery(
+                'INSERT INTO forwext_minecraft_server_updates '
+                . '(update_id,server_id,author_user_id,title,body,state,created_at_utc,updated_at_utc) '
+                . 'VALUES (:update_id,:server_id,:author_user_id,:title,:body,:state,:created_at,:updated_at)',
+                [
+                    'update_id'=>$update->updateId->value(),
+                    'server_id'=>$update->serverId->value(),
+                    'author_user_id'=>$update->authorUserId?->value(),
+                    'title'=>$update->title,
+                    'body'=>$update->body,
+                    'state'=>$update->state,
+                    'created_at'=>self::format($update->createdAt),
+                    'updated_at'=>self::format($update->updatedAt),
+                ],
+                true,
+            ));
+        });
     }
 
     public function setUpdateState(
@@ -244,21 +262,46 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         EntityId $updateId,
         string $state,
         DateTimeImmutable $now,
+        ?EntityId $requiredOwnerUserId = null,
     ): bool {
         if (!in_array($state, ['published','hidden'], true)) {
             throw new InvalidArgumentException('Minecraft server update state is invalid.');
         }
-        return $this->database->execute(new CompiledQuery(
-            'UPDATE forwext_minecraft_server_updates SET state=:state,updated_at_utc=:updated_at '
-            . 'WHERE update_id=:update_id AND server_id=:server_id',
-            [
-                'state'=>$state,
-                'updated_at'=>self::format($now),
-                'update_id'=>$updateId->value(),
-                'server_id'=>$serverId->value(),
-            ],
-            true,
-        )) === 1;
+        if ($requiredOwnerUserId !== null) {
+            UserId::assert($requiredOwnerUserId);
+        }
+        return $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+            $serverId,
+            $updateId,
+            $state,
+            $now,
+            $requiredOwnerUserId,
+        ): bool {
+            $row = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$serverId->value()],
+            ));
+            if ($row === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            if ($requiredOwnerUserId !== null) {
+                $storedOwner = $row['owner_user_id'] === null ? null : (string) $row['owner_user_id'];
+                if ($storedOwner === null || !hash_equals($storedOwner, $requiredOwnerUserId->value())) {
+                    throw new RuntimeException('Minecraft server ownership changed concurrently.');
+                }
+            }
+            return $database->execute(new CompiledQuery(
+                'UPDATE forwext_minecraft_server_updates SET state=:state,updated_at_utc=:updated_at '
+                . 'WHERE update_id=:update_id AND server_id=:server_id',
+                [
+                    'state'=>$state,
+                    'updated_at'=>self::format($now),
+                    'update_id'=>$updateId->value(),
+                    'server_id'=>$serverId->value(),
+                ],
+                true,
+            )) === 1;
+        });
     }
 
     public function statistics(EntityId $serverId, DateTimeImmutable $now): MinecraftServerStatistics
