@@ -16,6 +16,7 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
     public function testMigrationCreatesDirectoryStatusOwnershipAndPermissions(): void
     {
         $database = new MinecraftServerDirectoryRecordingDatabase();
+        $database->fetchValues = [1];
         $migration = new CreateMinecraftServerDirectory();
 
         $migration->up(new MigrationContext($database));
@@ -33,6 +34,7 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
             'fk_forwext_minecraft_server_owner',
             'minecraft_server.create',
             'minecraft_server.manage_any',
+            'minecraft-servers',
         ] as $contract) {
             self::assertStringContainsString($contract, $sql);
         }
@@ -47,7 +49,7 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
     public function testVerificationRequiresTablesForeignKeysPermissionsRulesAndUniqueSlug(): void
     {
         $database = new MinecraftServerDirectoryRecordingDatabase();
-        $database->fetchValues = [2, 2, 2, 10, 1];
+        $database->fetchValues = [2, 2, 2, 10, 1, 1];
 
         self::assertTrue(
             (new CreateMinecraftServerDirectory())->verify(new MigrationContext($database))->isPassed(),
