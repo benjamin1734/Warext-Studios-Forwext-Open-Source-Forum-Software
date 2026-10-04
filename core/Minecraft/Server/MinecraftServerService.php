@@ -288,6 +288,17 @@ final readonly class MinecraftServerService
         }
     }
 
+    public function canManageVoteIntegration(EntityId $actor, MinecraftServer $server): bool
+    {
+        $gate = $this->gate($actor);
+        if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
+            return true;
+        }
+        return $server->ownerUserId !== null
+            && $server->ownerUserId->equals($actor)
+            && $gate->allows(self::permission('minecraft_server.vote_integration.manage'));
+    }
+
     public function voteIntegrationSettings(
         EntityId $actor,
         EntityId $serverId,
