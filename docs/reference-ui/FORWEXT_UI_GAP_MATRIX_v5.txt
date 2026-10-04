@@ -15,7 +15,8 @@ Backend/current: shared ProfileHtml shell, managed navigation registry, search, 
 Design gap: shell is still less information-dense than the v5 reference set; account/tool popovers are mostly jump-off panels rather than compact summaries; account sub-navigation exposes only a subset of implemented account surfaces.
 Function gap: message popup has no recent conversation preview/unread count; alert popup has no recent alert preview/unread count; shell does not expose all implemented account tools.
 Permission gap: no client-side authorization issue observed; server-side route handlers remain authoritative.
-Next: densify shared shell without duplicating authorization or data sources; expose implemented account routes first, then add repository-backed previews through explicit view models.
+Implemented in the first Phase 1 slice: the shared member account menu now exposes existing profile, session, bookmark, relationship, notification-setting and presence routes; message/alert tool panels gained compact shortcut structure; direct-message compose has a stable anchor; shell tests cover the added member-only links.
+Next: add repository-backed recent-message and recent-alert preview view models without duplicating inbox logic or authorization.
 
 02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
