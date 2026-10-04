@@ -64,6 +64,8 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         self::assertStringContainsString('href="/community/account/sessions"', $member);
         self::assertStringContainsString('href="/community/account/bookmarks"', $member);
         self::assertStringContainsString('href="/community/account/relationships"', $member);
+        self::assertStringContainsString('href="/community/account/watched/threads"', $member);
+        self::assertStringContainsString('href="/community/account/watched/forums"', $member);
         self::assertStringContainsString('href="/community/account/notification-settings"', $member);
         self::assertStringContainsString('href="/community/account/presence"', $member);
         self::assertStringContainsString('/community/account/conversations#new-conversation', $member);
