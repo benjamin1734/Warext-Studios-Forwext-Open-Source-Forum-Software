@@ -120,23 +120,46 @@ final class ReferralHtml
         bool $updated,
     ): string {
         $action = self::e($basePath->prepend('/referrals/manage'));
-        $body = '<section class="card"><h1>Referans Yönetimi</h1>'
-            . '<p class="muted">Kampanya, attribution, anti-fraud inceleme ve qualification işlemleri.</p>';
+
+        $body = '<section class="referral-manage-page discovery-page"><header class="surface-head referral-manage-head"><div>'
+            . '<span class="forum-eyebrow">DAVETLER · YÖNETİM</span><h1>Referans Yönetimi</h1>'
+            . '<p>Kampanyaları, nitelik kuyruğunu ve anti-fraud incelemelerini tek çalışma alanından yönet.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/referrals')) . '">Davetlerime dön</a></header>';
+
         if ($updated) {
-            $body .= '<div class="notice success">Değişiklik kaydedildi.</div>';
+            $body .= '<div class="notification-settings-notice" role="status">Değişiklik kaydedildi.</div>';
         }
-        $body .= self::stats($analytics)
-            . '<form method="post" action="' . $action . '" class="presence-settings">'
+
+        $body .= '<section class="referral-stats referral-manage-stats" aria-label="Referans sistemi özeti">'
+            . self::accountStat('Tıklama', $analytics->clicks)
+            . self::accountStat('Attribution', $analytics->attributed)
+            . self::accountStat('Nitelikli', $analytics->qualified)
+            . self::accountStat('İnceleme', $analytics->review)
+            . self::accountStat('Reddedilen', $analytics->rejected)
+            . self::accountStat('Ödül Birimi', $analytics->rewardUnits)
+            . '</section>';
+
+        $body .= '<section class="surface-panel referral-qualification-panel"><div><h2>Nitelik kuyruğu</h2>'
+            . '<p>Bekleme süresi dolmuş attribution kayıtlarını mevcut kampanya ve anti-fraud kurallarıyla işle.</p></div>'
+            . '<form method="post" action="' . $action . '">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="qualify_due">'
-            . '<button type="submit">Bekleyen nitelikleri şimdi işle</button></form>'
-            . '<section class="section"><h2>Kampanyalar</h2>';
+            . '<button class="fx-btn fx-btn--primary" type="submit">Bekleyen nitelikleri işle</button></form></section>';
+
+        $body .= '<section class="surface-panel referral-manage-panel"><header><div><h2>Kampanyalar</h2>'
+            . '<p>' . count($campaigns) . ' kayıtlı kampanya · yeni kampanya formu her zaman erişilebilir.</p></div>'
+            . '<span>' . count($campaigns) . '</span></header><div class="referral-manage-list">';
 
         $editable = array_merge([null], $campaigns);
         foreach ($editable as $campaign) {
             $isNew = $campaign === null;
-            $body .= '<details class="search-hit"' . ($isNew ? ' open' : '') . '><summary>'
-                . ($isNew ? 'Yeni kampanya' : self::e($campaign->name)) . '</summary>'
-                . '<form method="post" action="' . $action . '" class="search-form">'
+            $body .= '<details class="referral-campaign-editor"' . ($isNew ? ' open' : '') . '><summary><div>'
+                . '<span>' . ($isNew ? 'YENİ KAMPANYA' : self::e($campaign->key)) . '</span><strong>'
+                . ($isNew ? 'Kampanya oluştur' : self::e($campaign->name)) . '</strong></div>'
+                . '<small>' . ($isNew
+                    ? 'Yeni kampanya ayarlarını tanımla'
+                    : self::e(($campaign->active ? 'Aktif' : 'Pasif') . ' · ' . $campaign->rewardUnits . ' ' . $campaign->rewardKey))
+                . '</small></summary>'
+                . '<form method="post" action="' . $action . '" class="search-form referral-campaign-form">'
                 . self::csrf($csrfToken)
                 . '<input type="hidden" name="action" value="campaign_save">'
                 . '<input type="hidden" name="campaign_id" value="' . self::e($campaign?->campaignId->value() ?? '') . '">'
@@ -163,29 +186,36 @@ final class ReferralHtml
                 . self::e($campaign?->rewardKey ?? 'referral.credit') . '"></label>'
                 . '<label><span>Ödül miktarı</span><input type="number" min="1" max="1000000000" name="reward_units" value="'
                 . ($campaign?->rewardUnits ?? 1) . '"></label>'
-                . '<label><input type="checkbox" name="active" value="1"'
+                . '<label class="referral-campaign-active"><input type="checkbox" name="active" value="1"'
                 . ($campaign?->active ? ' checked' : '') . '> Aktif</label>'
                 . '<div class="search-actions"><button type="submit">Kampanyayı kaydet</button></div></form></details>';
         }
+        $body .= '</div></section>';
 
-        $body .= '</section><section class="section"><h2>Anti-fraud inceleme kuyruğu</h2>';
+        $body .= '<section class="surface-panel referral-review-panel"><header><div><h2>Anti-fraud inceleme kuyruğu</h2>'
+            . '<p>Yalnızca inceleme gerektiren attribution kayıtları burada görünür.</p></div><span>'
+            . count($review) . '</span></header><div class="referral-review-list">';
+
         if ($review === []) {
-            $body .= '<p class="muted">İnceleme bekleyen attribution yok.</p>';
+            $body .= '<div class="surface-empty"><strong>İnceleme bekleyen kayıt yok.</strong>'
+                . '<span>Riskli attribution kayıtları oluştuğunda burada görünecek.</span></div>';
         } else {
             foreach ($review as $item) {
-                $body .= '<article class="search-hit"><strong>' . self::e($item->attributionId->value()) . '</strong>'
-                    . '<div class="muted">Risk: ' . self::e($item->riskCode ?? 'manual_review')
-                    . ' · Referrer: ' . self::e($item->referrerUserId->value())
-                    . ' · Referred: ' . self::e($item->referredUserId->value()) . '</div>'
-                    . '<form method="post" action="' . $action . '" class="presence-settings">'
+                $body .= '<article class="referral-review-row"><div class="referral-review-copy"><span>'
+                    . self::e($item->riskCode ?? 'manual_review') . '</span><strong>'
+                    . self::e($item->attributionId->value()) . '</strong><small>Referrer · '
+                    . self::e($item->referrerUserId->value()) . ' · Referred · '
+                    . self::e($item->referredUserId->value()) . '</small></div>'
+                    . '<form method="post" action="' . $action . '" class="referral-review-actions">'
                     . self::csrf($csrfToken)
                     . '<input type="hidden" name="action" value="review">'
                     . '<input type="hidden" name="attribution_id" value="' . self::e($item->attributionId->value()) . '">'
-                    . '<button type="submit" name="decision" value="approve">Onayla</button>'
-                    . '<button type="submit" name="decision" value="reject">Reddet</button></form></article>';
+                    . '<button class="fx-btn fx-btn--primary" type="submit" name="decision" value="approve">Onayla</button>'
+                    . '<button class="fx-btn" type="submit" name="decision" value="reject">Reddet</button></form></article>';
             }
         }
-        $body .= '</section></section>';
+
+        $body .= '</div></section></section>';
 
         return ProfileHtml::page('Referans Yönetimi', $body, $basePath, authenticated:true);
     }
