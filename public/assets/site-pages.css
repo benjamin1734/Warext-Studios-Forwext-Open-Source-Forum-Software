@@ -3248,3 +3248,52 @@ html,body{max-width:100%;overflow-x:clip}
   .minecraft-server-filter .fx-btn,
   .minecraft-server-detail-actions .fx-btn{min-height:44px}
 }
+
+
+/* minecraft-server-comparison-seasons-v1 */
+.minecraft-compare-form{display:grid;gap:10px;padding:11px;border-radius:4px}
+.minecraft-compare-form-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.minecraft-compare-form-head h2,.minecraft-compare-results>h2{margin:0;font-size:13px}
+.minecraft-compare-form-head p{margin:2px 0 0;color:var(--muted);font-size:9.5px}
+.minecraft-compare-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.minecraft-compare-option{
+  min-width:0;display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);
+  border-radius:4px;background:var(--panel2);cursor:pointer
+}
+.minecraft-compare-option input{width:16px;height:16px;flex:0 0 auto}
+.minecraft-compare-option>span:last-child{min-width:0;display:grid;gap:2px}
+.minecraft-compare-option strong,.minecraft-compare-option small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minecraft-compare-option strong{font-size:10.5px}.minecraft-compare-option small{color:var(--muted);font-size:8.5px}
+.minecraft-compare-results{display:grid;gap:7px}
+.minecraft-compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.minecraft-compare-card{display:grid;gap:9px;padding:10px;border-radius:4px}
+.minecraft-compare-card header{display:flex;align-items:center;gap:8px;min-width:0}
+.minecraft-compare-card header>div{min-width:0}.minecraft-compare-card h2{margin:0;font-size:11.5px}
+.minecraft-compare-card h2 a{color:var(--text);text-decoration:none}
+.minecraft-compare-card header small{color:var(--muted);font-size:8.5px;overflow-wrap:anywhere}
+.minecraft-compare-card dl{display:grid;margin:0}
+.minecraft-compare-card dl>div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:7px;padding:6px 0;border-bottom:1px solid var(--line)}
+.minecraft-compare-card dl>div:last-child{border-bottom:0}
+.minecraft-compare-card dt{color:var(--muted);font-size:8.5px}.minecraft-compare-card dd{margin:0;font-size:9.5px;font-weight:650;overflow-wrap:anywhere}
+.minecraft-season-tabs{display:flex;width:max-content;max-width:100%}
+.minecraft-season-list{padding:0;overflow:hidden}
+.minecraft-season-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;
+  padding:11px 12px;border-bottom:1px solid var(--line);background:var(--panel)
+}
+.minecraft-season-row:last-of-type{border-bottom:0}
+.minecraft-season-title{display:flex;align-items:center;gap:6px}.minecraft-season-title strong{font-size:11.5px}
+.minecraft-season-title span{padding:2px 6px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);font-size:8.5px;font-weight:700}
+.minecraft-season-row.is-active .minecraft-season-title span{border-color:color-mix(in srgb,var(--accent) 42%,var(--line));color:var(--accent)}
+.minecraft-season-row p{margin:3px 0 0;color:var(--muted);font-size:9.5px;line-height:1.4}
+.minecraft-season-meta{display:grid;justify-items:end;gap:2px}.minecraft-season-meta span{color:var(--muted);font-size:8.5px}.minecraft-season-meta strong{font-size:9.5px}
+@media(max-width:700px){
+  .minecraft-compare-form-head{align-items:stretch;flex-direction:column}
+  .minecraft-compare-form-head .fx-btn{width:100%;justify-content:center}
+  .minecraft-compare-options{grid-template-columns:1fr}
+  .minecraft-season-row{grid-template-columns:1fr;gap:6px}
+  .minecraft-season-meta{justify-items:start}
+}
+@media(pointer:coarse){
+  .minecraft-compare-option,.minecraft-compare-form-head .fx-btn{min-height:44px}
+}
