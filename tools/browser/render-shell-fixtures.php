@@ -50,6 +50,36 @@ $forumContent = <<<'HTML'
       </div>
     </section>
 
+    <section class="thread-view-head forum-page-head">
+      <div class="thread-view-title">
+        <div class="thread-badges"><span class="thread-badge">Sabit</span><span class="thread-badge thread-badge--accent">Öne çıkan</span></div>
+        <h1>Responsive ve erişilebilir forum arayüzü</h1>
+        <p>124 yanıt · 125 mesaj</p>
+      </div>
+      <div class="thread-view-actions">
+        <div class="thread-view-action-main">
+          <a class="fx-btn fx-btn--primary" href="#fixture-form">Yanıtla</a>
+          <a class="fx-btn" href="#fixture-category-title">Foruma dön</a>
+        </div>
+        <div class="thread-view-action-follow">
+          <form class="discussion-watch-form" action="#" method="get">
+            <label><span class="sr-only">Takip bildirim modu</span><select name="mode"><option>Uygulama içi</option></select></label>
+            <button class="fx-btn" type="submit">Takibi güncelle</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div class="thread-pagination thread-pagination--top">
+      <nav class="pagination thread-pagination-nav" aria-label="Konu mesaj sayfaları">
+        <a class="pagination-edge" href="#fixture-thread">← Önceki</a>
+        <a href="#fixture-thread">1</a><span class="pagination-gap" aria-hidden="true">…</span>
+        <a href="#fixture-thread">5</a><a href="#fixture-thread" aria-current="page">6</a><a href="#fixture-thread">7</a>
+        <span class="pagination-gap" aria-hidden="true">…</span><a href="#fixture-thread">25</a>
+        <a class="pagination-edge" href="#fixture-thread">Sonraki →</a>
+      </nav>
+    </div>
+
     <section id="fixture-thread" class="thread-post-list" aria-label="Örnek konu">
       <article class="thread-post">
         <aside class="thread-post-author">
@@ -62,8 +92,8 @@ $forumContent = <<<'HTML'
           <div class="thread-post-content">
             <p>Bu örnek ileti içinde çok uzun bir bağlantı benzeri metin de bulunur: https://example.invalid/forwext/very-long-segment-that-must-wrap-without-causing-horizontal-page-overflow-or-breaking-the-mobile-layout</p>
           </div>
-          <footer>
-            <span class="muted">Bugün</span>
+          <footer class="thread-post-footer">
+            <div class="thread-post-footer-meta"><span class="muted">Bugün</span></div>
             <div class="thread-post-interactions">
               <details data-browser-post-menu>
                 <summary class="fx-btn">Tepki</summary>
@@ -77,6 +107,15 @@ $forumContent = <<<'HTML'
         </div>
       </article>
     </section>
+
+    <div class="thread-pagination thread-pagination--bottom">
+      <nav class="pagination thread-pagination-nav" aria-label="Konu mesaj sayfaları alt">
+        <a class="pagination-edge" href="#fixture-thread">← Önceki</a>
+        <a href="#fixture-thread">1</a><span class="pagination-gap" aria-hidden="true">…</span>
+        <a href="#fixture-thread" aria-current="page">6</a><span class="pagination-gap" aria-hidden="true">…</span><a href="#fixture-thread">25</a>
+        <a class="pagination-edge" href="#fixture-thread">Sonraki →</a>
+      </nav>
+    </div>
 
     <form id="fixture-form" class="search-form surface-panel" action="#" method="get">
       <label class="search-wide"><span>Konu başlığı</span><input name="q" value="Responsive test" autocomplete="off"></label>
