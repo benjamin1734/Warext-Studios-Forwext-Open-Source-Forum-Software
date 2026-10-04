@@ -460,6 +460,48 @@ try {
   }
   await assertHealthyDocument("minecraft server seasons");
 
+  response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups mobile: directory route did not return HTTP 200");
+  const groupsMobileState = await page.evaluate(() => {
+    const directory = document.querySelector(".group-directory");
+    const search = document.querySelector(".group-search");
+    return {
+      directoryWidth: directory instanceof HTMLElement ? Math.round(directory.getBoundingClientRect().width) : 0,
+      searchColumns: search instanceof HTMLElement
+        ? getComputedStyle(search).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    groupsMobileState.directoryWidth > groupsMobileState.viewportWidth
+    || groupsMobileState.searchColumns !== 1
+  ) {
+    fail(`community groups mobile: responsive contract failed ${JSON.stringify(groupsMobileState)}`);
+  }
+  await assertHealthyDocument("community groups mobile");
+
+  response = await page.goto(baseUrl + "/groups/mine", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups mine mobile: route did not return HTTP 200");
+  const groupsMineMobileState = await page.evaluate(() => {
+    const form = document.querySelector(".group-create-panel form");
+    const list = document.querySelector(".group-mine-list");
+    return {
+      formColumns: form instanceof HTMLElement
+        ? getComputedStyle(form).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      listWidth: list instanceof HTMLElement ? Math.round(list.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    groupsMineMobileState.formColumns !== 1
+    || groupsMineMobileState.listWidth > groupsMineMobileState.viewportWidth
+  ) {
+    fail(`community groups mine mobile: responsive contract failed ${JSON.stringify(groupsMineMobileState)}`);
+  }
+  await assertHealthyDocument("community groups mine mobile");
+
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server management: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Sunucu Yönetimi", exact: true }).waitFor();
@@ -591,6 +633,104 @@ try {
     }
     await assertHealthyDocument("minecraft server vote integration");
   }
+
+  response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups: directory route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Klanlar & Gruplar", exact: true }).waitFor();
+  const groupDirectoryState = await page.evaluate(() => ({
+    searchForms: document.querySelectorAll(".group-search").length,
+    directories: document.querySelectorAll(".group-directory").length,
+    cards: document.querySelectorAll(".group-card").length,
+  }));
+  if (groupDirectoryState.searchForms !== 1 || groupDirectoryState.directories !== 1 || groupDirectoryState.cards < 1) {
+    fail(`community groups: directory contract failed ${JSON.stringify(groupDirectoryState)}`);
+  }
+  await assertHealthyDocument("community groups");
+
+  response = await page.goto(baseUrl + "/groups/mine", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups mine: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Klanlarım", exact: true }).waitFor();
+  if ((await page.locator(".group-create-panel").count()) !== 1) {
+    fail("community groups mine: create form is missing for administrator");
+  }
+  await page.locator('.group-create-panel input[name="name"]').fill("CI Admin Klanı");
+  await page.locator('.group-create-panel input[name="slug"]').fill("ci-admin-klani");
+  await page.locator('.group-create-panel input[name="tagline"]').fill("Gerçek create akışı");
+  await page.locator('.group-create-panel textarea[name="description"]').fill(
+    "Phase 8 gerçek tarayıcı kabul testi tarafından oluşturulan topluluk grubu.",
+  );
+  await page.locator('.group-create-panel select[name="join_policy"]').selectOption("open");
+  const [groupCreateResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/groups/mine";
+    }),
+    page.getByRole("button", { name: "Grubu oluştur", exact: true }).click(),
+  ]);
+  if (groupCreateResponse.status() !== 303) {
+    fail(`community groups mine: create POST returned HTTP ${groupCreateResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  if (new URL(page.url()).pathname !== "/groups/mine" || new URL(page.url()).searchParams.get("created") !== "1") {
+    fail("community groups mine: create redirect is invalid");
+  }
+  await page.getByText("Grup oluşturuldu.", { exact: true }).waitFor();
+  if ((await page.locator(".group-mine-row").count()) < 1) {
+    fail("community groups mine: created group is missing from membership list");
+  }
+  await assertHealthyDocument("community groups mine create");
+
+  const approvalGroupId = "dddddddddddddddddddddddddddddddd";
+  response = await page.goto(baseUrl + "/groups/" + approvalGroupId, { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community group detail: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "CI Onaylı Grup", exact: true }).waitFor();
+  const joinButton = page.getByRole("button", { name: "Katılım isteği gönder", exact: true });
+  if ((await joinButton.count()) !== 1) fail("community group detail: approval join action is missing");
+  const [groupJoinResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/groups/" + approvalGroupId;
+    }),
+    joinButton.click(),
+  ]);
+  if (groupJoinResponse.status() !== 303) {
+    fail(`community group detail: join POST returned HTTP ${groupJoinResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  await page.getByText("Üyelik isteğin gönderildi.", { exact: true }).waitFor();
+
+  const approveButton = page.getByRole("button", { name: "Onayla", exact: true });
+  if ((await approveButton.count()) !== 1) {
+    fail("community group detail: pending membership management action is missing");
+  }
+  const [groupApproveResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/groups/" + approvalGroupId;
+    }),
+    approveButton.click(),
+  ]);
+  if (groupApproveResponse.status() !== 303) {
+    fail(`community group detail: approval POST returned HTTP ${groupApproveResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  await page.getByText("Üyelik güncellendi.", { exact: true }).waitFor();
+
+  const leaveGroupButton = page.getByRole("button", { name: "Gruptan ayrıl", exact: true });
+  if ((await leaveGroupButton.count()) !== 1) fail("community group detail: leave action is missing after approval");
+  const [groupLeaveResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && url.pathname === "/groups/" + approvalGroupId;
+    }),
+    leaveGroupButton.click(),
+  ]);
+  if (groupLeaveResponse.status() !== 303) {
+    fail(`community group detail: leave POST returned HTTP ${groupLeaveResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  await page.getByText("Grup üyeliğin sona erdi.", { exact: true }).waitFor();
+  await assertHealthyDocument("community group membership lifecycle");
 
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
@@ -957,4 +1097,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory/voting/management, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory/voting/management, community groups create/membership flows, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
