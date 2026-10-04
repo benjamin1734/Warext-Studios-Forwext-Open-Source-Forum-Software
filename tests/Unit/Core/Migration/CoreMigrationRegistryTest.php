@@ -53,6 +53,7 @@ use Forwext\Database\Migrations\Core\CreateBugStaffWorkflow;
 use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateDirectConversationSystem;
+use Forwext\Database\Migrations\Core\CreateMinecraftServerDirectory;
 use Forwext\Database\Migrations\Core\AddDirectConversationParticipantManagement;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
@@ -127,6 +128,7 @@ final class CoreMigrationRegistryTest extends TestCase
         self::assertContains(CreateAttachmentPipelineTables::class, $classes);
         self::assertContains(CreateSocialInteractionTables::class, $classes);
         self::assertContains(CreateDirectConversationSystem::class, $classes);
+        self::assertContains(CreateMinecraftServerDirectory::class, $classes);
         self::assertContains(AddDirectConversationParticipantManagement::class, $classes);
         self::assertContains(CreateProfileActivityTables::class, $classes);
         self::assertContains(CreateNotificationAlertTables::class, $classes);

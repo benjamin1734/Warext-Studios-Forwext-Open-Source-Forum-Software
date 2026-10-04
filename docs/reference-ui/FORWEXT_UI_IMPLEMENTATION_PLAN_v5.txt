@@ -52,14 +52,17 @@ PHASE 5 — MEMBERS / PROFILE / ACCOUNT — VERIFIED
 - [DONE] Exercise the member, staff, online and profile routes on desktop and 390px mobile; security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium live-route accessibility and installation package all passed on main commit 187952fd.
 - [DONE] Phase 5 is VERIFIED; execution moved to Phase 6 direct messages/notifications.
 
-PHASE 6 — DM / ALERTS / ACTIVITY — IN PROGRESS
+PHASE 6 — DM / ALERTS / ACTIVITY — VERIFIED
 - [DONE] Preserve the authenticated shell message/alert previews already backed by the existing authorized preview endpoints.
-- [DONE] Add a recipient-scoped, CSRF-protected bulk notification read action using the existing notification inbox ownership and persistence model; full main qualification, including the installation package PHPUnit run, passed on 8ee6410.
-- [VERIFYING] Direct-message management ownership audit is complete for the current one-to-one model: per-participant star and leave state now have real persistence, active-participant checks, CSRF-protected actions and a real starred filter. Invite and global lock controls remain intentionally absent because the authoritative pair model has neither multi-participant membership nor conversation-owner/lock semantics.
-- [NEXT] Finish notification/DM density, responsive/accessibility and live-route qualification for the participant-management slice before closing Phase 6.
+- [DONE] Add a recipient-scoped, CSRF-protected bulk notification read action using the existing notification inbox ownership and persistence model.
+- [DONE] Add real per-participant star/leave state, active-participant enforcement and starred filtering for the authoritative one-to-one direct-message model. Invite and global lock remain intentionally absent because the model has no multi-participant or owner/lock semantics.
+- [DONE] Real installed Chromium qualification covers DM inbox, starred filter, notification center and 390px mobile layout. The mobile account secondary-nav overflow discovered by this check was fixed at 0134ef5.
+- [DONE] Latest Phase 6 main qualification at 0134ef5: PHP 8.4/8.5, security, performance, database migration smoke, real-route Chromium and installation package are green.
 
-PHASE 7 — MINECRAFT SERVER SYSTEM
-- Implement as a first-class Forwext module: directory, comparison, seasons, detail, vote, management, statistics, vote integration, team and ownership lifecycle.
+PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
+- [VERIFYING] First vertical slice: first-party module ownership, additive directory/status schema, public repository/service, /servers directory, /servers/{id} detail, primary navigation, compact responsive UI and regression contracts.
+- [NEXT] Qualify the first slice on PHP 8.4/8.5, migration smoke, security, real-route Chromium and installation package.
+- [NEXT] Then implement comparison and seasons, followed by vote/edit/updates/statistics/vote integration/team/ownership lifecycle.
 
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
 - Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.

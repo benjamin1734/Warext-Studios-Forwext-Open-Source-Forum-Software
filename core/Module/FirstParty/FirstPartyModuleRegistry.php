@@ -278,6 +278,19 @@ final readonly class FirstPartyModuleRegistry
                 ],
             ),
             new FirstPartyModuleDefinition(
+                'minecraft-servers',
+                'Minecraft Servers',
+                'Minecraft sunucu dizini, durum, oy, yönetim, ekip ve sahiplik yaşam döngüsü.',
+                routePrefixes:['server.'],
+                settings:[
+                    self::flag('directory_enabled', 'Sunucu dizini', 'Public Minecraft sunucu dizinini etkinleştirir.', true, $globalGroup),
+                ],
+                purgeTables:[
+                    'forwext_minecraft_server_status',
+                    'forwext_minecraft_servers',
+                ],
+            ),
+            new FirstPartyModuleDefinition(
                 'marketplace',
                 'Marketplace',
                 'Listing, category, review, external sale, native order ve digital delivery.',
