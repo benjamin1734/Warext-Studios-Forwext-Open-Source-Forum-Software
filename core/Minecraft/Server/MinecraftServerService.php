@@ -113,6 +113,71 @@ final readonly class MinecraftServerService
         return $recorded;
     }
 
+    /** @return list<MinecraftServerUpdate> */
+    public function updates(EntityId $serverId, int $limit = 20, int $offset = 0): array
+    {
+        if ($this->servers->publicById($serverId) === null) {
+            throw new InvalidArgumentException('Minecraft server is unavailable.');
+        }
+        return $this->servers->publicUpdates($serverId, $limit, $offset);
+    }
+
+    public function statistics(EntityId $serverId, DateTimeImmutable $now): MinecraftServerStatistics
+    {
+        if ($this->servers->publicById($serverId) === null) {
+            throw new InvalidArgumentException('Minecraft server is unavailable.');
+        }
+        return $this->servers->statistics($serverId, $now);
+    }
+
+    /** @return list<MinecraftServerUpdate> */
+    public function managementUpdates(EntityId $actor, EntityId $serverId, int $limit = 100): array
+    {
+        $this->managementDetail($actor, $serverId);
+        return $this->servers->managementUpdates($serverId, $limit);
+    }
+
+    public function publishUpdate(
+        EntityId $actor,
+        EntityId $serverId,
+        string $title,
+        string $body,
+        DateTimeImmutable $now,
+    ): EntityId {
+        $this->managementDetail($actor, $serverId);
+        $title = trim($title);
+        $body = trim($body);
+        $updateId = EntityId::fromString(bin2hex(random_bytes(16)));
+        $update = new MinecraftServerUpdate(
+            $updateId,
+            $serverId,
+            $actor,
+            $title,
+            $body,
+            'published',
+            $now,
+            $now,
+        );
+        $this->servers->createUpdate($update);
+        return $updateId;
+    }
+
+    public function changeUpdateState(
+        EntityId $actor,
+        EntityId $serverId,
+        EntityId $updateId,
+        string $state,
+        DateTimeImmutable $now,
+    ): void {
+        $this->managementDetail($actor, $serverId);
+        if (!in_array($state, ['published','hidden'], true)) {
+            throw new InvalidArgumentException('Minecraft server update state is invalid.');
+        }
+        if (!$this->servers->setUpdateState($serverId, $updateId, $state, $now)) {
+            throw new InvalidArgumentException('Minecraft server update was not found.');
+        }
+    }
+
     /** @return list<MinecraftServer> */
     public function manageable(EntityId $actor, int $limit = 100): array
     {
