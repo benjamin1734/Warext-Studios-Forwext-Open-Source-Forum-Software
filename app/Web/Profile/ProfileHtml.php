@@ -117,10 +117,16 @@ final class ProfileHtml
 
         $forumSubNav = $visibleNavItem('forums', 'Forum listesi', '/forums')
             . $visibleNavItem('search', 'Forumlarda ara', '/search')
-            . ($authenticated ? $navItem('forums.activity', 'Yeni içerikler', '/activity') : '');
+            . ($authenticated ? $navItem('forums.new', 'Yeni konular', '/activity/threads/new') : '');
 
         $whatsNewSubNav = $authenticated
             ? $navItem('activity.latest', 'Son hareketlilik', '/activity')
+                . $navItem('activity.new', 'Yeni konular', '/activity/threads/new')
+                . $navItem('activity.profile-posts', 'Yeni profil gönderileri', '/activity/profile-posts')
+                . $navItem('activity.unread', 'Okunmamış', '/activity/threads/unread')
+                . $navItem('activity.trending', 'Gündem', '/activity/threads/trending')
+                . $navItem('activity.featured', 'Öne çıkanlar', '/activity/threads/featured')
+                . $navItem('activity.recent', 'Son hareketli konular', '/activity/threads/recent')
                 . $navItem('activity.search', 'İçerik ara', '/search')
                 . (isset($visibleNavigation['giveaways'])
                     ? $navItem('activity.giveaways', 'Çekilişler', '/giveaways')

@@ -10,16 +10,24 @@ use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Profile\Activity\ActivityFeedEntry;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
+use Forwext\Core\Profile\Activity\ActivityFeedType;
 use Forwext\Core\Profile\Activity\ProfileActivityException;
 use Forwext\Core\Routing\BasePath;
 
 final readonly class ActivityFeedHandler implements RequestHandlerInterface
 {
+    /**
+     * @param null|list<ActivityFeedType> $types
+     */
     public function __construct(
         private ActivityFeedService $service,
         private ProfileViewerResolver $viewers,
         private BasePath $basePath,
         private DateTimeZone $timezone,
+        private ?array $types = null,
+        private string $title = 'Neler yeni?',
+        private string $description = 'Erişebildiğin forum ve profil hareketlerini kronolojik olarak takip et.',
+        private string $routePath = '/activity',
     ) {}
 
     public function handle(Request $request): Response
@@ -29,7 +37,7 @@ final readonly class ActivityFeedHandler implements RequestHandlerInterface
         try {
             if ($this->wantsHtml($request)) {
                 $page = $this->page($request->query()['page'] ?? null);
-                $items = $this->service->feed($actor, 31, ($page - 1) * 30);
+                $items = $this->service->feed($actor, 31, ($page - 1) * 30, $this->types);
                 $hasMore = count($items) > 30;
                 if ($hasMore) {
                     array_pop($items);
@@ -40,11 +48,14 @@ final readonly class ActivityFeedHandler implements RequestHandlerInterface
                     $hasMore,
                     $this->basePath,
                     $this->timezone,
+                    $this->title,
+                    $this->description,
+                    $this->routePath,
                 ))->withHeader('Cache-Control', 'private, no-store')
                     ->withHeader('X-Robots-Tag', 'noindex,nofollow');
             }
 
-            $items = $this->service->feed($actor, $this->queryInt($request, 'limit', 50), $this->queryInt($request, 'offset', 0));
+            $items = $this->service->feed($actor, $this->queryInt($request, 'limit', 50), $this->queryInt($request, 'offset', 0), $this->types);
             return $this->json(['items' => array_map($this->serialize(...), $items)]);
         } catch (ProfileActivityException) {
             return $this->wantsHtml($request)

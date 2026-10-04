@@ -21,16 +21,27 @@ final readonly class ActivityFeedService
     ) {
     }
 
-    /** @return list<ActivityFeedEntry> */
-    public function feed(EntityId $viewerId, int $limit = 50, int $offset = 0): array
+    /**
+     * @param null|list<ActivityFeedType> $types
+     * @return list<ActivityFeedEntry>
+     */
+    public function feed(EntityId $viewerId, int $limit = 50, int $offset = 0, ?array $types = null): array
     {
         if ($limit < 1 || $limit > 100 || $offset < 0 || $offset > 1_000_000) {
             throw new ProfileActivityException('Activity feed pagination is invalid.');
         }
+        if ($types !== null) {
+            foreach ($types as $type) {
+                if (!$type instanceof ActivityFeedType) {
+                    throw new ProfileActivityException('Activity feed type filter is invalid.');
+                }
+            }
+        }
+
         $ignored = [];
         foreach ($this->social->ignoredUserIds($viewerId) as $id) $ignored[$id->value()] = true;
         $gate = new PermissionGate($this->authorizer, $viewerId);
-        $candidates = $this->feed->candidates(min(300, max($limit, $limit * 4)), $offset);
+        $candidates = $this->feed->candidates(min(300, max($limit, $limit * 4)), $offset, $types);
         $visible = [];
         foreach ($candidates as $entry) {
             if ($entry->actorUserId !== null && isset($ignored[$entry->actorUserId->value()])) continue;

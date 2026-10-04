@@ -15,10 +15,28 @@ final readonly class DatabaseActivityFeedRepository implements ActivityFeedRepos
 {
     public function __construct(private QueryExecutor $database) {}
 
-    public function candidates(int $limit = 100, int $offset = 0): array
+    public function candidates(int $limit = 100, int $offset = 0, ?array $types = null): array
     {
         if ($limit < 1 || $limit > 300 || $offset < 0 || $offset > 1_000_000) {
             throw new ProfileActivityException('Activity feed pagination is invalid.');
+        }
+
+        $parameters = [];
+        $typeWhere = '';
+        if ($types !== null) {
+            if ($types === []) {
+                return [];
+            }
+            $placeholders = [];
+            foreach (array_values($types) as $index => $type) {
+                if (!$type instanceof ActivityFeedType) {
+                    throw new ProfileActivityException('Activity feed type filter is invalid.');
+                }
+                $name = 'activity_type_' . $index;
+                $placeholders[] = ':' . $name;
+                $parameters[$name] = $type->value;
+            }
+            $typeWhere = ' WHERE `activity_type` IN (' . implode(', ', $placeholders) . ')';
         }
 
         $sql = "SELECT `activity_type`, `actor_user_id`, `subject_id`, `forum_node_id`, `profile_owner_user_id`, "
@@ -50,9 +68,10 @@ final readonly class DatabaseActivityFeedRepository implements ActivityFeedRepos
             . "INNER JOIN `forwext_profile_posts` pp ON pp.`profile_post_id` = r.`profile_post_id` "
             . "INNER JOIN `forwext_reaction_types` rt ON rt.`reaction_key` = r.`reaction_key` AND rt.`enabled` = 1 "
             . "WHERE pp.`moderation_state` = 'visible' AND pp.`deleted_at_utc` IS NULL"
-            . ") feed ORDER BY `occurred_at_utc` DESC, `activity_type`, `subject_id` LIMIT " . $limit . " OFFSET " . $offset;
+            . ") feed" . $typeWhere
+            . " ORDER BY `occurred_at_utc` DESC, `activity_type`, `subject_id` LIMIT " . $limit . " OFFSET " . $offset;
 
-        return array_map($this->hydrate(...), $this->database->fetchAll(new CompiledQuery($sql)));
+        return array_map($this->hydrate(...), $this->database->fetchAll(new CompiledQuery($sql, $parameters)));
     }
 
     /** @param array<string,mixed> $row */

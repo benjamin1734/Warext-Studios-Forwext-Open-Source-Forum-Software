@@ -63,6 +63,10 @@ final class ActivityFeedServiceTest extends TestCase
         self::assertCount(1, $result);
         self::assertSame(ActivityFeedType::ProfilePostCreated, $result[0]->type);
         self::assertSame('visible profile', $result[0]->summary);
+
+        $profileOnly = $service->feed($viewer, 10, 0, [ActivityFeedType::ProfilePostCreated]);
+        self::assertCount(1, $profileOnly);
+        self::assertSame(ActivityFeedType::ProfilePostCreated, $profileOnly[0]->type);
     }
 
     private function user(EntityId $id, string $name): User
@@ -76,7 +80,23 @@ final class ActivityFeedServiceTest extends TestCase
 final readonly class FeedMemoryRepository implements ActivityFeedRepository
 {
     /** @param list<ActivityFeedEntry> $entries */ public function __construct(private array $entries) {}
-    public function candidates(int $limit = 100, int $offset = 0): array { return array_slice($this->entries, $offset, $limit); }
+    public function candidates(int $limit = 100, int $offset = 0, ?array $types = null): array
+    {
+        $entries = $this->entries;
+        if ($types !== null) {
+            $allowed = [];
+            foreach ($types as $type) {
+                if ($type instanceof ActivityFeedType) {
+                    $allowed[$type->value] = true;
+                }
+            }
+            $entries = array_values(array_filter(
+                $entries,
+                static fn (ActivityFeedEntry $entry): bool => isset($allowed[$entry->type->value]),
+            ));
+        }
+        return array_slice($entries, $offset, $limit);
+    }
 }
 
 final class FeedProfileRepository implements ProfileActivityRepository

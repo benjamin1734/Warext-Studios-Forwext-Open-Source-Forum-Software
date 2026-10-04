@@ -10,18 +10,21 @@ STATUS LEGEND
 - IMPLEMENTED: route + rendered UI + action/persistence + permission exists.
 - VERIFIED: implemented and current regression/CI checks cover the target behavior.
 
-01 GLOBAL SHELL / NAV / SEARCH / ACCOUNT / ALERTS / DM — IN PROGRESS
+01 GLOBAL SHELL / NAV / SEARCH / ACCOUNT / ALERTS / DM — VERIFIED
 Backend/current: shared ProfileHtml shell, managed navigation registry, search, direct conversations, notification inbox/realtime and account routes exist. Keyboard Escape, mobile focus trapping and active-section logic exist.
 Design gap: shell density is now closer to the v5 reference set, but active-state polish, account grouping and final responsive comparison remain.
 Function gap: the major shared-shell gaps are reduced; dedicated advanced account surfaces and later DM management states remain outside this phase.
 Permission gap: no client-side authorization issue observed; the lazy previews reuse the existing authorized inbox handlers and do not introduce a second data source.
 Implemented in Phase 1: the member account menu exposes existing profile, session, bookmark, relationship, notification-setting and presence routes; message/alert tool panels include compact shortcuts and lazy recent-item previews; direct-message compose has a stable anchor; the visible alert trigger receives realtime unread state; preview rendering uses same-origin fetches and textContent-only DOM insertion.
-Current final Phase 1 slice: account tools are grouped into compact Account/Communication/Community/Other sections; mobile account links retain >=44px touch targets; live browser acceptance verifies message/alert previews and exact active account navigation; representative browser coverage now includes an authenticated 390px mobile case.
-Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package CI for this final slice. When green, Phase 1 can be marked VERIFIED and execution moves to Phase 2 forum/discovery gaps.
+Verified Phase 1 slice: account tools are grouped into compact Account/Communication/Community/Other sections; mobile account links retain >=44px touch targets; the open mobile navigation is a stable viewport overlay with background pointer isolation; live browser acceptance verifies message/alert previews and exact active account navigation; representative browser coverage includes an authenticated 390px mobile case.
+Verification: PHP 8.4/8.5 contracts, Chromium responsive/live-route accessibility, security, performance/observability, database migration smoke, release contract and package/installer steps passed on the Phase 1 main baseline.
 
 02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
-Gap: dedicated new-post/featured/profile-post/watch/no-reply discovery flows and denser side modules are not all first-class routes.
+Implemented in the current Phase 2 slice: the existing permission-aware ThreadDiscoveryService is exposed through /activity/threads and mode routes for new, unread, trending, featured and recent thread activity; navigation and forum-home entry points use these real routes; the compact list surface reuses forum search scopes and adds live-route browser acceptance. The existing activity-feed repository now supports bounded enum type filters, and /activity/profile-posts reuses the same visibility/moderation/ignore checks for a dedicated new-profile-post flow without creating a second activity source.
+Forum-index density is now expanded with visible category forum counts and a compact authenticated discovery sidebar backed only by the new first-class discovery routes.
+Gap: watched/no-reply and user-specific thread filters remain Phase 3 work.
+Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package CI for the full Phase 2 slice.
 
 03 THREAD LIST / SEARCH / WATCH FLOWS — IN PROGRESS
 Current: forum view and permission-aware search exist.
