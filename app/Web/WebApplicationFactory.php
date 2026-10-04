@@ -115,6 +115,8 @@ use Forwext\App\Web\MinecraftServer\MinecraftServerDetailHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerCompareHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerSeasonsHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerVoteHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerUpdatesHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerStatisticsHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerManageHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerClaimHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
@@ -1937,6 +1939,18 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/claim', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerClaimHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.updates',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/{serverId}/updates', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerUpdatesHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.statistics',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/{serverId}/statistics', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerStatisticsHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'server.vote',
