@@ -41,7 +41,7 @@ final readonly class MinecraftServerVoteSettingsHandler implements RequestHandle
         }
 
         try {
-            $server = $this->servers->managementDetail($actor, $serverId);
+            $server = $this->servers->voteIntegrationManagementDetail($actor, $serverId);
             $integration = $this->servers->voteIntegrationSettings($actor, $serverId);
             $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
             if (!is_string($csrf) || $csrf === '') {
