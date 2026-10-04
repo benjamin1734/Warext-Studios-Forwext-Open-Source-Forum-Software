@@ -68,8 +68,9 @@ Portfolio browse density implemented: the public route accepts whitelisted categ
 FAQ public density implemented: the existing language-scoped FAQ service now renders compact category/article totals, explicit active language state, category counts, bounded tag chips and a separate helpfulness panel. Helpful votes remain authenticated, permission-owned and CSRF-protected by the existing route; no duplicate FAQ persistence was introduced.
 Referral management density implemented: existing campaign-save, qualify-due and anti-fraud review actions are grouped into a dedicated management workspace with real analytics summary, compact campaign editors and responsive review actions. Existing POST action names, service ownership and CSRF remain unchanged.
 Bug-report density implemented: the personal list derives open/terminal/high-priority summaries from authoritative reports, rows expose real category/status/severity state, intake keeps existing secure upload and diagnostic collection while separating submission guidance, and the detail page groups existing conversation/workflow controls into responsive bug-specific layouts.
-Qualification pending: the groups foundation plus portfolio/FAQ/referral/bug density slices must pass the full PHP/DB/security/performance/real-browser/package gate.
-Remaining Phase 8 gap after qualification: finish portfolio detail/manage density, then run the complete Phase 8 qualification and live-route comparison.
+Portfolio detail/manage density implemented: detail content and reactions now share a responsive primary grid with real project state/media/tag counts, while management exposes the same authoritative project summary beside the existing create/update form and retains the current media, category, moderation and CSRF flows.
+Phase 8 implementation gap: closed for groups, portfolio, FAQ, referrals and bug-report surfaces.
+Qualification pending: the complete Phase 8 surface must still pass PHP/DB/security/performance/real-browser/package gates and live-route comparison before Phase 8 can be marked VERIFIED.
 
 09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
 Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.

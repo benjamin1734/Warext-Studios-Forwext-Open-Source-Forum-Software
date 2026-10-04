@@ -56,8 +56,11 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('.portfolio-card-footer', $css);
         self::assertStringContainsString('portfolio-project discovery-page', $html);
         self::assertStringContainsString('surface-head portfolio-project-head', $html);
+        self::assertStringContainsString('portfolio-project-main-grid', $html);
         self::assertStringContainsString('surface-panel portfolio-project-content', $html);
+        self::assertStringContainsString('portfolio-project-content-head', $html);
         self::assertStringContainsString('class="portfolio-comment"', $html);
+        self::assertStringContainsString('.portfolio-project-main-grid', $css);
     }
     public function testGiveawayPublicSurfacesUseModuleSpecificCards(): void
     {
@@ -85,9 +88,13 @@ final class ModulePublicBrowseWebSurfaceTest extends TestCase
         self::assertStringContainsString('module-manage-page discovery-page',$html);
         self::assertStringContainsString('surface-head module-manage-head',$html);
         self::assertStringContainsString('surface-panel module-manage-panel',$html);
+        self::assertStringContainsString('portfolio-manage-grid',$html);
+        self::assertStringContainsString('surface-panel portfolio-manage-summary',$html);
         self::assertStringContainsString('surface-panel module-manage-section',$html);
         self::assertStringContainsString('module-manage-details',$html);
+        self::assertStringContainsString('class="fx-btn" type="submit">Görseli kaldır',$html);
         self::assertStringContainsString('.module-manage-panel',$css);
+        self::assertStringContainsString('.portfolio-manage-summary',$css);
     }
 
     public function testGiveawayManagementAndProofUseSharedModuleSurfaces(): void

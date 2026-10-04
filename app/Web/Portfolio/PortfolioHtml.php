@@ -133,7 +133,10 @@ final class PortfolioHtml
             $body .= '</div></section>';
         }
 
-        $body .= '<section class="surface-panel portfolio-project-content"><h2>Proje hakkında</h2>'
+        $body .= '<div class="portfolio-project-main-grid"><section class="surface-panel portfolio-project-content">'
+            . '<header class="portfolio-project-content-head"><div><h2>Proje hakkında</h2>'
+            . '<p>' . count($project->media) . ' görsel · ' . count($project->tags) . ' etiket</p></div>'
+            . '<span>' . self::e($project->state->value) . '</span></header>'
             . '<div class="about">' . nl2br(self::e($project->description), false) . '</div>';
         if ($project->tags !== []) {
             $body .= '<div class="portfolio-project-tags">';
@@ -170,7 +173,7 @@ final class PortfolioHtml
         } else {
             $body .= '<p class="muted portfolio-engagement-login">Tepki vermek için oturum aç.</p>';
         }
-        $body .= '</section>';
+        $body .= '</section></div>';
 
         $body .= '<section class="surface-panel portfolio-comments"><header><div><h2>Yorumlar</h2>'
             . '<p>' . count($comments) . ' yorum</p></div></header><div class="portfolio-comment-list">';
@@ -228,13 +231,17 @@ final class PortfolioHtml
         }
 
         $tagValue = $project === null ? '' : implode(', ', $project->tags);
+        $stateLabel = $project?->state->value ?? 'new';
+        $mediaCount = count($project?->media ?? []);
+        $tagCount = count($project?->tags ?? []);
+
         $body = '<section class="module-manage-page discovery-page"><header class="surface-head module-manage-head"><div>'
             . '<span class="forum-eyebrow">PORTFOLYO YÖNETİMİ</span><h1>'
             . ($project === null ? 'Yeni proje' : 'Projeyi düzenle') . '</h1>'
             . '<p>Proje içeriği ortak yazım ve moderasyon hattından geçirilir.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/portfolio')) . '">Portfolyoya dön</a></header>'
             . $notice
-            . '<section class="surface-panel module-manage-panel"><form method="post" action="' . $action . '" class="search-form">'
+            . '<div class="portfolio-manage-grid"><section class="surface-panel module-manage-panel"><form method="post" action="' . $action . '" class="search-form">'
             . self::csrf($csrfToken)
             . '<input type="hidden" name="action" value="project_save">'
             . '<input type="hidden" name="project_id" value="' . self::e($project?->projectId->value() ?? '') . '">'
@@ -256,7 +263,14 @@ final class PortfolioHtml
                 . ($project?->featured ? ' checked' : '') . '> Öne çıkar</label>';
         }
 
-        $body .= '<div class="search-actions"><button type="submit">Kaydet</button></div></form></section>';
+        $body .= '<div class="search-actions"><button type="submit">Kaydet</button></div></form></section>'
+            . '<aside class="surface-panel portfolio-manage-summary"><div><span class="forum-eyebrow">PROJE DURUMU</span>'
+            . '<h2>Yayın özeti</h2></div><dl>'
+            . '<div><dt>Durum</dt><dd>' . self::e($stateLabel) . '</dd></div>'
+            . '<div><dt>Medya</dt><dd>' . $mediaCount . ' / 12</dd></div>'
+            . '<div><dt>Etiket</dt><dd>' . $tagCount . ' / 32</dd></div>'
+            . '<div><dt>Yönetim</dt><dd>' . ($canManageAll ? 'Tam yetki' : 'Kendi projesi') . '</dd></div>'
+            . '</dl><p>Yayınlama isteği içerik ve moderasyon hattından geçirilir; gerekiyorsa incelemeye alınır.</p></aside></div>';
 
         if ($project !== null) {
             $mediaAction = self::e($basePath->prepend(
@@ -274,7 +288,7 @@ final class PortfolioHtml
                             . self::csrf($csrfToken)
                             . '<input type="hidden" name="action" value="delete">'
                             . '<input type="hidden" name="media_id" value="' . self::e($media->mediaId->value()) . '">'
-                            . '<button type="submit">Görseli kaldır</button></form>';
+                            . '<button class="fx-btn" type="submit">Görseli kaldır</button></form>';
                     }
                     $body .= '</figure>';
                 }
@@ -287,7 +301,7 @@ final class PortfolioHtml
                 . 'accept="image/jpeg,image/png,image/gif,image/webp" required></label>'
                 . '<label class="search-wide"><span>Alternatif metin</span><input name="alt" maxlength="200" '
                 . 'placeholder="Görseli erişilebilir biçimde açıklayın"></label>'
-                . '<div class="search-actions"><button type="submit">Görsel yükle</button></div></form></section>';
+                . '<div class="search-actions"><button class="fx-btn fx-btn--primary" type="submit">Görsel yükle</button></div></form></section>';
         }
 
         if ($canManageAll) {
