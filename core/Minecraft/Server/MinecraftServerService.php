@@ -237,6 +237,11 @@ final readonly class MinecraftServerService
             && $gate->allows(self::permission('minecraft_server.team.manage'));
     }
 
+    public function teamManagementDetail(EntityId $actor, EntityId $serverId): MinecraftServer
+    {
+        return $this->requireTeamManagement($actor, $serverId);
+    }
+
     /** @return list<MinecraftServerTeamMember> */
     public function teamForManagement(EntityId $actor, EntityId $serverId): array
     {
@@ -298,6 +303,13 @@ final readonly class MinecraftServerService
         return $server->ownerUserId !== null
             && $server->ownerUserId->equals($actor)
             && $gate->allows(self::permission('minecraft_server.vote_integration.manage'));
+    }
+
+    public function voteIntegrationManagementDetail(
+        EntityId $actor,
+        EntityId $serverId,
+    ): MinecraftServer {
+        return $this->requireVoteIntegrationManagement($actor, $serverId);
     }
 
     public function voteIntegrationSettings(
