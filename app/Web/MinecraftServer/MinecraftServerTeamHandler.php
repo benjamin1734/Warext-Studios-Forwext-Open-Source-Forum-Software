@@ -48,7 +48,7 @@ final readonly class MinecraftServerTeamHandler implements RequestHandlerInterfa
                 if ($actor === null) {
                     return Response::text('Not Found', 404)->withHeader('Cache-Control', 'no-store');
                 }
-                $server = $this->servers->managementDetail($actor, $serverId);
+                $server = $this->servers->teamManagementDetail($actor, $serverId);
             }
 
             if ($request->method() === HttpMethod::Post) {
