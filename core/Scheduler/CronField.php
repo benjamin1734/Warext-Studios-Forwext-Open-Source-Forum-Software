@@ -53,6 +53,16 @@ final readonly class CronField
         return $this->wildcard;
     }
 
+    /** @return list<int> */
+    public function values(): array
+    {
+        $values = array_keys($this->values);
+        sort($values, SORT_NUMERIC);
+
+        return array_values($values);
+    }
+
+
     /** @param array<int, true> $values */
     private static function expandPart(
         string $part,
