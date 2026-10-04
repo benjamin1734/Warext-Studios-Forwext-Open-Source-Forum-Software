@@ -252,6 +252,27 @@ try {
   }
   await assertHealthyDocument("thread discovery");
 
+  response = await page.goto(baseUrl + "/account/preferences", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail(`account preferences: returned HTTP ${response?.status() ?? "no response"}`);
+  }
+  await page.getByRole("heading", { name: "Tercihler ve Gizlilik", exact: true }).waitFor();
+  const preferencesState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    cards: document.querySelectorAll(".account-preference-card").length,
+    links: document.querySelectorAll(".account-preference-card a.fx-btn").length,
+  }));
+  if (
+    preferencesState.section !== "account"
+    || preferencesState.accountActive !== "1"
+    || preferencesState.cards < 5
+    || preferencesState.links < 4
+  ) {
+    fail(`account preferences: active/layout contract failed ${JSON.stringify(preferencesState)}`);
+  }
+  await assertHealthyDocument("account preferences");
+
   for (const [watchedPath, watchedHeading] of [
     ["/account/watched/threads", "Takip edilen konular"],
     ["/account/watched/forums", "Takip edilen forumlar"],
@@ -387,4 +408,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, staff directory, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, account preferences, watched content, member content, staff directory, thread discovery, members subnav and ACP GET/POST.");
