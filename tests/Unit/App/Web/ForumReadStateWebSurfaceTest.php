@@ -50,4 +50,31 @@ final class ForumReadStateWebSurfaceTest extends TestCase
             $factory,
         );
     }
+    public function testWatchAndForumMarkReadActionsUsePersistedStateAndCsrf(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
+        $forum = (string) file_get_contents($root . '/app/Web/Forum/ForumViewHandler.php');
+        $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
+        $watch = (string) file_get_contents($root . '/app/Web/Forum/DiscussionWatchHandler.php');
+        $markRead = (string) file_get_contents($root . '/app/Web/Forum/ForumMarkReadHandler.php');
+
+        self::assertStringContainsString("new PathTemplate('/forums/{slug}/watch'", $factory);
+        self::assertStringContainsString("new PathTemplate('/forums/{slug}/mark-read'", $factory);
+        self::assertStringContainsString("new PathTemplate('/threads/{threadId}/watch'", $factory);
+        self::assertStringContainsString('[$forumCsrf]', $factory);
+
+        self::assertStringContainsString('DiscussionWatchHtml::form(', $forum);
+        self::assertStringContainsString('DiscussionWatchHtml::markForumReadForm(', $forum);
+        self::assertStringContainsString('DiscussionWatchHtml::form(', $thread);
+        self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $forum . $thread);
+
+        self::assertStringContainsString('new DiscussionStateService(', $watch . $markRead);
+        self::assertStringContainsString('->watchThread(', $watch);
+        self::assertStringContainsString('->watchForum(', $watch);
+        self::assertStringContainsString('->markForumRead(', $markRead);
+        self::assertStringContainsString('WatchNotificationMode::tryFrom', $watch);
+    }
+
+
 }
