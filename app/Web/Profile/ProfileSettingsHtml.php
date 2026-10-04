@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\Profile;
 
-use Forwext\Core\Profile\ProfileVisibility;
 use Forwext\Core\Profile\UserProfile;
 use Forwext\Core\Routing\BasePath;
 
@@ -24,7 +23,7 @@ final class ProfileSettingsHtml
 
         $content = '<section class="profile-settings-page discovery-page">'
             . '<header class="surface-head"><div><span class="surface-eyebrow">PROFİL</span>'
-            . '<h1>Profil ve gizlilik</h1><p>Profil içeriğini, görünürlük sınırlarını ve profil görsellerini yönet.</p></div>'
+            . '<h1>Profil ve kimlik</h1><p>Hakkımda içeriğini ve profil görsellerini yönet.</p></div>'
             . '<a class="fx-btn" href="' . self::e($profileUrl) . '">Profilimi görüntüle</a></header>'
             . ($updated ? '<div class="forum-notice">Profil ayarların kaydedildi.</div>' : '')
             . ($error ? '<div class="forum-compose-error">Ayarlar kaydedilemedi. Alanları veya yüklediğin görseli kontrol edip tekrar dene.</div>' : '')
@@ -34,14 +33,12 @@ final class ProfileSettingsHtml
             . self::e($basePath->prepend('/account/profile')) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save_profile">'
-            . '<header><div><h2>Profil bilgileri</h2><p>Hakkımda metni ve profil bölümlerinin kimler tarafından görülebileceğini belirle.</p></div></header>'
+            . '<header><div><h2>Profil bilgileri</h2><p>Profilinde gösterilecek Hakkımda metnini düzenle.</p></div></header>'
             . '<label class="profile-settings-wide"><span>Hakkımda</span>'
             . '<textarea name="about" rows="8" maxlength="5000">' . self::e($profile->about) . '</textarea>'
             . '<small>En fazla 5000 karakter.</small></label>'
-            . self::visibilityField('profile_visibility', 'Profil görünürlüğü', $profile->profileVisibility, 'Profil sayfasının tamamına erişimi sınırlar.')
-            . self::visibilityField('about_visibility', 'Hakkımda görünürlüğü', $profile->aboutVisibility, 'Hakkımda bölümünün görünürlüğünü belirler.')
-            . self::visibilityField('social_visibility', 'Sosyal bağlantı görünürlüğü', $profile->socialVisibility, 'Sosyal bağlantıların kimlere gösterileceğini belirler.')
-            . self::visibilityField('media_visibility', 'Profil medyası görünürlüğü', $profile->mediaVisibility, 'Avatar ve banner dosyalarının görüntülenmesini sınırlar.')
+            . '<div class="profile-settings-privacy-link"><span>Görünürlük ayarları ayrı gizlilik merkezinden yönetilir.</span>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/privacy')) . '">Gizlilik ayarları</a></div>'
             . '<div class="profile-settings-actions"><button class="fx-btn fx-btn--primary" type="submit">Ayarları kaydet</button></div>'
             . '</form>';
 
@@ -71,31 +68,11 @@ final class ProfileSettingsHtml
         $content .= '</div></section>';
 
         return ProfileHtml::page(
-            'Profil ve gizlilik',
+            'Profil ve kimlik',
             $content,
             $basePath,
             authenticated: true,
         );
-    }
-
-    private static function visibilityField(
-        string $name,
-        string $label,
-        ProfileVisibility $selected,
-        string $description,
-    ): string {
-        $options = '';
-        foreach ([
-            [ProfileVisibility::Public, 'Herkes'],
-            [ProfileVisibility::Members, 'Yalnızca üyeler'],
-            [ProfileVisibility::Private, 'Yalnızca ben'],
-        ] as [$visibility, $caption]) {
-            $options .= '<option value="' . self::e($visibility->value) . '"'
-                . ($visibility === $selected ? ' selected' : '') . '>' . self::e($caption) . '</option>';
-        }
-
-        return '<label><span>' . self::e($label) . '</span><select name="' . self::e($name) . '">'
-            . $options . '</select><small>' . self::e($description) . '</small></label>';
     }
 
     private static function mediaCard(
