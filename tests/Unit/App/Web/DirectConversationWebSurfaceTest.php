@@ -24,8 +24,8 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('Authentication required.', $handler);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $handler);
         self::assertStringContainsString('otherParticipant($actor, $conversationId)', $handler);
-        self::assertStringContainsString("$action === 'star' || $action === 'unstar'", $handler);
-        self::assertStringContainsString("$action === 'leave'", $handler);
+        self::assertStringContainsString("\$action === 'star' || \$action === 'unstar'", $handler);
+        self::assertStringContainsString("\$action === 'leave'", $handler);
         self::assertStringContainsString("['all', 'starred']", $handler);
         self::assertStringContainsString("Response::text('Not Found', 404)", $handler);
         self::assertStringContainsString('private, no-store', $handler);
