@@ -300,6 +300,21 @@ try {
     await assertHealthyDocument(`member content ${memberContentPath}`);
   }
 
+  response = await page.goto(baseUrl + "/members/staff", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail(`members staff: real route returned HTTP ${response?.status() ?? "no response"}`);
+  }
+  await page.getByRole("heading", { name: "Yetkililer", exact: true }).waitFor();
+  const staffState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    staffLink: document.querySelectorAll('a[href$="/members/staff"]').length,
+    resultPanels: document.querySelectorAll(".member-directory-results").length,
+  }));
+  if (staffState.section !== "members" || staffState.staffLink < 1 || staffState.resultPanels !== 1) {
+    fail(`members staff: active/layout contract failed ${JSON.stringify(staffState)}`);
+  }
+  await assertHealthyDocument("members staff");
+
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
   const subnavState = await page.evaluate(() => {
@@ -372,4 +387,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, staff directory, thread discovery, members subnav and ACP GET/POST.");
