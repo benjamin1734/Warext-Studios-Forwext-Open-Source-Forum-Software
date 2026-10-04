@@ -47,7 +47,7 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
         if ($actor !== null) {
             $current = $this->presence->visibility($actor);
             $action = ProfileHtml::escape($this->basePath->prepend('/account/presence'));
-            $settings = '<form class="surface-panel presence-settings" data-presence-settings method="post" action="' . $action . '">'
+            $settings = '<form id="presence-settings" class="surface-panel presence-settings" data-presence-settings method="post" action="' . $action . '">'
                 . '<label><span>Çevrimiçi görünürlüğüm</span><select name="visibility">'
                 . self::option(PresenceVisibility::Hidden, $current, 'Gizli')
                 . self::option(PresenceVisibility::Members, $current, 'Yalnız üyeler')
