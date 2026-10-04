@@ -63,8 +63,9 @@ Reference-route alignment is now implemented: the v5 page-map routes /servers/{i
 Final verification at 969f157 is green across PHP 8.4/8.5, release contract, security/dependency advisory, shared-hosting performance, MySQL 8.4, MariaDB 10.11, fixture-backed real Chromium canonical edit/verify/transfer/stats/team/vote-integration acceptance and full package/installer qualification. Phase 7 has no remaining critical/high gap and is VERIFIED.
 
 08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
-Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces.
-Gap: clans/groups implementation family is absent; existing modules require v5 visual-density and flow comparison.
+Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces. The previously absent clans/groups family now has a first-party module, group/member persistence, permission defaults, shared navigation, /groups, /groups/mine and /groups/{id}, real create/join/request/leave/member moderation flows, and responsive UI. Owner membership is immutable through member actions; moderators can handle ordinary members while moderator role changes remain owner/global-moderator authority.
+Qualification pending: the groups foundation must pass the full PHP/DB/security/performance/real-browser/package gate.
+Remaining Phase 8 gap after groups qualification: compare and raise portfolio/FAQ/referral/bug visual density, list/detail/form states and responsive behavior against the v5 references.
 
 09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
 Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.
