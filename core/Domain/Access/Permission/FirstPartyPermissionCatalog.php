@@ -85,6 +85,12 @@ final class FirstPartyPermissionCatalog
             self::flag('minecraft_server.team.manage', 'Manage team membership for an owned Minecraft server.'),
             self::flag('minecraft_server.vote_integration.manage', 'Manage vote integration settings for an owned Minecraft server.'),
 
+            self::flag('group.view', 'View active community groups and public memberships.'),
+            self::flag('group.create', 'Create community groups.'),
+            self::flag('group.join', 'Join or request membership in community groups.'),
+            self::flag('group.manage_own', 'Manage a community group as owner or assigned moderator.'),
+            self::flag('group.moderate_any', 'Moderate any community group and membership.'),
+
             self::flag('portfolio.view', 'View portfolio content.'),
             self::flag('portfolio.create', 'Create portfolio entries.'),
             self::flag('portfolio.manage_own', 'Manage own portfolio entries.'),
