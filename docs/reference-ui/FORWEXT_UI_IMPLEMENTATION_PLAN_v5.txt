@@ -71,7 +71,8 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
 - [VERIFIED] Update/statistics qualification at 044d14e: PHP 8.4/8.5 qualification, MySQL 8.4, MariaDB 10.11, security/dependency advisory, shared-hosting performance, real installed Chromium desktop/390px and full package/installer qualification are green.
 - [DONE] Team/vote-integration implementation: owner-controlled manager/member team roles, delegated manage-own access without ownership escalation, ownership-bound privilege revocation, CSRF-protected team/token settings, one-time bearer token rotation with hash-only persistence, audited sensitive mutations, public /team and token-authenticated /vote-feed routes are implemented.
 - [DONE] Phase 7 CSRF audit: server detail/manage/claim/vote/team/vote-settings flows now share a dedicated minecraft-server CSRF scope; machine bearer vote-feed remains token-authenticated and outside browser CSRF state.
-- [NEXT] Qualify the final Phase 7 slice across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates. If green, close Phase 7 as VERIFIED and move to Phase 8.
+- [DONE] Reference-route alignment: canonical /servers/{id}/edit, /transfer, /verify and /stats routes now own the visible flows while legacy /manage, /claim and /statistics aliases remain for compatibility. Real post-install browser fixtures force owned and unowned server states so edit/save, ownership verification submit, transfer UI, stats, voting, team and bearer vote integration cannot be skipped by empty-data acceptance.
+- [NEXT] Re-qualify the complete Phase 7 surface on the aligned routes. If all gates are green, mark Phase 7 VERIFIED and move immediately to Phase 8.
 
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
 - Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.

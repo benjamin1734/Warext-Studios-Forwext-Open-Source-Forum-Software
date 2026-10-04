@@ -321,7 +321,8 @@ try {
     serverDirectoryState.filters !== 4
     || serverDirectoryState.searchForms !== 1
     || serverDirectoryState.panels !== 1
-    || (serverDirectoryState.listRows === 0 && serverDirectoryState.emptyStates !== 1)
+    || serverDirectoryState.listRows < 2
+    || serverDirectoryState.emptyStates !== 0
   ) {
     fail(`minecraft servers: directory contract failed ${JSON.stringify(serverDirectoryState)}`);
   }
@@ -372,7 +373,7 @@ try {
     }
     await assertHealthyDocument("minecraft server updates");
 
-    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/statistics", { waitUntil: "domcontentloaded" });
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/stats", { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server statistics: real route did not return HTTP 200");
     await page.getByRole("heading", { name: "Sunucu İstatistikleri", exact: true }).waitFor();
     const serverStatisticsState = await page.evaluate(() => ({
@@ -395,6 +396,37 @@ try {
     }
     await assertHealthyDocument("minecraft server team");
   }
+
+  const unownedServerId = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  response = await page.goto(baseUrl + "/servers/" + unownedServerId + "/verify", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail("minecraft server verify: canonical reference route did not return HTTP 200");
+  }
+  await page.getByRole("heading", { name: "Sahipliği talep et", exact: true }).waitFor();
+  if ((await page.locator(".minecraft-claim-form").count()) !== 1) {
+    fail("minecraft server verify: verification form is missing");
+  }
+  await assertHealthyDocument("minecraft server verify");
+
+  await page.locator('.minecraft-claim-form textarea[name="proof_note"]').fill(
+    "CI kabul testi için doğrulanabilir sahiplik kanıtı açıklaması.",
+  );
+  const [verifyPostResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/verify$/.test(url.pathname);
+    }),
+    page.getByRole("button", { name: "Talebi gönder", exact: true }).click(),
+  ]);
+  if (verifyPostResponse.status() !== 303) {
+    fail(`minecraft server verify: claim POST returned HTTP ${verifyPostResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  if (!new URL(page.url()).pathname.endsWith("/verify") || new URL(page.url()).searchParams.get("submitted") !== "1") {
+    fail("minecraft server verify: canonical claim redirect is invalid");
+  }
+  await page.getByText("Sahiplik talebin incelemeye gönderildi.", { exact: true }).waitFor();
+  await assertHealthyDocument("minecraft server verify POST");
 
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server compare: real route did not return HTTP 200");
@@ -439,7 +471,8 @@ try {
   }));
   if (
     serverManagementState.panels !== 1
-    || (serverManagementState.rows === 0 && serverManagementState.emptyStates !== 1)
+    || serverManagementState.rows < 1
+    || serverManagementState.emptyStates !== 0
     || serverManagementState.navLinks < 1
   ) {
     fail(`minecraft server management: route contract failed ${JSON.stringify(serverManagementState)}`);
@@ -447,78 +480,116 @@ try {
   await assertHealthyDocument("minecraft server management");
 
   if (serverManagementState.rows > 0) {
-    const manageHref = await page.locator('.minecraft-manage-row a[href$="/manage"]').first().getAttribute("href");
-    if (!manageHref) fail("minecraft server integration: manageable row has no management href");
-    response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-    if (!response || response.status() !== 200) fail("minecraft server integration: management detail did not return HTTP 200");
+    const ownedManageRow = page.locator(".minecraft-manage-row").filter({ hasText: "Sahipli" }).first();
+    if ((await ownedManageRow.count()) !== 1) fail("minecraft server integration: owned management fixture is missing");
+    const editHref = await ownedManageRow.locator('a[href$="/edit"]').getAttribute("href");
+    if (!editHref) fail("minecraft server integration: owned row has no canonical edit href");
+    response = await page.goto(new URL(editHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server edit: canonical route did not return HTTP 200");
+    if ((await page.locator(".minecraft-manage-form").count()) !== 1) {
+      fail("minecraft server edit: edit form is missing");
+    }
+    await assertHealthyDocument("minecraft server edit");
+
+    const [editPostResponse] = await Promise.all([
+      page.waitForResponse((candidate) => {
+        const url = new URL(candidate.url());
+        return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/edit$/.test(url.pathname);
+      }),
+      page.getByRole("button", { name: "Değişiklikleri kaydet", exact: true }).click(),
+    ]);
+    if (editPostResponse.status() !== 303) {
+      fail(`minecraft server edit: save POST returned HTTP ${editPostResponse.status()} instead of 303`);
+    }
+    await page.waitForLoadState("domcontentloaded");
+    if (!new URL(page.url()).pathname.endsWith("/edit") || new URL(page.url()).searchParams.get("updated") !== "1") {
+      fail("minecraft server edit: canonical save redirect is invalid");
+    }
+    await page.getByText("Sunucu yönetim değişikliği kaydedildi.", { exact: true }).waitFor();
+    await assertHealthyDocument("minecraft server edit POST");
+
+    const editUrl = new URL(editHref, baseUrl);
+    const manageBase = editUrl.pathname.replace(/\/edit$/, "");
+    response = await page.goto(new URL(manageBase + "/transfer", baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) {
+      fail("minecraft server transfer: canonical reference route did not return HTTP 200");
+    }
+    if ((await page.locator(".minecraft-ownership-panel").count()) !== 1) {
+      fail("minecraft server transfer: ownership controls are missing");
+    }
+    await assertHealthyDocument("minecraft server transfer");
+
+    response = await page.goto(new URL(editHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: edit route reload failed");
 
     const settingsLink = page.locator('a[href$="/vote-settings"]').first();
-    if ((await settingsLink.count()) === 1) {
-      const settingsHref = await settingsLink.getAttribute("href");
-      if (!settingsHref) fail("minecraft server integration: settings href is missing");
-      response = await page.goto(new URL(settingsHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-      if (!response || response.status() !== 200) fail("minecraft server integration: settings route did not return HTTP 200");
-      if ((await page.locator(".minecraft-vote-settings-summary").count()) !== 1) {
-        fail("minecraft server integration: settings summary is missing");
-      }
+    if ((await settingsLink.count()) !== 1) {
+      fail("minecraft server integration: settings link is missing for the owned fixture");
+    }
+    const settingsHref = await settingsLink.getAttribute("href");
+    if (!settingsHref) fail("minecraft server integration: settings href is missing");
+    response = await page.goto(new URL(settingsHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: settings route did not return HTTP 200");
+    if ((await page.locator(".minecraft-vote-settings-summary").count()) !== 1) {
+      fail("minecraft server integration: settings summary is missing");
+    }
 
-      const rotateButton = page.getByRole("button", { name: /Token(ı yenile| oluştur)/ }).first();
-      if ((await rotateButton.count()) !== 1) fail("minecraft server integration: token action is missing");
-      const [rotateResponse] = await Promise.all([
+    const rotateButton = page.getByRole("button", { name: /Token(ı yenile| oluştur)/ }).first();
+    if ((await rotateButton.count()) !== 1) fail("minecraft server integration: token action is missing");
+    const [rotateResponse] = await Promise.all([
+      page.waitForResponse((candidate) => {
+        const url = new URL(candidate.url());
+        return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
+      }),
+      rotateButton.click(),
+    ]);
+    if (rotateResponse.status() !== 200) {
+      fail(`minecraft server integration: rotate token returned HTTP ${rotateResponse.status()}`);
+    }
+    const token = (await page.locator(".minecraft-vote-secret code").textContent())?.trim() ?? "";
+    if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
+      fail("minecraft server integration: one-time token was not rendered");
+    }
+
+    const enabledCheckbox = page.locator('.minecraft-vote-settings-toggle input[name="enabled"]');
+    if ((await enabledCheckbox.count()) !== 1) {
+      fail("minecraft server integration: enabled toggle is missing after token creation");
+    }
+    if (!(await enabledCheckbox.isChecked())) {
+      await enabledCheckbox.check();
+      const [toggleResponse] = await Promise.all([
         page.waitForResponse((candidate) => {
           const url = new URL(candidate.url());
           return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
         }),
-        rotateButton.click(),
+        page.getByRole("button", { name: "Durumu kaydet", exact: true }).click(),
       ]);
-      if (rotateResponse.status() !== 200) {
-        fail(`minecraft server integration: rotate token returned HTTP ${rotateResponse.status()}`);
+      if (toggleResponse.status() !== 303) {
+        fail(`minecraft server integration: enable toggle returned HTTP ${toggleResponse.status()}`);
       }
-      const token = (await page.locator(".minecraft-vote-secret code").textContent())?.trim() ?? "";
-      if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
-        fail("minecraft server integration: one-time token was not rendered");
-      }
-
-      const enabledCheckbox = page.locator('.minecraft-vote-settings-toggle input[name="enabled"]');
-      if ((await enabledCheckbox.count()) !== 1) {
-        fail("minecraft server integration: enabled toggle is missing after token creation");
-      }
-      if (!(await enabledCheckbox.isChecked())) {
-        await enabledCheckbox.check();
-        const [toggleResponse] = await Promise.all([
-          page.waitForResponse((candidate) => {
-            const url = new URL(candidate.url());
-            return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
-          }),
-          page.getByRole("button", { name: "Durumu kaydet", exact: true }).click(),
-        ]);
-        if (toggleResponse.status() !== 303) {
-          fail(`minecraft server integration: enable toggle returned HTTP ${toggleResponse.status()}`);
-        }
-        await page.waitForLoadState("domcontentloaded");
-      }
-
-      const endpointText = (await page.locator(".minecraft-vote-settings-endpoint > code").textContent())?.trim() ?? "";
-      const endpointPath = endpointText.replace(/^GET\s+/, "");
-      if (!/\/servers\/[a-f0-9]{32}\/vote-feed\?limit=100$/.test(endpointPath)) {
-        fail(`minecraft server integration: endpoint contract failed "${endpointPath}"`);
-      }
-      const feedResponse = await page.request.get(new URL(endpointPath, baseUrl).toString(), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (feedResponse.status() !== 200) {
-        fail(`minecraft server integration: bearer feed returned HTTP ${feedResponse.status()}`);
-      }
-      const feedPayload = await feedResponse.json();
-      if (
-        feedPayload?.order !== "newest_first"
-        || !Array.isArray(feedPayload?.votes)
-        || typeof feedPayload?.count !== "number"
-      ) {
-        fail(`minecraft server integration: feed payload contract failed ${JSON.stringify(feedPayload)}`);
-      }
-      await assertHealthyDocument("minecraft server vote integration");
+      await page.waitForLoadState("domcontentloaded");
     }
+
+    const endpointText = (await page.locator(".minecraft-vote-settings-endpoint > code").textContent())?.trim() ?? "";
+    const endpointPath = endpointText.replace(/^GET\s+/, "");
+    if (!/\/servers\/[a-f0-9]{32}\/vote-feed\?limit=100$/.test(endpointPath)) {
+      fail(`minecraft server integration: endpoint contract failed "${endpointPath}"`);
+    }
+    const feedResponse = await page.request.get(new URL(endpointPath, baseUrl).toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (feedResponse.status() !== 200) {
+      fail(`minecraft server integration: bearer feed returned HTTP ${feedResponse.status()}`);
+    }
+    const feedPayload = await feedResponse.json();
+    if (
+      feedPayload?.order !== "newest_first"
+      || !Array.isArray(feedPayload?.votes)
+      || typeof feedPayload?.count !== "number"
+    ) {
+      fail(`minecraft server integration: feed payload contract failed ${JSON.stringify(feedPayload)}`);
+    }
+    await assertHealthyDocument("minecraft server vote integration");
   }
 
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
@@ -767,7 +838,7 @@ try {
     }
     await assertHealthyDocument("minecraft server updates mobile");
 
-    response = await page.goto(mobileServerUrl + "/statistics", { waitUntil: "domcontentloaded" });
+    response = await page.goto(mobileServerUrl + "/stats", { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server statistics mobile: real route did not return HTTP 200");
     const statisticsMobileState = await page.evaluate(() => {
       const grid = document.querySelector(".minecraft-stat-grid");

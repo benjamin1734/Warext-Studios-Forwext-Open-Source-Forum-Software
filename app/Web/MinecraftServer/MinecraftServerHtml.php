@@ -93,15 +93,15 @@ final class MinecraftServerHtml
         }
         $serverBase = '/servers/' . rawurlencode($server->serverId->value());
         $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/updates')) . '">Güncellemeler</a>';
-        $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/statistics')) . '">İstatistikler</a>';
+        $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/stats')) . '">İstatistikler</a>';
         $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">Ekip</a>';
         if ($canManage) {
             $links .= '<a class="fx-btn fx-btn--primary" href="'
-                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/manage'))
+                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/edit'))
                 . '">Sunucuyu yönet</a>';
         } elseif ($canClaim) {
             $links .= '<a class="fx-btn fx-btn--primary" href="'
-                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/claim'))
+                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/verify'))
                 . '">Sahipliği talep et</a>';
         }
 
@@ -294,7 +294,7 @@ final class MinecraftServerHtml
             . self::e($server->name) . '</a><span class="forum-eyebrow">MINECRAFT · GÜNCELLEMELER</span>'
             . '<h1>Sunucu Güncellemeleri</h1><p>Sunucu sahibi veya yetkili ekip tarafından yayınlanan güncelleme notları.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend(
-                '/servers/' . rawurlencode($server->serverId->value()) . '/statistics',
+                '/servers/' . rawurlencode($server->serverId->value()) . '/stats',
             )) . '">İstatistikler</a></header>'
             . '<section class="surface-panel minecraft-update-list">' . $rows . $pagination . '</section></section>';
 
@@ -353,7 +353,7 @@ final class MinecraftServerHtml
         $rows = '';
         foreach ($servers as $server) {
             $href = self::e($basePath->prepend(
-                '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
+                '/servers/' . rawurlencode($server->serverId->value()) . '/edit',
             ));
             $rows .= '<article class="minecraft-manage-row"><div><strong>' . self::e($server->name)
                 . '</strong><span>' . self::e($server->address()) . '</span></div><div class="minecraft-manage-row-meta">'
@@ -402,6 +402,12 @@ final class MinecraftServerHtml
         $action = self::e($basePath->prepend(
             '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
         ));
+        $editAction = self::e($basePath->prepend(
+            '/servers/' . rawurlencode($server->serverId->value()) . '/edit',
+        ));
+        $transferAction = self::e($basePath->prepend(
+            '/servers/' . rawurlencode($server->serverId->value()) . '/transfer',
+        ));
         $notice = $updated
             ? '<div class="surface-notice" role="status">Sunucu yönetim değişikliği kaydedildi.</div>'
             : '';
@@ -419,6 +425,10 @@ final class MinecraftServerHtml
             $headActions .= '<a class="fx-btn" href="'
                 . self::e($basePath->prepend($serverBase . '/vote-settings')) . '">Oy entegrasyonu</a>';
         }
+        if ($canManageOwnership) {
+            $headActions .= '<a class="fx-btn" href="'
+                . self::e($basePath->prepend($serverBase . '/transfer')) . '">Sahiplik</a>';
+        }
         $headActions .= '</div>';
 
         $body = '<section class="minecraft-server-page minecraft-manage-page discovery-page">'
@@ -427,7 +437,7 @@ final class MinecraftServerHtml
             . '<span class="forum-eyebrow">MINECRAFT · YÖNETİM</span><h1>' . self::e($server->name) . '</h1>'
             . '<p>Listeleme bilgileri, yayın durumu ve sahiplik işlemleri sunucu tarafı yetkileriyle korunur.</p></div>'
             . $headActions . '</header>' . $notice
-            . '<form class="surface-panel minecraft-manage-form" action="' . $action . '" method="post">'
+            . '<form class="surface-panel minecraft-manage-form" action="' . $editAction . '" method="post">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save"><h2>Sunucu bilgileri</h2>'
             . '<div class="minecraft-manage-fields">'
@@ -467,12 +477,12 @@ final class MinecraftServerHtml
         if ($server->ownerUserId !== null && $canManageOwnership) {
             $body .= '<section class="surface-panel minecraft-ownership-panel"><div><h2>Sahiplik</h2>'
                 . '<p>Transfer yalnızca aktif bir hesaba yapılır. Bırakma işlemi kaydı sahipsiz duruma döndürür.</p></div>'
-                . '<div class="minecraft-ownership-actions"><form action="' . $action . '" method="post">'
+                . '<div class="minecraft-ownership-actions"><form action="' . $transferAction . '" method="post">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
                 . '<input type="hidden" name="action" value="transfer">'
                 . '<label><span>Yeni sahip kullanıcı adı</span><input name="target_username" maxlength="64" required></label>'
                 . '<button class="fx-btn" type="submit">Sahipliği aktar</button></form>'
-                . '<form action="' . $action . '" method="post">'
+                . '<form action="' . $transferAction . '" method="post">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
                 . '<input type="hidden" name="action" value="release">'
                 . '<button class="fx-btn fx-btn--danger" type="submit">Sahipliği bırak</button></form></div></section>';
@@ -606,7 +616,7 @@ final class MinecraftServerHtml
 
         $body = '<section class="minecraft-server-page minecraft-vote-settings-page discovery-page">'
             . '<header class="surface-head"><div><a class="surface-back-link" href="'
-            . self::e($basePath->prepend($serverBase . '/manage')) . '">← Sunucu yönetimi</a>'
+            . self::e($basePath->prepend($serverBase . '/edit')) . '">← Sunucu yönetimi</a>'
             . '<span class="forum-eyebrow">MINECRAFT · OY ENTEGRASYONU</span><h1>' . self::e($server->name)
             . '</h1><p>Web oylarını sunucu tarafı entegrasyonuna güvenli bearer token ile aktar.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">Ekip</a></header>'
@@ -642,7 +652,7 @@ final class MinecraftServerHtml
         bool $submitted,
     ): string {
         $action = self::e($basePath->prepend(
-            '/servers/' . rawurlencode($server->serverId->value()) . '/claim',
+            '/servers/' . rawurlencode($server->serverId->value()) . '/verify',
         ));
         $history = '';
         foreach ($claims as $claim) {

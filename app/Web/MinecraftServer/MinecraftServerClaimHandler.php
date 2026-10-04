@@ -65,7 +65,7 @@ final readonly class MinecraftServerClaimHandler implements RequestHandlerInterf
                 );
 
                 return Response::redirect(
-                    $this->basePath->prepend('/servers/' . rawurlencode($serverId->value()) . '/claim?submitted=1'),
+                    $this->basePath->prepend('/servers/' . rawurlencode($serverId->value()) . '/verify?submitted=1'),
                     303,
                 )->withHeader('Cache-Control', 'no-store');
             }

@@ -1934,10 +1934,31 @@ final readonly class WebApplicationFactory
             [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
+            'server.edit',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/edit', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
+        ));
+        $routes->add(new Route(
+            'server.transfer',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/transfer', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
+        ));
+        $routes->add(new Route(
             'server.manage',
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/manage', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
+        ));
+        $routes->add(new Route(
+            'server.verify',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/verify', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerClaimHandler($minecraftServers, $viewerResolver, $basePath),
             [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
@@ -1952,6 +1973,12 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/servers/{serverId}/updates', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerUpdatesHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.stats',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/{serverId}/stats', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerStatisticsHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'server.statistics',
