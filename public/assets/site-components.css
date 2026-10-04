@@ -2221,18 +2221,16 @@ body.forwext-nav-open{overflow:hidden}
     border-radius:5px;
     background:var(--panel);
     opacity:0;
-    visibility:hidden;
     transform:translateY(-4px);
     pointer-events:none;
     box-shadow:0 16px 38px rgba(0,0,0,.32);
-    transition:opacity var(--fx-transition),transform var(--fx-transition),visibility 0s linear var(--fx-transition);
+    transition:opacity var(--fx-transition),transform var(--fx-transition);
   }
   .nav-shell[data-mobile-open="1"]{
     opacity:1;
-    visibility:visible;
     transform:translateY(0);
     pointer-events:auto;
-    transition:opacity var(--fx-transition),transform var(--fx-transition),visibility 0s linear 0s;
+    transition:opacity var(--fx-transition),transform var(--fx-transition);
   }
   .nav-primary{display:grid;overflow:visible}
   .nav-primary>a,.nav-primary-menu>summary{min-height:42px;padding:8px 10px;border-radius:3px}
