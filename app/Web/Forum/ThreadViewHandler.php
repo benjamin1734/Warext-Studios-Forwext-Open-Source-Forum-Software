@@ -152,6 +152,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             $body .= '<div class="forum-notice forum-notice--warning">Mesajınız gönderildi ancak bir veya daha fazla dosya mesaja bağlanamadı. Dosyayı yeniden ekleyebilirsiniz.</div>';
         }
 
+        $body .= $this->replyStateNotice($actor, $thread, $forum, $canReply);
+
         if ($posts['rows'] === []) {
             $body .= '<section class="card forum-empty-state"><h2>Görüntülenebilir mesaj yok</h2></section>';
         } else {
@@ -161,7 +163,13 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
             $body .= '<div class="thread-post-list">';
             foreach ($posts['rows'] as $post) {
-                $body .= $this->renderPost($post, $actor, $canReply, $attachmentsByPost[$post['post_id']] ?? []);
+                $body .= $this->renderPost(
+                    $post,
+                    $thread,
+                    $actor,
+                    $canReply,
+                    $attachmentsByPost[$post['post_id']] ?? [],
+                );
             }
             $body .= '</div>';
             if ($pagination !== '') {
@@ -192,6 +200,32 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             && $settings !== null
             && $settings->allowReplies()
             && $this->authorizer->allows($actor, PostPermission::Create->key(), $forum->id());
+    }
+
+    private function replyStateNotice(
+        ?EntityId $actor,
+        Thread $thread,
+        ForumNode $forum,
+        bool $canReply,
+    ): string {
+        if ($canReply) {
+            return '';
+        }
+        if ($thread->isLocked()) {
+            return '<div class="thread-state-strip thread-state-strip--locked"><strong>Konu kilitli.</strong>'
+                . '<span>Yeni yanıt kabul edilmiyor; mevcut mesajları okumaya devam edebilirsin.</span></div>';
+        }
+        $settings = $forum->forumSettings();
+        if ($settings === null || !$settings->allowReplies()) {
+            return '<div class="thread-state-strip"><strong>Yanıtlar kapalı.</strong>'
+                . '<span>Bu forum ayarları yeni yanıt gönderimine izin vermiyor.</span></div>';
+        }
+        if ($actor !== null) {
+            return '<div class="thread-state-strip"><strong>Yanıt yetkisi yok.</strong>'
+                . '<span>Bu forumda yeni mesaj gönderme iznin bulunmuyor.</span></div>';
+        }
+
+        return '';
     }
 
     private function canView(?EntityId $actor, ForumNodeHierarchy $hierarchy, ForumNode $forum): bool
