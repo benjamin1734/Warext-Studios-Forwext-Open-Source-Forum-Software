@@ -70,6 +70,8 @@ $forumContent = <<<'HTML'
       </div>
     </section>
 
+    <div class="thread-state-strip thread-state-strip--locked"><strong>Konu kilitli.</strong><span>Responsive durum satırı küçük ekranda taşmamalıdır.</span></div>
+
     <div class="thread-pagination thread-pagination--top">
       <nav class="pagination thread-pagination-nav" aria-label="Konu mesaj sayfaları">
         <a class="pagination-edge" href="#fixture-thread">← Önceki</a>
@@ -81,11 +83,14 @@ $forumContent = <<<'HTML'
     </div>
 
     <section id="fixture-thread" class="thread-post-list" aria-label="Örnek konu">
-      <article class="thread-post">
+      <article class="thread-post is-thread-starter">
         <aside class="thread-post-author">
           <div class="thread-post-avatar" aria-hidden="true">F</div>
-          <a class="thread-post-author-name" href="#fixture-profile">forwext-test</a>
-          <span class="muted">Üye</span>
+          <div class="thread-post-author-copy">
+            <a class="thread-post-author-name" href="#fixture-profile">forwext-test</a>
+            <div class="thread-post-author-badges"><span class="thread-author-badge">Aktif Üye</span><span class="thread-author-badge thread-author-badge--starter">Konu sahibi</span></div>
+            <nav class="thread-post-author-links" aria-label="forwext-test bağlantıları"><a href="#fixture-profile">Profil</a><a href="#fixture-thread">Konular</a><a href="#fixture-thread">Mesajlar</a></nav>
+          </div>
         </aside>
         <div class="thread-post-body">
           <header><span>#1</span><a href="#fixture-thread">Kalıcı bağlantı</a></header>
@@ -117,6 +122,7 @@ $forumContent = <<<'HTML'
       </nav>
     </div>
 
+    <div class="thread-quick-reply-capabilities" aria-label="Düzenleyici özellikleri"><span>Önizleme</span><span>Alıntı</span><span>Yazım denetimi</span><span>Dosya ekleme</span></div>
     <form id="fixture-form" class="search-form surface-panel" action="#" method="get">
       <label class="search-wide"><span>Konu başlığı</span><input name="q" value="Responsive test" autocomplete="off"></label>
       <label><span>Tür</span><select name="type"><option>Forum</option><option>Üye</option></select></label>
