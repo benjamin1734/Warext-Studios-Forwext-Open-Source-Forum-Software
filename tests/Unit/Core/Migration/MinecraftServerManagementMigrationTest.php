@@ -25,6 +25,15 @@ final class MinecraftServerManagementMigrationTest extends TestCase
             static fn (CompiledQuery $query): string => $query->sql,
             $database->executedQueries,
         ));
+        $boundValues = [];
+        foreach ($database->executedQueries as $query) {
+            foreach ($query->parameters as $value) {
+                if (is_string($value)) {
+                    $boundValues[] = $value;
+                }
+            }
+        }
+        $contractText = $sql . "\n" . implode("\n", $boundValues);
 
         foreach ([
             'forwext_minecraft_server_claims',
@@ -36,7 +45,7 @@ final class MinecraftServerManagementMigrationTest extends TestCase
             'minecraft_server.transfer',
             'forwext_permission_template_rules',
         ] as $contract) {
-            self::assertStringContainsString($contract, $sql);
+            self::assertStringContainsString($contract, $contractText);
         }
     }
 
