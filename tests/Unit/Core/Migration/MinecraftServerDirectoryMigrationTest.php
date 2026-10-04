@@ -44,6 +44,7 @@ final class MinecraftServerDirectoryMigrationTest extends TestCase
             static fn (CompiledQuery $query): bool => isset($query->parameters['template_key']),
         );
         self::assertCount(10, $templateRules);
+        self::assertStringContainsString('ON DELETE SET NULL', $sql);
     }
 
     public function testVerificationRequiresTablesForeignKeysPermissionsRulesAndUniqueSlug(): void
