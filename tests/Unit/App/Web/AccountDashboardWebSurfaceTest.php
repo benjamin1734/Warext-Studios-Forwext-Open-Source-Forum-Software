@@ -33,6 +33,7 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             '/community/account/notifications',
             '/community/account/notification-settings',
             '/community/account/profile',
+            '/community/account/privacy',
             '/community/account/profile-url',
             '/community/account/profile-activity',
             '/community/account/bookmarks',
@@ -61,6 +62,8 @@ final class AccountDashboardWebSurfaceTest extends TestCase
             . (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         self::assertStringContainsString("'account.own'", $navigation);
+        self::assertStringContainsString("'privacy.own'", $navigation);
+        self::assertStringNotContainsString("'presence.own'", $navigation);
         self::assertStringContainsString("'conversations.own'", $navigation);
         self::assertStringContainsString("'Hesabım'", $navigation);
         self::assertStringContainsString("NavigationAudience::Member", $navigation);
