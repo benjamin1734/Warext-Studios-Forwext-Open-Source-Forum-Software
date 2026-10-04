@@ -95,4 +95,5 @@ final class WorkerMemoryRepository implements NotificationRepository
     public function inbox(EntityId $userId, int $limit, int $offset): array { return []; }
     public function unreadCount(EntityId $userId): int { return 0; }
     public function markRead(EntityId $userId, EntityId $notificationId, DateTimeImmutable $now): bool { return false; }
+    public function markAllRead(EntityId $userId, DateTimeImmutable $now): int { return 0; }
 }
