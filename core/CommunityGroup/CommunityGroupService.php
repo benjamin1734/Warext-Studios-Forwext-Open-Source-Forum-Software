@@ -156,6 +156,15 @@ final readonly class CommunityGroupService
         return $membership?->managesMembers() ?? false;
     }
 
+    public function canManageRoles(EntityId $actor, CommunityGroup $group): bool
+    {
+        if ($this->allows($actor, 'group.moderate_any')) {
+            return true;
+        }
+        $membership = $this->groups->membership($group->groupId, $actor);
+        return $membership?->roleKey === 'owner' && $membership->active();
+    }
+
     public function manageMembership(
         EntityId $actor,
         EntityId $groupId,
