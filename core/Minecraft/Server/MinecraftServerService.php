@@ -145,6 +145,7 @@ final readonly class MinecraftServerService
         DateTimeImmutable $now,
     ): EntityId {
         $this->managementDetail($actor, $serverId);
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
         $title = trim($title);
         $body = trim($body);
         $updateId = EntityId::fromString(bin2hex(random_bytes(16)));
@@ -158,7 +159,7 @@ final readonly class MinecraftServerService
             $now,
             $now,
         );
-        $this->servers->createUpdate($update);
+        $this->servers->createUpdate($update, $manageAny ? null : $actor);
         return $updateId;
     }
 
@@ -170,10 +171,11 @@ final readonly class MinecraftServerService
         DateTimeImmutable $now,
     ): void {
         $this->managementDetail($actor, $serverId);
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
         if (!in_array($state, ['published','hidden'], true)) {
             throw new InvalidArgumentException('Minecraft server update state is invalid.');
         }
-        if (!$this->servers->setUpdateState($serverId, $updateId, $state, $now)) {
+        if (!$this->servers->setUpdateState($serverId, $updateId, $state, $now, $manageAny ? null : $actor)) {
             throw new InvalidArgumentException('Minecraft server update was not found.');
         }
     }
