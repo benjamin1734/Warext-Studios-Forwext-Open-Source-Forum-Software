@@ -27,6 +27,10 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'servers', 'Sunucular', '/servers', 190,
+            placement: NavigationPlacement::Primary,
+        ));
+        $registry->register(new NavigationItem(
             'members', 'Üyeler', '/members', 200,
             placement: NavigationPlacement::Primary,
         ));
