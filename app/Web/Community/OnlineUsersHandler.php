@@ -34,9 +34,11 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
         $cards = '';
         foreach ($users as $online) {
             $path = ProfileHtml::memberPath($this->basePath, $online->username);
-            $cards .= '<a class="member-directory-card is-online" href="' . ProfileHtml::escape($path) . '">'
+            $safeUsername = ProfileHtml::escape($online->username);
+            $cards .= '<a class="member-directory-card is-online" href="' . ProfileHtml::escape($path) . '" aria-label="'
+                . $safeUsername . ' profilini aç">'
                 . '<span class="avatar" aria-hidden="true">' . ProfileHtml::initial($online->username) . '</span>'
-                . '<span class="member-directory-copy"><strong>' . ProfileHtml::escape($online->username) . '</strong>'
+                . '<span class="member-directory-copy"><strong>' . $safeUsername . '</strong>'
                 . '<small><span class="online-dot" aria-hidden="true"></span>Şu anda çevrimiçi</small></span></a>';
         }
         $cards = $cards === ''
@@ -47,7 +49,8 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
         if ($actor !== null) {
             $current = $this->presence->visibility($actor);
             $action = ProfileHtml::escape($this->basePath->prepend('/account/presence'));
-            $settings = '<form class="surface-panel presence-settings" data-presence-settings method="post" action="' . $action . '">'
+            $settings = '<form class="surface-panel presence-settings" data-presence-settings method="post" action="' . $action
+                . '" aria-label="Çevrimiçi görünürlük ayarı">'
                 . '<label><span>Çevrimiçi görünürlüğüm</span><select name="visibility">'
                 . self::option(PresenceVisibility::Hidden, $current, 'Gizli')
                 . self::option(PresenceVisibility::Members, $current, 'Yalnız üyeler')
@@ -58,9 +61,15 @@ final readonly class OnlineUsersHandler implements RequestHandlerInterface
 
         $body = '<section class="online-users-page discovery-page"><header class="surface-head online-users-head">'
             . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Çevrimiçi Kullanıcılar</h1>'
-            . '<p>Son 5 dakika içinde aktif olan ve görünürlüğünü paylaşan profiller.</p></div>'
-            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members')) . '">Tüm üyeler</a>'
-            . '</header>' . $settings . '<section class="surface-panel online-users-results">' . $cards
+            . '<p>Son 5 dakika içinde aktif olan ve görünürlüğünü paylaşan profiller · '
+            . number_format(count($users), 0, ',', '.') . ' kullanıcı</p></div>'
+            . '<div class="member-directory-head-actions"><a class="fx-btn" href="'
+            . ProfileHtml::escape($this->basePath->prepend('/members')) . '">Tüm üyeler</a>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members/staff'))
+            . '">Yetkili ekip</a></div></header>' . $settings
+            . '<section class="surface-panel online-users-results">'
+            . '<div class="member-directory-summary" role="status"><span>Görünür çevrimiçi</span><strong>'
+            . number_format(count($users), 0, ',', '.') . '</strong></div>' . $cards
             . '</section></section>';
         $breadcrumbs = new BreadcrumbTrail([
             new BreadcrumbItem('Ana Sayfa', '/'),
