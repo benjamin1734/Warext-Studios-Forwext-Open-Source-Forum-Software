@@ -365,6 +365,17 @@ final readonly class MinecraftServerService
         return $this->servers->voteFeed($serverId, $limit);
     }
 
+    public function canManageOwnership(EntityId $actor, MinecraftServer $server): bool
+    {
+        $gate = $this->gate($actor);
+        if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
+            return true;
+        }
+        return $server->ownerUserId !== null
+            && $server->ownerUserId->equals($actor)
+            && $gate->allows(self::permission('minecraft_server.transfer'));
+    }
+
     public function canClaim(EntityId $actor, MinecraftServer $server): bool
     {
         return $server->ownerUserId === null
