@@ -55,7 +55,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             . '<section class="forum-hero forum-page-head"><div>'
             . '<h1>Forumlar</h1><p>Topluluk kategorileri, forumlar ve son hareketler.</p></div>'
             . '<div class="forum-hero-actions">'
-            . ($actor === null ? '' : '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/activity')) . '">Yeni mesajlar</a>')
+            . ($actor === null ? '' : '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular</a>')
             . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Forumlarda ara</a>'
             . '</div></section>';
 
