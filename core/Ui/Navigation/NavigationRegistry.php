@@ -47,6 +47,10 @@ final class NavigationRegistry
             placement: NavigationPlacement::Primary,
         ));
         $registry->register(new NavigationItem(
+            'groups', 'Klanlar & Gruplar', '/groups', 235,
+            placement: NavigationPlacement::Primary,
+        ));
+        $registry->register(new NavigationItem(
             'giveaways',
             'Çekilişler',
             '/giveaways',
