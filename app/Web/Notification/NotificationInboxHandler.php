@@ -111,7 +111,7 @@ final readonly class NotificationInboxHandler implements RequestHandlerInterface
             $this->inbox->markAllRead($actor);
 
             return Response::redirect(
-                $this->basePath->prepend('/account/notifications?page=' . $page . '&updated=all-read'),
+                $this->basePath->prepend('/account/notifications?page=' . $page),
                 303,
             )->withHeader('Cache-Control', 'no-store');
         }
