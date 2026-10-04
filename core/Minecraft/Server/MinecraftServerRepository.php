@@ -43,13 +43,14 @@ interface MinecraftServerRepository
     /** @return list<MinecraftServerUpdate> */
     public function managementUpdates(EntityId $serverId, int $limit = 100): array;
 
-    public function createUpdate(MinecraftServerUpdate $update): void;
+    public function createUpdate(MinecraftServerUpdate $update, ?EntityId $requiredOwnerUserId = null): void;
 
     public function setUpdateState(
         EntityId $serverId,
         EntityId $updateId,
         string $state,
         DateTimeImmutable $now,
+        ?EntityId $requiredOwnerUserId = null,
     ): bool;
 
     public function statistics(EntityId $serverId, DateTimeImmutable $now): MinecraftServerStatistics;
