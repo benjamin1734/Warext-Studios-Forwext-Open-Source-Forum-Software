@@ -10,12 +10,12 @@ PHASE 0 — COMPLETE REFERENCE INGESTION — VERIFIED
 - Continuation/state handling rule recorded.
 - Persistent index, page map, gap matrix and this implementation plan created.
 
-PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — IN PROGRESS
+PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — VERIFIED
 1. [DONE] Keep Forwext-only naming in repository comments and documentation.
 2. [DONE] Expand account navigation to implemented account/profile/session/bookmark/relationship/notification/presence surfaces without inventing dead routes.
 3. [DONE] Make tool popovers denser and more usable with explicit headings, footer actions, keyboard-safe structure and mobile behavior.
 4. [DONE] Reuse the authorized DM/alert inbox handlers for lazy recent-item previews; no duplicated inbox source of truth.
-5. [VERIFYING] Group account tools, verify exact account active state, add authenticated mobile coverage and exercise lazy message/alert previews in live browser acceptance.
+5. [DONE] Group account tools, verify exact account active state, add authenticated mobile coverage and exercise lazy message/alert previews in live browser acceptance; PHP 8.4/8.5, Chromium, security, DB, performance and package/installer qualification passed.
 
 PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 - [DONE] Expose existing permission-aware new, unread, trending, featured and recent thread discovery as real routed pages.
