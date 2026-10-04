@@ -47,7 +47,7 @@ PHASE 5 — MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 - [DONE] Add a public staff directory using authoritative staff-role assignments, active-user state and public profile visibility; expose it through member navigation with bounded search/pagination and live-route acceptance. Full CI passed on main commit 68317606.
 - [DONE] Consolidate account privacy/preferences in a dedicated hub backed by existing profile visibility, presence and notification-sound services; keep profile, notification, security, session and relationship settings owned by their existing surfaces.
 - [DONE] Audit reactions/signature/style ownership: reaction actions exist without preference storage, while signature/style preference persistence is absent; do not fabricate controls or duplicate state.
-- [VERIFYING] Run source contracts and live CSRF save acceptance for the preferences hub, then the complete CI gate.\n- [NEXT] Finish remaining member/profile/account density and responsive/accessibility comparison before closing Phase 5.
+- [DONE] Preferences hub source contracts, live CSRF save acceptance and the complete CI gate passed on main commit 78bd8a13.\n- [DONE] Keep the machine-facing presence endpoint intact while routing human account navigation to the preferences hub.\n- [NEXT] Finish remaining member/profile/account density and responsive/accessibility comparison before closing Phase 5.
 
 PHASE 6 — DM / ALERTS / ACTIVITY
 - Conversation management states, notification summaries and member activity/recent-content views.
