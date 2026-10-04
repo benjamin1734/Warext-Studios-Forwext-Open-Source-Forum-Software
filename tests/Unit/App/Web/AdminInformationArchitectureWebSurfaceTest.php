@@ -109,6 +109,7 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
             'Admin/AdminDashboardHandler.php',
             'Admin/AdminCommunityHandler.php',
             'Admin/AdminModuleManagerHandler.php',
+            'Admin/PublicNavigationHandler.php',
             'Admin/SystemIntegrationHandler.php',
             'Admin/SystemOperationsHandler.php',
             'Appearance/AppearanceGuideHandler.php',
@@ -206,6 +207,7 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
             'AdminDashboardHandler.php',
             'AdminCommunityHandler.php',
             'AdminModuleManagerHandler.php',
+            'PublicNavigationHandler.php',
             'SystemIntegrationHandler.php',
             'SystemOperationsHandler.php',
         ] as $file) {
