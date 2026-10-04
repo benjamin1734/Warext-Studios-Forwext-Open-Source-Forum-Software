@@ -144,7 +144,7 @@ final readonly class MinecraftServerService
         string $body,
         DateTimeImmutable $now,
     ): EntityId {
-        $this->managementDetail($actor, $serverId);
+        $server = $this->managementDetail($actor, $serverId);
         $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
         $title = trim($title);
         $body = trim($body);
@@ -159,7 +159,7 @@ final readonly class MinecraftServerService
             $now,
             $now,
         );
-        $this->servers->createUpdate($update, $manageAny ? null : $actor);
+        $this->servers->createUpdate($update, $manageAny ? null : $server->ownerUserId);
         return $updateId;
     }
 
@@ -170,12 +170,12 @@ final readonly class MinecraftServerService
         string $state,
         DateTimeImmutable $now,
     ): void {
-        $this->managementDetail($actor, $serverId);
+        $server = $this->managementDetail($actor, $serverId);
         $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
         if (!in_array($state, ['published','hidden'], true)) {
             throw new InvalidArgumentException('Minecraft server update state is invalid.');
         }
-        if (!$this->servers->setUpdateState($serverId, $updateId, $state, $now, $manageAny ? null : $actor)) {
+        if (!$this->servers->setUpdateState($serverId, $updateId, $state, $now, $manageAny ? null : $server->ownerUserId)) {
             throw new InvalidArgumentException('Minecraft server update was not found.');
         }
     }
@@ -207,9 +207,151 @@ final readonly class MinecraftServerService
         if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
             return true;
         }
+        if (!$gate->allows(self::permission('minecraft_server.manage_own'))) {
+            return false;
+        }
+        if ($server->ownerUserId !== null && $server->ownerUserId->equals($actor)) {
+            return true;
+        }
+        return $this->servers->teamRole($server->serverId, $actor) === 'manager';
+    }
+
+    /** @return list<MinecraftServerTeamMember> */
+    public function publicTeam(EntityId $serverId): array
+    {
+        if ($this->servers->publicById($serverId) === null) {
+            throw new InvalidArgumentException('Minecraft server is unavailable.');
+        }
+        return $this->servers->team($serverId);
+    }
+
+    public function canManageTeam(EntityId $actor, MinecraftServer $server): bool
+    {
+        $gate = $this->gate($actor);
+        if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
+            return true;
+        }
         return $server->ownerUserId !== null
             && $server->ownerUserId->equals($actor)
-            && $gate->allows(self::permission('minecraft_server.manage_own'));
+            && $gate->allows(self::permission('minecraft_server.team.manage'));
+    }
+
+    /** @return list<MinecraftServerTeamMember> */
+    public function teamForManagement(EntityId $actor, EntityId $serverId): array
+    {
+        $this->requireTeamManagement($actor, $serverId);
+        return $this->servers->team($serverId);
+    }
+
+    public function saveTeamMember(
+        EntityId $actor,
+        EntityId $serverId,
+        EntityId $targetUserId,
+        string $roleKey,
+        ?string $publicTitle,
+        DateTimeImmutable $now,
+    ): void {
+        $server = $this->requireTeamManagement($actor, $serverId);
+        if ($server->ownerUserId !== null && $server->ownerUserId->equals($targetUserId)) {
+            throw new InvalidArgumentException('Minecraft server owner cannot also be a team member.');
+        }
+        $publicTitle = self::optionalText($publicTitle, 64);
+        $member = new MinecraftServerTeamMember(
+            $serverId,
+            $targetUserId,
+            $roleKey,
+            $publicTitle,
+            $actor,
+            $now,
+            $now,
+        );
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
+        $this->servers->upsertTeamMember($member, $manageAny ? null : $server->ownerUserId);
+    }
+
+    public function removeTeamMember(
+        EntityId $actor,
+        EntityId $serverId,
+        EntityId $targetUserId,
+        DateTimeImmutable $now,
+    ): void {
+        $server = $this->requireTeamManagement($actor, $serverId);
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
+        if (!$this->servers->removeTeamMember(
+            $serverId,
+            $targetUserId,
+            $manageAny ? null : $server->ownerUserId,
+            $actor,
+            $now,
+        )) {
+            throw new InvalidArgumentException('Minecraft server team member was not found.');
+        }
+    }
+
+    public function voteIntegrationSettings(
+        EntityId $actor,
+        EntityId $serverId,
+    ): ?MinecraftServerVoteIntegration {
+        $this->requireVoteIntegrationManagement($actor, $serverId);
+        return $this->servers->voteIntegration($serverId);
+    }
+
+    public function setVoteIntegrationEnabled(
+        EntityId $actor,
+        EntityId $serverId,
+        bool $enabled,
+        DateTimeImmutable $now,
+    ): void {
+        $server = $this->requireVoteIntegrationManagement($actor, $serverId);
+        $integration = $this->servers->voteIntegration($serverId);
+        if ($enabled && ($integration === null || !$integration->hasToken())) {
+            throw new InvalidArgumentException('Create an integration token before enabling the vote feed.');
+        }
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
+        $this->servers->saveVoteIntegration(
+            $serverId,
+            $enabled,
+            null,
+            null,
+            false,
+            $manageAny ? null : $server->ownerUserId,
+            $actor,
+            $now,
+        );
+    }
+
+    public function rotateVoteIntegrationToken(
+        EntityId $actor,
+        EntityId $serverId,
+        DateTimeImmutable $now,
+    ): string {
+        $server = $this->requireVoteIntegrationManagement($actor, $serverId);
+        $existing = $this->servers->voteIntegration($serverId);
+        $token = self::integrationToken();
+        $manageAny = $this->gate($actor)->allows(self::permission('minecraft_server.manage_any'));
+        $this->servers->saveVoteIntegration(
+            $serverId,
+            $existing?->enabled ?? false,
+            hash('sha256', $token),
+            substr($token, 0, 10),
+            true,
+            $manageAny ? null : $server->ownerUserId,
+            $actor,
+            $now,
+        );
+        return $token;
+    }
+
+    /** @return list<MinecraftServerVoteFeedEntry> */
+    public function voteIntegrationFeed(EntityId $serverId, string $token, int $limit = 100): array
+    {
+        if (preg_match('/^[A-Za-z0-9_-]{40,128}$/D', $token) !== 1) {
+            throw new InvalidArgumentException('Minecraft vote integration token is invalid.');
+        }
+        if (!$this->servers->acceptsVoteIntegrationToken($serverId, hash('sha256', $token))) {
+            throw new InvalidArgumentException('Minecraft vote integration token is invalid.');
+        }
+        return $this->servers->voteFeed($serverId, $limit);
     }
 
     public function canClaim(EntityId $actor, MinecraftServer $server): bool
@@ -424,10 +566,53 @@ final readonly class MinecraftServerService
         if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
             return;
         }
+        $gate->require(self::permission('minecraft_server.manage_own'));
+        if ($server->ownerUserId !== null && $server->ownerUserId->equals($actor)) {
+            return;
+        }
+        if ($this->servers->teamRole($server->serverId, $actor) === 'manager') {
+            return;
+        }
+        $gate->require(self::permission('minecraft_server.manage_any'));
+    }
+
+    private function requireTeamManagement(EntityId $actor, EntityId $serverId): MinecraftServer
+    {
+        $server = $this->servers->managementById($serverId);
+        if ($server === null) {
+            throw new InvalidArgumentException('Minecraft server was not found.');
+        }
+        $gate = $this->gate($actor);
+        if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
+            return $server;
+        }
+        $gate->require(self::permission('minecraft_server.team.manage'));
         if ($server->ownerUserId === null || !$server->ownerUserId->equals($actor)) {
             $gate->require(self::permission('minecraft_server.manage_any'));
         }
-        $gate->require(self::permission('minecraft_server.manage_own'));
+        return $server;
+    }
+
+    private function requireVoteIntegrationManagement(EntityId $actor, EntityId $serverId): MinecraftServer
+    {
+        $server = $this->servers->managementById($serverId);
+        if ($server === null) {
+            throw new InvalidArgumentException('Minecraft server was not found.');
+        }
+        $gate = $this->gate($actor);
+        if ($gate->allows(self::permission('minecraft_server.manage_any'))) {
+            return $server;
+        }
+        $gate->require(self::permission('minecraft_server.vote_integration.manage'));
+        if ($server->ownerUserId === null || !$server->ownerUserId->equals($actor)) {
+            $gate->require(self::permission('minecraft_server.manage_any'));
+        }
+        return $server;
+    }
+
+    private static function integrationToken(): string
+    {
+        return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
     }
 
     private function gate(EntityId $actor): PermissionGate
