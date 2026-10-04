@@ -163,6 +163,14 @@ final class ProfileHtml
 
         $accountSubNav = '';
         $accountNav = '';
+        $accountSubNavKeys = [
+            'account.own',
+            'profile.settings.own',
+            'security.own',
+            'conversations.own',
+            'notifications.own',
+            'bookmarks.own',
+        ];
         $accountGroups = [
             'account' => [
                 'label' => 'Hesap',
@@ -207,7 +215,9 @@ final class ProfileHtml
                     continue;
                 }
                 $groupLinks .= $navItem($key, $label, $path, ' class="nav-account-link"');
-                $accountSubNav .= $navItem('sub.' . $key, $label, $path);
+                if (in_array($key, $accountSubNavKeys, true)) {
+                    $accountSubNav .= $navItem('sub.' . $key, $label, $path);
+                }
             }
             if ($groupLinks !== '') {
                 $accountNav .= '<section class="nav-account-group" data-account-group="' . self::escape($groupKey) . '">'
