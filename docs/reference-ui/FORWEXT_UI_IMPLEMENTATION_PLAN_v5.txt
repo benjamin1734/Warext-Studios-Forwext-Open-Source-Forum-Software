@@ -59,7 +59,7 @@ PHASE 6 — DM / ALERTS / ACTIVITY — VERIFIED
 - [DONE] Real installed Chromium qualification covers DM inbox, starred filter, notification center and 390px mobile layout. The mobile account secondary-nav overflow discovered by this check was fixed at 0134ef5.
 - [DONE] Latest Phase 6 main qualification at 0134ef5: PHP 8.4/8.5, security, performance, database migration smoke, real-route Chromium and installation package are green.
 
-PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
+PHASE 7 — MINECRAFT SERVER SYSTEM — VERIFIED
 - [DONE] First vertical slice: first-party module ownership, additive directory/status schema, public repository/service, /servers directory, /servers/{id} detail, primary navigation, compact responsive UI and regression contracts.
 - [DONE] First-slice qualification at 607661a: PHP 8.4/8.5 qualification, full package PHPUnit on PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance, real installed Chromium /servers desktop + 390px acceptance, SDK/React/Next builds, package integrity and packaged-installer smoke are green.
 - [DONE] Comparison and seasons slice at d6dd418: additive season persistence, /servers/compare and /servers/seasons, real directory-backed comparison, responsive UI and complete qualification are green.
@@ -72,7 +72,9 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
 - [DONE] Team/vote-integration implementation: owner-controlled manager/member team roles, delegated manage-own access without ownership escalation, ownership-bound privilege revocation, CSRF-protected team/token settings, one-time bearer token rotation with hash-only persistence, audited sensitive mutations, public /team and token-authenticated /vote-feed routes are implemented.
 - [DONE] Phase 7 CSRF audit: server detail/manage/claim/vote/team/vote-settings flows now share a dedicated minecraft-server CSRF scope; machine bearer vote-feed remains token-authenticated and outside browser CSRF state.
 - [DONE] Reference-route alignment: canonical /servers/{id}/edit, /transfer, /verify and /stats routes now own the visible flows while legacy /manage, /claim and /statistics aliases remain for compatibility. Real post-install browser fixtures force owned and unowned server states so edit/save, ownership verification submit, transfer UI, stats, voting, team and bearer vote integration cannot be skipped by empty-data acceptance.
-- [NEXT] Re-qualify the complete Phase 7 surface on the aligned routes. If all gates are green, mark Phase 7 VERIFIED and move immediately to Phase 8.
+- [VERIFIED] Final Phase 7 qualification at 969f157: PHP 8.4/8.5, release contract, security/dependency advisory, shared-hosting performance, MySQL 8.4, MariaDB 10.11, fixture-backed real Chromium canonical edit/verify/transfer/stats/team/vote-integration acceptance, full package/SDK/React/Next/integrity and packaged-installer smoke are green.
+- [VERIFIED] Phase 7 is closed. CI package artifact: forwext-packages-1.0.16-1333, SHA-256 4a37f0938477eefad29b3957ec6e7cba1547afccb1704bcc65dc517a6871fa0c.
+- [NEXT] Phase 8: raise portfolio/FAQ/referral/bug surfaces to v5 density and implement the absent clans/groups family with real persistence, permissions and responsive flows.
 
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
 - Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.
