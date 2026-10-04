@@ -145,6 +145,9 @@ final class ProfileHtml
             . (isset($visibleNavigation['members.online'])
                 ? $navItem('members.online', 'Çevrimiçi üyeler', '/members/online')
                 : '')
+            . (isset($visibleNavigation['members.staff'])
+                ? $navItem('members.staff', 'Yetkili Ekip', '/members/staff')
+                : '')
             . (isset($visibleNavigation['forum.stats'])
                 ? $navItem('members.stats', 'İstatistikler', '/stats')
                 : '');
