@@ -16,6 +16,8 @@ final class AdminUxQualityStandardTest extends TestCase
         self::assertStringContainsString('Güvenli varsayılan', $helper);
         self::assertStringContainsString('Önizleme / doğrulama', $helper);
         self::assertStringContainsString('Geri dönüş', $helper);
+        self::assertStringContainsString('<details class="acp-ux-guide"', $helper);
+        self::assertStringContainsString('Yönetim rehberi', $helper);
         self::assertStringNotContainsString('<script', $helper);
 
         foreach ([
@@ -43,6 +45,9 @@ final class AdminUxQualityStandardTest extends TestCase
         self::assertStringContainsString(':focus-visible', $asset);
         self::assertStringContainsString('.mod-actions--spaced', $asset);
         self::assertStringContainsString('.mod-settings-body', $asset);
+        self::assertStringContainsString('/* xenforo-reference-acp-density-v1 */', $asset);
+        self::assertStringContainsString('.acp-report-head', $asset);
+        self::assertStringContainsString('.acp-ux-guide>summary', $asset);
         self::assertSame(substr_count($asset, '{'), substr_count($asset, '}'));
         self::assertStringNotContainsString('function css(', $qualityHelper);
 
