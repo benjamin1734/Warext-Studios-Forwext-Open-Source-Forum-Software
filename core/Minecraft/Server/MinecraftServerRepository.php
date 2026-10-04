@@ -45,6 +45,7 @@ interface MinecraftServerRepository
 
     public function updateDetails(
         EntityId $serverId,
+        ?EntityId $expectedOwnerUserId,
         EntityId $actorUserId,
         string $name,
         string $summary,
