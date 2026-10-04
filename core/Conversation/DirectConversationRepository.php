@@ -26,11 +26,17 @@ interface DirectConversationRepository
     ): DirectMessage;
 
     /** @return list<DirectConversationSummary> */
-    public function summaries(EntityId $actorId, int $limit = 30, int $offset = 0): array;
+    public function summaries(EntityId $actorId, int $limit = 30, int $offset = 0, bool $starredOnly = false): array;
 
     public function view(EntityId $actorId, EntityId $conversationId, int $messageLimit = 200): ?DirectConversationView;
 
     public function otherParticipant(EntityId $actorId, EntityId $conversationId): ?EntityId;
 
     public function markRead(EntityId $actorId, EntityId $conversationId, DateTimeImmutable $at): void;
+
+    public function setStarred(EntityId $actorId, EntityId $conversationId, bool $starred, DateTimeImmutable $at): bool;
+
+    public function leave(EntityId $actorId, EntityId $conversationId, DateTimeImmutable $at): bool;
+
+    public function reactivate(EntityId $actorId, EntityId $conversationId): bool;
 }

@@ -9,6 +9,7 @@ use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\TransactionalQueryExecutor;
 use Forwext\Core\Migration\MigrationContext;
 use Forwext\Database\Migrations\Core\CreateDirectConversationSystem;
+use Forwext\Database\Migrations\Core\AddDirectConversationParticipantManagement;
 use PHPUnit\Framework\TestCase;
 
 final class DirectConversationMigrationTest extends TestCase
@@ -54,6 +55,33 @@ final class DirectConversationMigrationTest extends TestCase
 
         self::assertTrue($result->isPassed());
         self::assertCount(5, $database->verificationQueries);
+    }
+
+    public function testParticipantManagementMigrationAddsStarLeaveStateAndIndex(): void
+    {
+        $database = new DirectConversationMigrationRecordingDatabase();
+        $migration = new AddDirectConversationParticipantManagement();
+
+        $migration->up(new MigrationContext($database));
+
+        self::assertSame('20261004175500_direct_conversation_participant_management', $migration->id()->value());
+        $sql = implode("\n", array_map(
+            static fn (CompiledQuery $query): string => $query->sql,
+            $database->executedQueries,
+        ));
+        self::assertStringContainsString('starred_at_utc', $sql);
+        self::assertStringContainsString('left_at_utc', $sql);
+        self::assertStringContainsString('idx_forwext_direct_participant_state', $sql);
+    }
+
+    public function testParticipantManagementVerificationRequiresBothColumnsAndStateIndex(): void
+    {
+        $database = new DirectConversationMigrationRecordingDatabase();
+        $database->fetchValues = [2, 1];
+
+        self::assertTrue(
+            (new AddDirectConversationParticipantManagement())->verify(new MigrationContext($database))->isPassed(),
+        );
     }
 
     public function testVerificationFailsClosedForIncompletePermissionRules(): void

@@ -27,10 +27,10 @@ final readonly class DirectConversationService
     }
 
     /** @return list<DirectConversationSummary> */
-    public function inbox(int $limit = 30, int $offset = 0): array
+    public function inbox(int $limit = 30, int $offset = 0, bool $starredOnly = false): array
     {
         $this->requireUse();
-        return $this->conversations->summaries($this->gate->actorId(), $limit, $offset);
+        return $this->conversations->summaries($this->gate->actorId(), $limit, $offset, $starredOnly);
     }
 
     public function view(EntityId $conversationId, ?DateTimeImmutable $now = null): ?DirectConversationView
@@ -61,6 +61,9 @@ final readonly class DirectConversationService
 
         $existing = $this->conversations->findPair($actor, $target->id());
         if ($existing !== null) {
+            if (!$this->conversations->reactivate($actor, $existing)) {
+                throw new InvalidArgumentException('Özel konuşma katılımı yeniden etkinleştirilemedi.');
+            }
             $this->conversations->append($actor, $existing, $message, self::utc($now));
             return $existing;
         }
@@ -88,6 +91,27 @@ final readonly class DirectConversationService
             self::body($body),
             self::utc($now),
         );
+    }
+
+    public function setStarred(EntityId $conversationId, bool $starred, ?DateTimeImmutable $now = null): void
+    {
+        $this->requireUse();
+        if (!$this->conversations->setStarred(
+            $this->gate->actorId(),
+            $conversationId,
+            $starred,
+            self::utc($now),
+        )) {
+            throw new InvalidArgumentException('Özel konuşma bulunamadı.');
+        }
+    }
+
+    public function leave(EntityId $conversationId, ?DateTimeImmutable $now = null): void
+    {
+        $this->requireUse();
+        if (!$this->conversations->leave($this->gate->actorId(), $conversationId, self::utc($now))) {
+            throw new InvalidArgumentException('Özel konuşma bulunamadı.');
+        }
     }
 
     private function requireUse(): void

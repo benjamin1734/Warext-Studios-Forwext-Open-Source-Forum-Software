@@ -18,6 +18,7 @@ final readonly class DirectConversationSummary
         public string $lastMessageBody,
         public DateTimeImmutable $updatedAt,
         public int $unreadCount,
+        public bool $starred = false,
     ) {
         UserId::assert($otherUserId);
         if (trim($otherUsername) === '') {

@@ -24,6 +24,7 @@ use Forwext\Database\Migrations\Core\CreateDisciplineTables;
 use Forwext\Database\Migrations\Core\CreateCustomProfileUrlTables;
 use Forwext\Database\Migrations\Core\CreateDiscussionStateTables;
 use Forwext\Database\Migrations\Core\CreateDirectConversationSystem;
+use Forwext\Database\Migrations\Core\AddDirectConversationParticipantManagement;
 use Forwext\Database\Migrations\Core\CreateForumMetadataTables;
 use Forwext\Database\Migrations\Core\CreateForumNodeTables;
 use Forwext\Database\Migrations\Core\CreateIndependentModerationOversight;
@@ -204,6 +205,7 @@ final class CoreMigrationRegistry
             new SeedStarterForumStructure(),
             new CreateAuthSessionIndex(),
             new CreateDirectConversationSystem(),
+            new AddDirectConversationParticipantManagement(),
         ];
     }
 }

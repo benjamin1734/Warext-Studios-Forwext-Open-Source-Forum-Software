@@ -24,6 +24,9 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('Authentication required.', $handler);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $handler);
         self::assertStringContainsString('otherParticipant($actor, $conversationId)', $handler);
+        self::assertStringContainsString("\$action === 'star' || \$action === 'unstar'", $handler);
+        self::assertStringContainsString("\$action === 'leave'", $handler);
+        self::assertStringContainsString("['all', 'starred']", $handler);
         self::assertStringContainsString("Response::text('Not Found', 404)", $handler);
         self::assertStringContainsString('private, no-store', $handler);
         self::assertStringContainsString('X-Robots-Tag', $handler);
@@ -47,6 +50,9 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('FOR UPDATE', $repository);
         self::assertStringContainsString('WHERE p.user_id=:actor_id', $repository);
         self::assertStringContainsString('last_read_at_utc', $repository);
+        self::assertStringContainsString('starred_at_utc', $repository);
+        self::assertStringContainsString('left_at_utc', $repository);
+        self::assertStringContainsString('activeParticipantExists', $repository);
         self::assertStringContainsString('um.author_user_id IS NULL', $repository);
     }
 
@@ -65,6 +71,11 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('name="_csrf"', $html);
         self::assertStringContainsString('maxlength="10000"', $html);
         self::assertStringContainsString('nl2br(self::e($message->body)', $html);
+        self::assertStringContainsString('conversation-filters', $html);
+        self::assertStringContainsString('conversation-star-button', $html);
+        self::assertStringContainsString('name="action" value="leave"', $html);
+        self::assertStringNotContainsString('name="action" value="invite"', $html);
+        self::assertStringNotContainsString('name="action" value="lock"', $html);
         self::assertStringContainsString("otherUsername !== 'Silinmiş kullanıcı'", $html);
 
         self::assertStringContainsString("'conversations.own'", $navigation);
@@ -77,6 +88,8 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('.conversation-row.is-unread', $css);
         self::assertStringContainsString('.conversation-message.is-own', $css);
         self::assertStringContainsString('@media(max-width:760px)', $css);
+        self::assertStringContainsString('/* direct-conversations-v2 */', $css);
+        self::assertStringContainsString('.conversation-row-shell', $css);
     }
 
     public function testMigrationIsPartOfTheProductionInstallerRegistry(): void
@@ -88,8 +101,14 @@ final class DirectConversationWebSurfaceTest extends TestCase
         );
 
         self::assertStringContainsString('new CreateDirectConversationSystem()', $registry);
+        self::assertStringContainsString('new AddDirectConversationParticipantManagement()', $registry);
         self::assertStringContainsString('20261003150000_direct_conversation_system', $migration);
         self::assertStringContainsString("'conversation.use'", $migration);
+        $managementMigration = (string) file_get_contents(
+            $root . '/database/migrations/core/AddDirectConversationParticipantManagement.php',
+        );
+        self::assertStringContainsString('starred_at_utc', $managementMigration);
+        self::assertStringContainsString('left_at_utc', $managementMigration);
         self::assertStringContainsString('uq_forwext_direct_pair', $migration);
     }
 }
