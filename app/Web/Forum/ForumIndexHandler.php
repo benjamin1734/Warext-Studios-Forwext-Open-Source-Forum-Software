@@ -71,6 +71,13 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $body .= '</div><aside class="forum-home-side" aria-label="Forum özeti">'
             . $this->renderRecent($recent)
+            . ($actor === null ? '' : '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
+                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular <span>→</span></a>'
+                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/unread')) . '">Okunmamış <span>→</span></a>'
+                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/trending')) . '">Gündem <span>→</span></a>'
+                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/featured')) . '">Öne çıkanlar <span>→</span></a>'
+                . '<a href="' . self::e($this->basePath->prepend('/activity/profile-posts')) . '">Profil gönderileri <span>→</span></a>'
+                . '</section>')
             . '<section class="card forum-side-card"><h2>Topluluk</h2>'
             . '<a href="' . self::e($this->basePath->prepend('/members/online')) . '">Çevrimiçi üyeler <span>→</span></a>'
             . ($actor === null ? '' : '<a href="' . self::e($this->basePath->prepend('/stats')) . '">Forum istatistikleri <span>→</span></a>')
@@ -158,7 +165,8 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         if ($description !== '') {
             $html .= '<p>' . self::e($description) . '</p>';
         }
-        $html .= '</div></header><div class="forum-node-list">';
+        $html .= '</div><span>' . number_format(count($forums), 0, ',', '.') . ' forum</span>'
+            . '</header><div class="forum-node-list">';
 
         foreach ($forums as $forum) {
             $summary = $summaries[$forum->id()->value()] ?? [
