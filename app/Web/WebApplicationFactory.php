@@ -10,6 +10,7 @@ use Forwext\App\Web\Advertising\AdvertisingManageHandler;
 use Forwext\App\Web\Advertising\AdvertisingMiddleware;
 use Forwext\App\Web\Advertising\AdvertisingRenderer;
 use Forwext\App\Web\Account\AccountDashboardHandler;
+use Forwext\App\Web\Account\AccountPreferencesHandler;
 use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
@@ -1664,6 +1665,19 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/account'),
             new AccountDashboardHandler($viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'account.preferences',
+            [HttpMethod::Get],
+            new PathTemplate('/account/preferences'),
+            new AccountPreferencesHandler(
+                $viewerResolver,
+                $profileService,
+                $profileActivity,
+                $presence,
+                $notificationSound,
+                $basePath,
+            ),
         ));
         $routes->add(new Route(
             'account.sessions',
