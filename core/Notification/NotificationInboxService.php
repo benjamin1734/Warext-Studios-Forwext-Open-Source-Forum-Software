@@ -40,6 +40,13 @@ final readonly class NotificationInboxService
         return $this->repository->markRead($userId, $notificationId, $now);
     }
 
+    public function markAllRead(EntityId $userId, ?DateTimeImmutable $now = null): int
+    {
+        $this->requirePermission($userId, 'notification.alert.view');
+        $now ??= new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        return $this->repository->markAllRead($userId, $now);
+    }
+
     public function setPreference(
         EntityId $userId,
         string $categoryKey,
