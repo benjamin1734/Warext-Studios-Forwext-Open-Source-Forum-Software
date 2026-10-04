@@ -192,6 +192,15 @@ final readonly class AdminNavigationRegistry
                 ['report', 'rapor', 'export', 'saved report'],
             ),
             new AdminNavigationItem(
+                'admin.navigation',
+                'Navigasyon Yönetimi',
+                'Ana navigasyon bağlantıları, sıralama, hedef kitle, görünürlük ve özel bağlantılar.',
+                AdminNavigationSection::Appearance,
+                '/admin/navigation',
+                ['acp.manage'],
+                ['navigation', 'navigasyon', 'menu', 'menü', 'link', 'navbar'],
+            ),
+            new AdminNavigationItem(
                 'admin.appearance',
                 'Appearance Studio',
                 'Basit/Gelişmiş görünüm, güvenli presetler, arama, preview ve setup assistant.',

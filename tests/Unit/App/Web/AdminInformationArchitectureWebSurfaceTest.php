@@ -70,11 +70,32 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
             );
         }
 
-        self::assertCount(26, $targets);
+        self::assertCount(27, $targets);
         self::assertSame('/admin/users', $targets['admin.users'] ?? null);
+        self::assertSame('/admin/navigation', $targets['admin.navigation'] ?? null);
         self::assertSame('/admin/system/operations', $targets['admin.system.operations'] ?? null);
         self::assertSame('/support/staff', $targets['admin.support'] ?? null);
         self::assertSame('/bugs/staff', $targets['admin.bugs'] ?? null);
+    }
+
+
+    public function testPublicNavigationManagerIsFirstPartyCsrfProtectedAndNoindex(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
+        $handler = (string) file_get_contents($root . '/app/Web/Admin/PublicNavigationHandler.php');
+        $html = (string) file_get_contents($root . '/app/Web/Admin/PublicNavigationHtml.php');
+        $service = (string) file_get_contents($root . '/core/Admin/Navigation/PublicNavigationService.php');
+
+        self::assertStringContainsString("new PathTemplate('/admin/navigation')", $factory);
+        self::assertStringContainsString('publicNavigationCsrfMiddleware', $factory);
+        self::assertStringContainsString('name="_csrf"', $html);
+        self::assertStringContainsString('Navigasyon Yönetimi', $html);
+        self::assertStringContainsString("'navigation.items'", $service);
+        self::assertStringContainsString("'acp.manage'", $service);
+        self::assertStringContainsString('private, no-store', $handler);
+        self::assertStringContainsString('X-Robots-Tag', $handler);
+        self::assertStringContainsString('noindex,nofollow', $handler);
     }
 
 
@@ -88,6 +109,7 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
             'Admin/AdminDashboardHandler.php',
             'Admin/AdminCommunityHandler.php',
             'Admin/AdminModuleManagerHandler.php',
+            'Admin/PublicNavigationHandler.php',
             'Admin/SystemIntegrationHandler.php',
             'Admin/SystemOperationsHandler.php',
             'Appearance/AppearanceGuideHandler.php',
@@ -185,6 +207,7 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
             'AdminDashboardHandler.php',
             'AdminCommunityHandler.php',
             'AdminModuleManagerHandler.php',
+            'PublicNavigationHandler.php',
             'SystemIntegrationHandler.php',
             'SystemOperationsHandler.php',
         ] as $file) {

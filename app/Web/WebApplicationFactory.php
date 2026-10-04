@@ -14,6 +14,7 @@ use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
 use Forwext\App\Web\Admin\AdminModuleManagerHandler;
+use Forwext\App\Web\Admin\PublicNavigationHandler;
 use Forwext\App\Web\Admin\SystemIntegrationHandler;
 use Forwext\App\Web\Admin\SystemOperationsHandler;
 use Forwext\App\Web\Appearance\AppearanceGuideHandler;
@@ -191,6 +192,7 @@ use Forwext\Core\Admin\Operations\SystemMaintenanceSchedulerCatalog;
 use Forwext\Core\Admin\Operations\SystemOperationsService;
 use Forwext\Core\Admin\Navigation\AdminNavigationRegistry;
 use Forwext\Core\Admin\Navigation\DatabaseAdminNavigationPreferenceRepository;
+use Forwext\Core\Admin\Navigation\PublicNavigationService;
 use Forwext\Core\Analytics\Access\AnalyticsAccessService;
 use Forwext\Core\Api\V1\DatabasePrivateApiV1ReadRepository;
 use Forwext\Core\Api\V1\DatabasePublicApiV1ReadRepository;
@@ -476,6 +478,7 @@ use Forwext\Core\Ui\Appearance\Guide\AppearanceGuideService;
 use Forwext\Core\Ui\Layout\Builder\DatabaseLayoutBuilderRepository;
 use Forwext\Core\Ui\Layout\Builder\LayoutBuilderService;
 use Forwext\Core\Ui\Layout\UiSlotRegistry;
+use Forwext\Core\Ui\Navigation\NavigationRuntime;
 use Forwext\Core\Ui\Widget\WidgetRegistry;
 use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
 use Forwext\Core\Ui\Theme\PublishedThemeAssetService;
@@ -508,6 +511,10 @@ final readonly class WebApplicationFactory
     public function create(string $version): Router
     {
         $config = $this->config();
+        $navigationItems = $config->get('navigation.items', []);
+        NavigationRuntime::configure(
+            is_array($navigationItems) && !array_is_list($navigationItems) ? $navigationItems : [],
+        );
         $database = $this->database($config);
         $masterKey = $this->masterKey($config);
         $secretStore = new EncryptedFileSecretStore(
@@ -918,10 +925,16 @@ final readonly class WebApplicationFactory
             new AdminActionQueueService($database, $authorizer),
             $authorizer,
         );
+        $generatedConfig = new GeneratedConfigStore($this->projectRoot . '/config/generated.php');
+        $publicNavigation = new PublicNavigationService(
+            $generatedConfig,
+            $authorizer,
+            new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
+        );
         $systemIntegrations = new SystemIntegrationService(
             SystemIntegrationCatalog::coreDefaults(),
             $config,
-            new GeneratedConfigStore($this->projectRoot . '/config/generated.php'),
+            $generatedConfig,
             $secretStore,
             $authorizer,
             new CoreAuditRecorder($database, new DatabaseAuditEventStore($database)),
@@ -972,7 +985,7 @@ final readonly class WebApplicationFactory
         $systemOperations = new SystemOperationsService(
             $database,
             $config,
-            new GeneratedConfigStore($this->projectRoot . '/config/generated.php'),
+            $generatedConfig,
             $systemHealth,
             new CapabilityResolver(databaseProbe: new DatabaseServerCapabilityProbe($database)),
             new SystemLogReader($this->projectPath($config->requireString('logging.path'))),
@@ -1523,6 +1536,7 @@ final readonly class WebApplicationFactory
         $subscriptionCsrf = $this->subscriptionCsrfMiddleware($config);
         $advertisingCsrf = $this->advertisingCsrfMiddleware($config);
         $adminNavigationCsrf = $this->adminNavigationCsrfMiddleware($config);
+        $publicNavigationCsrf = $this->publicNavigationCsrfMiddleware($config);
         $adminCommunityCsrf = $this->adminCommunityCsrfMiddleware($config);
         $moduleManagerCsrf = $this->moduleManagerCsrfMiddleware($config);
         $systemIntegrationCsrf = $this->systemIntegrationCsrfMiddleware($config);
@@ -2530,6 +2544,13 @@ final readonly class WebApplicationFactory
             new AdminDashboardHandler($adminInformation, $viewerResolver, $basePath),
             [$adminNavigationCsrf],
         ));
+        $routes->add(new Route(
+            'admin.navigation',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/admin/navigation'),
+            new PublicNavigationHandler($publicNavigation, $viewerResolver, $basePath),
+            [$publicNavigationCsrf],
+        ));
         foreach (AdminCommunitySection::cases() as $adminSection) {
             $routes->add(new Route(
                 'admin.community.' . $adminSection->value,
@@ -3045,6 +3066,11 @@ final readonly class WebApplicationFactory
     private function advertisingCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'advertising', 'forwext.csrf.advertising.v1');
+    }
+
+    private function publicNavigationCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'public-navigation', 'forwext.csrf.public-navigation.v1');
     }
 
     private function adminCommunityCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

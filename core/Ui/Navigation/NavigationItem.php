@@ -16,6 +16,7 @@ final readonly class NavigationItem
         public NavigationAudience $audience = NavigationAudience::Public,
         public ?string $moduleKey = null,
         public ?string $addonKey = null,
+        public NavigationPlacement $placement = NavigationPlacement::More,
     ) {
         if (preg_match('/^[a-z][a-z0-9_.-]{1,190}$/D', $this->key) !== 1) {
             throw new InvalidArgumentException('Navigation key is invalid.');
