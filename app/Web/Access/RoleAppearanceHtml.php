@@ -32,6 +32,9 @@ final class RoleAppearanceHtml
         if ($appearance->hasGradient()) {
             $classes[] = 'role-appearance--gradient';
         }
+        if (!$appearance->showMobile()) {
+            $classes[] = 'role-appearance--hide-mobile';
+        }
 
         $styles = [];
         if ($appearance->textColor() !== null) {
