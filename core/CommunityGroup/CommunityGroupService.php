@@ -183,17 +183,30 @@ final readonly class CommunityGroupService
             );
         }
 
-        match ($action) {
-            'approve' => $this->groups->setMembership($groupId, $targetUserId, 'member', 'active', $actor, $now),
-            'promote' => $roleAuthority
-                ? $this->groups->setMembership($groupId, $targetUserId, 'moderator', 'active', $actor, $now)
-                : $this->require($actor, 'group.moderate_any'),
-            'demote' => $roleAuthority
-                ? $this->groups->setMembership($groupId, $targetUserId, 'member', 'active', $actor, $now)
-                : $this->require($actor, 'group.moderate_any'),
-            'remove' => $this->groups->removeMembership($groupId, $targetUserId, $actor, $now),
-            default => throw new InvalidArgumentException('Community group membership action is invalid.'),
-        };
+        switch ($action) {
+            case 'approve':
+                $this->groups->setMembership($groupId, $targetUserId, 'member', 'active', $actor, $now);
+                return;
+            case 'promote':
+                if (!$roleAuthority) {
+                    $this->require($actor, 'group.moderate_any');
+                }
+                $this->groups->setMembership($groupId, $targetUserId, 'moderator', 'active', $actor, $now);
+                return;
+            case 'demote':
+                if (!$roleAuthority) {
+                    $this->require($actor, 'group.moderate_any');
+                }
+                $this->groups->setMembership($groupId, $targetUserId, 'member', 'active', $actor, $now);
+                return;
+            case 'remove':
+                if (!$this->groups->removeMembership($groupId, $targetUserId, $actor, $now)) {
+                    throw new InvalidArgumentException('Community group membership was not found.');
+                }
+                return;
+            default:
+                throw new InvalidArgumentException('Community group membership action is invalid.');
+        }
     }
 
     public function now(): DateTimeImmutable
