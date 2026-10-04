@@ -62,10 +62,17 @@ final readonly class MinecraftServerManageHandler implements RequestHandlerInter
 
             $server = $this->servers->managementDetail($actor, $serverId);
             if ($request->method() === HttpMethod::Post) {
+                $action = $request->parsedBody()['action'] ?? null;
                 $this->mutate($actor, $serverId, $request);
 
+                $redirectPath = match ($action) {
+                    'save' => '/servers/' . rawurlencode($serverId->value()) . '/edit?updated=1',
+                    'transfer', 'release' => '/servers/' . rawurlencode($serverId->value()),
+                    default => '/servers/' . rawurlencode($serverId->value()) . '/manage?updated=1',
+                };
+
                 return Response::redirect(
-                    $this->basePath->prepend('/servers/' . rawurlencode($serverId->value()) . '/manage?updated=1'),
+                    $this->basePath->prepend($redirectPath),
                     303,
                 )->withHeader('Cache-Control', 'no-store');
             }
