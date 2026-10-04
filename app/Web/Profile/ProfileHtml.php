@@ -122,6 +122,7 @@ final class ProfileHtml
         $whatsNewSubNav = $authenticated
             ? $navItem('activity.latest', 'Son hareketlilik', '/activity')
                 . $navItem('activity.new', 'Yeni konular', '/activity/threads/new')
+                . $navItem('activity.profile-posts', 'Yeni profil gönderileri', '/activity/profile-posts')
                 . $navItem('activity.unread', 'Okunmamış', '/activity/threads/unread')
                 . $navItem('activity.trending', 'Gündem', '/activity/threads/trending')
                 . $navItem('activity.featured', 'Öne çıkanlar', '/activity/threads/featured')
