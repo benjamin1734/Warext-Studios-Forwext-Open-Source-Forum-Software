@@ -45,6 +45,9 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-reaction-key="', $thread);
         self::assertStringContainsString('data-bookmark-form', $thread);
         self::assertStringContainsString('data-quote-post', $thread);
+        self::assertStringContainsString('aria-label="Tepki seçenekleri"', $thread);
+        self::assertStringContainsString('aria-label="Mesajı kaydet"', $thread);
+        self::assertStringContainsString('class="thread-post-footer"', $thread);
         self::assertStringContainsString('maxlength="1000"', $thread);
         self::assertStringContainsString('hash_equals($actor->value(), $post[\'author_user_id\'])', $thread);
         self::assertStringContainsString('Kendi mesajına tepki veremezsin.', $thread);

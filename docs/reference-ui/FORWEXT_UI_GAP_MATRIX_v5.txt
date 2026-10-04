@@ -33,8 +33,11 @@ Phase 3 verification: security, performance/observability, database migration sm
 Next: Phase 4 thread-view/editor density.
 
 04 THREAD VIEW / EDITOR — IN PROGRESS
-Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention and spellcheck infrastructure exists.
-Gap: post action density, moderation state presentation and long-thread navigation need visual/function review.
+Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention, spellcheck and editor text/attachment metrics already exist.
+Current Phase 4 slice: thread header actions are grouped into compact primary/follow areas; post footer actions use a dedicated dense toolbar; long-thread pagination gains previous/next, first/last context and bounded ellipsis windows; responsive browser fixtures exercise the new controls.
+Moderation boundary: the public thread reader intentionally exposes only visible posts, so pending/rejected staff presentation is not fabricated here and remains owned by the moderation phase.
+Verification pending: PHP 8.4/8.5, Chromium responsive/accessibility, security, DB, performance and package qualification for the Phase 4 slice.
+Gap after this slice: author identity/banner/badge richness and final editor/thread visual polish still need review.
 
 05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.

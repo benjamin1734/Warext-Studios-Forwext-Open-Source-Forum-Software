@@ -32,8 +32,12 @@ PHASE 3 — THREAD LIST / SEARCH / WATCH — VERIFIED
 - [DONE] Cover watched routes, watch mutations, discovery filters and member content routes with PHP/source contracts plus live Chromium acceptance; full Phase 3 CI passed on d885af3f.
 - [DONE] Phase 3 full CI gate passed; execution moves to Phase 4 thread-view/editor density.
 
-PHASE 4 — THREAD VIEW / EDITOR
-- Author/content separation, banners/badges, action density, reactions, attachments, editor/preview and moderation states.
+PHASE 4 — THREAD VIEW / EDITOR — IN PROGRESS
+- [DONE] Preserve existing author/content separation, reactions, bookmarks, attachments, editor preview, quote, mention, spellcheck and attachment staging.
+- [DONE] Group thread header actions and compact post footer/social controls without replacing existing backend services.
+- [DONE] Upgrade long-thread navigation with previous/next, first/last context and bounded ellipsis windows.
+- [VERIFYING] Exercise the new header/footer/pagination hooks in PHP source contracts and responsive browser fixtures.
+- [NEXT] Review author identity/banner/badge richness and final editor/thread visual polish, then pass the Phase 4 CI gate.
 
 PHASE 5 — MEMBERS / PROFILE / ACCOUNT
 - Member directory/staff/current visitors.
