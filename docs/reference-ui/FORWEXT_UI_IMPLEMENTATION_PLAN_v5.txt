@@ -21,8 +21,8 @@ PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 - [DONE] Expose existing permission-aware new, unread, trending, featured and recent thread discovery as real routed pages.
 - [DONE] Connect forum-home and "Neler yeni?" navigation to the discovery routes with compact list rendering.
 - [DONE] Add profile-post discovery by reusing the existing activity-feed repository/service with an enum-bound SQL type filter and the same profile visibility/moderation rules.
-- [VERIFYING] Cover the discovery slice in PHP 8.4/8.5 and live Chromium acceptance.
-- [NEXT] Finish forum-index/sidebar density without duplicating existing activity/search sources.
+- [DONE] Densify the forum index with real category counts and a compact authenticated discovery sidebar linking the new/unread/trending/featured/profile-post flows.
+- [VERIFYING] Cover the complete Phase 2 discovery/index slice in PHP 8.4/8.5 and live Chromium acceptance.
 
 PHASE 3 — THREAD LIST / SEARCH / WATCH
 - Watched threads/forums, no-reply, started-by-user, posts-by-user and mark-read flows.
