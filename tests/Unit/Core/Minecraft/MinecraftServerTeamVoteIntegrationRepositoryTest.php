@@ -98,6 +98,37 @@ final class MinecraftServerTeamVoteIntegrationRepositoryTest extends TestCase
         ));
     }
 
+    public function testOwnershipTransferRevokesDelegatedTeamAndVoteIntegration(): void
+    {
+        $database = new MinecraftServerTeamVoteIntegrationRepositoryDatabase();
+        $database->fetchOneRows[] = ['owner_user_id'=>'11111111111111111111111111111111'];
+        $database->executeResult = 1;
+        $repository = new DatabaseMinecraftServerRepository($database);
+
+        $repository->transferOwnership(
+            EntityId::fromString('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+            EntityId::fromString('11111111111111111111111111111111'),
+            EntityId::fromString('33333333333333333333333333333333'),
+            EntityId::fromString('11111111111111111111111111111111'),
+            'ownership_transferred',
+            new DateTimeImmutable('2026-10-04 20:35:00', new DateTimeZone('UTC')),
+        );
+
+        $sql = implode("\n", array_map(
+            static fn (CompiledQuery $query): string => $query->sql,
+            $database->executeQueries,
+        ));
+        self::assertStringContainsString(
+            'DELETE FROM forwext_minecraft_server_team_members WHERE server_id=:server_id',
+            $sql,
+        );
+        self::assertStringContainsString(
+            'DELETE FROM forwext_minecraft_server_vote_integrations WHERE server_id=:server_id',
+            $sql,
+        );
+        self::assertStringContainsString('forwext_minecraft_server_ownership_events', $sql);
+    }
+
     public function testVoteFeedHydratesOpaqueVoteIdAndCurrentAccountUsername(): void
     {
         $database = new MinecraftServerTeamVoteIntegrationRepositoryDatabase();
