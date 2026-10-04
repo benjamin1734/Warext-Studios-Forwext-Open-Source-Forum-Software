@@ -93,6 +93,17 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('thread-pagination--bottom', $thread);
         self::assertStringContainsString('class="thread-view-head forum-page-head"', $thread);
         self::assertStringContainsString('<h2>Yanıt yaz</h2>', $thread);
+        self::assertStringContainsString('class="thread-view-action-main"', $thread);
+        self::assertStringContainsString('class="thread-view-action-follow"', $thread);
+        self::assertStringContainsString('class="thread-post-footer"', $thread);
+        self::assertStringContainsString('class="pagination thread-pagination-nav"', $thread);
+        self::assertStringContainsString('class="pagination-edge"', $thread);
+        self::assertStringContainsString('class="pagination-gap"', $thread);
+        self::assertStringContainsString('rel="prev"', $thread);
+        self::assertStringContainsString('rel="next"', $thread);
+        self::assertStringContainsString('/* thread-view-density-v1 */', $css);
+        self::assertStringContainsString('.thread-post-footer{', $css);
+        self::assertStringContainsString('.thread-pagination-nav{', $css);
         self::assertStringContainsString('/* reference-forum-r2 */', $css);
     }
 }
