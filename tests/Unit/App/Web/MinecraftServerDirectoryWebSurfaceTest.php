@@ -197,9 +197,9 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $settings);
         self::assertStringContainsString("minecraft_server.team.manage", $service);
         self::assertStringContainsString("minecraft_server.vote_integration.manage", $service);
-        self::assertStringContainsString("teamRole($server->serverId, $actor) === 'manager'", $service);
+        self::assertStringContainsString("teamRole(\$server->serverId, \$actor) === 'manager'", $service);
         self::assertStringContainsString('integrationToken()', $service);
-        self::assertStringContainsString("hash('sha256', $token)", $service);
+        self::assertStringContainsString("hash('sha256', \$token)", $service);
         self::assertStringContainsString('FOR UPDATE', $repository);
         self::assertStringContainsString('forwext_minecraft_server_team_members', $repository);
         self::assertStringContainsString('forwext_minecraft_server_vote_integrations', $repository);
