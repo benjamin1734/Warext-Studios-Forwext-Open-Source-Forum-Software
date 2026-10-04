@@ -21,6 +21,9 @@ final class CommunityGroupWebSurfaceTest extends TestCase
         $navigation = (string) file_get_contents($root . '/core/Ui/Navigation/NavigationRegistry.php');
         $modules = (string) file_get_contents($root . '/core/Module/FirstParty/FirstPartyModuleRegistry.php');
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
+        $liveSmoke = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
+        $fixtureSeeder = (string) file_get_contents($root . '/tools/browser/seed-group-fixtures.php');
+        $qualificationWorkflow = (string) file_get_contents($root . '/.github/workflows/qualification-matrix.yml');
 
         self::assertStringContainsString("new PathTemplate('/groups')", $factory);
         self::assertStringContainsString("new PathTemplate('/groups/mine')", $factory);
@@ -59,6 +62,12 @@ final class CommunityGroupWebSurfaceTest extends TestCase
         self::assertStringContainsString("'groups',", $modules);
         self::assertStringContainsString("routePrefixes:['group.']", $modules);
         self::assertStringContainsString('/* community-groups-v1 */', $css);
+        self::assertStringContainsString('community groups mine: create POST', $liveSmoke);
+        self::assertStringContainsString('community group detail: join POST', $liveSmoke);
+        self::assertStringContainsString('community group detail: approval POST', $liveSmoke);
+        self::assertStringContainsString('community group detail: leave POST', $liveSmoke);
+        self::assertStringContainsString('ci-approval-group', $fixtureSeeder);
+        self::assertStringContainsString('seed-group-fixtures.php', $qualificationWorkflow);
     }
 
     public function testWritesAreCsrfProtectedAndNoOwnerMutationControlIsExposed(): void
