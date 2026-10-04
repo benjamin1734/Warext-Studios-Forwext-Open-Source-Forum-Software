@@ -51,7 +51,7 @@ final class BugReportFormHtml
             . '<p>Sorunu tekrar üretilebilir şekilde anlat; teknik bağlam güvenli biçimde ayrıca toplanır.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/bugs')) . '">Kayıtlarıma dön</a></header>'
             . $notice
-            . '<section class="surface-panel bug-form-panel"><form method="post" enctype="multipart/form-data" action="'
+            . '<div class="bug-form-grid"><section class="surface-panel bug-form-panel"><form method="post" enctype="multipart/form-data" action="'
             . self::e($basePath->prepend('/bugs/report')) . '" class="support-intake-form">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrfToken) . '">'
             . '<input type="hidden" name="source_path" value="' . self::e($sourcePath ?? '') . '">'
@@ -62,12 +62,16 @@ final class BugReportFormHtml
             . 'placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea></label>'
             . '<label><span>Beklenen sonuç</span><textarea name="expected_result" maxlength="10000" rows="5" required></textarea></label>'
             . '<label><span>Gerçekleşen sonuç</span><textarea name="actual_result" maxlength="10000" rows="5" required></textarea></label>'
-            . '<div><strong>Kaynak sayfa</strong><div>' . $source . '</div></div>'
             . '<label><span>Screenshot / dosya</span><input type="file" name="attachments[]" multiple '
             . 'accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/zip,text/plain"></label>'
-            . '<p class="muted">En fazla 5 dosya; dosya başına 25 MiB. Görseller güvenli biçimde yeniden işlenebilir ve metadata temizlenebilir.</p>'
             . '<div class="support-intake-actions"><button class="fx-btn fx-btn--primary" type="submit">Hata bildirimini gönder</button></div>'
-            . '</form></section></section>';
+            . '</form></section><aside class="surface-panel bug-form-guidance"><div><span class="forum-eyebrow">BAĞLAM</span>'
+            . '<h2>Gönderim bilgileri</h2></div><dl><div><dt>Kaynak sayfa</dt><dd>' . $source . '</dd></div>'
+            . '<div><dt>Ek sınırı</dt><dd>En fazla 5 dosya · dosya başına 25 MiB</dd></div>'
+            . '<div><dt>Gizlilik</dt><dd>Teknik bağlam güvenli biçimde toplanır; görsel metadata temizlenebilir.</dd></div></dl>'
+            . '<div class="bug-form-checklist"><strong>Daha hızlı inceleme için</strong><span>Tekrar üretme adımlarını sırayla yaz.</span>'
+            . '<span>Beklenen ve gerçekleşen sonucu ayrı anlat.</span><span>Gerekliyse ekran görüntüsü veya log ekle.</span></div>'
+            . '</aside></div></section>';
 
         return ProfileHtml::page('Hata bildir', $body, $basePath, authenticated: true);
     }
