@@ -60,6 +60,7 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         );
         self::assertStringContainsString('href="/community/staff"', $member);
         self::assertStringContainsString('data-nav-section-link="custom-custom-wiki"', $member);
+        self::assertStringContainsString('href="/community/account/preferences"', $member);
         self::assertStringContainsString('href="/community/account/profile"', $member);
         self::assertStringContainsString('href="/community/account/sessions"', $member);
         self::assertStringContainsString('href="/community/account/bookmarks"', $member);

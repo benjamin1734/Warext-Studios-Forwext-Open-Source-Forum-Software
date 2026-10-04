@@ -41,8 +41,9 @@ Phase 4 verification: security, performance/observability, database migration sm
 
 05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
-Current Phase 5 slice: a first-class public staff directory is backed by authoritative staff-role assignments, active-account state and public profile visibility; member navigation exposes staff and online directory views; bounded username search/pagination and live-route acceptance are included.
-Gap: privacy/preferences/signature/reactions/style controls remain fragmented or absent as dedicated account surfaces; member/profile/account density and responsive comparison still require completion.
+Verified Phase 5 member slice: the public staff directory is backed by authoritative staff-role assignments, active-account state and public profile visibility; member navigation exposes staff and online directory views; bounded username search/pagination and live-route acceptance are included. The complete CI gate passed on main commit 68317606.
+Current Phase 5 account slice: a unified preferences/privacy hub reads existing profile visibility, presence and notification-sound services without introducing duplicate storage; the only inline mutation is the existing presence visibility setting behind a dedicated CSRF scope. Existing profile, notification, security, session and relationship surfaces remain authoritative for their own settings.
+Gap: signature/style preference persistence does not currently exist and will not be fabricated; reaction actions exist but no reaction-preference store exists. Member/profile/account density and responsive comparison still require completion.
 
 06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
 Current: DM inbox/detail/start/reply and notification inbox/realtime/settings exist.

@@ -67,6 +67,14 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'preferences.own',
+            'Tercihler ve gizlilik',
+            '/account/preferences',
+            255,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
             'profile.settings.own',
             'Profil ve kimlik',
             '/account/profile',
