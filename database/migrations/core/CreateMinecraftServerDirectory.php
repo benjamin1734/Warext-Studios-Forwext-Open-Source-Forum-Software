@@ -80,6 +80,19 @@ final readonly class CreateMinecraftServerDirectory implements Migration
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
 
+        $moduleTable = (int) $context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() "
+            . "AND TABLE_NAME='forwext_first_party_modules'",
+        ));
+        if ($moduleTable === 1) {
+            $context->execute(new CompiledQuery(
+                'INSERT INTO forwext_first_party_modules '
+                . '(module_key,state,data_state,updated_by_user_id,updated_at_utc) '
+                . "VALUES ('minecraft-servers','enabled','retained',NULL,UTC_TIMESTAMP(6)) "
+                . 'ON DUPLICATE KEY UPDATE module_key=VALUES(module_key)',
+            ));
+        }
+
         $permissions = [
             'minecraft_server.create'=>'Create a Minecraft server directory entry.',
             'minecraft_server.manage_any'=>'Manage any Minecraft server directory entry.',
@@ -136,6 +149,9 @@ final readonly class CreateMinecraftServerDirectory implements Migration
             . "WHERE template_key IN ('new_user','member','verified','moderator','administrator') "
             . "AND permission_key IN ('minecraft_server.create','minecraft_server.manage_any')",
         ));
+        $module = (int) $context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM forwext_first_party_modules WHERE module_key='minecraft-servers'",
+        ));
         $slugIndex = (int) $context->fetchValue(new CompiledQuery(
             'SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() '
             . "AND TABLE_NAME='forwext_minecraft_servers' AND INDEX_NAME='uq_forwext_minecraft_server_slug' "
@@ -146,6 +162,7 @@ final readonly class CreateMinecraftServerDirectory implements Migration
             && $foreignKeys === 2
             && $permissions === 2
             && $templateRules === 10
+            && $module === 1
             && $slugIndex === 1
             ? MigrationVerification::passed()
             : MigrationVerification::failed('Minecraft server directory schema or permission defaults are incomplete.');
