@@ -34,6 +34,10 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertGreaterThanOrEqual(3, substr_count($css, 'display:grid;'));
         self::assertStringContainsString('grid-template-columns:repeat(3,minmax(0,1fr));', $css);
         self::assertStringContainsString('forum-side-card--empty', $index);
+        self::assertStringContainsString('class="forum-hero forum-page-head"', $index);
+        self::assertStringContainsString('<h2>Gündem</h2>', $index);
+        self::assertStringContainsString('forum-side-card--stats', $index);
+        self::assertStringContainsString('/* reference-forum-r2 */', $css);
     }
 
     public function testForumThreadListUsesExplicitDesktopColumns(): void
@@ -53,6 +57,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('forum-thread-pagination--bottom', $forum);
         self::assertStringContainsString("is-sticky", $forum);
         self::assertStringContainsString('?forum=', $forum);
+        self::assertStringContainsString('class="forum-view-head forum-page-head"', $forum);
+        self::assertStringContainsString('class="forum-thread-filter-link"', $forum);
     }
 
     public function testThreadViewKeepsDedicatedTitleAndClassicAuthorColumnHooks(): void
@@ -71,5 +77,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString('.thread-quick-reply{', $css);
         self::assertStringContainsString('thread-pagination--top', $thread);
         self::assertStringContainsString('thread-pagination--bottom', $thread);
+        self::assertStringContainsString('class="thread-view-head forum-page-head"', $thread);
+        self::assertStringContainsString('<h2>Yanıt yaz</h2>', $thread);
+        self::assertStringContainsString('/* reference-forum-r2 */', $css);
     }
 }

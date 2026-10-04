@@ -76,7 +76,7 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             $unread = array_fill_keys($this->discussionState->unreadThreadIds($actor, $threadIds), true);
         }
 
-        $body = '<section class="forum-view-head"><div><span class="forum-eyebrow">FORUM</span><h1>'
+        $body = '<section class="forum-view-head forum-page-head"><div><h1>'
             . self::e($node->title()) . '</h1>';
         if ($node->description() !== '') {
             $body .= '<p>' . self::e($node->description()) . '</p>';
@@ -115,7 +115,8 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         }
 
         $body .= '<section class="forum-thread-panel"><header class="forum-thread-panel-head"><div><h2>Konular</h2>'
-            . '<p>' . number_format($threads['total'], 0, ',', '.') . ' görünür konu</p></div></header>';
+            . '<p>' . number_format($threads['total'], 0, ',', '.') . ' konu</p></div>'
+            . '<a class="forum-thread-filter-link" href="' . self::e($forumSearch) . '">Filtreler</a></header>';
 
         if ($threads['rows'] === []) {
             $body .= '<div class="card forum-empty-state"><div class="forum-node-icon">◇</div>'

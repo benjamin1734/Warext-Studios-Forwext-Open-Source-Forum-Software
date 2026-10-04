@@ -117,7 +117,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
         }
 
-        $body = '<section class="thread-view-head"><div class="thread-view-title"><div class="thread-badges">'
+        $body = '<section class="thread-view-head forum-page-head"><div class="thread-view-title"><div class="thread-badges">'
             . ($thread->isSticky() ? '<span class="thread-badge">Sabit</span>' : '')
             . ($thread->isFeatured() ? '<span class="thread-badge thread-badge--accent">Öne çıkan</span>' : '')
             . ($thread->isLocked() ? '<span class="thread-badge">Kilitli</span>' : '')
@@ -206,8 +206,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         $action = $threadUrl . '/reply';
 
         return '<section class="thread-quick-reply card" id="quick-reply">'
-            . '<header class="thread-quick-reply-head"><div><span class="forum-eyebrow">HIZLI YANIT</span>'
-            . '<h2>Yanıtını yaz</h2><p>Konu sayfasından ayrılmadan yanıt gönderebilirsin.</p></div>'
+            . '<header class="thread-quick-reply-head"><div>'
+            . '<h2>Yanıt yaz</h2><p>Konu sayfasından ayrılmadan mesajını gönderebilirsin.</p></div>'
             . '<a class="fx-btn" href="' . self::e($action) . '">Tam editörü aç</a></header>'
             . '<form class="thread-quick-reply-form" method="post" action="' . self::e($action) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
