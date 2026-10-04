@@ -19,16 +19,17 @@ Implemented in Phase 1: the member account menu exposes existing profile, sessio
 Verified Phase 1 slice: account tools are grouped into compact Account/Communication/Community/Other sections; mobile account links retain >=44px touch targets; the open mobile navigation is a stable viewport overlay with background pointer isolation; live browser acceptance verifies message/alert previews and exact active account navigation; representative browser coverage includes an authenticated 390px mobile case.
 Verification: PHP 8.4/8.5 contracts, Chromium responsive/live-route accessibility, security, performance/observability, database migration smoke, release contract and package/installer steps passed on the Phase 1 main baseline.
 
-02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
+02 FORUM INDEX / DISCOVERY / WHAT IS NEW — VERIFIED
 Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
 Implemented in the current Phase 2 slice: the existing permission-aware ThreadDiscoveryService is exposed through /activity/threads and mode routes for new, unread, trending, featured and recent thread activity; navigation and forum-home entry points use these real routes; the compact list surface reuses forum search scopes and adds live-route browser acceptance. The existing activity-feed repository now supports bounded enum type filters, and /activity/profile-posts reuses the same visibility/moderation/ignore checks for a dedicated new-profile-post flow without creating a second activity source.
 Forum-index density is now expanded with visible category forum counts and a compact authenticated discovery sidebar backed only by the new first-class discovery routes.
-Gap: watched/no-reply and user-specific thread filters remain Phase 3 work.
-Next: pass PHP 8.4/8.5, Chromium live-route/responsive/accessibility and package CI for the full Phase 2 slice.
+Phase 2 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility, release contract and installation package all passed on main commit d19dcff8.
 
 03 THREAD LIST / SEARCH / WATCH FLOWS — IN PROGRESS
-Current: forum view and permission-aware search exist.
-Gap: watched forums/threads, user-thread filters and no-reply filters are not complete first-class account/discovery surfaces.
+Current: forum view, permission-aware search, persisted thread/forum read state and persisted thread/forum watch state exist.
+Implemented in the current Phase 3 slice: no-reply, started-by-viewer and participated-by-viewer modes extend the existing permission-aware thread discovery repository; watched threads/forums are first-class account surfaces filtered through current forum permissions and moderation state; forum/thread pages expose CSRF-protected watch notification modes; forum pages expose the existing monotonic mark-read watermark as a real action.
+Verification pending: PHP 8.4/8.5, Chromium live-route/responsive/accessibility, security, DB, performance and package qualification for the Phase 3 slice.
+Gap after this slice: broader user-targeted content lookup/search polish remains before Phase 3 can be closed.
 
 04 THREAD VIEW / EDITOR — IN PROGRESS
 Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention and spellcheck infrastructure exists.
