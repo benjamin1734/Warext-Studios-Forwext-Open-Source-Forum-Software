@@ -12,7 +12,7 @@ use Forwext\Core\Forum\Node\ForumNodeAuthorization;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
-use Forwext\Core\Forum\State\DatabaseDiscussionStateRepository;
+use Forwext\Core\Forum\State\DiscussionStateRepository;
 use Forwext\Core\Forum\Thread\ThreadModerationState;
 use Forwext\Core\Forum\Thread\ThreadRepository;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
@@ -23,7 +23,7 @@ use Forwext\Core\Routing\BasePath;
 final readonly class WatchedContentHandler implements RequestHandlerInterface
 {
     public function __construct(
-        private DatabaseDiscussionStateRepository $state,
+        private DiscussionStateRepository $state,
         private ForumNodeRepository $nodes,
         private ThreadRepository $threads,
         private ProfileViewerResolver $viewers,
