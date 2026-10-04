@@ -27,6 +27,7 @@ final class AccountDashboardHtml
                 'label' => 'Profil ve sosyal',
                 'description' => 'Profil görünümünü, etkinliğini ve topluluk ilişkilerini düzenle.',
                 'items' => [
+                    ['Tercihler ve Gizlilik', 'Profil görünürlüğü, çevrimiçi durumu ve bildirim tercihlerini tek merkezden izle.', '/account/preferences'],
                     ['Profil ve Gizlilik', 'Hakkımda, görünürlük, avatar ve banner ayarlarını yönet.', '/account/profile'],
                     ['Profil URL', 'Profiline ait özel URL ayarlarını yönet.', '/account/profile-url'],
                     ['Profil Etkinliği', 'Profil gönderileri ve etkinlik tercihlerini yönet.', '/account/profile-activity'],
