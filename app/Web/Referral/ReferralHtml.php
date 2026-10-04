@@ -225,23 +225,6 @@ final class ReferralHtml
         return '<div class="referral-stat"><strong>' . $value . '</strong><span>' . self::e($label) . '</span></div>';
     }
 
-    private static function stats(ReferralAnalytics $analytics): string
-    {
-        return '<div class="stats-grid section">'
-            . self::stat('Tıklama', $analytics->clicks)
-            . self::stat('Attribution', $analytics->attributed)
-            . self::stat('Nitelikli', $analytics->qualified)
-            . self::stat('İnceleme', $analytics->review)
-            . self::stat('Reddedilen', $analytics->rejected)
-            . self::stat('Ödül Birimi', $analytics->rewardUnits)
-            . '</div>';
-    }
-
-    private static function stat(string $label, int $value): string
-    {
-        return '<div class="card stat"><strong>' . $value . '</strong><span class="muted">' . self::e($label) . '</span></div>';
-    }
-
     private static function duration(int $seconds): string
     {
         if ($seconds % 86400 === 0) return (string) ($seconds / 86400) . ' gün';
