@@ -53,8 +53,8 @@ Verification: real installed Chromium covers DM inbox, starred state, notificati
 Model boundary: invite/global lock controls are intentionally absent until multi-participant and owner/lock semantics exist.
 
 07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — IN PROGRESS
-Current first slice: first-party module registration, additive server/status persistence, create/manage-any permission defaults, public repository/service, /servers and /servers/{id}, primary navigation, compact filtering/list/detail UI and responsive regression contracts are implemented on the Phase 7 branch.
-Gap: first slice still requires full CI/live-route verification. Comparison, seasons, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer and management states remain.
+Verified first slice: first-party module registration, additive server/status persistence, create/manage-any permission defaults, public repository/service, /servers and /servers/{id}, primary navigation, compact filtering/list/detail UI and responsive regression contracts are merged. Qualification at 607661a is green across PHP 8.4/8.5, full package PHPUnit, MySQL 8.4, MariaDB 10.11, security, performance, real installed Chromium desktop/390px, SDK/React/Next and packaged-installer smoke.
+Gap: comparison and seasons are now the first unfinished reference group. Vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer and management states remain after that.
 
 08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces.
