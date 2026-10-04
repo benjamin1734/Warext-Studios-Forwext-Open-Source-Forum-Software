@@ -202,6 +202,10 @@ try {
 
       const accountSummary = page.locator(".nav-account-menu > summary");
       if ((await accountSummary.count()) > 0) {
+        await page.locator("[data-forwext-primary-navigation]").evaluate((element) => {
+          element.scrollTop = element.scrollHeight;
+        });
+        await accountSummary.scrollIntoViewIfNeeded();
         await accountSummary.click();
         const groups = await page.locator(".nav-account-group").count();
         if (groups !== 4) fail(`${testCase.name}: grouped account menu expected 4 groups, got ${groups}`);
