@@ -272,7 +272,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '</form></section>';
     }
 
-    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string,author_group_name:?string} $post */
+    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
     private function renderPost(
         array $post,
         Thread $thread,
@@ -306,11 +306,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         $isThreadStarter = $threadAuthorId !== null
             && $post['author_user_id'] !== null
             && hash_equals($threadAuthorId->value(), $post['author_user_id']);
-        $groupName = $profileUrl === null
-            ? 'Silinmiş hesap'
-            : ($post['author_group_name'] ?? 'Topluluk üyesi');
         $authorBadges = '<div class="thread-post-author-badges"><span class="thread-author-badge">'
-            . self::e($groupName) . '</span>'
+            . ($profileUrl === null ? 'Silinmiş hesap' : 'Topluluk üyesi') . '</span>'
             . ($isThreadStarter ? '<span class="thread-author-badge thread-author-badge--starter">Konu sahibi</span>' : '')
             . '</div>';
         $authorLinks = '';
@@ -367,7 +364,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '<div class="thread-attachment-list">' . $items . '</div></section>';
     }
 
-    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string,author_group_name:?string} $post */
+    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
     private function interactionControls(array $post, ?EntityId $actor, bool $canReply): string
     {
         if ($actor === null) {
