@@ -161,7 +161,7 @@ final class DirectConversationHtml
         if ($page === 1 && !$hasMore) {
             return '';
         }
-        $queryPrefix = $filter === 'starred' ? 'filter=starred&amp;' : '';
+        $queryPrefix = $filter === 'starred' ? 'filter=starred&' : '';
         $html = '<nav class="surface-pagination" aria-label="Mesaj sayfaları">';
         if ($page > 1) {
             $html .= '<a href="' . self::e($basePath->prepend('/account/conversations?' . $queryPrefix . 'page=' . ($page - 1)))
