@@ -460,48 +460,6 @@ try {
   }
   await assertHealthyDocument("minecraft server seasons");
 
-  response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
-  if (!response || response.status() !== 200) fail("community groups mobile: directory route did not return HTTP 200");
-  const groupsMobileState = await page.evaluate(() => {
-    const directory = document.querySelector(".group-directory");
-    const search = document.querySelector(".group-search");
-    return {
-      directoryWidth: directory instanceof HTMLElement ? Math.round(directory.getBoundingClientRect().width) : 0,
-      searchColumns: search instanceof HTMLElement
-        ? getComputedStyle(search).gridTemplateColumns.split(" ").filter(Boolean).length
-        : 0,
-      viewportWidth: window.innerWidth,
-    };
-  });
-  if (
-    groupsMobileState.directoryWidth > groupsMobileState.viewportWidth
-    || groupsMobileState.searchColumns !== 1
-  ) {
-    fail(`community groups mobile: responsive contract failed ${JSON.stringify(groupsMobileState)}`);
-  }
-  await assertHealthyDocument("community groups mobile");
-
-  response = await page.goto(baseUrl + "/groups/mine", { waitUntil: "domcontentloaded" });
-  if (!response || response.status() !== 200) fail("community groups mine mobile: route did not return HTTP 200");
-  const groupsMineMobileState = await page.evaluate(() => {
-    const form = document.querySelector(".group-create-panel form");
-    const list = document.querySelector(".group-mine-list");
-    return {
-      formColumns: form instanceof HTMLElement
-        ? getComputedStyle(form).gridTemplateColumns.split(" ").filter(Boolean).length
-        : 0,
-      listWidth: list instanceof HTMLElement ? Math.round(list.getBoundingClientRect().width) : 0,
-      viewportWidth: window.innerWidth,
-    };
-  });
-  if (
-    groupsMineMobileState.formColumns !== 1
-    || groupsMineMobileState.listWidth > groupsMineMobileState.viewportWidth
-  ) {
-    fail(`community groups mine mobile: responsive contract failed ${JSON.stringify(groupsMineMobileState)}`);
-  }
-  await assertHealthyDocument("community groups mine mobile");
-
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server management: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Sunucu Yönetimi", exact: true }).waitFor();
@@ -1020,6 +978,48 @@ try {
     }
     await assertHealthyDocument("minecraft server team mobile");
   }
+
+  response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups mobile: directory route did not return HTTP 200");
+  const groupsMobileState = await page.evaluate(() => {
+    const directory = document.querySelector(".group-directory");
+    const search = document.querySelector(".group-search");
+    return {
+      directoryWidth: directory instanceof HTMLElement ? Math.round(directory.getBoundingClientRect().width) : 0,
+      searchColumns: search instanceof HTMLElement
+        ? getComputedStyle(search).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    groupsMobileState.directoryWidth > groupsMobileState.viewportWidth
+    || groupsMobileState.searchColumns !== 1
+  ) {
+    fail(`community groups mobile: responsive contract failed ${JSON.stringify(groupsMobileState)}`);
+  }
+  await assertHealthyDocument("community groups mobile");
+
+  response = await page.goto(baseUrl + "/groups/mine", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("community groups mine mobile: route did not return HTTP 200");
+  const groupsMineMobileState = await page.evaluate(() => {
+    const form = document.querySelector(".group-create-panel form");
+    const list = document.querySelector(".group-mine-list");
+    return {
+      formColumns: form instanceof HTMLElement
+        ? getComputedStyle(form).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      listWidth: list instanceof HTMLElement ? Math.round(list.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    groupsMineMobileState.formColumns !== 1
+    || groupsMineMobileState.listWidth > groupsMineMobileState.viewportWidth
+  ) {
+    fail(`community groups mine mobile: responsive contract failed ${JSON.stringify(groupsMineMobileState)}`);
+  }
+  await assertHealthyDocument("community groups mine mobile");
 
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server management mobile: real route did not return HTTP 200");
