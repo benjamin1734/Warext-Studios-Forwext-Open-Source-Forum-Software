@@ -39,6 +39,23 @@ final class SchedulerTest extends TestCase
         self::assertFalse($cron->isDue(new DateTimeImmutable('2026-09-08 00:00:00', new DateTimeZone('UTC'))));
     }
 
+    public function testCronExpressionCalculatesNextRunWithoutMinuteByMinuteYearScanning(): void
+    {
+        $weekday = CronExpression::parse('15 8-18 * * 1-5');
+        self::assertSame(
+            '2026-09-14 10:15',
+            $weekday->nextRunAfter(new DateTimeImmutable('2026-09-14 10:14:42', new DateTimeZone('UTC')))
+                ?->format('Y-m-d H:i'),
+        );
+
+        $annual = CronExpression::parse('0 0 1 1 *');
+        self::assertSame(
+            '2027-01-01 00:00',
+            $annual->nextRunAfter(new DateTimeImmutable('2026-09-14 10:14:42', new DateTimeZone('UTC')))
+                ?->format('Y-m-d H:i'),
+        );
+    }
+
     public function testDispatcherClaimsOneMinuteOnlyOnce(): void
     {
         $registry = new SchedulerRegistry();
