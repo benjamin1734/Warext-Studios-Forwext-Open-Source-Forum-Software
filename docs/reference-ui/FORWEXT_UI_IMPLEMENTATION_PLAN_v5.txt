@@ -64,8 +64,8 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
 - [DONE] First-slice qualification at 607661a: PHP 8.4/8.5 qualification, full package PHPUnit on PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance, real installed Chromium /servers desktop + 390px acceptance, SDK/React/Next builds, package integrity and packaged-installer smoke are green.
 - [DONE] Comparison and seasons slice at d6dd418: additive season persistence, /servers/compare and /servers/seasons, real directory-backed comparison, responsive UI and complete qualification are green.
 - [DONE] Management/ownership implementation: owner-scoped and staff-wide management, CSRF-protected editing, transactional ownership claims/review, transfer/release lifecycle, ownership event history, permission-engine integration and responsive management surfaces are implemented without dead controls.
-- [NEXT] Qualify the management/ownership slice across PHP 8.4/8.5, MySQL/MariaDB, security, performance, Chromium and package/installer gates.
-- [NEXT] Then implement voting, server updates/statistics, vote integration settings and team management.
+- [VERIFIED] Management/ownership qualification at d5ffc37: PHP 8.4/8.5 qualification, MySQL 8.4, MariaDB 10.11, security, dependency advisory, low-resource performance, real installed Chromium desktop/390px, full package PHPUnit/build/integrity and packaged-installer smoke are green.
+- [NEXT] Implement voting as the next real backed vertical slice; then server updates/statistics, vote integration settings and team management.
 
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
 - Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.
