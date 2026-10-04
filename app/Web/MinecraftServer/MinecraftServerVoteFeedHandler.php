@@ -32,6 +32,13 @@ final readonly class MinecraftServerVoteFeedHandler implements RequestHandlerInt
 
         try {
             $limit = self::limit($request);
+        } catch (InvalidArgumentException) {
+            return Response::json(['error'=>'bad_request'], 400)
+                ->withHeader('Cache-Control', 'no-store')
+                ->withHeader('X-Content-Type-Options', 'nosniff');
+        }
+
+        try {
             $rows = $this->servers->voteIntegrationFeed($serverId, $match[1], $limit);
             $votes = array_map(
                 static fn ($vote): array => [
