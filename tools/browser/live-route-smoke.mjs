@@ -359,6 +359,24 @@ try {
   }
   await assertHealthyDocument("minecraft server seasons");
 
+  response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft server management: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Sunucu Yönetimi", exact: true }).waitFor();
+  const serverManagementState = await page.evaluate(() => ({
+    panels: document.querySelectorAll(".minecraft-manage-list").length,
+    rows: document.querySelectorAll(".minecraft-manage-row").length,
+    emptyStates: document.querySelectorAll(".minecraft-manage-list .surface-empty").length,
+    navLinks: document.querySelectorAll('a[href$="/servers/manage"]').length,
+  }));
+  if (
+    serverManagementState.panels !== 1
+    || (serverManagementState.rows === 0 && serverManagementState.emptyStates !== 1)
+    || serverManagementState.navLinks < 1
+  ) {
+    fail(`minecraft server management: route contract failed ${JSON.stringify(serverManagementState)}`);
+  }
+  await assertHealthyDocument("minecraft server management");
+
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
@@ -590,6 +608,27 @@ try {
   }
   await assertHealthyDocument("minecraft servers mobile");
 
+  response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft server management mobile: real route did not return HTTP 200");
+  const serverManagementMobileState = await page.evaluate(() => {
+    const panel = document.querySelector(".minecraft-manage-list");
+    const row = document.querySelector(".minecraft-manage-row");
+    return {
+      panelWidth: panel instanceof HTMLElement ? Math.round(panel.getBoundingClientRect().width) : 0,
+      rowColumns: row instanceof HTMLElement
+        ? getComputedStyle(row).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    serverManagementMobileState.panelWidth > serverManagementMobileState.viewportWidth
+    || (serverManagementMobileState.rowColumns !== 0 && serverManagementMobileState.rowColumns !== 1)
+  ) {
+    fail(`minecraft server management mobile: responsive contract failed ${JSON.stringify(serverManagementMobileState)}`);
+  }
+  await assertHealthyDocument("minecraft server management mobile");
+
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
@@ -645,4 +684,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory/management, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
