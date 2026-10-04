@@ -49,8 +49,8 @@ Phase 5 verification: security, performance/observability, database migration sm
 
 06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
 Current: DM inbox/detail/start/reply, notification inbox/realtime/settings, and authenticated shell message/alert previews exist. The shell previews reuse the existing permission-aware preview endpoints rather than a duplicate source.
-Current Phase 6 slice: recipient-scoped bulk notification read is being added through the existing inbox service/repository and dedicated CSRF-protected notification route.
-Gap: the current direct-message model is authoritative for one-to-one participant pairs and start/reply/read state. Star/leave/invite/lock management states are absent and must receive real persistence plus permission semantics before any controls are exposed. Notification/DM density and final responsive/live-route qualification remain.
+Verified Phase 6 notification slice: recipient-scoped bulk notification read uses the existing inbox service/repository and dedicated CSRF-protected notification route; all main qualification workflows, including the installation package, passed on 8ee6410.\nCurrent Phase 6 DM slice: per-participant starred and left state is persisted through an additive installer migration; active membership gates inbox/detail/reply/management actions; the inbox exposes a real starred filter and CSRF-protected star/leave controls.
+Gap: the direct-message model remains authoritative for one-to-one participant pairs. Invite is not exposed because multi-participant membership is not represented; global lock is not exposed because creator/owner and lock semantics are not represented. Notification/DM final responsive/live-route qualification remains before Phase 6 can be VERIFIED.
 
 07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — NOT STARTED
 Repository scan found no server-directory implementation family. Required: directory, comparison, seasons, detail, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer, permissions and error states.
