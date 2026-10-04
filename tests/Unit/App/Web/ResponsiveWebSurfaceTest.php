@@ -22,7 +22,8 @@ final class ResponsiveWebSurfaceTest extends TestCase
         self::assertStringContainsString('aria-controls="forwext-primary-navigation"', $html);
         self::assertStringContainsString('data-forwext-primary-navigation', $html);
         self::assertStringContainsString('data-forwext-subnav', $html);
-        self::assertStringContainsString('data-nav-section-link="forums"', $html);
+        self::assertStringContainsString("'forums' => 'forums'", $html);
+        self::assertStringContainsString('NavigationRuntime::registry()', $html);
         self::assertStringContainsString('id="main-content"', $html);
         self::assertStringContainsString('/assets/mobile-nav.js', $html);
         self::assertStringContainsString('<html lang="tr" dir="ltr">', $html);
@@ -36,8 +37,9 @@ final class ResponsiveWebSurfaceTest extends TestCase
         $script = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
 
         self::assertStringContainsString('/* xenforo-reference-density-v1 */', $css);
-        self::assertStringContainsString('data-nav-section-link="portfolio"', $html);
-        self::assertStringContainsString('data-nav-section-link="faq"', $html);
+        self::assertStringContainsString("'portfolio' => 'portfolio'", $html);
+        self::assertStringContainsString("'faq' => 'faq'", $html);
+        self::assertStringContainsString('NavigationPlacement::Primary', $html);
         self::assertStringContainsString('class="nav-account-grid"', $html);
         self::assertStringContainsString('nav-tool-menu--messages', $html);
         self::assertStringContainsString('nav-tool-menu--alerts', $html);
