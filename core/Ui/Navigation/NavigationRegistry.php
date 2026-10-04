@@ -35,6 +35,10 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'members.staff', 'Yetkili Ekip', '/members/staff', 220,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
             'portfolio', 'Portfolyo', '/portfolio', 230,
             placement: NavigationPlacement::Primary,
         ));
