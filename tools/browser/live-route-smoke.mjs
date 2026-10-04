@@ -523,72 +523,73 @@ try {
     if (!response || response.status() !== 200) fail("minecraft server integration: edit route reload failed");
 
     const settingsLink = page.locator('a[href$="/vote-settings"]').first();
-    if ((await settingsLink.count()) === 1) {
-      const settingsHref = await settingsLink.getAttribute("href");
-      if (!settingsHref) fail("minecraft server integration: settings href is missing");
-      response = await page.goto(new URL(settingsHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-      if (!response || response.status() !== 200) fail("minecraft server integration: settings route did not return HTTP 200");
-      if ((await page.locator(".minecraft-vote-settings-summary").count()) !== 1) {
-        fail("minecraft server integration: settings summary is missing");
-      }
+    if ((await settingsLink.count()) !== 1) {
+      fail("minecraft server integration: settings link is missing for the owned fixture");
+    }
+    const settingsHref = await settingsLink.getAttribute("href");
+    if (!settingsHref) fail("minecraft server integration: settings href is missing");
+    response = await page.goto(new URL(settingsHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: settings route did not return HTTP 200");
+    if ((await page.locator(".minecraft-vote-settings-summary").count()) !== 1) {
+      fail("minecraft server integration: settings summary is missing");
+    }
 
-      const rotateButton = page.getByRole("button", { name: /Token(ı yenile| oluştur)/ }).first();
-      if ((await rotateButton.count()) !== 1) fail("minecraft server integration: token action is missing");
-      const [rotateResponse] = await Promise.all([
+    const rotateButton = page.getByRole("button", { name: /Token(ı yenile| oluştur)/ }).first();
+    if ((await rotateButton.count()) !== 1) fail("minecraft server integration: token action is missing");
+    const [rotateResponse] = await Promise.all([
+      page.waitForResponse((candidate) => {
+        const url = new URL(candidate.url());
+        return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
+      }),
+      rotateButton.click(),
+    ]);
+    if (rotateResponse.status() !== 200) {
+      fail(`minecraft server integration: rotate token returned HTTP ${rotateResponse.status()}`);
+    }
+    const token = (await page.locator(".minecraft-vote-secret code").textContent())?.trim() ?? "";
+    if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
+      fail("minecraft server integration: one-time token was not rendered");
+    }
+
+    const enabledCheckbox = page.locator('.minecraft-vote-settings-toggle input[name="enabled"]');
+    if ((await enabledCheckbox.count()) !== 1) {
+      fail("minecraft server integration: enabled toggle is missing after token creation");
+    }
+    if (!(await enabledCheckbox.isChecked())) {
+      await enabledCheckbox.check();
+      const [toggleResponse] = await Promise.all([
         page.waitForResponse((candidate) => {
           const url = new URL(candidate.url());
           return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
         }),
-        rotateButton.click(),
+        page.getByRole("button", { name: "Durumu kaydet", exact: true }).click(),
       ]);
-      if (rotateResponse.status() !== 200) {
-        fail(`minecraft server integration: rotate token returned HTTP ${rotateResponse.status()}`);
+      if (toggleResponse.status() !== 303) {
+        fail(`minecraft server integration: enable toggle returned HTTP ${toggleResponse.status()}`);
       }
-      const token = (await page.locator(".minecraft-vote-secret code").textContent())?.trim() ?? "";
-      if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
-        fail("minecraft server integration: one-time token was not rendered");
-      }
-
-      const enabledCheckbox = page.locator('.minecraft-vote-settings-toggle input[name="enabled"]');
-      if ((await enabledCheckbox.count()) !== 1) {
-        fail("minecraft server integration: enabled toggle is missing after token creation");
-      }
-      if (!(await enabledCheckbox.isChecked())) {
-        await enabledCheckbox.check();
-        const [toggleResponse] = await Promise.all([
-          page.waitForResponse((candidate) => {
-            const url = new URL(candidate.url());
-            return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
-          }),
-          page.getByRole("button", { name: "Durumu kaydet", exact: true }).click(),
-        ]);
-        if (toggleResponse.status() !== 303) {
-          fail(`minecraft server integration: enable toggle returned HTTP ${toggleResponse.status()}`);
-        }
-        await page.waitForLoadState("domcontentloaded");
-      }
-
-      const endpointText = (await page.locator(".minecraft-vote-settings-endpoint > code").textContent())?.trim() ?? "";
-      const endpointPath = endpointText.replace(/^GET\s+/, "");
-      if (!/\/servers\/[a-f0-9]{32}\/vote-feed\?limit=100$/.test(endpointPath)) {
-        fail(`minecraft server integration: endpoint contract failed "${endpointPath}"`);
-      }
-      const feedResponse = await page.request.get(new URL(endpointPath, baseUrl).toString(), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (feedResponse.status() !== 200) {
-        fail(`minecraft server integration: bearer feed returned HTTP ${feedResponse.status()}`);
-      }
-      const feedPayload = await feedResponse.json();
-      if (
-        feedPayload?.order !== "newest_first"
-        || !Array.isArray(feedPayload?.votes)
-        || typeof feedPayload?.count !== "number"
-      ) {
-        fail(`minecraft server integration: feed payload contract failed ${JSON.stringify(feedPayload)}`);
-      }
-      await assertHealthyDocument("minecraft server vote integration");
+      await page.waitForLoadState("domcontentloaded");
     }
+
+    const endpointText = (await page.locator(".minecraft-vote-settings-endpoint > code").textContent())?.trim() ?? "";
+    const endpointPath = endpointText.replace(/^GET\s+/, "");
+    if (!/\/servers\/[a-f0-9]{32}\/vote-feed\?limit=100$/.test(endpointPath)) {
+      fail(`minecraft server integration: endpoint contract failed "${endpointPath}"`);
+    }
+    const feedResponse = await page.request.get(new URL(endpointPath, baseUrl).toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (feedResponse.status() !== 200) {
+      fail(`minecraft server integration: bearer feed returned HTTP ${feedResponse.status()}`);
+    }
+    const feedPayload = await feedResponse.json();
+    if (
+      feedPayload?.order !== "newest_first"
+      || !Array.isArray(feedPayload?.votes)
+      || typeof feedPayload?.count !== "number"
+    ) {
+      fail(`minecraft server integration: feed payload contract failed ${JSON.stringify(feedPayload)}`);
+    }
+    await assertHealthyDocument("minecraft server vote integration");
   }
 
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
