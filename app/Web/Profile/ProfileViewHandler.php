@@ -151,7 +151,7 @@ final readonly class ProfileViewHandler implements RequestHandlerInterface
             : '';
         $relationshipControls = $this->relationshipControls($viewerId, $user->id());
         $music = $this->musicPlayer($user->id(), $viewerId, $now, $memberPath);
-        $body = '<article class="profile" data-forwext-background-scope="profile" data-forwext-background-id="'
+        $body = '<article class="profile profile-reference-shell" data-forwext-background-scope="profile" data-forwext-background-id="'
             . ProfileHtml::escape($profile->userId->value()) . '">' . $banner
             . '<div class="profilebody"><div class="profilehead">'
             . $avatar . '<div class="identity profile-identity"><h1>' . $safeName

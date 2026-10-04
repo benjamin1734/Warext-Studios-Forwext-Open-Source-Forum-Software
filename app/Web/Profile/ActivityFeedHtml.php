@@ -51,7 +51,7 @@ final class ActivityFeedHtml
         $pager .= '</nav>';
 
         $content = '<section class="activity-feed discovery-page"><header class="surface-head activity-feed-head">'
-            . '<div><span class="forum-eyebrow">TOPLULUK</span><h1>Neler yeni?</h1>'
+            . '<div><h1>Neler yeni?</h1>'
             . '<p>Erişebildiğin forum ve profil hareketlerini kronolojik olarak takip et.</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/profile-activity')) . '">Akış ayarları</a>'
             . '</header><section class="surface-panel activity-feed-panel"><div class="activity-feed-list">'
