@@ -72,6 +72,8 @@ use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\ForumIndexHandler;
 use Forwext\App\Web\Forum\ForumViewHandler;
+use Forwext\App\Web\Forum\DiscussionWatchHandler;
+use Forwext\App\Web\Forum\ForumMarkReadHandler;
 use Forwext\App\Web\Forum\ThreadViewHandler;
 use Forwext\App\Web\Forum\WatchedContentHandler;
 use Forwext\App\Web\Forum\ThreadCreateHandler;
@@ -1709,12 +1711,57 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/forums/{slug}', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
             $forumViewHandler,
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.watch',
+            [HttpMethod::Post],
+            new PathTemplate('/forums/{slug}/watch', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            new DiscussionWatchHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                false,
+            ),
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.mark-read',
+            [HttpMethod::Post],
+            new PathTemplate('/forums/{slug}/mark-read', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            new ForumMarkReadHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+            ),
+            [$forumCsrf],
         ));
         $routes->add(new Route(
             'thread.view',
             [HttpMethod::Get],
             new PathTemplate('/threads/{threadId}', ['threadId'=>'[a-f0-9]{32}']),
             $threadViewHandler,
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'thread.watch',
+            [HttpMethod::Post],
+            new PathTemplate('/threads/{threadId}/watch', ['threadId'=>'[a-f0-9]{32}']),
+            new DiscussionWatchHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                true,
+            ),
             [$forumCsrf],
         ));
         $routes->add(new Route(
