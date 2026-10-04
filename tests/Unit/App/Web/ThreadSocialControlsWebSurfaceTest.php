@@ -38,7 +38,10 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         $root = dirname(__DIR__, 4);
         $thread = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
 
-        self::assertStringContainsString("\$this->renderPost(\$post, \$actor, \$canReply, \$attachmentsByPost[\$post['post_id']] ?? [])", $thread);
+        self::assertStringContainsString('$this->renderPost(', $thread);
+        self::assertStringContainsString('$post,', $thread);
+        self::assertStringContainsString('$thread,', $thread);
+        self::assertStringContainsString("\$attachmentsByPost[\$post['post_id']] ?? []", $thread);
         self::assertStringContainsString('data-thread-interactions', $thread);
         self::assertStringContainsString("'like' => ['👍', 'Beğen']", $thread);
         self::assertStringContainsString("'angry' => ['😠', 'Kızgın']", $thread);
@@ -51,6 +54,16 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString('maxlength="1000"', $thread);
         self::assertStringContainsString('hash_equals($actor->value(), $post[\'author_user_id\'])', $thread);
         self::assertStringContainsString('Kendi mesajına tepki veremezsin.', $thread);
+        self::assertStringContainsString('thread-post-author-badges', $thread);
+        self::assertStringContainsString('thread-author-badge--starter', $thread);
+        self::assertStringContainsString('Konu sahibi', $thread);
+        self::assertStringContainsString("'/content/threads'", $thread);
+        self::assertStringContainsString("'/content/posts'", $thread);
+        self::assertStringContainsString('thread-state-strip', $thread);
+        self::assertStringContainsString('Konu kilitli.', $thread);
+        self::assertStringContainsString('Yanıt yetkisi yok.', $thread);
+        self::assertStringContainsString('thread-quick-reply-capabilities', $thread);
+        self::assertStringContainsString('<span>Yazım denetimi</span>', $thread);
     }
 
     public function testBrowserClientUsesOneCsrfTokenContractAndSafeDomRendering(): void
@@ -73,6 +86,10 @@ final class ThreadSocialControlsWebSurfaceTest extends TestCase
         self::assertStringContainsString("quotePost(editorRoot, postId)", $asset);
         self::assertStringNotContainsString('innerHTML', $asset);
         self::assertStringContainsString('/assets/thread-interactions.js', $profile);
+        self::assertStringContainsString('/* thread-author-editor-polish-v1 */', $css);
+        self::assertStringContainsString('.thread-post-author-badges', $css);
+        self::assertStringContainsString('.thread-state-strip', $css);
+        self::assertStringContainsString('.thread-quick-reply-capabilities', $css);
         self::assertStringContainsString('/* thread-social-controls-v2 */', $css);
         self::assertStringContainsString('.thread-reaction-popover', $css);
         self::assertStringContainsString('.thread-bookmark-form', $css);
