@@ -166,10 +166,10 @@ final class ProfileHtml
         $accountSubNavKeys = [
             'account.own',
             'profile.settings.own',
+            'privacy.own',
             'security.own',
             'conversations.own',
             'notifications.own',
-            'bookmarks.own',
         ];
         $accountGroups = [
             'account' => [
@@ -177,6 +177,7 @@ final class ProfileHtml
                 'items' => [
                     'account.own' => ['Hesap merkezi', '/account'],
                     'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
+                    'privacy.own' => ['Gizlilik ve görünürlük', '/account/privacy'],
                     'security.own' => ['Güvenlik', '/account/security'],
                     'sessions.own' => ['Oturumlar', '/account/sessions'],
                 ],
@@ -196,7 +197,6 @@ final class ProfileHtml
                     'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
                     'watched.threads.own' => ['Takip edilen konular', '/account/watched/threads'],
                     'watched.forums.own' => ['Takip edilen forumlar', '/account/watched/forums'],
-                    'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
                 ],
             ],
             'extras' => [
