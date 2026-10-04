@@ -46,6 +46,9 @@ final class ThreadDiscoveryWebSurfaceTest extends TestCase
         self::assertStringContainsString('href="/community/activity/threads/unread"', $html);
         self::assertStringContainsString('href="/community/activity/threads/trending"', $html);
         self::assertStringContainsString('aria-current="page" href="/community/activity/threads/featured"', $html);
+        self::assertStringContainsString('href="/community/activity/threads/no-replies"', $html);
+        self::assertStringContainsString('href="/community/activity/threads/mine"', $html);
+        self::assertStringContainsString('href="/community/activity/threads/participated"', $html);
         self::assertStringContainsString('href="/community/activity/threads/recent"', $html);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         self::assertStringNotContainsString('<script>alert(1)</script>', $html);
@@ -65,14 +68,20 @@ final class ThreadDiscoveryWebSurfaceTest extends TestCase
         self::assertStringContainsString('[$forumScopeProvider]', $factory);
         self::assertStringContainsString("new PathTemplate('/activity/threads')", $factory);
         self::assertStringContainsString("new PathTemplate('/activity/threads/{mode}'", $factory);
-        self::assertStringContainsString("'mode'=>'new|unread|trending|featured|recent'", $factory);
+        self::assertStringContainsString("'mode'=>'new|unread|trending|featured|no-replies|mine|participated|recent'", $factory);
         self::assertStringContainsString('$actor = $this->viewers->resolve($request);', $handler);
         self::assertStringContainsString('DiscoveryMode::Unread', $handler);
         self::assertStringContainsString('DiscoveryMode::Trending', $handler);
         self::assertStringContainsString('DiscoveryMode::Featured', $handler);
+        self::assertStringContainsString('DiscoveryMode::NoReplies', $handler);
+        self::assertStringContainsString('DiscoveryMode::StartedByViewer', $handler);
+        self::assertStringContainsString('DiscoveryMode::ParticipatedByViewer', $handler);
         self::assertStringContainsString("'/activity/threads/new'", $profile);
         self::assertStringContainsString("'/activity/threads/unread'", $profile);
         self::assertStringContainsString("'/activity/threads/featured'", $profile);
+        self::assertStringContainsString("'/activity/threads/no-replies'", $profile);
+        self::assertStringContainsString("'/activity/threads/mine'", $profile);
+        self::assertStringContainsString("'/activity/threads/participated'", $profile);
 
         $forumIndex = (string) file_get_contents($root . '/app/Web/Forum/ForumIndexHandler.php');
         self::assertStringContainsString("'/activity/threads/new'", $forumIndex);
