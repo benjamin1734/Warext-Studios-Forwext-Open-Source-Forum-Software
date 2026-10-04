@@ -3360,3 +3360,37 @@ html,body{max-width:100%;overflow-x:clip}
   .minecraft-manage-row .fx-btn,.minecraft-manage-actions .fx-btn,.minecraft-ownership-actions .fx-btn,
   .minecraft-claim-form .fx-btn,.minecraft-claim-review-actions .fx-btn{min-height:44px}
 }
+
+
+/* minecraft-server-voting-v1 */
+.minecraft-server-vote-panel{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:11px 12px;
+  border-radius:4px
+}
+.minecraft-server-vote-panel h2{margin:2px 0 0;font-size:18px}
+.minecraft-server-vote-panel p{margin:4px 0 0;color:var(--muted);font-size:9.5px;line-height:1.45}
+.minecraft-server-vote-action{display:flex;align-items:center;justify-content:flex-end;min-width:150px}
+.minecraft-server-vote-action form{margin:0}
+.minecraft-server-vote-state{
+  display:inline-flex;align-items:center;min-height:32px;padding:5px 8px;
+  border:1px solid var(--line);border-radius:3px;background:var(--panel2);
+  color:var(--muted);font-size:9px;font-weight:700
+}
+.minecraft-server-vote-state.is-done{
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line));
+  color:var(--accent)
+}
+@media(max-width:700px){
+  .minecraft-server-vote-panel{grid-template-columns:1fr;align-items:stretch}
+  .minecraft-server-vote-action{min-width:0;justify-content:stretch}
+  .minecraft-server-vote-action form,.minecraft-server-vote-action .fx-btn,.minecraft-server-vote-state{
+    width:100%;justify-content:center
+  }
+}
+@media(pointer:coarse){
+  .minecraft-server-vote-action .fx-btn,.minecraft-server-vote-state{min-height:44px}
+}
