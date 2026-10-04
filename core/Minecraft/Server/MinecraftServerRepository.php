@@ -25,6 +25,18 @@ interface MinecraftServerRepository
     /** @return list<MinecraftServerSeason> */
     public function publicSeasons(?string $state = null, int $limit = 30, int $offset = 0): array;
 
+    public function voteSummary(
+        EntityId $serverId,
+        ?EntityId $voterUserId,
+        DateTimeImmutable $now,
+    ): MinecraftServerVoteSummary;
+
+    public function castVote(
+        EntityId $serverId,
+        EntityId $voterUserId,
+        DateTimeImmutable $now,
+    ): bool;
+
     public function managementById(EntityId $serverId): ?MinecraftServer;
 
     /** @return list<MinecraftServer> */
