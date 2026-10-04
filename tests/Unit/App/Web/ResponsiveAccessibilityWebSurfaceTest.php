@@ -48,6 +48,9 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString('@media(prefers-reduced-motion:reduce)', $css);
         self::assertStringContainsString('@media(forced-colors:active)', $css);
         self::assertStringContainsString('overflow-x:clip', $css);
+        self::assertStringContainsString('/* mobile-secondary-navigation-wrap-v1 */', $css);
+        self::assertStringContainsString('flex-wrap:wrap', $css);
+        self::assertStringContainsString('overflow-x:visible', $css);
 
         self::assertStringContainsString('navigation.toggleAttribute("inert", !open)', $mobileNav);
         self::assertStringContainsString('navigation.setAttribute("aria-hidden", open ? "false" : "true")', $mobileNav);
