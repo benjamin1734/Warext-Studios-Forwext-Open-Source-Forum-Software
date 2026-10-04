@@ -321,7 +321,8 @@ try {
     serverDirectoryState.filters !== 4
     || serverDirectoryState.searchForms !== 1
     || serverDirectoryState.panels !== 1
-    || (serverDirectoryState.listRows === 0 && serverDirectoryState.emptyStates !== 1)
+    || serverDirectoryState.listRows < 2
+    || serverDirectoryState.emptyStates !== 0
   ) {
     fail(`minecraft servers: directory contract failed ${JSON.stringify(serverDirectoryState)}`);
   }
@@ -407,6 +408,26 @@ try {
   }
   await assertHealthyDocument("minecraft server verify");
 
+  await page.locator('.minecraft-claim-form textarea[name="proof_note"]').fill(
+    "CI kabul testi için doğrulanabilir sahiplik kanıtı açıklaması.",
+  );
+  const [verifyPostResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/verify$/.test(url.pathname);
+    }),
+    page.getByRole("button", { name: "Talebi gönder", exact: true }).click(),
+  ]);
+  if (verifyPostResponse.status() !== 303) {
+    fail(`minecraft server verify: claim POST returned HTTP ${verifyPostResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  if (!new URL(page.url()).pathname.endsWith("/verify") || new URL(page.url()).searchParams.get("submitted") !== "1") {
+    fail("minecraft server verify: canonical claim redirect is invalid");
+  }
+  await page.getByText("Sahiplik talebin incelemeye gönderildi.", { exact: true }).waitFor();
+  await assertHealthyDocument("minecraft server verify POST");
+
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server compare: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Sunucu Karşılaştırma", exact: true }).waitFor();
@@ -450,7 +471,8 @@ try {
   }));
   if (
     serverManagementState.panels !== 1
-    || (serverManagementState.rows === 0 && serverManagementState.emptyStates !== 1)
+    || serverManagementState.rows < 1
+    || serverManagementState.emptyStates !== 0
     || serverManagementState.navLinks < 1
   ) {
     fail(`minecraft server management: route contract failed ${JSON.stringify(serverManagementState)}`);
@@ -458,14 +480,33 @@ try {
   await assertHealthyDocument("minecraft server management");
 
   if (serverManagementState.rows > 0) {
-    const editHref = await page.locator('.minecraft-manage-row a[href$="/edit"]').first().getAttribute("href");
-    if (!editHref) fail("minecraft server integration: manageable row has no canonical edit href");
+    const ownedManageRow = page.locator(".minecraft-manage-row").filter({ hasText: "Sahipli" }).first();
+    if ((await ownedManageRow.count()) !== 1) fail("minecraft server integration: owned management fixture is missing");
+    const editHref = await ownedManageRow.locator('a[href$="/edit"]').getAttribute("href");
+    if (!editHref) fail("minecraft server integration: owned row has no canonical edit href");
     response = await page.goto(new URL(editHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server edit: canonical route did not return HTTP 200");
     if ((await page.locator(".minecraft-manage-form").count()) !== 1) {
       fail("minecraft server edit: edit form is missing");
     }
     await assertHealthyDocument("minecraft server edit");
+
+    const [editPostResponse] = await Promise.all([
+      page.waitForResponse((candidate) => {
+        const url = new URL(candidate.url());
+        return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/edit$/.test(url.pathname);
+      }),
+      page.getByRole("button", { name: "Değişiklikleri kaydet", exact: true }).click(),
+    ]);
+    if (editPostResponse.status() !== 303) {
+      fail(`minecraft server edit: save POST returned HTTP ${editPostResponse.status()} instead of 303`);
+    }
+    await page.waitForLoadState("domcontentloaded");
+    if (!new URL(page.url()).pathname.endsWith("/edit") || new URL(page.url()).searchParams.get("updated") !== "1") {
+      fail("minecraft server edit: canonical save redirect is invalid");
+    }
+    await page.getByText("Sunucu yönetim değişikliği kaydedildi.", { exact: true }).waitFor();
+    await assertHealthyDocument("minecraft server edit POST");
 
     const editUrl = new URL(editHref, baseUrl);
     const manageBase = editUrl.pathname.replace(/\/edit$/, "");
