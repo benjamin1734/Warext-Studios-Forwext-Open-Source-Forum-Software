@@ -85,7 +85,8 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
             }
 
             $page = self::page($request);
-            $rows = $service->inbox(31, ($page - 1) * 30);
+            $filter = self::filter($request);
+            $rows = $service->inbox(31, ($page - 1) * 30, $filter === 'starred');
             $hasMore = count($rows) > 30;
             if ($hasMore) {
                 array_pop($rows);
@@ -98,6 +99,7 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
                 $this->timezone,
                 $page,
                 $hasMore,
+                $filter,
             ))->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');
         } catch (PermissionDeniedException) {
@@ -149,26 +151,33 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
                 throw new InvalidArgumentException('Direct conversation fields are invalid.');
             }
             $conversationId = $service->start($username, $message);
+            $location = '/account/conversations/' . rawurlencode($conversationId->value());
         } else {
-            if ($action !== 'reply') {
-                throw new InvalidArgumentException('Direct conversation reply action is invalid.');
-            }
             $conversationId = EntityId::fromString($conversationValue);
             if ($this->conversations->otherParticipant($actor, $conversationId) === null) {
                 return Response::text('Not Found', 404)->withHeader('Cache-Control', 'no-store');
             }
-            $message = $body['body'] ?? null;
-            if (!is_string($message)) {
-                throw new InvalidArgumentException('Direct conversation reply is invalid.');
+
+            if ($action === 'reply') {
+                $message = $body['body'] ?? null;
+                if (!is_string($message)) {
+                    throw new InvalidArgumentException('Direct conversation reply is invalid.');
+                }
+                $service->reply($conversationId, $message);
+                $location = '/account/conversations/' . rawurlencode($conversationId->value());
+            } elseif ($action === 'star' || $action === 'unstar') {
+                $service->setStarred($conversationId, $action === 'star');
+                $location = '/account/conversations/' . rawurlencode($conversationId->value());
+            } elseif ($action === 'leave') {
+                $service->leave($conversationId);
+                $location = '/account/conversations';
+            } else {
+                throw new InvalidArgumentException('Direct conversation action is invalid.');
             }
-            $service->reply($conversationId, $message);
         }
 
         return Response::text('', 303)
-            ->withHeader(
-                'Location',
-                $this->basePath->prepend('/account/conversations/' . rawurlencode($conversationId->value())),
-            )
+            ->withHeader('Location', $this->basePath->prepend($location))
             ->withHeader('Cache-Control', 'no-store');
     }
 
@@ -185,6 +194,15 @@ final readonly class DirectConversationHandler implements RequestHandlerInterfac
         }
         $preview = $match[1];
         return $preview === $value ? $preview : $preview . '…';
+    }
+
+    private static function filter(Request $request): string
+    {
+        $filter = $request->query()['filter'] ?? 'all';
+        if (!is_string($filter) || !in_array($filter, ['all', 'starred'], true)) {
+            throw new InvalidArgumentException('Direct conversation filter is invalid.');
+        }
+        return $filter;
     }
 
     private static function page(Request $request): int
