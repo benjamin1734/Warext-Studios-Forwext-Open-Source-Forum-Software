@@ -104,16 +104,28 @@ final readonly class NotificationInboxHandler implements RequestHandlerInterface
     private function mutate(EntityId $actor, Request $request): Response
     {
         $body = $request->parsedBody();
-        if (($body['action'] ?? null) !== 'mark_read') {
+        $action = $body['action'] ?? null;
+        $page = $this->page($body['page'] ?? null);
+
+        if ($action === 'mark_all_read') {
+            $this->inbox->markAllRead($actor);
+
+            return Response::redirect(
+                $this->basePath->prepend('/account/notifications?page=' . $page . '&updated=all-read'),
+                303,
+            )->withHeader('Cache-Control', 'no-store');
+        }
+
+        if ($action !== 'mark_read') {
             throw new InvalidArgumentException('Notification inbox action is invalid.');
         }
+
         $rawId = $body['notification_id'] ?? null;
         if (!is_string($rawId) || preg_match('/^[a-f0-9]{32}$/D', $rawId) !== 1) {
             throw new InvalidArgumentException('Notification id is invalid.');
         }
 
         $this->inbox->markRead($actor, EntityId::fromString($rawId));
-        $page = $this->page($body['page'] ?? null);
 
         return Response::redirect(
             $this->basePath->prepend('/account/notifications?page=' . $page),
