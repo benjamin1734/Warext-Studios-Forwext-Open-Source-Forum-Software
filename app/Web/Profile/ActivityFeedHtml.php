@@ -18,6 +18,9 @@ final class ActivityFeedHtml
         bool $hasMore,
         BasePath $basePath,
         DateTimeZone $timezone,
+        string $title = 'Neler yeni?',
+        string $description = 'Erişebildiğin forum ve profil hareketlerini kronolojik olarak takip et.',
+        string $routePath = '/activity',
     ): string {
         $rows = '';
         foreach ($items as $entry) {
@@ -41,23 +44,23 @@ final class ActivityFeedHtml
 
         $pager = '<nav class="surface-pagination activity-pagination" aria-label="Etkinlik sayfaları">';
         if ($page > 1) {
-            $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend('/activity?page=' . ($page - 1)))
+            $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend($routePath . '?page=' . ($page - 1)))
                 . '">Önceki</a>';
         }
         if ($hasMore) {
-            $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend('/activity?page=' . ($page + 1)))
+            $pager .= '<a class="fx-btn" href="' . self::e($basePath->prepend($routePath . '?page=' . ($page + 1)))
                 . '">Sonraki</a>';
         }
         $pager .= '</nav>';
 
         $content = '<section class="activity-feed discovery-page"><header class="surface-head activity-feed-head">'
-            . '<div><h1>Neler yeni?</h1>'
-            . '<p>Erişebildiğin forum ve profil hareketlerini kronolojik olarak takip et.</p></div>'
+            . '<div><h1>' . self::e($title) . '</h1>'
+            . '<p>' . self::e($description) . '</p></div>'
             . '<a class="fx-btn" href="' . self::e($basePath->prepend('/account/profile-activity')) . '">Akış ayarları</a>'
             . '</header><section class="surface-panel activity-feed-panel"><div class="activity-feed-list">'
             . $rows . '</div>' . $pager . '</section></section>';
 
-        return ProfileHtml::page('Neler yeni?', $content, $basePath, authenticated: true);
+        return ProfileHtml::page($title, $content, $basePath, authenticated: true);
     }
 
     private static function label(ActivityFeedType $type): string
