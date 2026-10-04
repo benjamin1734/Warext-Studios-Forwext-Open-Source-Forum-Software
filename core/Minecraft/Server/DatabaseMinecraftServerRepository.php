@@ -74,7 +74,7 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
     {
         return new MinecraftServer(
             EntityId::fromString((string) $row['server_id']),
-            UserId::fromStored((string) $row['owner_user_id']),
+            $row['owner_user_id'] === null ? null : UserId::fromStored((string) $row['owner_user_id']),
             (string) $row['slug'],
             (string) $row['name'],
             (string) $row['summary'],
