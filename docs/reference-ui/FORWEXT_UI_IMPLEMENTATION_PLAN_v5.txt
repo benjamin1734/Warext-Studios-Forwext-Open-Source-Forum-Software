@@ -79,8 +79,9 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — VERIFIED
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 - [DONE] Groups foundation implementation: first-party groups module, additive group/member persistence, group.view/create/join/manage-own/moderate-any permissions, shared navigation, /groups, /groups/mine and /groups/{id}, CSRF-protected create/join/request/leave/member moderation, owner/moderator role boundaries and compact responsive surfaces.
 - [DONE] Groups browser acceptance is wired to deterministic post-install fixture data and covers create, approval-request, moderation approval and leave lifecycles so reference routes cannot pass only on empty-state rendering.
-- [NEXT] Qualify the groups foundation across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates.
-- [NEXT] Then raise existing portfolio/FAQ/referral/bug modules to the same v5 shell/list/form density and flow standard.
+- [DONE] Portfolio browse-density slice: category and featured filters are backed by bounded public project data; the browse toolbar exposes current filter state, cards show real tag/media/update metadata, and coarse-pointer/mobile controls preserve usable touch targets without adding fake data.
+- [NEXT] Qualify the groups foundation and portfolio browse-density slice across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates.
+- [NEXT] Then raise FAQ/referral/bug surfaces plus portfolio detail/manage states to the same v5 shell/list/form density and flow standard.
 
 PHASE 9 — MODERATION / INDEPENDENT AUDIT
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
