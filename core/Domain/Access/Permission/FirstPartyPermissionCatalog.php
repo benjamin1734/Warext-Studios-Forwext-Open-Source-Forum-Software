@@ -81,6 +81,7 @@ final class FirstPartyPermissionCatalog
             self::flag('minecraft_server.claim', 'Submit an ownership claim for an unowned Minecraft server entry.'),
             self::flag('minecraft_server.transfer', 'Transfer or release an owned Minecraft server entry.'),
             self::flag('minecraft_server.manage_any', 'Manage any Minecraft server directory entry and review ownership claims.'),
+            self::flag('minecraft_server.vote', 'Vote for a published Minecraft server once per UTC day.'),
 
             self::flag('portfolio.view', 'View portfolio content.'),
             self::flag('portfolio.create', 'Create portfolio entries.'),
