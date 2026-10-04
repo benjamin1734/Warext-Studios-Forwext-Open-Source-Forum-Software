@@ -84,6 +84,19 @@ final readonly class CreateCommunityGroups implements Migration
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci',
         ));
 
+        $moduleTable = (int) $context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() "
+            . "AND TABLE_NAME='forwext_first_party_modules'",
+        ));
+        if ($moduleTable === 1) {
+            $context->execute(new CompiledQuery(
+                'INSERT INTO forwext_first_party_modules '
+                . '(module_key,state,data_state,updated_by_user_id,updated_at_utc) '
+                . "VALUES ('groups','enabled','retained',NULL,UTC_TIMESTAMP(6)) "
+                . 'ON DUPLICATE KEY UPDATE module_key=VALUES(module_key)',
+            ));
+        }
+
         foreach (self::PERMISSIONS as $key=>$description) {
             $context->execute(new CompiledQuery(
                 'INSERT INTO forwext_permissions(permission_key,value_type,description,created_at_utc,updated_at_utc) '
@@ -137,8 +150,12 @@ final readonly class CreateCommunityGroups implements Migration
             "SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() "
             . "AND TABLE_NAME='forwext_groups' AND INDEX_NAME='uq_forwext_group_slug' AND NON_UNIQUE=0",
         ));
+        $module = (int) $context->fetchValue(new CompiledQuery(
+            "SELECT COUNT(*) FROM forwext_first_party_modules WHERE module_key='groups'",
+        ));
 
-        return $tables === 2 && $foreignKeys === 4 && $permissions === 5 && $rules === 25 && $slugIndex === 1
+        return $tables === 2 && $foreignKeys === 4 && $permissions === 5 && $rules === 25
+            && $slugIndex === 1 && $module === 1
             ? MigrationVerification::passed()
             : MigrationVerification::failed('Community group schema or permission defaults are incomplete.');
     }
