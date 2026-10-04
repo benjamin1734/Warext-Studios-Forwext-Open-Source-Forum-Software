@@ -168,6 +168,7 @@ final class ProfileHtml
         $accountNav = '';
         $accountSubNavKeys = [
             'account.own',
+            'preferences.own',
             'profile.settings.own',
             'security.own',
             'conversations.own',
@@ -179,6 +180,7 @@ final class ProfileHtml
                 'label' => 'Hesap',
                 'items' => [
                     'account.own' => ['Hesap merkezi', '/account'],
+                    'preferences.own' => ['Tercihler ve gizlilik', '/account/preferences'],
                     'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
                     'security.own' => ['Güvenlik', '/account/security'],
                     'sessions.own' => ['Oturumlar', '/account/sessions'],
