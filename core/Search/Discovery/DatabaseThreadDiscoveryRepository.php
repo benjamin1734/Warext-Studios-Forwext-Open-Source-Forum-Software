@@ -43,8 +43,6 @@ final readonly class DatabaseThreadDiscoveryRepository implements ThreadDiscover
         $parameters = [
             'read_user_id' => $userId->value(),
             'forum_user_id' => $userId->value(),
-            'viewer_user_id' => $userId->value(),
-            'participant_user_id' => $userId->value(),
             'trend_since' => self::format(
                 $now->setTimezone(new DateTimeZone('UTC'))->sub(new DateInterval(self::TREND_WINDOW)),
             ),
@@ -91,8 +89,11 @@ final readonly class DatabaseThreadDiscoveryRepository implements ThreadDiscover
         } elseif ($mode === DiscoveryMode::NoReplies) {
             $having[] = '`visible_post_count` <= 1';
         } elseif ($mode === DiscoveryMode::StartedByViewer) {
+            $parameters['viewer_user_id'] = $userId->value();
             $where[] = '`t`.`author_user_id` = :viewer_user_id';
         } elseif ($mode === DiscoveryMode::ParticipatedByViewer) {
+            $parameters['viewer_user_id'] = $userId->value();
+            $parameters['participant_user_id'] = $userId->value();
             $where[] = '(`t`.`author_user_id` = :viewer_user_id OR EXISTS ('
                 . 'SELECT 1 FROM `forwext_posts` `vp` WHERE `vp`.`thread_id` = `t`.`thread_id` '
                 . 'AND `vp`.`author_user_id` = :participant_user_id '
