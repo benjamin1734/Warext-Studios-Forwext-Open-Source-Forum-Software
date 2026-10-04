@@ -38,7 +38,7 @@ final class SearchHtml
         $advancedOpen = self::hasAdvancedFilters($query) ? ' open' : '';
 
         $content = '<section class="discovery-page"><header class="surface-head search-head"><div>'
-            . '<span class="forum-eyebrow">KEŞİF</span><h1>Keşfet ve Ara</h1>'
+            . '<h1>Ara</h1>'
             . '<p>Erişebildiğin forum, üye ve modül içeriklerini tek yerden ara.</p></div></header>'
             . self::tabs($basePath, $query, $discovery, $selectedTab)
             . '<section class="surface-panel search-panel"><form class="search-form" method="get" action="' . $action . '">'
@@ -83,7 +83,7 @@ final class SearchHtml
             $content .= '<div class="search-alert" role="alert">' . ProfileHtml::escape($error) . '</div>';
         } elseif ($text !== '') {
             $content .= '<section class="search-results"><div class="search-result-head"><div>'
-                . '<span class="forum-eyebrow">SONUÇLAR</span><h2>Arama sonuçları</h2></div>'
+                . '<h2>Arama sonuçları</h2></div>'
                 . '<span class="muted">Sayfa ' . $page . '</span></div>'
                 . self::results($basePath, $hits, $discovery, $selectedTab)
                 . self::pagination($basePath, $query, $page, $hasMore)
