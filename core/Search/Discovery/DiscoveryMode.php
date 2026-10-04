@@ -10,5 +10,8 @@ enum DiscoveryMode: string
     case Unread = 'unread';
     case Trending = 'trending';
     case Featured = 'featured';
+    case NoReplies = 'no_replies';
+    case StartedByViewer = 'started_by_viewer';
+    case ParticipatedByViewer = 'participated_by_viewer';
     case RecentActivity = 'recent_activity';
 }

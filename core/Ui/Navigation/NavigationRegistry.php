@@ -95,6 +95,22 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'watched.threads.own',
+            'Takip edilen konular',
+            '/account/watched/threads',
+            264,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'watched.forums.own',
+            'Takip edilen forumlar',
+            '/account/watched/forums',
+            265,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
             'notification-settings.own',
             'Bildirim ayarları',
             '/account/notification-settings',

@@ -106,6 +106,9 @@ final class ThreadDiscoveryHtml
             'unread' => ['Okunmamış', DiscoveryMode::Unread],
             'trending' => ['Gündem', DiscoveryMode::Trending],
             'featured' => ['Öne çıkanlar', DiscoveryMode::Featured],
+            'no-replies' => ['Yanıtsız', DiscoveryMode::NoReplies],
+            'mine' => ['Konularım', DiscoveryMode::StartedByViewer],
+            'participated' => ['Katıldıklarım', DiscoveryMode::ParticipatedByViewer],
             'recent' => ['Son hareketli', DiscoveryMode::RecentActivity],
         ];
 
@@ -133,6 +136,9 @@ final class ThreadDiscoveryHtml
             DiscoveryMode::Unread => 'unread',
             DiscoveryMode::Trending => 'trending',
             DiscoveryMode::Featured => 'featured',
+            DiscoveryMode::NoReplies => 'no-replies',
+            DiscoveryMode::StartedByViewer => 'mine',
+            DiscoveryMode::ParticipatedByViewer => 'participated',
             DiscoveryMode::RecentActivity => 'recent',
         };
         $base = $basePath->prepend('/activity/threads/' . $modePath);
@@ -157,6 +163,9 @@ final class ThreadDiscoveryHtml
             DiscoveryMode::Unread => ['Okunmamış konular', 'Okuma durumuna göre henüz görmediğin veya yeni yanıt alan konular.'],
             DiscoveryMode::Trending => ['Gündemdeki konular', 'Son yedi gündeki görünür mesaj hareketine göre öne çıkan konular.'],
             DiscoveryMode::Featured => ['Öne çıkan konular', 'Forum yönetiminin öne çıkardığı görünür konular.'],
+            DiscoveryMode::NoReplies => ['Yanıtsız konular', 'Henüz yanıt almamış görünür konular.'],
+            DiscoveryMode::StartedByViewer => ['Başlattığım konular', 'Senin açtığın ve hâlâ erişebildiğin konular.'],
+            DiscoveryMode::ParticipatedByViewer => ['Katıldığım konular', 'Açtığın veya görünür bir mesaj yazdığın konular.'],
             DiscoveryMode::RecentActivity => ['Son hareketli konular', 'Erişebildiğin forumlardaki en güncel konu hareketleri.'],
         };
     }

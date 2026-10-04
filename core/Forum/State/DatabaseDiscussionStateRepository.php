@@ -300,6 +300,26 @@ final readonly class DatabaseDiscussionStateRepository implements DiscussionStat
         return $row === null ? null : WatchNotificationMode::from((string) $row['notification_mode']);
     }
 
+    public function watchedThreads(EntityId $userId, int $limit = 50, int $offset = 0): array
+    {
+        UserId::assert($userId);
+        self::assertWatchPagination($limit, $offset);
+
+        return array_map(
+            static fn (array $row): WatchRecord => new WatchRecord(
+                ThreadId::fromStored((string) $row['thread_id']),
+                WatchNotificationMode::from((string) $row['notification_mode']),
+                self::parse((string) $row['updated_at_utc']),
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT `thread_id`, `notification_mode`, `updated_at_utc` '
+                . 'FROM `forwext_watched_threads` WHERE `user_id` = :user_id '
+                . 'ORDER BY `updated_at_utc` DESC, `thread_id` DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+                ['user_id' => $userId->value()],
+            )),
+        );
+    }
+
     public function watchForum(EntityId $userId, EntityId $forumNodeId, WatchNotificationMode $mode, DateTimeImmutable $at): void
     {
         UserId::assert($userId);
@@ -337,6 +357,26 @@ final readonly class DatabaseDiscussionStateRepository implements DiscussionStat
         return $row === null ? null : WatchNotificationMode::from((string) $row['notification_mode']);
     }
 
+    public function watchedForums(EntityId $userId, int $limit = 50, int $offset = 0): array
+    {
+        UserId::assert($userId);
+        self::assertWatchPagination($limit, $offset);
+
+        return array_map(
+            static fn (array $row): WatchRecord => new WatchRecord(
+                ForumNodeId::fromStored((string) $row['forum_node_id']),
+                WatchNotificationMode::from((string) $row['notification_mode']),
+                self::parse((string) $row['updated_at_utc']),
+            ),
+            $this->database->fetchAll(new CompiledQuery(
+                'SELECT `forum_node_id`, `notification_mode`, `updated_at_utc` '
+                . 'FROM `forwext_watched_forums` WHERE `user_id` = :user_id '
+                . 'ORDER BY `updated_at_utc` DESC, `forum_node_id` DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+                ['user_id' => $userId->value()],
+            )),
+        );
+    }
+
     public function subscriptionPreferences(EntityId $userId): SubscriptionPreferences
     {
         UserId::assert($userId);
@@ -372,6 +412,13 @@ final readonly class DatabaseDiscussionStateRepository implements DiscussionStat
                 'forum_mode' => $preferences->defaultForumMode()->value, 'updated_at' => self::format($at),
             ],
         ));
+    }
+
+    private static function assertWatchPagination(int $limit, int $offset): void
+    {
+        if ($limit < 1 || $limit > 100 || $offset < 0 || $offset > 1_000_000) {
+            throw new InvalidArgumentException('Watch list pagination is invalid.');
+        }
     }
 
     private static function assertTarget(EntityId $userId, DraftTargetType $targetType, EntityId $targetId): void

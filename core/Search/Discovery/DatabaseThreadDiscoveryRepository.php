@@ -74,6 +74,9 @@ final readonly class DatabaseThreadDiscoveryRepository implements ThreadDiscover
             DiscoveryMode::Unread => '`activity_at_utc` DESC, `t`.`thread_id` DESC',
             DiscoveryMode::Trending => '`recent_post_count` DESC, `activity_at_utc` DESC, `t`.`thread_id` DESC',
             DiscoveryMode::Featured => '`activity_at_utc` DESC, `t`.`thread_id` DESC',
+            DiscoveryMode::NoReplies => '`t`.`created_at_utc` DESC, `t`.`thread_id` DESC',
+            DiscoveryMode::StartedByViewer => '`activity_at_utc` DESC, `t`.`thread_id` DESC',
+            DiscoveryMode::ParticipatedByViewer => '`activity_at_utc` DESC, `t`.`thread_id` DESC',
             DiscoveryMode::RecentActivity => '`activity_at_utc` DESC, `t`.`thread_id` DESC',
         };
 
@@ -83,6 +86,18 @@ final readonly class DatabaseThreadDiscoveryRepository implements ThreadDiscover
             $having[] = '`unread` = 1';
         } elseif ($mode === DiscoveryMode::Trending) {
             $having[] = '`recent_post_count` > 0';
+        } elseif ($mode === DiscoveryMode::NoReplies) {
+            $having[] = '`visible_post_count` <= 1';
+        } elseif ($mode === DiscoveryMode::StartedByViewer) {
+            $parameters['viewer_user_id'] = $userId->value();
+            $where[] = '`t`.`author_user_id` = :viewer_user_id';
+        } elseif ($mode === DiscoveryMode::ParticipatedByViewer) {
+            $parameters['viewer_user_id'] = $userId->value();
+            $parameters['participant_user_id'] = $userId->value();
+            $where[] = '(`t`.`author_user_id` = :viewer_user_id OR EXISTS ('
+                . 'SELECT 1 FROM `forwext_posts` `vp` WHERE `vp`.`thread_id` = `t`.`thread_id` '
+                . 'AND `vp`.`author_user_id` = :participant_user_id '
+                . 'AND `vp`.`deleted` = 0 AND `vp`.`moderation_state` = \'visible\'))';
         }
 
         $sql = 'SELECT `t`.`thread_id`, `t`.`forum_node_id`, `t`.`author_user_id`, `t`.`title`, '

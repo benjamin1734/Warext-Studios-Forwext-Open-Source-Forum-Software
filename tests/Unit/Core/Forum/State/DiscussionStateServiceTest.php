@@ -184,9 +184,11 @@ final class DiscussionStateSpyRepository implements DiscussionStateRepository
     public function watchThread(EntityId $userId, EntityId $threadId, WatchNotificationMode $mode, DateTimeImmutable $at): void { $this->actor = $userId; $this->threadMode = $mode; }
     public function unwatchThread(EntityId $userId, EntityId $threadId): void { $this->actor = $userId; $this->threadMode = null; }
     public function threadWatch(EntityId $userId, EntityId $threadId): ?WatchNotificationMode { $this->actor = $userId; return $this->threadMode; }
+    public function watchedThreads(EntityId $userId, int $limit = 50, int $offset = 0): array { $this->actor = $userId; return []; }
     public function watchForum(EntityId $userId, EntityId $forumNodeId, WatchNotificationMode $mode, DateTimeImmutable $at): void { $this->actor = $userId; $this->forumMode = $mode; }
     public function unwatchForum(EntityId $userId, EntityId $forumNodeId): void { $this->actor = $userId; $this->forumMode = null; }
     public function forumWatch(EntityId $userId, EntityId $forumNodeId): ?WatchNotificationMode { $this->actor = $userId; return $this->forumMode; }
+    public function watchedForums(EntityId $userId, int $limit = 50, int $offset = 0): array { $this->actor = $userId; return []; }
     public function subscriptionPreferences(EntityId $userId): SubscriptionPreferences { $this->actor = $userId; return $this->preferences; }
     public function saveSubscriptionPreferences(EntityId $userId, SubscriptionPreferences $preferences, DateTimeImmutable $at): void { $this->actor = $userId; $this->preferences = $preferences; }
 }

@@ -72,7 +72,10 @@ use Forwext\App\Web\Forum\AttachmentServiceResolver;
 use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\ForumIndexHandler;
 use Forwext\App\Web\Forum\ForumViewHandler;
+use Forwext\App\Web\Forum\DiscussionWatchHandler;
+use Forwext\App\Web\Forum\ForumMarkReadHandler;
 use Forwext\App\Web\Forum\ThreadViewHandler;
+use Forwext\App\Web\Forum\WatchedContentHandler;
 use Forwext\App\Web\Forum\ThreadCreateHandler;
 use Forwext\App\Web\Forum\ThreadReplyHandler;
 use Forwext\App\Web\Forum\ThreadFreshnessHandler;
@@ -1708,12 +1711,57 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/forums/{slug}', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
             $forumViewHandler,
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.watch',
+            [HttpMethod::Post],
+            new PathTemplate('/forums/{slug}/watch', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            new DiscussionWatchHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                false,
+            ),
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'forum.mark-read',
+            [HttpMethod::Post],
+            new PathTemplate('/forums/{slug}/mark-read', ['slug'=>'[a-z0-9]+(?:-[a-z0-9]+)*']),
+            new ForumMarkReadHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+            ),
+            [$forumCsrf],
         ));
         $routes->add(new Route(
             'thread.view',
             [HttpMethod::Get],
             new PathTemplate('/threads/{threadId}', ['threadId'=>'[a-f0-9]{32}']),
             $threadViewHandler,
+            [$forumCsrf],
+        ));
+        $routes->add(new Route(
+            'thread.watch',
+            [HttpMethod::Post],
+            new PathTemplate('/threads/{threadId}/watch', ['threadId'=>'[a-f0-9]{32}']),
+            new DiscussionWatchHandler(
+                $nodes,
+                $threads,
+                $discussionState,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                true,
+            ),
             [$forumCsrf],
         ));
         $routes->add(new Route(
@@ -2287,7 +2335,7 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'activity.threads.mode',
             [HttpMethod::Get],
-            new PathTemplate('/activity/threads/{mode}', ['mode'=>'new|unread|trending|featured|recent']),
+            new PathTemplate('/activity/threads/{mode}', ['mode'=>'new|unread|trending|featured|no-replies|mine|participated|recent']),
             $threadDiscoveryHandler,
         ));
         $routes->add(new Route(
@@ -2368,6 +2416,32 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'account.bookmarks', [HttpMethod::Get], new PathTemplate('/account/bookmarks'),
             new BookmarkListHandler($socialInteractions, $viewerResolver, $basePath), [$interactionCsrf],
+        ));
+        $routes->add(new Route(
+            'account.watched.threads', [HttpMethod::Get], new PathTemplate('/account/watched/threads'),
+            new WatchedContentHandler(
+                $discussionState,
+                $nodes,
+                $threads,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+                true,
+            ),
+        ));
+        $routes->add(new Route(
+            'account.watched.forums', [HttpMethod::Get], new PathTemplate('/account/watched/forums'),
+            new WatchedContentHandler(
+                $discussionState,
+                $nodes,
+                $threads,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+                false,
+            ),
         ));
         $routes->add(new Route(
             'account.relationships', [HttpMethod::Get], new PathTemplate('/account/relationships'),

@@ -20,6 +20,7 @@ use Forwext\Core\Forum\Thread\ThreadPermission;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbItem;
@@ -53,6 +54,7 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
         }
 
         $actor = $this->viewers->resolve($request);
+        $csrfToken = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
         $hierarchy = new ForumNodeHierarchy($this->nodes->all());
         if (!$this->canView($actor, $hierarchy, $node)) {
             return Response::text($actor === null ? 'Not Found' : 'Forbidden', $actor === null ? 404 : 403)
@@ -88,8 +90,26 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
                 . '">Yeni konu</a>';
         }
         $forumSearch = $this->basePath->prepend('/search') . '?forum=' . rawurlencode($node->id()->value());
-        $body .= '<a class="fx-btn" href="' . self::e($forumSearch) . '">Bu forumda ara</a>'
-            . '</div></section>';
+        $body .= '<a class="fx-btn" href="' . self::e($forumSearch) . '">Bu forumda ara</a>';
+        if ($actor !== null && is_string($csrfToken) && $csrfToken !== '') {
+            $body .= DiscussionWatchHtml::form(
+                $this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()) . '/watch'),
+                $csrfToken,
+                $this->discussionState->forumWatch($actor, $node->id()),
+            );
+            $body .= DiscussionWatchHtml::markForumReadForm(
+                $this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()) . '/mark-read'),
+                $csrfToken,
+            );
+        }
+        $body .= '</div></section>';
+
+        if (($request->query()['watch'] ?? null) === 'updated') {
+            $body .= '<div class="forum-notice">Forum takip tercihin güncellendi.</div>';
+        }
+        if (($request->query()['read'] ?? null) === 'marked') {
+            $body .= '<div class="forum-notice">Forum okundu olarak işaretlendi.</div>';
+        }
 
         if (($request->query()['submitted'] ?? null) === '1') {
             $body .= '<div class="forum-notice">Konunuz gönderildi ve moderasyon onayı bekliyor.</div>';

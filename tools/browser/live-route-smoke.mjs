@@ -252,6 +252,30 @@ try {
   }
   await assertHealthyDocument("thread discovery");
 
+  for (const [watchedPath, watchedHeading] of [
+    ["/account/watched/threads", "Takip edilen konular"],
+    ["/account/watched/forums", "Takip edilen forumlar"],
+  ]) {
+    response = await page.goto(baseUrl + watchedPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) {
+      fail(`watched content: ${watchedPath} returned HTTP ${response?.status() ?? "no response"}`);
+    }
+    await page.getByRole("heading", { name: watchedHeading, exact: true }).waitFor();
+    const watchedState = await page.evaluate(() => ({
+      section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+      accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+      panelCount: document.querySelectorAll(".watched-panel").length,
+    }));
+    if (
+      watchedState.section !== "account"
+      || watchedState.accountActive !== "1"
+      || watchedState.panelCount !== 1
+    ) {
+      fail(`watched content: active/layout contract failed ${JSON.stringify(watchedState)}`);
+    }
+    await assertHealthyDocument(`watched content ${watchedPath}`);
+  }
+
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
   const subnavState = await page.evaluate(() => {
@@ -324,4 +348,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, thread discovery, members subnav and ACP GET/POST.");

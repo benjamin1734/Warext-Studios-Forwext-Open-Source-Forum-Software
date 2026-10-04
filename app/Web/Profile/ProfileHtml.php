@@ -126,6 +126,9 @@ final class ProfileHtml
                 . $navItem('activity.unread', 'Okunmamış', '/activity/threads/unread')
                 . $navItem('activity.trending', 'Gündem', '/activity/threads/trending')
                 . $navItem('activity.featured', 'Öne çıkanlar', '/activity/threads/featured')
+                . $navItem('activity.no-replies', 'Yanıtsız', '/activity/threads/no-replies')
+                . $navItem('activity.mine', 'Konularım', '/activity/threads/mine')
+                . $navItem('activity.participated', 'Katıldıklarım', '/activity/threads/participated')
                 . $navItem('activity.recent', 'Son hareketli konular', '/activity/threads/recent')
                 . $navItem('activity.search', 'İçerik ara', '/search')
                 . (isset($visibleNavigation['giveaways'])
@@ -183,6 +186,8 @@ final class ProfileHtml
                 'items' => [
                     'bookmarks.own' => ['Kaydedilenler', '/account/bookmarks'],
                     'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
+                    'watched.threads.own' => ['Takip edilen konular', '/account/watched/threads'],
+                    'watched.forums.own' => ['Takip edilen forumlar', '/account/watched/forums'],
                     'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
                 ],
             ],

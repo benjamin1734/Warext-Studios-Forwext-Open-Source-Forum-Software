@@ -101,6 +101,42 @@ final class DatabaseDiscussionStateRepositoryTest extends TestCase
         self::assertArrayNotHasKey('thread_2', $db->fetchAllQueries[0]->parameters);
     }
 
+    public function testWatchedListsAreActorBoundOrderedAndHydrated(): void
+    {
+        $db = new DiscussionStateRecordingDatabase();
+        $db->fetchAllQueue = [
+            [[
+                'thread_id' => str_repeat('b', 32),
+                'notification_mode' => 'in_app_email',
+                'updated_at_utc' => '2026-09-15 22:10:00.000000',
+            ]],
+            [[
+                'forum_node_id' => str_repeat('a', 32),
+                'notification_mode' => 'email',
+                'updated_at_utc' => '2026-09-15 22:11:00.000000',
+            ]],
+        ];
+
+        $repo = new DatabaseDiscussionStateRepository($db);
+        $threads = $repo->watchedThreads($this->id('1'), 20, 5);
+        $forums = $repo->watchedForums($this->id('1'), 15, 3);
+
+        self::assertCount(1, $threads);
+        self::assertSame(str_repeat('b', 32), $threads[0]->targetId->value());
+        self::assertSame(WatchNotificationMode::InAppEmail, $threads[0]->notificationMode);
+        self::assertCount(1, $forums);
+        self::assertSame(str_repeat('a', 32), $forums[0]->targetId->value());
+        self::assertSame(WatchNotificationMode::Email, $forums[0]->notificationMode);
+
+        self::assertStringContainsString('FROM `forwext_watched_threads`', $db->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('ORDER BY `updated_at_utc` DESC', $db->fetchAllQueries[0]->sql);
+        self::assertStringContainsString('LIMIT 20 OFFSET 5', $db->fetchAllQueries[0]->sql);
+        self::assertSame(str_repeat('1', 32), $db->fetchAllQueries[0]->parameters['user_id']);
+
+        self::assertStringContainsString('FROM `forwext_watched_forums`', $db->fetchAllQueries[1]->sql);
+        self::assertStringContainsString('LIMIT 15 OFFSET 3', $db->fetchAllQueries[1]->sql);
+    }
+
     public function testMissingSubscriptionPreferencesUseSafeDefaults(): void
     {
         $db = new DiscussionStateRecordingDatabase();
