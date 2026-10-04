@@ -7,6 +7,7 @@ namespace Forwext\Core\Domain\Access\Appearance;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\QueryExecutor;
 use Forwext\Core\Domain\Entity\EntityId;
+use InvalidArgumentException;
 
 final readonly class DatabaseRoleAppearanceRepository implements RoleAppearanceRepository
 {
@@ -25,6 +26,52 @@ final readonly class DatabaseRoleAppearanceRepository implements RoleAppearanceR
         ));
 
         return $row === null ? null : $this->hydrate($row);
+    }
+
+    /**
+     * @param list<EntityId> $roleIds
+     * @return array<string,RoleAppearance>
+     */
+    public function findMany(array $roleIds): array
+    {
+        if (count($roleIds) > 200) {
+            throw new InvalidArgumentException('Batch role appearance lookup accepts at most 200 roles.');
+        }
+
+        $parameters = [];
+        $placeholders = [];
+        $unique = [];
+        foreach ($roleIds as $roleId) {
+            if (!$roleId instanceof EntityId) {
+                throw new InvalidArgumentException('Batch role appearance ids must be entity ids.');
+            }
+            $unique[$roleId->value()] = $roleId;
+        }
+        foreach (array_values($unique) as $index => $roleId) {
+            $name = 'role_' . $index;
+            $placeholders[] = ':' . $name;
+            $parameters[$name] = $roleId->value();
+        }
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT `role_id`, `text_color`, `gradient_from`, `gradient_to`, `gradient_angle`, '
+            . '`icon`, `banner_text`, `banner_color`, `pattern`, `animation`, '
+            . '`show_mobile`, `show_profile`, `show_posts` '
+            . 'FROM `forwext_role_appearances` WHERE `role_id` IN (' . implode(',', $placeholders) . ') '
+            . 'ORDER BY `role_id`',
+            $parameters,
+        ));
+
+        $appearances = [];
+        foreach ($rows as $row) {
+            $appearance = $this->hydrate($row);
+            $appearances[$appearance->roleId()->value()] = $appearance;
+        }
+
+        return $appearances;
     }
 
     public function save(RoleAppearance $appearance): void
