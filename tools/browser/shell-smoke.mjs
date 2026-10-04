@@ -9,6 +9,7 @@ await mkdir(artifactDir, { recursive: true });
 const cases = [
   { name: "guest-mobile", fixture: "guest", width: 390, height: 844, touch: true, reducedMotion: "reduce" },
   { name: "guest-tablet", fixture: "guest", width: 768, height: 1024, touch: true, reducedMotion: "no-preference" },
+  { name: "member-mobile", fixture: "member", width: 390, height: 844, touch: true, reducedMotion: "no-preference" },
   { name: "member-1024", fixture: "member", width: 1024, height: 900, touch: false, reducedMotion: "no-preference" },
   { name: "member-desktop", fixture: "member", width: 1440, height: 1000, touch: false, reducedMotion: "no-preference" },
   { name: "moderator-desktop", fixture: "moderator", width: 1440, height: 1000, touch: false, reducedMotion: "no-preference" },
@@ -199,6 +200,25 @@ try {
       const inputTouchHeight = await page.$eval("#fixture-form input", (element) => element.getBoundingClientRect().height);
       if (inputTouchHeight < 43.5) fail(`${testCase.name}: form control touch target is below 44px`);
 
+      const accountSummary = page.locator(".nav-account-menu > summary");
+      if ((await accountSummary.count()) > 0) {
+        await accountSummary.click();
+        const groups = await page.locator(".nav-account-group").count();
+        if (groups !== 4) fail(`${testCase.name}: grouped account menu expected 4 groups, got ${groups}`);
+
+        const labels = await page.locator(".nav-account-group-title").allTextContents();
+        for (const expected of ["Hesap", "İletişim", "Topluluk", "Diğer"]) {
+          if (!labels.includes(expected)) fail(`${testCase.name}: account group "${expected}" is missing`);
+        }
+
+        const accountLinkHeight = await page.locator(".nav-account-link").first().evaluate(
+          (element) => element.getBoundingClientRect().height,
+        );
+        if (accountLinkHeight < 43.5) {
+          fail(`${testCase.name}: mobile account link touch target is below 44px`);
+        }
+      }
+
       await page.keyboard.press("Escape");
       if ((await toggle.getAttribute("aria-expanded")) !== "false") {
         fail(`${testCase.name}: Escape did not close mobile navigation`);
@@ -262,4 +282,4 @@ try {
   await browser.close();
 }
 
-console.log(`Forwext browser smoke passed for ${cases.length} representative layouts.`);
+console.log(`Forwext browser smoke passed for ${cases.length} representative layouts including member mobile account navigation.`);
