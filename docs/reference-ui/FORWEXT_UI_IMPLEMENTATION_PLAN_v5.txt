@@ -24,13 +24,13 @@ PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
 - [DONE] Densify the forum index with real category counts and a compact authenticated discovery sidebar linking the new/unread/trending/featured/profile-post flows.
 - [VERIFYING] Cover the complete Phase 2 discovery/index slice in PHP 8.4/8.5 and live Chromium acceptance.
 
-PHASE 3 — THREAD LIST / SEARCH / WATCH — IN PROGRESS
+PHASE 3 — THREAD LIST / SEARCH / WATCH — VERIFIED
 - [DONE] Add no-reply, current-user started-thread and participated-thread discovery modes on the existing permission-aware repository.
 - [DONE] Add watched threads/forums account surfaces using the persisted watch tables and server-side forum permission filtering.
 - [DONE] Add CSRF-protected forum/thread watch mode controls and forum mark-read action using the existing DiscussionStateService.
 - [DONE] Add username-routed member Konuları/Mesajları surfaces backed by authoritative thread/post tables and viewer-specific forum scopes; enforce profile visibility and visible moderation state.
-- [VERIFYING] Cover watched routes, watch mutations, discovery filters and member content routes with PHP/source contracts plus live Chromium acceptance.
-- [NEXT] Pass the full Phase 3 CI gate; if green, mark Phase 3 VERIFIED and start Phase 4 thread-view/editor density.
+- [DONE] Cover watched routes, watch mutations, discovery filters and member content routes with PHP/source contracts plus live Chromium acceptance; full Phase 3 CI passed on d885af3f.
+- [DONE] Phase 3 full CI gate passed; execution moves to Phase 4 thread-view/editor density.
 
 PHASE 4 — THREAD VIEW / EDITOR
 - Author/content separation, banners/badges, action density, reactions, attachments, editor/preview and moderation states.
