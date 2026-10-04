@@ -1062,8 +1062,17 @@ a.forum-thread-author:hover{color:var(--text)}
   }
   .thread-reaction-popover,
   .thread-bookmark-form{
-    left:0;
-    right:auto;
+    position:fixed;
+    z-index:3100;
+    left:12px;
+    right:12px;
+    top:auto;
+    bottom:12px;
+    width:auto;
+    max-width:none;
+    max-height:min(62vh,420px);
+    overflow:auto;
+    transform:none;
   }
   .thread-quick-reply-head{
     display:grid;
