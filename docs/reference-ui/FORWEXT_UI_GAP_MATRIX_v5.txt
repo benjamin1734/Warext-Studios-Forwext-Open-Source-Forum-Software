@@ -57,7 +57,8 @@ Verified first slice: first-party module registration, additive server/status pe
 Verified comparison/seasons slice: d6dd418 adds additive season persistence, real /servers/compare and /servers/seasons routes, directory-backed comparison and responsive contracts with the full CI gate green.
 Verified management/ownership slice at d5ffc37: manage-own/claim/transfer permissions, staff-wide management, owner-scoped editing, CSRF-protected writes, transaction-locked ownership claims/review, transfer/release events and responsive /servers/manage surfaces pass PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium and package/installer gates. Ownership claim approval remains deliberately separate from technical server verification.
 Verified voting slice at 28be076: one first-party web vote per account/server/UTC day is persisted with a database unique key; public detail exposes all-time and rolling 30-day totals; authenticated voting is permission-checked and CSRF-protected; duplicate votes are idempotently redirected instead of double-counted. PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium and package/installer qualification are green.
-Remaining gap: update feed and server statistics are next, followed by vote-integration settings and team management.
+Current update/statistics slice: update posts are persisted separately from server metadata; owner/staff writes reuse server management authorization, CSRF and transaction-locked ownership checks; public update feed exposes only published posts. Statistics derive from authoritative vote history plus current status and published-update counts, including a zero-filled 30-day UTC vote trend.
+Remaining gap after qualification: vote-integration settings and team management.
 
 08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces.
