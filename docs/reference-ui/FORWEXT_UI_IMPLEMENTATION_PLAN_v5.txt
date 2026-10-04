@@ -32,19 +32,21 @@ PHASE 3 — THREAD LIST / SEARCH / WATCH — VERIFIED
 - [DONE] Cover watched routes, watch mutations, discovery filters and member content routes with PHP/source contracts plus live Chromium acceptance; full Phase 3 CI passed on d885af3f.
 - [DONE] Phase 3 full CI gate passed; execution moves to Phase 4 thread-view/editor density.
 
-PHASE 4 — THREAD VIEW / EDITOR — IN PROGRESS
+PHASE 4 — THREAD VIEW / EDITOR — VERIFIED
 - [DONE] Preserve existing author/content separation, reactions, bookmarks, attachments, editor preview, quote, mention, spellcheck and attachment staging.
 - [DONE] Group thread header actions and compact post footer/social controls without replacing existing backend services.
 - [DONE] Upgrade long-thread navigation with previous/next, first/last context and bounded ellipsis windows.
 - [DONE] Exercise the header/footer/pagination hooks in PHP source contracts and responsive browser fixtures; full first-slice CI passed on a480d81b.
 - [DONE] Enrich author cards with real thread-starter state and existing member-content links without exposing internal group data or inventing display roles.
 - [DONE] Present locked/reply-disabled/reply-permission states explicitly and add a compact quick-editor capability summary backed only by existing editor features.
-- [VERIFYING] Run source contracts, responsive browser fixtures and the complete Phase 4 CI gate for the final polish slice.
-- [NEXT] If green, mark Phase 4 VERIFIED and move to Phase 5 members/profile/account.
+- [DONE] Full final Phase 4 CI gate passed on a5f81099.
 
-PHASE 5 — MEMBERS / PROFILE / ACCOUNT
-- Member directory/staff/current visitors.
-- Details/security/privacy/preferences/reactions/signature/follow/ignore/style controls using existing services where available.
+PHASE 5 — MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
+- [DONE] Split profile identity/media ownership from privacy ownership: /account/profile keeps About/avatar/banner while /account/privacy owns existing profile visibility fields.
+- [DONE] Reuse PresenceService on the privacy page for online visibility; keep the JSON presence endpoint available to existing clients without exposing it as a standalone human navigation item.
+- [DONE] Keep security, sessions, relationships, bookmarks and notification settings on their existing services and link them from the account/privacy surfaces rather than duplicating persistence.
+- [VERIFYING] Cover the privacy route, ownership split, navigation and responsive layout with PHP/source contracts plus live Chromium acceptance.
+- [NEXT] After the privacy CI gate, review member/staff/current-visitor density and implement only genuinely backed preferences/reaction/signature/style controls.
 
 PHASE 6 — DM / ALERTS / ACTIVITY
 - Conversation management states, notification summaries and member activity/recent-content views.
