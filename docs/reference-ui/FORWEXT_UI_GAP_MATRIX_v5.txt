@@ -34,10 +34,10 @@ Next: Phase 4 thread-view/editor density.
 
 04 THREAD VIEW / EDITOR — IN PROGRESS
 Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention, spellcheck and editor text/attachment metrics already exist.
-Current Phase 4 slice: thread header actions are grouped into compact primary/follow areas; post footer actions use a dedicated dense toolbar; long-thread pagination gains previous/next, first/last context and bounded ellipsis windows; responsive browser fixtures exercise the new controls.
+Verified first Phase 4 slice: thread header actions are grouped into compact primary/follow areas; post footer actions use a dedicated dense toolbar; long-thread pagination gains previous/next, first/last context and bounded ellipsis windows; responsive browser fixtures exercise the controls. Security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/accessibility and installation package all passed on main commit a480d81b.
+Current final Phase 4 slice: author cards distinguish the real thread starter without exposing internal group data; authenticated viewers receive existing profile/thread/post discovery links; locked/reply-disabled/permission-denied states are presented explicitly; quick reply advertises only capabilities already provided by the existing rich editor.
 Moderation boundary: the public thread reader intentionally exposes only visible posts, so pending/rejected staff presentation is not fabricated here and remains owned by the moderation phase.
-Verification pending: PHP 8.4/8.5, Chromium responsive/accessibility, security, DB, performance and package qualification for the Phase 4 slice.
-Gap after this slice: author identity/banner/badge richness and final editor/thread visual polish still need review.
+Verification pending: run the complete CI gate for the final author/editor polish slice.
 
 05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
