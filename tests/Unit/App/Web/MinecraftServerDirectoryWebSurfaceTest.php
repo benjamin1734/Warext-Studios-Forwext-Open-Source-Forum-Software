@@ -20,6 +20,8 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
         $liveSmoke = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
+        $fixtureSeeder = (string) file_get_contents($root . '/tools/browser/seed-minecraft-fixtures.php');
+        $qualificationWorkflow = (string) file_get_contents($root . '/.github/workflows/qualification-matrix.yml');
 
         self::assertStringContainsString("new PathTemplate('/servers')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/compare')", $factory);
@@ -92,6 +94,14 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('/* minecraft-server-team-vote-integration-v1 */', $css);
         self::assertStringContainsString('minecraft servers: real route did not return HTTP 200', $liveSmoke);
         self::assertStringContainsString('minecraft servers mobile', $liveSmoke);
+        self::assertStringContainsString('minecraft server edit POST', $liveSmoke);
+        self::assertStringContainsString('minecraft server verify POST', $liveSmoke);
+        self::assertStringContainsString('minecraft server transfer', $liveSmoke);
+        self::assertStringContainsString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', $liveSmoke);
+        self::assertStringContainsString('forwext-ci-owned', $fixtureSeeder);
+        self::assertStringContainsString('forwext-ci-unowned', $fixtureSeeder);
+        self::assertStringContainsString('owner_user_id', $fixtureSeeder);
+        self::assertStringContainsString('seed-minecraft-fixtures.php', $qualificationWorkflow);
     }
 
     public function testFirstPartyModuleOwnsServerRoutesAndSeasonData(): void
@@ -230,6 +240,7 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
         $manage = (string) file_get_contents($root . '/app/Web/MinecraftServer/MinecraftServerManageHandler.php');
         $claim = (string) file_get_contents($root . '/app/Web/MinecraftServer/MinecraftServerClaimHandler.php');
+        $html = (string) file_get_contents($root . '/app/Web/MinecraftServer/MinecraftServerHtml.php');
         $service = (string) file_get_contents($root . '/core/Minecraft/Server/MinecraftServerService.php');
         $repository = (string) file_get_contents(
             $root . '/core/Minecraft/Server/DatabaseMinecraftServerRepository.php',
@@ -238,6 +249,12 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('[HttpMethod::Get,HttpMethod::Post]', $factory);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $manage);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $claim);
+        self::assertStringContainsString("'/edit?updated=1'", $manage);
+        self::assertStringContainsString("'/verify?submitted=1'", $claim);
+        self::assertStringContainsString("'/edit'", $html);
+        self::assertStringContainsString("'/transfer'", $html);
+        self::assertStringContainsString("'/verify'", $html);
+        self::assertStringContainsString("'/stats'", $html);
         self::assertStringContainsString("minecraft_server.manage_own", $service);
         self::assertStringContainsString("minecraft_server.manage_any", $service);
         self::assertStringContainsString("minecraft_server.claim", $service);
