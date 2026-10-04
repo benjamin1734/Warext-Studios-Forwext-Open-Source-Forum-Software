@@ -64,6 +64,57 @@ final readonly class CronExpression
         return $dayOfMonthMatches || $dayOfWeekMatches;
     }
 
+    public function nextRunAfter(DateTimeImmutable $time, int $maxYears = 5): ?DateTimeImmutable
+    {
+        if ($maxYears < 1 || $maxYears > 10) {
+            throw new InvalidArgumentException('Cron next-run horizon must be between one and ten years.');
+        }
+
+        $utc = $time->setTimezone(new DateTimeZone('UTC'));
+        $start = $utc->setTime((int) $utc->format('G'), (int) $utc->format('i'), 0)->modify('+1 minute');
+        $limit = $start->modify('+' . $maxYears . ' years');
+        $day = $start->setTime(0, 0, 0);
+        $hours = $this->hour->values();
+        $minutes = $this->minute->values();
+
+        while ($day <= $limit) {
+            if (
+                $this->month->matches((int) $day->format('n'))
+                && $this->dayMatches($day)
+            ) {
+                foreach ($hours as $hour) {
+                    foreach ($minutes as $minute) {
+                        $candidate = $day->setTime($hour, $minute, 0);
+                        if ($candidate >= $start && $candidate <= $limit) {
+                            return $candidate;
+                        }
+                    }
+                }
+            }
+            $day = $day->modify('+1 day');
+        }
+
+        return null;
+    }
+
+    private function dayMatches(DateTimeImmutable $utc): bool
+    {
+        $dayOfMonthMatches = $this->dayOfMonth->matches((int) $utc->format('j'));
+        $dayOfWeekMatches = $this->dayOfWeek->matches((int) $utc->format('w'));
+
+        if ($this->dayOfMonth->isWildcard() && $this->dayOfWeek->isWildcard()) {
+            return true;
+        }
+        if ($this->dayOfMonth->isWildcard()) {
+            return $dayOfWeekMatches;
+        }
+        if ($this->dayOfWeek->isWildcard()) {
+            return $dayOfMonthMatches;
+        }
+
+        return $dayOfMonthMatches || $dayOfWeekMatches;
+    }
+
     public function value(): string
     {
         return $this->expression;
