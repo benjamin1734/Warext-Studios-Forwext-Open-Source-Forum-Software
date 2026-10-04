@@ -450,6 +450,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 ],
                 true,
             ));
+            $this->appendOwnershipEvent(
+                $database,
+                $member->serverId,
+                'team_member_saved',
+                $member->addedByUserId,
+                null,
+                null,
+                'Team member ' . $member->userId->value() . ' saved with role ' . $member->roleKey . '.',
+                $member->updatedAt,
+            );
         });
     }
 
@@ -469,6 +479,8 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             $serverId,
             $userId,
             $expectedOwnerUserId,
+            $actorUserId,
+            $now,
         ): bool {
             $server = $database->fetchOne(new CompiledQuery(
                 'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
@@ -482,12 +494,25 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 && ($storedOwner === null || !hash_equals($storedOwner, $expectedOwnerUserId->value()))) {
                 throw new RuntimeException('Minecraft server ownership changed concurrently.');
             }
-            return $database->execute(new CompiledQuery(
+            $removed = $database->execute(new CompiledQuery(
                 'DELETE FROM forwext_minecraft_server_team_members '
                 . 'WHERE server_id=:server_id AND user_id=:user_id',
                 ['server_id'=>$serverId->value(),'user_id'=>$userId->value()],
                 true,
             )) === 1;
+            if ($removed) {
+                $this->appendOwnershipEvent(
+                    $database,
+                    $serverId,
+                    'team_member_removed',
+                    $actorUserId,
+                    null,
+                    null,
+                    'Team member ' . $userId->value() . ' removed.',
+                    $now,
+                );
+            }
+            return $removed;
         });
     }
 
@@ -569,6 +594,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                     ],
                     true,
                 ));
+                $this->appendOwnershipEvent(
+                    $database,
+                    $serverId,
+                    'vote_token_rotated',
+                    $actorUserId,
+                    null,
+                    null,
+                    'Vote integration token rotated.',
+                    $now,
+                );
                 return;
             }
 
@@ -588,6 +623,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 ],
                 true,
             ));
+            $this->appendOwnershipEvent(
+                $database,
+                $serverId,
+                $enabled ? 'vote_integration_on' : 'vote_integration_off',
+                $actorUserId,
+                null,
+                null,
+                $enabled ? 'Vote integration enabled.' : 'Vote integration disabled.',
+                $now,
+            );
         });
     }
 
