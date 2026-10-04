@@ -22,6 +22,8 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         $liveSmoke = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
 
         self::assertStringContainsString("new PathTemplate('/servers')", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/compare')", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/seasons')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}'", $factory);
         self::assertStringContainsString('new DatabaseMinecraftServerRepository($database)', $factory);
         self::assertStringContainsString("listing_state='published'", $repository);
@@ -31,22 +33,29 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('Minecraft Sunucuları', $html);
         self::assertStringContainsString('minecraft-server-filter', $html);
         self::assertStringContainsString('minecraft-server-row', $html);
+        self::assertStringContainsString('Sunucu Karşılaştırma', $html);
+        self::assertStringContainsString('Sunucu Sezonları', $html);
+        self::assertStringContainsString('minecraft-compare-options', $html);
+        self::assertStringContainsString('minecraft-season-list', $html);
         self::assertStringContainsString('safeExternal', $html);
         self::assertStringNotContainsString('Yeni sunucu ekle', $html);
 
         self::assertStringContainsString("'servers', 'Sunucular', '/servers'", $navigation);
         self::assertStringContainsString("'servers' => 'servers'", $profile);
         self::assertStringContainsString('data-nav-section="servers"', $profile);
+        self::assertStringContainsString('/servers/compare', $profile);
+        self::assertStringContainsString('/servers/seasons', $profile);
 
         self::assertStringContainsString('/* minecraft-server-directory-v1 */', $css);
         self::assertStringContainsString('@media(max-width:700px)', $css);
         self::assertStringContainsString('@media(pointer:coarse)', $css);
         self::assertStringContainsString('min-height:44px', $css);
+        self::assertStringContainsString('/* minecraft-server-comparison-seasons-v1 */', $css);
         self::assertStringContainsString('minecraft servers: real route did not return HTTP 200', $liveSmoke);
         self::assertStringContainsString('minecraft servers mobile', $liveSmoke);
     }
 
-    public function testFirstPartyModuleOwnsServerRoutesWithoutDeadFutureLinks(): void
+    public function testFirstPartyModuleOwnsServerRoutesAndSeasonData(): void
     {
         $root = dirname(__DIR__, 4);
         $registry = (string) file_get_contents(
@@ -56,9 +65,11 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'minecraft-servers'", $registry);
         self::assertStringContainsString("routePrefixes:['server.']", $registry);
+        self::assertStringContainsString("'forwext_minecraft_server_season_entries'", $registry);
+        self::assertStringContainsString("'forwext_minecraft_server_seasons'", $registry);
         self::assertStringContainsString("'forwext_minecraft_server_status'", $registry);
         self::assertStringContainsString("'forwext_minecraft_servers'", $registry);
-        self::assertStringNotContainsString('/servers/compare', $profile);
-        self::assertStringNotContainsString('/servers/seasons', $profile);
+        self::assertStringContainsString('/servers/compare', $profile);
+        self::assertStringContainsString('/servers/seasons', $profile);
     }
 }
