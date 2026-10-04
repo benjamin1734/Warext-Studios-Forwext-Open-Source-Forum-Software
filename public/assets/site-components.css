@@ -2313,6 +2313,7 @@ body.forwext-nav-open{overflow:hidden}
     box-shadow:none;
   }
   .nav-account-grid{grid-template-columns:1fr}
+  .nav-account-link{min-height:44px;padding-block:8px}
   .nav-user-tools{
     display:grid;
     margin-left:0;
