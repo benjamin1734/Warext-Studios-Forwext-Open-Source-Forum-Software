@@ -44,10 +44,10 @@ PHASE 4 — THREAD VIEW / EDITOR — VERIFIED
 
 PHASE 5 — MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 - [DONE] Preserve the existing public member directory and current-online presence surface.
-- [DONE] Add a public staff directory using authoritative staff-role assignments, active-user state and public profile visibility; expose it through member navigation with bounded search/pagination and live-route acceptance.
-- [NEXT] Consolidate account privacy/preferences around existing profile visibility, presence and notification services without introducing duplicate settings state.
-- [NEXT] Add or complete reactions/signature/style controls only where authoritative persistence and permission ownership exist.
-- [NEXT] Finish member/profile/account density, responsive/accessibility coverage and the complete Phase 5 CI gate.
+- [DONE] Add a public staff directory using authoritative staff-role assignments, active-user state and public profile visibility; expose it through member navigation with bounded search/pagination and live-route acceptance. Full CI passed on main commit 68317606.
+- [DONE] Consolidate account privacy/preferences in a dedicated hub backed by existing profile visibility, presence and notification-sound services; keep profile, notification, security, session and relationship settings owned by their existing surfaces.
+- [DONE] Audit reactions/signature/style ownership: reaction actions exist without preference storage, while signature/style preference persistence is absent; do not fabricate controls or duplicate state.
+- [VERIFYING] Run source contracts and live CSRF save acceptance for the preferences hub, then the complete CI gate.\n- [NEXT] Finish remaining member/profile/account density and responsive/accessibility comparison before closing Phase 5.
 
 PHASE 6 — DM / ALERTS / ACTIVITY
 - Conversation management states, notification summaries and member activity/recent-content views.
