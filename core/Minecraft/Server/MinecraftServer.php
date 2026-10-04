@@ -12,7 +12,7 @@ final readonly class MinecraftServer
 {
     public function __construct(
         public EntityId $serverId,
-        public EntityId $ownerUserId,
+        public ?EntityId $ownerUserId,
         public string $slug,
         public string $name,
         public string $summary,
