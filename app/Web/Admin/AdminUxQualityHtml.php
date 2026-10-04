@@ -12,14 +12,15 @@ final class AdminUxQualityHtml
         string $preview,
         string $recovery,
     ): string {
-        return '<aside class="acp-ux-guide" aria-label="Güvenli yönetim rehberi">'
-            . '<div><strong>Bu ekranda güvenli çalışma</strong><p>Kompleks ayarları önce bul, doğrula, sonra uygula.</p></div>'
+        return '<details class="acp-ux-guide" aria-label="Güvenli yönetim rehberi">'
+            . '<summary><span><strong>Yönetim rehberi</strong><small>Güvenli varsayılanlar, doğrulama ve geri dönüş notları</small></span>'
+            . '<span class="acp-ux-guide-toggle" aria-hidden="true">Ayrıntılar</span></summary>'
             . '<div class="acp-ux-grid">'
             . self::item('Amaç', $purpose)
             . self::item('Güvenli varsayılan', $safeDefault)
             . self::item('Önizleme / doğrulama', $preview)
             . self::item('Geri dönüş', $recovery)
-            . '</div></aside>';
+            . '</div></details>';
     }
 
     private static function item(string $label, string $text): string
