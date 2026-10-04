@@ -2287,7 +2287,7 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'activity.threads.mode',
             [HttpMethod::Get],
-            new PathTemplate('/activity/threads/{mode}', ['mode'=>'new|unread|trending|featured|recent']),
+            new PathTemplate('/activity/threads/{mode}', ['mode'=>'new|unread|trending|featured|no-replies|mine|participated|recent']),
             $threadDiscoveryHandler,
         ));
         $routes->add(new Route(
