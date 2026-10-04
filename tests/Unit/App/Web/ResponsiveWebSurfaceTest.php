@@ -36,7 +36,7 @@ final class ResponsiveWebSurfaceTest extends TestCase
         $css = (string) file_get_contents($root . '/public/assets/site-components.css');
         $script = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
 
-        self::assertStringContainsString('/* xenforo-reference-density-v1 */', $css);
+        self::assertStringContainsString('/* compact-reference-density-v1 */', $css);
         self::assertStringContainsString("'portfolio' => 'portfolio'", $html);
         self::assertStringContainsString("'faq' => 'faq'", $html);
         self::assertStringContainsString('NavigationPlacement::Primary', $html);
