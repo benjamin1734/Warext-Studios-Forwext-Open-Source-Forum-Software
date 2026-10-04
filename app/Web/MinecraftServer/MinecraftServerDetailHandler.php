@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Forwext\App\Web\MinecraftServer;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Forwext\App\Web\Profile\ProfileViewerResolver;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
+use Forwext\Core\Http\Security\Csrf\CsrfMiddleware;
 use Forwext\Core\Minecraft\Server\MinecraftServerService;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Routing\Router;
@@ -33,6 +36,17 @@ final readonly class MinecraftServerDetailHandler implements RequestHandlerInter
             return Response::text('Not Found', 404)->withHeader('Cache-Control', 'no-store');
         }
         $actor = $this->viewers->resolve($request);
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $voteSummary = $this->servers->voteSummary($serverId, $actor, $now);
+        $canVote = $actor !== null && $this->servers->canVote($actor, $voteSummary);
+        $csrf = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
+        if ($canVote && (!is_string($csrf) || $csrf === '')) {
+            return Response::text('Internal Server Error', 500)->withHeader('Cache-Control', 'no-store');
+        }
+        $voteStatus = $request->query()['vote'] ?? null;
+        if (!is_string($voteStatus) || !in_array($voteStatus, ['recorded','already'], true)) {
+            $voteStatus = null;
+        }
 
         return Response::html(MinecraftServerHtml::detail(
             $server,
@@ -40,6 +54,10 @@ final readonly class MinecraftServerDetailHandler implements RequestHandlerInter
             $actor !== null,
             $actor !== null && $this->servers->canManage($actor, $server),
             $actor !== null && $this->servers->canClaim($actor, $server),
+            $voteSummary,
+            $canVote,
+            $canVote && is_string($csrf) ? $csrf : null,
+            $voteStatus,
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=60' : 'private, no-store');
     }
 
