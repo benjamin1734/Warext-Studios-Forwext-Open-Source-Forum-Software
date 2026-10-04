@@ -80,8 +80,10 @@ final class BugReportDetailHtmlTest extends TestCase
         self::assertStringContainsString('name="_csrf" value="csrf-token"',$html);
         self::assertStringContainsString('name="action" value="reply"',$html);
         self::assertStringContainsString('/community/bugs',$html);
-        self::assertStringContainsString('ticket-detail-page discovery-page',$html);
+        self::assertStringContainsString('ticket-detail-page bug-detail-page discovery-page',$html);
         self::assertStringContainsString('surface-head ticket-detail-head',$html);
+        self::assertStringContainsString('bug-detail-primary-grid',$html);
+        self::assertStringContainsString('bug-detail-secondary-grid',$html);
         self::assertStringContainsString('surface-panel ticket-conversation',$html);
         self::assertStringContainsString('class="ticket-message bug-message"',$html);
     }
@@ -112,6 +114,11 @@ final class BugReportDetailHtmlTest extends TestCase
         self::assertStringContainsString('/community/bugs/'.str_repeat('a',32),$html);
         self::assertStringNotContainsString('<script>bad</script>',$html);
         self::assertStringContainsString('surface-head bug-list-head',$html);
+        self::assertStringContainsString('bug-list-overview',$html);
+        self::assertStringContainsString('bug-list-panel-head',$html);
         self::assertStringContainsString('class="bug-report-row"',$html);
+        self::assertStringContainsString('bug-report-row-badges',$html);
+        self::assertStringContainsString('bug-report-status is-in_review',$html);
+        self::assertStringContainsString('bug-report-severity is-high',$html);
     }
 }
