@@ -385,6 +385,7 @@ use Forwext\Core\Portfolio\Search\PortfolioSearchAccessScopeProvider;
 use Forwext\Core\Presence\DatabasePresenceRepository;
 use Forwext\Core\Presence\PresenceService;
 use Forwext\Core\Profile\Activity\ActivityFeedService;
+use Forwext\Core\Profile\Activity\ActivityFeedType;
 use Forwext\Core\Realtime\DatabaseRealtimeMessageStore;
 use Forwext\Core\Realtime\PollingRealtimeTransport;
 use Forwext\Core\Realtime\RealtimeMode;
@@ -2426,6 +2427,19 @@ final readonly class WebApplicationFactory
                 $viewerResolver,
                 $basePath,
                 new DateTimeZone($config->requireString('site.timezone')),
+            ),
+        ));
+        $routes->add(new Route(
+            'activity.profile-posts', [HttpMethod::Get], new PathTemplate('/activity/profile-posts'),
+            new ActivityFeedHandler(
+                $activityFeed,
+                $viewerResolver,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+                [ActivityFeedType::ProfilePostCreated],
+                'Yeni profil gönderileri',
+                'Erişebildiğin üyelerin en yeni profil gönderileri.',
+                '/activity/profile-posts',
             ),
         ));
 
