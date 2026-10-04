@@ -2876,3 +2876,178 @@ html,body{max-width:100%;overflow-x:clip}
   .profile-reference-shell .profilebody{padding-inline:9px}
   .profile-reference-shell .profile-tabs{margin-inline:-9px}
 }
+
+
+/* member-profile-density-v1 */
+.member-directory-summary{
+  min-height:31px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:6px 9px;
+  border-bottom:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--muted);
+  font-size:9.5px;
+}
+.member-directory-summary strong{
+  color:var(--text);
+  font-size:10.5px;
+}
+.member-directory-card:focus-visible{
+  position:relative;
+  z-index:1;
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+}
+.member-pagination{
+  align-items:center;
+  flex-wrap:wrap;
+}
+.member-pagination>a,
+.member-pagination-gap{
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 8px;
+  border:1px solid var(--line);
+  border-radius:4px;
+  background:var(--panel2);
+  color:var(--muted);
+  text-decoration:none;
+  font-size:9.5px;
+}
+.member-pagination>a:hover,
+.member-pagination>a:focus-visible,
+.member-pagination>a[aria-current="page"]{
+  border-color:color-mix(in srgb,var(--accent) 34%,var(--line));
+  background:color-mix(in srgb,var(--accent) 6%,var(--panel2));
+  color:var(--text);
+}
+.member-pagination>a:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.member-pagination-gap{
+  min-width:26px;
+  border-color:transparent;
+  background:transparent;
+}
+.profile-reference-shell .profile-head-actions{
+  min-width:0;
+  margin-left:auto;
+  padding-bottom:5px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.profile-reference-shell .profile-forum-content-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-wrap:wrap;
+}
+.profile-reference-shell .profile-forum-content-actions .fx-btn{
+  min-height:28px;
+  padding:4px 7px;
+  border-radius:3px;
+  font-size:9px;
+}
+.profile-reference-shell .profile-head-actions .profile-relationship-actions{
+  margin-left:0;
+  padding-bottom:0;
+}
+.profile-reference-shell .profile-overview-facts{
+  margin:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  border:1px solid var(--line);
+  border-radius:4px;
+  overflow:hidden;
+}
+.profile-reference-shell .profile-overview-facts>div{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  padding:7px 8px;
+  border-right:1px solid var(--line);
+  background:var(--panel2);
+}
+.profile-reference-shell .profile-overview-facts>div:last-child{border-right:0}
+.profile-reference-shell .profile-overview-facts dt{
+  color:var(--muted);
+  font-size:8.5px;
+}
+.profile-reference-shell .profile-overview-facts dd{
+  margin:0;
+  color:var(--text);
+  font-size:10px;
+  font-weight:760;
+}
+.profile-reference-shell .profile-subsection{
+  margin-top:9px;
+  padding-top:9px;
+  border-top:1px solid var(--line);
+}
+.profile-reference-shell .profile-subsection h3{
+  margin:0 0 6px;
+  font-size:10.5px;
+}
+.profile-reference-shell .profile-section[id]{
+  scroll-margin-top:112px;
+}
+.profile-reference-shell .profile-tabs a:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+}
+@media(max-width:700px){
+  .profile-reference-shell .profile-head-actions{
+    grid-column:1/-1;
+    width:100%;
+    margin-left:0;
+    justify-content:flex-start;
+    padding-bottom:0;
+  }
+  .profile-reference-shell .profile-forum-content-actions{
+    flex:1 1 auto;
+  }
+}
+@media(max-width:520px){
+  .member-pagination{
+    justify-content:flex-start;
+  }
+  .member-pagination>a{
+    min-height:44px;
+    padding-inline:10px;
+  }
+  .profile-reference-shell .profile-head-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .profile-reference-shell .profile-forum-content-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .profile-reference-shell .profile-forum-content-actions .fx-btn,
+  .profile-reference-shell .profile-head-actions .profile-relationship-actions .fx-btn{
+    min-height:44px;
+    justify-content:center;
+  }
+  .profile-reference-shell .profile-head-actions .profile-relationship-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+  }
+  .profile-reference-shell .profile-overview-facts{
+    grid-template-columns:1fr;
+  }
+  .profile-reference-shell .profile-overview-facts>div{
+    border-right:0;
+    border-bottom:1px solid var(--line);
+  }
+  .profile-reference-shell .profile-overview-facts>div:last-child{border-bottom:0}
+}

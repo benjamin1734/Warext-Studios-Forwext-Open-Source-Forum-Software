@@ -46,8 +46,8 @@ final readonly class StaffDirectoryHandler implements RequestHandlerInterface
                 ? '<img class="avatar" src="' . $safePath . '/avatar" alt="">'
                 : '<span class="avatar" aria-hidden="true">' . ProfileHtml::initial($username) . '</span>';
 
-            $cards .= '<a class="member-directory-card member-staff-card" href="' . $safePath . '">'
-                . $avatar
+            $cards .= '<a class="member-directory-card member-staff-card" href="' . $safePath . '" aria-label="'
+                . $safeUsername . ' profilini aç">' . $avatar
                 . '<span class="member-directory-copy"><strong>' . $safeUsername . '</strong>'
                 . '<small>Yetkili ekip · Katılım ' . $joined . '</small></span></a>';
         }
@@ -61,13 +61,17 @@ final readonly class StaffDirectoryHandler implements RequestHandlerInterface
             . '<header class="surface-head member-directory-head"><div><span class="forum-eyebrow">TOPLULUK</span>'
             . '<h1>Yetkili Ekip</h1><p>Herkese açık profili bulunan aktif yetkililer · '
             . number_format($total, 0, ',', '.') . ' kişi</p></div>'
-            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members')) . '">Tüm üyeler</a>'
-            . '</header>'
+            . '<div class="member-directory-head-actions"><a class="fx-btn" href="'
+            . ProfileHtml::escape($this->basePath->prepend('/members')) . '">Tüm üyeler</a>'
+            . '<a class="fx-btn" href="' . ProfileHtml::escape($this->basePath->prepend('/members/online'))
+            . '">Çevrimiçi üyeler</a></div></header>'
             . '<section class="surface-panel member-directory-filter"><form class="member-directory-form" method="get" action="'
-            . $action . '"><label><span>Kullanıcı ara</span><input name="q" maxlength="64" value="'
+            . $action . '" aria-label="Yetkili dizini filtreleri"><label><span>Kullanıcı ara</span><input name="q" maxlength="64" value="'
             . ProfileHtml::escape($query) . '" placeholder="Kullanıcı adı"></label>'
             . '<button type="submit">Filtrele</button></form></section>'
-            . '<section class="surface-panel member-directory-results">' . $cards
+            . '<section class="surface-panel member-directory-results">'
+            . '<div class="member-directory-summary" role="status"><span>Yetkili sonuçları</span><strong>'
+            . number_format($total, 0, ',', '.') . '</strong></div>' . $cards
             . self::pagination($this->basePath, $query, $page, $total) . '</section></section>';
 
         $breadcrumbs = new BreadcrumbTrail([
@@ -118,19 +122,46 @@ final readonly class StaffDirectoryHandler implements RequestHandlerInterface
         }
 
         $links = '';
-        foreach (array_unique(array_filter(
-            [$page - 1, $page, $page + 1],
+        if ($page > 1) {
+            $links .= self::pageLink($basePath, $query, $page - 1, 'Önceki');
+        }
+
+        $targets = array_values(array_unique(array_filter(
+            [1, $page - 1, $page, $page + 1, $lastPage],
             static fn (int $candidate): bool => $candidate >= 1 && $candidate <= $lastPage,
-        )) as $target) {
-            $params = ['page' => $target];
-            if ($query !== '') {
-                $params['q'] = $query;
+        )));
+        sort($targets);
+
+        $previous = null;
+        foreach ($targets as $target) {
+            if ($previous !== null && $target - $previous > 1) {
+                $links .= '<span class="member-pagination-gap" aria-hidden="true">…</span>';
             }
-            $href = $basePath->prepend('/members/staff') . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-            $links .= '<a' . ($target === $page ? ' aria-current="page"' : '') . ' href="'
-                . ProfileHtml::escape($href) . '">' . $target . '</a>';
+            $links .= self::pageLink($basePath, $query, $target, (string) $target, $target === $page);
+            $previous = $target;
+        }
+
+        if ($page < $lastPage) {
+            $links .= self::pageLink($basePath, $query, $page + 1, 'Sonraki');
         }
 
         return '<nav class="surface-pagination member-pagination" aria-label="Yetkili sayfaları">' . $links . '</nav>';
+    }
+
+    private static function pageLink(
+        BasePath $basePath,
+        string $query,
+        int $target,
+        string $label,
+        bool $current = false,
+    ): string {
+        $params = ['page' => $target];
+        if ($query !== '') {
+            $params['q'] = $query;
+        }
+        $href = $basePath->prepend('/members/staff') . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+
+        return '<a' . ($current ? ' aria-current="page"' : '') . ' href="'
+            . ProfileHtml::escape($href) . '">' . ProfileHtml::escape($label) . '</a>';
     }
 }

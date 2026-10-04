@@ -378,6 +378,70 @@ try {
   }
   await assertHealthyDocument("staff members");
 
+  response = await page.goto(baseUrl + "/members/online", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("online members: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Çevrimiçi Kullanıcılar", exact: true }).waitFor();
+  const onlineDirectoryState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    summaryCount: document.querySelectorAll(".online-users-results .member-directory-summary").length,
+    settingsCount: document.querySelectorAll("[data-presence-settings]").length,
+    communityActions: document.querySelectorAll(".online-users-head .member-directory-head-actions a").length,
+  }));
+  if (
+    onlineDirectoryState.section !== "members"
+    || onlineDirectoryState.summaryCount !== 1
+    || onlineDirectoryState.settingsCount !== 1
+    || onlineDirectoryState.communityActions !== 2
+  ) {
+    fail(`online members: active/layout contract failed ${JSON.stringify(onlineDirectoryState)}`);
+  }
+  await assertHealthyDocument("online members");
+
+  response = await page.goto(baseUrl + "/members/ci-admin", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("member profile: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "ci-admin", exact: true }).waitFor();
+  const memberProfileState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    profileCount: document.querySelectorAll(".profile-reference-shell").length,
+    actionGroups: document.querySelectorAll(".profile-head-actions").length,
+    factRows: document.querySelectorAll(".profile-overview-facts > div").length,
+    controlledTabs: document.querySelectorAll(".profile-tabs a[aria-controls]").length,
+  }));
+  if (
+    memberProfileState.section !== "members"
+    || memberProfileState.profileCount !== 1
+    || memberProfileState.actionGroups !== 1
+    || memberProfileState.factRows !== 2
+    || memberProfileState.controlledTabs < 1
+  ) {
+    fail(`member profile: density contract failed ${JSON.stringify(memberProfileState)}`);
+  }
+  await assertHealthyDocument("member profile");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/members/ci-admin", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("member profile mobile: real route did not return HTTP 200");
+  const memberProfileMobileState = await page.evaluate(() => {
+    const links = [...document.querySelectorAll(".profile-forum-content-actions .fx-btn")];
+    const facts = document.querySelector(".profile-overview-facts");
+    return {
+      linkCount: links.length,
+      shortTargets: links.filter((link) => link.getBoundingClientRect().height < 43).length,
+      factColumns: facts instanceof HTMLElement
+        ? getComputedStyle(facts).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+    };
+  });
+  if (
+    memberProfileMobileState.linkCount !== 2
+    || memberProfileMobileState.shortTargets !== 0
+    || memberProfileMobileState.factColumns !== 1
+  ) {
+    fail(`member profile mobile: responsive contract failed ${JSON.stringify(memberProfileMobileState)}`);
+  }
+  await assertHealthyDocument("member profile mobile");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail(`admin: real route returned HTTP ${response?.status() ?? "no response"}`);
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
