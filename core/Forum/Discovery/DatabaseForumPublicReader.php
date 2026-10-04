@@ -231,8 +231,7 @@ final readonly class DatabaseForumPublicReader
      *     created_at:string,
      *     updated_at:string,
      *     author_user_id:?string,
-     *     author_username:?string,
-     *     author_group_name:?string
+     *     author_username:?string
      *   }>,
      *   total:int,
      *   page:int,
@@ -259,11 +258,9 @@ final readonly class DatabaseForumPublicReader
 
         $rows = $this->database->fetchAll(new CompiledQuery(
             'SELECT p.post_id,p.position,p.body_source,p.created_at_utc,p.updated_at_utc,'
-            . 'p.author_user_id,u.username AS author_username,g.name AS author_group_name '
+            . 'p.author_user_id,u.username AS author_username '
             . 'FROM forwext_posts p '
             . 'LEFT JOIN forwext_users u ON u.user_id=p.author_user_id '
-            . 'LEFT JOIN forwext_user_primary_groups pg ON pg.user_id=p.author_user_id '
-            . 'LEFT JOIN forwext_user_groups g ON g.group_id=pg.group_id '
             . 'WHERE p.thread_id=:thread_id AND p.deleted=0 '
             . "AND p.moderation_state='visible' "
             . 'ORDER BY p.position ASC LIMIT ' . $perPage . ' OFFSET ' . $offset,
@@ -279,7 +276,6 @@ final readonly class DatabaseForumPublicReader
                 'updated_at' => (string) $row['updated_at_utc'],
                 'author_user_id' => self::nullableString($row['author_user_id'] ?? null),
                 'author_username' => self::nullableString($row['author_username'] ?? null),
-                'author_group_name' => self::nullableString($row['author_group_name'] ?? null),
             ], $rows),
             'total' => max(0, $total),
             'page' => $page,
