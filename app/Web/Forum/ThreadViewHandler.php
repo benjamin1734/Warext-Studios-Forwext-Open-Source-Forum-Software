@@ -73,6 +73,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         }
 
         $actor = $this->viewers->resolve($request);
+        $csrfToken = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
         $hierarchy = new ForumNodeHierarchy($this->nodes->all());
         if (!$this->canView($actor, $hierarchy, $forum)) {
             return Response::text($actor === null ? 'Not Found' : 'Forbidden', $actor === null ? 404 : 403)
@@ -130,7 +131,19 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             $body .= '<a class="fx-btn fx-btn--primary" href="#quick-reply">Yanıtla</a>';
         }
         $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
-            . '">Foruma dön</a></div></section>';
+            . '">Foruma dön</a>';
+        if ($actor !== null && is_string($csrfToken) && $csrfToken !== '') {
+            $body .= DiscussionWatchHtml::form(
+                $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/watch'),
+                $csrfToken,
+                $this->discussionState->threadWatch($actor, $thread->id()),
+            );
+        }
+        $body .= '</div></section>';
+
+        if (($request->query()['watch'] ?? null) === 'updated') {
+            $body .= '<div class="forum-notice">Konu takip tercihin güncellendi.</div>';
+        }
 
         if (($request->query()['reply_pending'] ?? null) === '1') {
             $body .= '<div class="forum-notice">Yanıtınız gönderildi ve moderasyon onayı bekliyor.</div>';
@@ -156,11 +169,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
         }
 
-        if ($canReply) {
-            $token = $request->attribute(CsrfMiddleware::ATTRIBUTE_TOKEN);
-            if (is_string($token) && $token !== '') {
-                $body .= $this->quickReply($thread, $forum, $token);
-            }
+        if ($canReply && is_string($csrfToken) && $csrfToken !== '') {
+            $body .= $this->quickReply($thread, $forum, $csrfToken);
         }
 
         return Response::html(ProfileHtml::page(
