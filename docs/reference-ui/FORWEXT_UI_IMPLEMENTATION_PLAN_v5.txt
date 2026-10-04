@@ -85,7 +85,8 @@ PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
 - [DONE] Bug-report density slice: personal reports expose real open/terminal/priority summaries and status/severity badges; intake separates the existing secure upload/source context into a guidance panel; detail/conversation/control sections use responsive bug-specific grids without changing workflow actions.
 - [DONE] Portfolio detail/manage density slice: project content and engagement use a responsive primary grid, real project state/media/tag summaries are exposed in detail and management, and media actions use the shared control treatment without changing persistence or moderation behavior.
 - [DONE] Phase 8 implementation scope is complete for groups, portfolio, FAQ, referrals and bug-report surfaces.
-- [NEXT] Run the full Phase 8 qualification across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates before marking Phase 8 VERIFIED.
+- [DONE] Phase 8 qualification wiring now seeds deterministic portfolio/FAQ/bug runtime data and exercises portfolio browse/detail/manage, FAQ browse/article, referral account/manage and bug list/detail/intake in real Chromium on desktop and 390px; qualification and database workflows also run on pull requests for observable gate evidence.
+- [NEXT] Require the Phase 8 pull-request qualification to pass PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance/release contracts and real Chromium, then confirm main package/installer gates before marking Phase 8 VERIFIED.
 
 PHASE 9 — MODERATION / INDEPENDENT AUDIT
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
