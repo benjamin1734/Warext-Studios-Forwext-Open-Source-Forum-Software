@@ -187,7 +187,10 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString("'server.team'", $factory);
         self::assertStringContainsString("'server.vote-settings'", $factory);
         self::assertStringContainsString("'server.vote-feed'", $factory);
-        self::assertStringContainsString("$minecraftServerCsrf = $this->minecraftServerCsrfMiddleware($config);", $factory);
+        self::assertStringContainsString(
+            '$minecraftServerCsrf = $this->minecraftServerCsrfMiddleware($config);',
+            $factory,
+        );
         self::assertStringContainsString("forwext.csrf.minecraft-server.v1", $factory);
         self::assertGreaterThanOrEqual(7, substr_count($factory, '[$minecraftServerCsrf]'));
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $team);
