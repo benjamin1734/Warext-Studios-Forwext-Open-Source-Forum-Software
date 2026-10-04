@@ -106,7 +106,11 @@ final readonly class MinecraftServerService
         if ($this->servers->publicById($serverId) === null) {
             throw new InvalidArgumentException('Minecraft server is unavailable for voting.');
         }
-        return $this->servers->castVote($serverId, $actor, $now);
+        $recorded = $this->servers->castVote($serverId, $actor, $now);
+        if (!$recorded && $this->servers->publicById($serverId) === null) {
+            throw new InvalidArgumentException('Minecraft server is unavailable for voting.');
+        }
+        return $recorded;
     }
 
     /** @return list<MinecraftServer> */
