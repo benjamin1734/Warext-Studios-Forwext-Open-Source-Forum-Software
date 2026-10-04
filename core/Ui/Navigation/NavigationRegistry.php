@@ -71,6 +71,14 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'privacy.own',
+            'Gizlilik ve görünürlük',
+            '/account/privacy',
+            257,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
             'sessions.own',
             'Oturumlar',
             '/account/sessions',
@@ -114,14 +122,6 @@ final class NavigationRegistry
             'notification-settings.own',
             'Bildirim ayarları',
             '/account/notification-settings',
-            269,
-            NavigationAudience::Member,
-            placement: NavigationPlacement::Utility,
-        ));
-        $registry->register(new NavigationItem(
-            'presence.own',
-            'Çevrimiçi görünürlük',
-            '/account/presence',
             269,
             NavigationAudience::Member,
             placement: NavigationPlacement::Utility,
