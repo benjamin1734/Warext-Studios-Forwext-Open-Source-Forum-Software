@@ -1,0 +1,63 @@
+FORWEXT UI REFERENCE SET v5 — GAP MATRIX
+==========================================
+
+Baseline main: 96aeb77e87bab174a0950bc15b6baaabb006cd1b
+CI baseline: security, performance/observability, database migration smoke, qualification matrix and installation package are green on the baseline commit.
+
+STATUS LEGEND
+- NOT STARTED: required surface/system absent.
+- IN PROGRESS: route/backend exists but reference-level UI/functionality is incomplete.
+- IMPLEMENTED: route + rendered UI + action/persistence + permission exists.
+- VERIFIED: implemented and current regression/CI checks cover the target behavior.
+
+01 GLOBAL SHELL / NAV / SEARCH / ACCOUNT / ALERTS / DM — IN PROGRESS
+Backend/current: shared ProfileHtml shell, managed navigation registry, search, direct conversations, notification inbox/realtime and account routes exist. Keyboard Escape, mobile focus trapping and active-section logic exist.
+Design gap: shell is still less information-dense than the v5 reference set; account/tool popovers are mostly jump-off panels rather than compact summaries; account sub-navigation exposes only a subset of implemented account surfaces.
+Function gap: message popup has no recent conversation preview/unread count; alert popup has no recent alert preview/unread count; shell does not expose all implemented account tools.
+Permission gap: no client-side authorization issue observed; server-side route handlers remain authoritative.
+Next: densify shared shell without duplicating authorization or data sources; expose implemented account routes first, then add repository-backed previews through explicit view models.
+
+02 FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
+Current: /, /forums, /activity and /search exist; forum index uses real repository data and forum.view permission checks.
+Gap: dedicated new-post/featured/profile-post/watch/no-reply discovery flows and denser side modules are not all first-class routes.
+
+03 THREAD LIST / SEARCH / WATCH FLOWS — IN PROGRESS
+Current: forum view and permission-aware search exist.
+Gap: watched forums/threads, user-thread filters and no-reply filters are not complete first-class account/discovery surfaces.
+
+04 THREAD VIEW / EDITOR — IN PROGRESS
+Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention and spellcheck infrastructure exists.
+Gap: post action density, moderation state presentation and long-thread navigation need visual/function review.
+
+05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
+Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
+Gap: privacy/preferences/signature/reactions/style controls are fragmented or absent as dedicated account surfaces.
+
+06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
+Current: DM inbox/detail/start/reply and notification inbox/realtime/settings exist.
+Gap: DM star/leave/invite/lock states and shell previews are absent; alert popup lacks live summary.
+
+07 MINECRAFT SERVER DIRECTORY / MANAGEMENT — NOT STARTED
+Repository scan found no server-directory implementation family. Required: directory, comparison, seasons, detail, vote, edit, updates, statistics, vote-integration settings, team, ownership verification/transfer, permissions and error states.
+
+08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
+Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces.
+Gap: clans/groups implementation family is absent; existing modules require v5 visual-density and flow comparison.
+
+09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
+Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.
+Gap: dashboard/report/pool/case-detail flows need unified visual language and state coverage.
+
+10 HELP / LEGAL / REFERENCE PAGES — IN PROGRESS
+Gap: help/legal/reference family is incomplete as a coherent route set; smilies, BB-code, trophies, cookie usage, terms/privacy/contact/RSS need explicit final route ownership and consistent shell.
+
+11-18 ACP — IN PROGRESS
+Current: dashboard, managed public navigation, community sections, modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
+Gap: v5 reference shows denser table/list patterns, deeper user/group/node/theme/template/log/job surfaces and clearer management hierarchy. Existing generic card-heavy areas must be converted to compact data-oriented layouts where appropriate.
+
+19 RESPONSIVE / ACCESSIBILITY — IN PROGRESS
+Current: browser fixture regression covers guest/member/moderator/admin layouts, overflow, keyboard navigation, Escape, focus return and 44px touch targets on representative surfaces.
+Gap: final coverage must expand from representative fixtures to all newly implemented high-priority live routes.
+
+20 RELEASE QUALIFICATION — NOT STARTED
+Blocked until critical/high v5 gaps are closed and final live-route screenshot comparison passes.
