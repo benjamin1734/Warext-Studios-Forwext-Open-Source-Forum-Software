@@ -25,13 +25,33 @@ final readonly class PortfolioIndexHandler implements RequestHandlerInterface
     {
         $actor = $this->viewers->resolve($request);
         try {
+            $categories = $this->portfolio->categories();
+            $query = $request->query();
+            $category = $query['category'] ?? null;
+            $category = is_string($category) && $category !== '' ? $category : null;
+            if ($category !== null) {
+                $known = false;
+                foreach ($categories as $candidate) {
+                    if ($candidate->key === $category) {
+                        $known = true;
+                        break;
+                    }
+                }
+                if (!$known) {
+                    $category = null;
+                }
+            }
+            $featuredOnly = ($query['featured'] ?? null) === '1';
+
             $projects = $this->portfolio->projects($actor, null, false, 100);
             return Response::html(PortfolioHtml::index(
                 $projects,
-                $this->portfolio->categories(),
+                $categories,
                 $this->basePath,
                 $actor !== null,
                 $actor !== null && $this->portfolio->canCreate($actor),
+                $category,
+                $featuredOnly,
             ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=60' : 'private, no-store');
         } catch (PermissionDeniedException) {
             return Response::text('Forbidden', 403)->withHeader('Cache-Control', 'no-store');
