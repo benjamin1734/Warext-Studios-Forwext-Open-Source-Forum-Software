@@ -901,6 +901,9 @@ select:focus{
 
 /* navigation-responsive-ownership-v2 */
 @media(max-width:920px){
+  .nav-tool-actions{grid-template-columns:1fr}
+  .nav-tool-actions>a{min-height:44px}
+
   .layout-shell{grid-template-columns:1fr}
   .layout-sidebar{order:2}
   .forum-home-side{position:static}
@@ -1674,7 +1677,7 @@ select:focus{
 /* navigation-shell-v1 */
 /* shell-ownership-v2 */
 /* navigation-stacking-ownership-v2 */
-/* xenforo-reference-density-v1 */
+/* compact-reference-density-v1 */
 .top{
   position:sticky;
   top:0;
@@ -1862,6 +1865,40 @@ select:focus{
 .nav-account-link:hover,
 .nav-account-link:focus-visible,
 .nav-account-link[aria-current="page"]{color:var(--text);background:var(--panel2)}
+.nav-tool-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  padding:7px;
+  background:var(--line);
+}
+.nav-tool-actions>a{
+  min-width:0;
+  min-height:54px;
+  display:grid;
+  align-content:center;
+  gap:2px;
+  padding:7px 9px;
+  background:var(--panel);
+  color:var(--text);
+  text-decoration:none;
+}
+.nav-tool-actions>a:hover,
+.nav-tool-actions>a:focus-visible,
+.nav-tool-actions>a[aria-current="page"]{background:var(--panel2)}
+.nav-tool-actions strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11.5px;
+}
+.nav-tool-actions span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--muted);
+  font-size:10px;
+}
 .nav-popover-footer{
   padding:5px 8px;
   border-top:1px solid var(--line);

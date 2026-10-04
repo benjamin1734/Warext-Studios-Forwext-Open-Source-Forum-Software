@@ -1,0 +1,527 @@
+FORWEXT UI REFERENCE SET v5 — LOGICAL PAGE MAP
+=================================================
+
+Rule: screenshot continuations and UI states belong to one logical page group whenever shell, breadcrumb, tabs, form/table continuity or overlapping content indicates a shared route.
+
+[PUBLIC_FORUM] Forum index
+  Reference: REF-0001, REF-0066, REF-0129, REF-0535
+  Forwext route: /
+  Priority phase: 1
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Featured content
+  Reference: REF-0004, REF-0068, REF-0553
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Forum / thread listing states
+  Reference: REF-0547, REF-0556..REF-0558
+  Forwext route: /forums
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Latest activity
+  Reference: REF-0007, REF-0071
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] New posts
+  Reference: REF-0002, REF-0005, REF-0020, REF-0051, REF-0536, REF-0544
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] New profile posts
+  Reference: REF-0006, REF-0012, REF-0070
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] News feed
+  Reference: REF-0033
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Threads started by member
+  Reference: REF-0021
+  Forwext route: /search
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Threads with no replies
+  Reference: REF-0023
+  Forwext route: /search
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] Threads with posts by member
+  Reference: REF-0022
+  Forwext route: /search
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DISCOVERY] What is new
+  Reference: REF-0069
+  Forwext route: /activity
+  Priority phase: 2
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[FORUM] Mark forums read
+  Reference: REF-0027
+  Forwext route: /forums
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SEARCH] Global search
+  Reference: REF-0050, REF-0073, REF-0549
+  Forwext route: /search
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SEARCH] Search profile posts
+  Reference: REF-0013, REF-0072
+  Forwext route: /search
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SEARCH] Search results
+  Reference: REF-0034, REF-0122..REF-0123
+  Forwext route: /search
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SEARCH] Search threads
+  Reference: REF-0003, REF-0026
+  Forwext route: /search
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[WATCH] Watched / filtered thread list
+  Reference: REF-0537
+  Forwext route: /account
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[WATCH] Watched forums
+  Reference: REF-0025
+  Forwext route: /account
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[WATCH] Watched threads
+  Reference: REF-0024
+  Forwext route: /account
+  Priority phase: 3
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[THREAD] Post thread selection
+  Reference: REF-0052
+  Forwext route: /forums
+  Priority phase: 4
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[THREAD] Thread view / reply states
+  Reference: REF-0053..REF-0054, REF-0059, REF-0112..REF-0116, REF-0545..REF-0546, REF-0548
+  Forwext route: /threads/{id}
+  Priority phase: 4
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Account details
+  Reference: REF-0037, REF-0542
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Edit signature
+  Reference: REF-0045
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Password and security
+  Reference: REF-0038, REF-0559
+  Forwext route: /account/security
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Preferences
+  Reference: REF-0040
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Privacy
+  Reference: REF-0039
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACCOUNT] Reactions received
+  Reference: REF-0035
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[APPEARANCE] Style chooser / variation
+  Reference: REF-0060..REF-0061, REF-0554
+  Forwext route: /account
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MEMBERS] Current visitors
+  Reference: REF-0011, REF-0057
+  Forwext route: /members/online
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MEMBERS] Member latest activity
+  Reference: REF-0119
+  Forwext route: /members/{username}
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MEMBERS] Member profile
+  Reference: REF-0056, REF-0058, REF-0121, REF-0560..REF-0562
+  Forwext route: /members/{username}
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MEMBERS] Recent content by member
+  Reference: REF-0120
+  Forwext route: /members/{username}
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MEMBERS] Staff members
+  Reference: REF-0055
+  Forwext route: /members
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SOCIAL] Bookmarks
+  Reference: REF-0043
+  Forwext route: /account/bookmarks
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SOCIAL] Following
+  Reference: REF-0046
+  Forwext route: /account/relationships
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SOCIAL] Ignoring
+  Reference: REF-0047
+  Forwext route: /account/relationships
+  Priority phase: 5
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DM] Direct messages
+  Reference: REF-0048, REF-0543
+  Forwext route: /account/conversations
+  Priority phase: 6
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[DM] Send direct message
+  Reference: REF-0124
+  Forwext route: /account/conversations
+  Priority phase: 6
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[NOTIFICATIONS] Alerts
+  Reference: REF-0049
+  Forwext route: /account/notifications
+  Priority phase: 6
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Edit server
+  Reference: REF-0096, REF-0105
+  Forwext route: /servers/{id}/edit
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Ownership transfer
+  Reference: REF-0103
+  Forwext route: /servers/{id}/transfer
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Ownership verification
+  Reference: REF-0102
+  Forwext route: /servers/{id}/verify
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server comparison
+  Reference: REF-0009, REF-0074
+  Forwext route: /servers/compare
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server detail/dashboard
+  Reference: REF-0093, REF-0095, REF-0104
+  Forwext route: /servers/{id}
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server directory / detail states
+  Reference: REF-0008, REF-0076..REF-0092, REF-0555
+  Forwext route: /servers
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server error state
+  Reference: REF-0100
+  Forwext route: /servers/{id}
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server seasons
+  Reference: REF-0010, REF-0075
+  Forwext route: /servers/seasons
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server statistics
+  Reference: REF-0098
+  Forwext route: /servers/{id}/stats
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server team
+  Reference: REF-0101
+  Forwext route: /servers/{id}/team
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server updates
+  Reference: REF-0097
+  Forwext route: /servers/{id}/updates
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Server vote
+  Reference: REF-0094
+  Forwext route: /servers/{id}/vote
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MC_SERVER] Vote integration settings
+  Reference: REF-0099
+  Forwext route: /servers/{id}/vote-settings
+  Priority phase: 7
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[BUGS] Bug detail
+  Reference: REF-0117..REF-0118
+  Forwext route: /bugs/{id}
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[BUGS] My bug reports
+  Reference: REF-0036
+  Forwext route: /bugs
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[FAQ] FAQ listing
+  Reference: REF-0015, REF-0029, REF-0539
+  Forwext route: /faq
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[GROUPS] Clans & groups
+  Reference: REF-0031, REF-0541
+  Forwext route: /groups
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[GROUPS] My clans
+  Reference: REF-0032
+  Forwext route: /groups/mine
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[PORTFOLIO] Add portfolio work
+  Reference: REF-0042
+  Forwext route: /portfolio/manage
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[PORTFOLIO] Portfolio listing
+  Reference: REF-0014, REF-0028, REF-0538
+  Forwext route: /portfolio
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[PORTFOLIO] Portfolio work management
+  Reference: REF-0041
+  Forwext route: /portfolio/manage
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[REFERRAL] Invitations / referrals
+  Reference: REF-0030, REF-0044, REF-0540
+  Forwext route: /account/referrals
+  Priority phase: 8
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Approval queue
+  Reference: REF-0017
+  Forwext route: /moderation/approval
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Audit / closed report states
+  Reference: REF-0110..REF-0111
+  Forwext route: /moderation/oversight
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Audit case detail
+  Reference: REF-0109
+  Forwext route: /moderation/oversight/cases/{id}
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Audit reports
+  Reference: REF-0107
+  Forwext route: /moderation/oversight/reports
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Independent audit state
+  Reference: REF-0106
+  Forwext route: /moderation/oversight
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Independent auditor pool
+  Reference: REF-0108
+  Forwext route: /moderation/oversight/auditors
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Independent moderation audit
+  Reference: REF-0016
+  Forwext route: /moderation/oversight
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[MODERATION] Report / approval states
+  Reference: REF-0018..REF-0019
+  Forwext route: /moderation
+  Priority phase: 9
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[HELP] BB codes
+  Reference: REF-0126
+  Forwext route: /help/bb-codes
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[HELP] Help
+  Reference: REF-0065, REF-0550
+  Forwext route: /help
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[HELP] Smilies
+  Reference: REF-0125
+  Forwext route: /help/smilies
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[HELP] Trophies
+  Reference: REF-0127
+  Forwext route: /help/trophies
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[LEGAL] Contact us
+  Reference: REF-0062
+  Forwext route: /contact
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[LEGAL] Cookie usage
+  Reference: REF-0128
+  Forwext route: /help/cookies
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[LEGAL] Privacy policy
+  Reference: REF-0064, REF-0552
+  Forwext route: /privacy
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[LEGAL] Terms and rules
+  Reference: REF-0063, REF-0551
+  Forwext route: /terms
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[SYSTEM_PUBLIC] RSS output
+  Reference: REF-0067
+  Forwext route: /forums/index.rss
+  Priority phase: 10
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_CORE] ACP shell, dashboard and core configuration
+  Reference: REF-0130..REF-0144
+  Forwext route: /admin
+  Priority phase: 11
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_ACCESS] ACP users, groups, roles and permissions
+  Reference: REF-0145..REF-0192
+  Forwext route: /admin/community
+  Priority phase: 12
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_ACCESS_DETAIL] ACP permission matrices, analyzers and detailed access surfaces
+  Reference: REF-0385..REF-0432
+  Forwext route: /admin/community
+  Priority phase: 13
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_CONTENT] ACP forums, nodes, content and editor management
+  Reference: REF-0193..REF-0240
+  Forwext route: /admin/community
+  Priority phase: 14
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_APPEARANCE] ACP appearance, themes, templates and language surfaces
+  Reference: REF-0289..REF-0336
+  Forwext route: /admin/appearance
+  Priority phase: 15
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_APPEARANCE_DETAIL] ACP style properties, component settings and theme detail
+  Reference: REF-0433..REF-0480
+  Forwext route: /admin/appearance
+  Priority phase: 15
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_PLATFORM] ACP navigation, modules, integrations and system settings
+  Reference: REF-0241..REF-0288
+  Forwext route: /admin
+  Priority phase: 16
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_OBSERVABILITY] ACP analytics, logs and operational surfaces
+  Reference: REF-0337..REF-0384
+  Forwext route: /admin/analytics
+  Priority phase: 17
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+
+[ACP_SYSTEM_DETAIL] ACP logs, maintenance, jobs and extension management
+  Reference: REF-0481..REF-0534
+  Forwext route: /admin/system/operations
+  Priority phase: 18
+  Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
+

@@ -60,6 +60,14 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         );
         self::assertStringContainsString('href="/community/staff"', $member);
         self::assertStringContainsString('data-nav-section-link="custom-custom-wiki"', $member);
+        self::assertStringContainsString('href="/community/account/profile"', $member);
+        self::assertStringContainsString('href="/community/account/sessions"', $member);
+        self::assertStringContainsString('href="/community/account/bookmarks"', $member);
+        self::assertStringContainsString('href="/community/account/relationships"', $member);
+        self::assertStringContainsString('href="/community/account/notification-settings"', $member);
+        self::assertStringContainsString('href="/community/account/presence"', $member);
+        self::assertStringContainsString('/community/account/conversations#new-conversation', $member);
+        self::assertStringNotContainsString('href="/community/account/profile"', $guest);
     }
 
     public function testNavigationManagerSurfaceIsServerRenderedAndHasNoInlineScript(): void

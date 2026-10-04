@@ -156,8 +156,15 @@ final class ProfileHtml
         $accountNav = '';
         foreach ([
             'account.own' => ['Hesap merkezi', '/account'],
+            'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
             'security.own' => ['Güvenlik', '/account/security'],
+            'sessions.own' => ['Oturumlar', '/account/sessions'],
             'conversations.own' => ['Özel mesajlar', '/account/conversations'],
+            'notifications.own' => ['Bildirimler', '/account/notifications'],
+            'notification-settings.own' => ['Bildirim ayarları', '/account/notification-settings'],
+            'bookmarks.own' => ['Kaydedilenler', '/account/bookmarks'],
+            'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
+            'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
             'referrals.own' => ['Davetlerim', '/account/referrals'],
             'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
             'bugs.mine' => ['Hata bildirimlerim', '/bugs'],
@@ -176,7 +183,10 @@ final class ProfileHtml
                 . '<span class="sr-only">Özel mesajlar</span></summary>'
                 . '<div class="nav-tool-popover" aria-label="Özel mesaj seçenekleri">'
                 . '<div class="nav-popover-title"><strong>Özel mesajlar</strong><span>Konuşmalarını ve yeni mesajlarını yönet.</span></div>'
-                . '<a class="nav-popover-cta" data-nav-key="conversations.own" href="' . $navHref('/account/conversations') . '">Tüm mesajları göster</a>'
+                . '<div class="nav-tool-actions">'
+                . '<a data-nav-key="conversations.own" href="' . $navHref('/account/conversations') . '"><strong>Mesaj kutusu</strong><span>Tüm konuşmalar</span></a>'
+                . '<a href="' . $navHref('/account/conversations#new-conversation') . '"><strong>Yeni konuşma</strong><span>Bir üyeye mesaj gönder</span></a>'
+                . '</div><a class="nav-popover-cta" href="' . $navHref('/account/conversations') . '">Tüm mesajları göster</a>'
                 . '</div></details>';
         }
 
@@ -188,7 +198,10 @@ final class ProfileHtml
                 . '<span class="sr-only">Bildirimler</span></summary>'
                 . '<div class="nav-tool-popover" aria-label="Bildirim seçenekleri">'
                 . '<div class="nav-popover-title"><strong>Bildirimler</strong><span>Yeni hareketleri bildirim merkezinden takip et.</span></div>'
-                . '<a class="nav-popover-cta" data-nav-key="notifications.own" href="' . $navHref('/account/notifications') . '">Tüm bildirimleri göster</a>'
+                . '<div class="nav-tool-actions">'
+                . '<a data-nav-key="notifications.own" href="' . $navHref('/account/notifications') . '"><strong>Bildirim merkezi</strong><span>Tüm hareketler</span></a>'
+                . '<a href="' . $navHref('/account/notification-settings') . '"><strong>Bildirim ayarları</strong><span>Ses ve tercihleri yönet</span></a>'
+                . '</div><a class="nav-popover-cta" href="' . $navHref('/account/notifications') . '">Tüm bildirimleri göster</a>'
                 . '</div></details>';
         }
 
