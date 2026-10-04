@@ -36,4 +36,5 @@ interface NotificationRepository
     public function inbox(EntityId $userId, int $limit, int $offset): array;
     public function unreadCount(EntityId $userId): int;
     public function markRead(EntityId $userId, EntityId $notificationId, DateTimeImmutable $now): bool;
+    public function markAllRead(EntityId $userId, DateTimeImmutable $now): int;
 }
