@@ -901,6 +901,8 @@ select:focus{
 
 /* navigation-responsive-ownership-v2 */
 @media(max-width:920px){
+  .nav-account-grid{grid-template-columns:1fr}
+  .nav-account-link{min-height:44px;padding-block:8px}
   .nav-tool-actions{grid-template-columns:1fr}
   .nav-tool-actions>a{min-height:44px}
 
