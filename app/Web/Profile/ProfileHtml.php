@@ -200,7 +200,7 @@ final class ProfileHtml
                     'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
                     'watched.threads.own' => ['Takip edilen konular', '/account/watched/threads'],
                     'watched.forums.own' => ['Takip edilen forumlar', '/account/watched/forums'],
-                    'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
+                    'presence.own' => ['Çevrimiçi görünürlük', '/account/preferences#presence'],
                 ],
             ],
             'extras' => [
