@@ -59,6 +59,18 @@ final class NavigationPresenceStatsTest extends TestCase
             'conversations.own',
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
         );
+        self::assertContains(
+            'watched.threads.own',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
+        );
+        self::assertContains(
+            'watched.forums.own',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
+        );
+        self::assertNotContains(
+            'watched.threads.own',
+            array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
+        );
     }
 
     public function testManagedNavigationCanReorderHideAndAddSafeCustomLinks(): void
