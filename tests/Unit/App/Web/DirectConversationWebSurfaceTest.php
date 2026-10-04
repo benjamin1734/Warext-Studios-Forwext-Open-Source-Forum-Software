@@ -64,6 +64,7 @@ final class DirectConversationWebSurfaceTest extends TestCase
         $dashboard = (string) file_get_contents($root . '/app/Web/Account/AccountDashboardHtml.php');
         $navigation = (string) file_get_contents($root . '/core/Ui/Navigation/NavigationRegistry.php');
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
+        $liveSmoke = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
 
         self::assertStringContainsString('conversation-page discovery-page', $html);
         self::assertStringContainsString('surface-panel conversation-list-panel', $html);
@@ -90,6 +91,9 @@ final class DirectConversationWebSurfaceTest extends TestCase
         self::assertStringContainsString('@media(max-width:760px)', $css);
         self::assertStringContainsString('/* direct-conversations-v2 */', $css);
         self::assertStringContainsString('.conversation-row-shell', $css);
+        self::assertStringContainsString('/account/conversations?filter=starred', $liveSmoke);
+        self::assertStringContainsString('direct messages mobile', $liveSmoke);
+        self::assertStringContainsString('/account/notifications', $liveSmoke);
     }
 
     public function testMigrationIsPartOfTheProductionInstallerRegistry(): void
