@@ -5,13 +5,13 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.15
+CURRENT_VERSION = 1.0.16
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = production UX acceptance / P0 remediation
+CURRENT_STEP = maintenance release 1.0.16
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and real-route browser acceptance before the next immutable patch release
+NEXT_STEP = publish and verify immutable 1.0.16 full/update packages, then keep roadmap scope closed unless new verified production defects are reported
 ```
 
 ## Frontend rebuild — F0/F1/F2/F3/F4 complete
@@ -90,6 +90,17 @@ NEXT_STEP = close live ACP runtime failure, navigation overlap regressions and r
 
 
 
+
+## Maintenance release — 1.0.16 release candidate
+
+- Patch-only production UX hardening over immutable 1.0.15; no roadmap scope expansion.
+- Fixed guest-page notification realtime bootstrapping so public pages no longer issue unauthorized account requests or browser-console resource errors.
+- Repaired ACP CSRF/render-token handling and verified authenticated /admin GET plus CSRF-protected POST/303/GET behavior through the real installed runtime.
+- Reworked desktop account/primary dropdown stacking, top-layer progressive enhancement and mobile fallback so menus no longer render beneath secondary navigation, sidebars or page content.
+- Restored forum-index desktop grid/sidebar composition, sticky offset behavior, statistics layout and compact empty recent-activity presentation.
+- Replaced bare HTML 500 responses with a dependency-light branded Forwext error surface that exposes only a safe correlation/reference identifier; API/JSON contracts remain unchanged.
+- Corrected browser qualification to model 125% desktop zoom as responsive reflow and to ignore only intentional Chromium ERR_ABORTED navigation/realtime cancellations while still failing other request/console/page errors.
+- HEAD bf2a075fa3ad3f31de3769f7d49d60d59bed26c6 passes PHP 8.4/8.5 qualification, Chromium responsive + live-route acceptance, security/advisory checks, MySQL 8.4 and MariaDB 10.11 migration smoke, shared-hosting performance qualification and release-package contract checks.
 
 ## Maintenance release — 1.0.15 complete
 
