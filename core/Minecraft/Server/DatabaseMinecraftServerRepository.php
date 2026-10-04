@@ -129,6 +129,66 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         return array_map($this->hydrateSeason(...), $rows);
     }
 
+    public function voteSummary(
+        EntityId $serverId,
+        ?EntityId $voterUserId,
+        DateTimeImmutable $now,
+    ): MinecraftServerVoteSummary {
+        $parameters = [
+            'server_id'=>$serverId->value(),
+            'since'=>self::format($now->modify('-30 days')),
+        ];
+        $select = 'SELECT COUNT(*) AS total_votes,'
+            . 'COALESCE(SUM(created_at_utc>=:since),0) AS votes_30d';
+        if ($voterUserId === null) {
+            $select .= ',NULL AS last_vote_at,0 AS voted_today';
+        } else {
+            UserId::assert($voterUserId);
+            $parameters['voter_user_id'] = $voterUserId->value();
+            $parameters['vote_day'] = $now->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
+            $select .= ',MAX(CASE WHEN voter_user_id=:voter_user_id THEN created_at_utc ELSE NULL END) AS last_vote_at'
+                . ',COALESCE(SUM(CASE WHEN voter_user_id=:voter_user_id AND vote_day=:vote_day THEN 1 ELSE 0 END),0) '
+                . 'AS voted_today';
+        }
+        $row = $this->database->fetchOne(new CompiledQuery(
+            $select . ' FROM forwext_minecraft_server_votes WHERE server_id=:server_id',
+            $parameters,
+        ));
+        if ($row === null) {
+            throw new RuntimeException('Minecraft server vote summary query failed.');
+        }
+
+        return new MinecraftServerVoteSummary(
+            (int) $row['total_votes'],
+            (int) $row['votes_30d'],
+            (int) $row['voted_today'] > 0,
+            $row['last_vote_at'] === null ? null : self::parse((string) $row['last_vote_at']),
+        );
+    }
+
+    public function castVote(
+        EntityId $serverId,
+        EntityId $voterUserId,
+        DateTimeImmutable $now,
+    ): bool {
+        UserId::assert($voterUserId);
+        $affected = $this->database->execute(new CompiledQuery(
+            'INSERT IGNORE INTO forwext_minecraft_server_votes '
+            . '(vote_id,server_id,voter_user_id,vote_day,created_at_utc) '
+            . 'SELECT :vote_id,s.server_id,:voter_user_id,:vote_day,:created_at '
+            . "FROM forwext_minecraft_servers s WHERE s.server_id=:server_id AND s.listing_state='published'",
+            [
+                'vote_id'=>bin2hex(random_bytes(16)),
+                'server_id'=>$serverId->value(),
+                'voter_user_id'=>$voterUserId->value(),
+                'vote_day'=>$now->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d'),
+                'created_at'=>self::format($now),
+            ],
+        ));
+
+        return $affected === 1;
+    }
+
     public function managementById(EntityId $serverId): ?MinecraftServer
     {
         $row = $this->database->fetchOne(new CompiledQuery(
