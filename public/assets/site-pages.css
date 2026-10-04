@@ -2722,6 +2722,29 @@ html,body{max-width:100%;overflow-x:clip}
 .member-directory-copy{gap:1px}
 .member-directory-copy strong{font-size:11px;color:var(--accent)}
 .member-directory-copy small{font-size:8.5px}
+.member-directory-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.member-directory-card.is-staff{
+  background:color-mix(in srgb,var(--accent) 2.5%,var(--panel));
+}
+.member-staff-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:18px;
+  padding:2px 5px;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));
+  border-radius:999px;
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel));
+  color:var(--accent);
+  font-size:8px;
+  font-weight:760;
+  line-height:1;
+}
 .member-directory-results>.surface-pagination{
   padding:7px 9px;
   border-top:1px solid var(--line);
