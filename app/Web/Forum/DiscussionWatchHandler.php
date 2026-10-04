@@ -13,7 +13,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionGate;
 use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
-use Forwext\Core\Forum\State\DatabaseDiscussionStateRepository;
+use Forwext\Core\Forum\State\DiscussionStateRepository;
 use Forwext\Core\Forum\State\DiscussionStateException;
 use Forwext\Core\Forum\State\DiscussionStateService;
 use Forwext\Core\Forum\State\WatchNotificationMode;
@@ -30,7 +30,7 @@ final readonly class DiscussionWatchHandler implements RequestHandlerInterface
     public function __construct(
         private ForumNodeRepository $nodes,
         private ThreadRepository $threads,
-        private DatabaseDiscussionStateRepository $state,
+        private DiscussionStateRepository $state,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
         private BasePath $basePath,
