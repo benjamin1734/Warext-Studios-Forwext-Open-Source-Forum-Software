@@ -35,11 +35,17 @@ interface DiscussionStateRepository
 
     public function threadWatch(EntityId $userId, EntityId $threadId): ?WatchNotificationMode;
 
+    /** @return list<WatchRecord> */
+    public function watchedThreads(EntityId $userId, int $limit = 50, int $offset = 0): array;
+
     public function watchForum(EntityId $userId, EntityId $forumNodeId, WatchNotificationMode $mode, DateTimeImmutable $at): void;
 
     public function unwatchForum(EntityId $userId, EntityId $forumNodeId): void;
 
     public function forumWatch(EntityId $userId, EntityId $forumNodeId): ?WatchNotificationMode;
+
+    /** @return list<WatchRecord> */
+    public function watchedForums(EntityId $userId, int $limit = 50, int $offset = 0): array;
 
     public function subscriptionPreferences(EntityId $userId): SubscriptionPreferences;
 
