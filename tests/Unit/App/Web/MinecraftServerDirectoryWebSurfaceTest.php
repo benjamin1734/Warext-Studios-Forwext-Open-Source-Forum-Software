@@ -27,6 +27,7 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString("new PathTemplate('/servers/manage')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/manage'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/claim'", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/{serverId}/vote'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}'", $factory);
         self::assertStringContainsString('new DatabaseMinecraftServerRepository($database)', $factory);
         self::assertStringContainsString("listing_state='published'", $repository);
@@ -34,6 +35,8 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('forwext_minecraft_server_status', $repository);
         self::assertStringContainsString('forwext_minecraft_server_claims', $repository);
         self::assertStringContainsString('forwext_minecraft_server_ownership_events', $repository);
+        self::assertStringContainsString('forwext_minecraft_server_votes', $repository);
+        self::assertStringContainsString('INSERT IGNORE INTO forwext_minecraft_server_votes', $repository);
         self::assertStringContainsString('FOR UPDATE', $repository);
         self::assertStringContainsString('expectedOwnerUserId', $repository);
 
@@ -48,6 +51,8 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('minecraft-ownership-panel', $html);
         self::assertStringContainsString('minecraft-claim-form', $html);
         self::assertStringContainsString('minecraft-claim-review-actions', $html);
+        self::assertStringContainsString('minecraft-server-vote-panel', $html);
+        self::assertStringContainsString('Bugün oy ver', $html);
         self::assertStringContainsString('safeExternal', $html);
         self::assertStringNotContainsString('Yeni sunucu ekle', $html);
 
@@ -64,6 +69,7 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('min-height:44px', $css);
         self::assertStringContainsString('/* minecraft-server-comparison-seasons-v1 */', $css);
         self::assertStringContainsString('/* minecraft-server-management-v1 */', $css);
+        self::assertStringContainsString('/* minecraft-server-voting-v1 */', $css);
         self::assertStringContainsString('minecraft servers: real route did not return HTTP 200', $liveSmoke);
         self::assertStringContainsString('minecraft servers mobile', $liveSmoke);
     }
@@ -78,6 +84,7 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
 
         self::assertStringContainsString("'minecraft-servers'", $registry);
         self::assertStringContainsString("routePrefixes:['server.']", $registry);
+        self::assertStringContainsString("'forwext_minecraft_server_votes'", $registry);
         self::assertStringContainsString("'forwext_minecraft_server_claims'", $registry);
         self::assertStringContainsString("'forwext_minecraft_server_ownership_events'", $registry);
         self::assertStringContainsString("'forwext_minecraft_server_season_entries'", $registry);
@@ -87,6 +94,31 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('/servers/compare', $profile);
         self::assertStringContainsString('/servers/seasons', $profile);
         self::assertStringContainsString('/servers/manage', $profile);
+    }
+
+    public function testVotingUsesCsrfPermissionAndDatabaseDailyUniqueness(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
+        $detail = (string) file_get_contents($root . '/app/Web/MinecraftServer/MinecraftServerDetailHandler.php');
+        $vote = (string) file_get_contents($root . '/app/Web/MinecraftServer/MinecraftServerVoteHandler.php');
+        $service = (string) file_get_contents($root . '/core/Minecraft/Server/MinecraftServerService.php');
+        $repository = (string) file_get_contents(
+            $root . '/core/Minecraft/Server/DatabaseMinecraftServerRepository.php',
+        );
+        $migration = (string) file_get_contents(
+            $root . '/database/migrations/core/CreateMinecraftServerVoting.php',
+        );
+
+        self::assertStringContainsString("'server.vote'", $factory);
+        self::assertStringContainsString('[HttpMethod::Post]', $factory);
+        self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $detail);
+        self::assertStringContainsString("minecraft_server.vote", $service);
+        self::assertStringContainsString('INSERT IGNORE INTO forwext_minecraft_server_votes', $repository);
+        self::assertStringContainsString('uq_forwext_minecraft_server_vote_daily', $migration);
+        self::assertStringContainsString('vote_day', $migration);
+        self::assertStringContainsString('PermissionDeniedException', $vote);
+        self::assertStringContainsString('?vote=', $vote);
     }
 
     public function testManagementWritesUseCsrfAndServerSidePermissionLifecycle(): void
