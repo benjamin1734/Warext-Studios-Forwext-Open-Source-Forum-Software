@@ -32,10 +32,19 @@
     if (!(summary instanceof HTMLElement) || !(popover instanceof HTMLElement)) return;
 
     const trigger = summary.getBoundingClientRect();
-    const width = Math.min(230, Math.max(180, window.innerWidth - 24));
-    const preferredLeft = details.classList.contains("nav-account-menu")
-      ? trigger.right - width
-      : trigger.left;
+    const requestedWidth = details.classList.contains("nav-account-menu")
+      ? 360
+      : details.classList.contains("nav-search-menu")
+        ? 380
+        : details.classList.contains("nav-tool-menu")
+          ? 300
+          : 240;
+    const width = Math.min(requestedWidth, Math.max(180, window.innerWidth - 24));
+    const alignRight =
+      details.classList.contains("nav-account-menu")
+      || details.classList.contains("nav-search-menu")
+      || details.classList.contains("nav-tool-menu");
+    const preferredLeft = alignRight ? trigger.right - width : trigger.left;
     const left = Math.min(
       Math.max(12, preferredLeft),
       Math.max(12, window.innerWidth - width - 12),
@@ -79,14 +88,22 @@
 
   const topLayerMenus = [];
   if (topLayerMenuSupported) {
-    for (const details of header.querySelectorAll(".nav-primary-menu, .nav-account-menu")) {
+    for (const details of header.querySelectorAll(".nav-primary-menu, .nav-account-menu, .nav-tool-menu, .nav-search-menu")) {
       if (!(details instanceof HTMLDetailsElement)) continue;
-      const popover = details.querySelector(":scope > .nav-primary-popover, :scope > .nav-account-popover");
+      const popover = details.querySelector(
+        ":scope > .nav-primary-popover, :scope > .nav-account-popover, :scope > .nav-tool-popover, :scope > .nav-search-popover",
+      );
       if (!(popover instanceof HTMLElement)) continue;
 
       topLayerMenus.push([details, popover]);
       details.addEventListener("toggle", () => {
         if (desktop.matches) syncTopLayerMenu(details, popover);
+        if (details.open && details.classList.contains("nav-search-menu")) {
+          window.requestAnimationFrame(() => {
+            const searchInput = popover.querySelector('input[type="search"]');
+            if (searchInput instanceof HTMLInputElement) searchInput.focus();
+          });
+        }
       });
     }
   }
@@ -147,11 +164,10 @@
   const sectionForPath = (path) => {
     if (path === "/") return "home";
     if (path === "/activity" || path.startsWith("/activity/")) return "whatsnew";
-    if (
-      path === "/marketplace" || path.startsWith("/marketplace/") ||
-      path === "/portfolio" || path.startsWith("/portfolio/") ||
-      path === "/giveaways" || path.startsWith("/giveaways/")
-    ) return "marketplace";
+    if (path === "/marketplace" || path.startsWith("/marketplace/")) return "marketplace";
+    if (path === "/portfolio" || path.startsWith("/portfolio/")) return "portfolio";
+    if (path === "/faq" || path.startsWith("/faq/")) return "faq";
+    if (path === "/giveaways" || path.startsWith("/giveaways/")) return "more";
     if (
       path === "/members" || path.startsWith("/members/") ||
       path === "/stats"
@@ -160,7 +176,6 @@
       path === "/account" || path.startsWith("/account/") ||
       path === "/bugs" || path.startsWith("/bugs/")
     ) return "account";
-    if (path === "/faq" || path.startsWith("/faq/")) return "more";
     if (
       path === "/forums" || path.startsWith("/forums/") ||
       path.startsWith("/threads/") || path === "/search"
