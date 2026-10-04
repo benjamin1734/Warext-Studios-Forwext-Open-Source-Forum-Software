@@ -154,24 +154,54 @@ final class ProfileHtml
 
         $accountSubNav = '';
         $accountNav = '';
-        foreach ([
-            'account.own' => ['Hesap merkezi', '/account'],
-            'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
-            'security.own' => ['Güvenlik', '/account/security'],
-            'sessions.own' => ['Oturumlar', '/account/sessions'],
-            'conversations.own' => ['Özel mesajlar', '/account/conversations'],
-            'notifications.own' => ['Bildirimler', '/account/notifications'],
-            'notification-settings.own' => ['Bildirim ayarları', '/account/notification-settings'],
-            'bookmarks.own' => ['Kaydedilenler', '/account/bookmarks'],
-            'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
-            'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
-            'referrals.own' => ['Davetlerim', '/account/referrals'],
-            'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
-            'bugs.mine' => ['Hata bildirimlerim', '/bugs'],
-        ] as $key => [$label, $path]) {
-            if (isset($visibleNavigation[$key])) {
-                $accountNav .= $navItem($key, $label, $path, ' class="nav-account-link"');
+        $accountGroups = [
+            'account' => [
+                'label' => 'Hesap',
+                'items' => [
+                    'account.own' => ['Hesap merkezi', '/account'],
+                    'profile.settings.own' => ['Profil ve kimlik', '/account/profile'],
+                    'security.own' => ['Güvenlik', '/account/security'],
+                    'sessions.own' => ['Oturumlar', '/account/sessions'],
+                ],
+            ],
+            'communication' => [
+                'label' => 'İletişim',
+                'items' => [
+                    'conversations.own' => ['Özel mesajlar', '/account/conversations'],
+                    'notifications.own' => ['Bildirimler', '/account/notifications'],
+                    'notification-settings.own' => ['Bildirim ayarları', '/account/notification-settings'],
+                ],
+            ],
+            'community' => [
+                'label' => 'Topluluk',
+                'items' => [
+                    'bookmarks.own' => ['Kaydedilenler', '/account/bookmarks'],
+                    'relationships.own' => ['Takip ve engelleme', '/account/relationships'],
+                    'presence.own' => ['Çevrimiçi görünürlük', '/account/presence'],
+                ],
+            ],
+            'extras' => [
+                'label' => 'Diğer',
+                'items' => [
+                    'referrals.own' => ['Davetlerim', '/account/referrals'],
+                    'subscriptions.own' => ['Yükseltmeler', '/account/upgrades'],
+                    'bugs.mine' => ['Hata bildirimlerim', '/bugs'],
+                ],
+            ],
+        ];
+        foreach ($accountGroups as $groupKey => $group) {
+            $groupLinks = '';
+            foreach ($group['items'] as $key => [$label, $path]) {
+                if (!isset($visibleNavigation[$key])) {
+                    continue;
+                }
+                $groupLinks .= $navItem($key, $label, $path, ' class="nav-account-link"');
                 $accountSubNav .= $navItem('sub.' . $key, $label, $path);
+            }
+            if ($groupLinks !== '') {
+                $accountNav .= '<section class="nav-account-group" data-account-group="' . self::escape($groupKey) . '">'
+                    . '<strong class="nav-account-group-title">' . self::escape($group['label']) . '</strong>'
+                    . '<div class="nav-account-group-links">' . $groupLinks . '</div></section>';
             }
         }
 

@@ -153,7 +153,65 @@ try {
   if (popoverCoverage.length > 0) {
     fail(`header: account popover coverage ${JSON.stringify(popoverCoverage)}`);
   }
+  const accountGroups = await page.locator(".nav-account-group").count();
+  if (accountGroups !== 4) fail(`header: expected 4 account groups, got ${accountGroups}`);
+  const accountLabels = await page.locator(".nav-account-group-title").allTextContents();
+  for (const expected of ["Hesap", "İletişim", "Topluluk", "Diğer"]) {
+    if (!accountLabels.includes(expected)) fail(`header: account group "${expected}" is missing`);
+  }
   await page.keyboard.press("Escape");
+
+  const messageSummary = page.locator(".nav-tool-menu--messages > summary");
+  if (!(await messageSummary.count())) fail("header: message tool trigger is missing");
+  const messagePreviewResponse = page.waitForResponse((candidate) => {
+    const url = new URL(candidate.url());
+    return candidate.request().method() === "GET"
+      && url.pathname === "/account/conversations"
+      && url.searchParams.get("preview") === "1";
+  });
+  await messageSummary.click();
+  const messageResponse = await messagePreviewResponse;
+  if (messageResponse.status() !== 200) fail(`header: message preview returned HTTP ${messageResponse.status()}`);
+  await page.waitForFunction(() => document.querySelector('[data-nav-preview="messages"]')?.dataset.loaded === "1");
+  if (!(await page.locator('[data-nav-preview="messages"]').isVisible())) {
+    fail("header: message preview did not become visible");
+  }
+  await page.keyboard.press("Escape");
+
+  const alertSummary = page.locator(".nav-tool-menu--alerts > summary");
+  if (!(await alertSummary.count())) fail("header: alert tool trigger is missing");
+  const alertPreviewResponse = page.waitForResponse((candidate) => {
+    const url = new URL(candidate.url());
+    return candidate.request().method() === "GET"
+      && url.pathname === "/account/notifications"
+      && url.searchParams.get("preview") === "1";
+  });
+  await alertSummary.click();
+  const alertResponse = await alertPreviewResponse;
+  if (alertResponse.status() !== 200) fail(`header: alert preview returned HTTP ${alertResponse.status()}`);
+  await page.waitForFunction(() => document.querySelector('[data-nav-preview="alerts"]')?.dataset.loaded === "1");
+  if (!(await page.locator('[data-nav-preview="alerts"]').isVisible())) {
+    fail("header: alert preview did not become visible");
+  }
+  await page.keyboard.press("Escape");
+
+  response = await page.goto(baseUrl + "/account/security", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("account security: real route did not return HTTP 200");
+  const accountActiveState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    securityCurrent: document.querySelector('[data-nav-key="security.own"]')?.getAttribute("aria-current") ?? "",
+    accountSubnavVisible: !Boolean(document.querySelector('[data-nav-section="account"]')?.hasAttribute("hidden")),
+  }));
+  if (
+    accountActiveState.section !== "account"
+    || accountActiveState.accountActive !== "1"
+    || accountActiveState.securityCurrent !== "page"
+    || !accountActiveState.accountSubnavVisible
+  ) {
+    fail(`account security: active navigation contract failed ${JSON.stringify(accountActiveState)}`);
+  }
+  await assertHealthyDocument("account security");
 
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
@@ -227,4 +285,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, header, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, members subnav and ACP GET/POST.");

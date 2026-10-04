@@ -72,6 +72,15 @@ final class PublicNavigationWebSurfaceTest extends TestCase
         self::assertStringContainsString('data-nav-preview="alerts"', $member);
         self::assertStringContainsString('data-preview-url="/community/account/notifications?preview=1"', $member);
         self::assertStringContainsString('data-notification-nav-trigger', $member);
+        self::assertSame(4, substr_count($member, 'class="nav-account-group"'));
+        self::assertStringContainsString('data-account-group="account"', $member);
+        self::assertStringContainsString('data-account-group="communication"', $member);
+        self::assertStringContainsString('data-account-group="community"', $member);
+        self::assertStringContainsString('data-account-group="extras"', $member);
+        self::assertStringContainsString('class="nav-account-group-title">Hesap</strong>', $member);
+        self::assertStringContainsString('class="nav-account-group-title">İletişim</strong>', $member);
+        self::assertStringContainsString('class="nav-account-group-title">Topluluk</strong>', $member);
+        self::assertStringContainsString('class="nav-account-group-title">Diğer</strong>', $member);
         self::assertStringNotContainsString('href="/community/account/profile"', $guest);
         self::assertStringNotContainsString('data-nav-preview="messages"', $guest);
     }
