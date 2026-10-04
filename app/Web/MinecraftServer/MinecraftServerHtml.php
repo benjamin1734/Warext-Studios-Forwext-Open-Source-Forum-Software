@@ -9,7 +9,9 @@ use Forwext\Core\Minecraft\Server\MinecraftServer;
 use Forwext\Core\Minecraft\Server\MinecraftServerClaim;
 use Forwext\Core\Minecraft\Server\MinecraftServerSeason;
 use Forwext\Core\Minecraft\Server\MinecraftServerStatistics;
+use Forwext\Core\Minecraft\Server\MinecraftServerTeamMember;
 use Forwext\Core\Minecraft\Server\MinecraftServerUpdate;
+use Forwext\Core\Minecraft\Server\MinecraftServerVoteIntegration;
 use Forwext\Core\Minecraft\Server\MinecraftServerVoteSummary;
 use Forwext\Core\Routing\BasePath;
 
@@ -92,6 +94,7 @@ final class MinecraftServerHtml
         $serverBase = '/servers/' . rawurlencode($server->serverId->value());
         $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/updates')) . '">Güncellemeler</a>';
         $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/statistics')) . '">İstatistikler</a>';
+        $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">Ekip</a>';
         if ($canManage) {
             $links .= '<a class="fx-btn fx-btn--primary" href="'
                 . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/manage'))
@@ -392,6 +395,9 @@ final class MinecraftServerHtml
         BasePath $basePath,
         bool $canReviewClaims,
         bool $updated,
+        bool $canManageTeam,
+        bool $canManageVoteIntegration,
+        bool $canManageOwnership,
     ): string {
         $action = self::e($basePath->prepend(
             '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
@@ -404,15 +410,23 @@ final class MinecraftServerHtml
         if ($canReviewClaims || $server->listingState === 'suspended') {
             $stateOptions .= self::option('suspended', 'Askıya alındı', $server->listingState);
         }
+        $serverBase = '/servers/' . rawurlencode($server->serverId->value());
+        $headActions = '<div class="minecraft-manage-head-actions">'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase)) . '">Public görünüm</a>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">'
+            . ($canManageTeam ? 'Ekibi yönet' : 'Ekip') . '</a>';
+        if ($canManageVoteIntegration) {
+            $headActions .= '<a class="fx-btn" href="'
+                . self::e($basePath->prepend($serverBase . '/vote-settings')) . '">Oy entegrasyonu</a>';
+        }
+        $headActions .= '</div>';
 
         $body = '<section class="minecraft-server-page minecraft-manage-page discovery-page">'
             . '<header class="surface-head"><div><a class="surface-back-link" href="'
             . self::e($basePath->prepend('/servers/manage')) . '">← Sunucu yönetimi</a>'
             . '<span class="forum-eyebrow">MINECRAFT · YÖNETİM</span><h1>' . self::e($server->name) . '</h1>'
             . '<p>Listeleme bilgileri, yayın durumu ve sahiplik işlemleri sunucu tarafı yetkileriyle korunur.</p></div>'
-            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
-                '/servers/' . rawurlencode($server->serverId->value()),
-            )) . '">Public görünüm</a></header>' . $notice
+            . $headActions . '</header>' . $notice
             . '<form class="surface-panel minecraft-manage-form" action="' . $action . '" method="post">'
             . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
             . '<input type="hidden" name="action" value="save"><h2>Sunucu bilgileri</h2>'
@@ -450,7 +464,7 @@ final class MinecraftServerHtml
             . '<button class="fx-btn fx-btn--primary" type="submit">Güncellemeyi yayınla</button></form>'
             . '<div class="minecraft-update-management-list">' . $updateRows . '</div></section>';
 
-        if ($server->ownerUserId !== null) {
+        if ($server->ownerUserId !== null && $canManageOwnership) {
             $body .= '<section class="surface-panel minecraft-ownership-panel"><div><h2>Sahiplik</h2>'
                 . '<p>Transfer yalnızca aktif bir hesaba yapılır. Bırakma işlemi kaydı sahipsiz duruma döndürür.</p></div>'
                 . '<div class="minecraft-ownership-actions"><form action="' . $action . '" method="post">'
@@ -473,6 +487,150 @@ final class MinecraftServerHtml
         $body .= '</section>';
 
         return ProfileHtml::page('Sunucu Yönetimi · ' . $server->name, $body, $basePath, authenticated:true);
+    }
+
+    /**
+     * @param list<MinecraftServerTeamMember> $team
+     * @param array<string,string> $usernames
+     */
+    public static function team(
+        MinecraftServer $server,
+        array $team,
+        array $usernames,
+        ?string $ownerName,
+        bool $canManage,
+        ?string $csrf,
+        BasePath $basePath,
+        bool $authenticated,
+        bool $updated,
+        bool $canManageVoteIntegration,
+    ): string {
+        $serverBase = '/servers/' . rawurlencode($server->serverId->value());
+        $action = self::e($basePath->prepend($serverBase . '/team'));
+        $rows = '<article class="minecraft-team-member is-owner"><div class="minecraft-team-avatar" aria-hidden="true">'
+            . self::e(self::initial($ownerName ?? $server->name)) . '</div><div><div class="minecraft-team-title"><strong>'
+            . self::e($ownerName ?? 'Sahip atanmamış') . '</strong><span>Sunucu sahibi</span></div>'
+            . '<p>Sahiplik; ekip rolünden ayrıdır ve yalnız sahiplik yaşam döngüsü üzerinden değişir.</p></div></article>';
+
+        foreach ($team as $member) {
+            $name = $usernames[$member->userId->value()] ?? 'Hesap kullanılamıyor';
+            $roleLabel = $member->roleKey === 'manager' ? 'Yönetici' : 'Ekip üyesi';
+            $title = $member->publicTitle ?? $roleLabel;
+            $profile = $name === 'Hesap kullanılamıyor'
+                ? self::e($name)
+                : '<a href="' . self::e($basePath->prepend('/members/' . rawurlencode($name))) . '">'
+                    . self::e($name) . '</a>';
+            $remove = '';
+            if ($canManage && $csrf !== null) {
+                $remove = '<form action="' . $action . '" method="post">'
+                    . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                    . '<input type="hidden" name="action" value="remove_member">'
+                    . '<input type="hidden" name="user_id" value="' . self::e($member->userId->value()) . '">'
+                    . '<button class="fx-btn fx-btn--danger" type="submit">Ekipten çıkar</button></form>';
+            }
+            $rows .= '<article class="minecraft-team-member is-' . self::e($member->roleKey) . '">'
+                . '<div class="minecraft-team-avatar" aria-hidden="true">' . self::e(self::initial($name)) . '</div>'
+                . '<div><div class="minecraft-team-title"><strong>' . $profile . '</strong><span>'
+                . self::e($roleLabel) . '</span></div><p>' . self::e($title) . '</p></div>' . $remove . '</article>';
+        }
+
+        $managePanel = '';
+        if ($canManage && $csrf !== null) {
+            $managePanel = '<section class="surface-panel minecraft-team-manage"><div><h2>Ekip üyesi ekle veya güncelle</h2>'
+                . '<p>Aynı kullanıcıyı tekrar kaydetmek rol ve görünen unvanı günceller.</p></div>'
+                . '<form action="' . $action . '" method="post">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="save_member">'
+                . '<label><span>Kullanıcı adı</span><input name="username" maxlength="64" required></label>'
+                . '<label><span>Rol</span><select name="role_key">'
+                . '<option value="manager">Yönetici</option><option value="member">Ekip üyesi</option></select></label>'
+                . '<label><span>Public unvan</span><input name="public_title" maxlength="64" placeholder="Örn. Teknik sorumlu"></label>'
+                . '<button class="fx-btn fx-btn--primary" type="submit">Ekip kaydını kaydet</button></form>'
+                . '<p class="surface-help">Yönetici rolü mevcut manage_own izniyle sunucu bilgileri ve güncellemeleri yönetebilir; '
+                . 'sahiplik, ekip ve entegrasyon anahtarlarını yönetemez.</p></section>';
+        }
+
+        $headActions = '<div class="minecraft-team-head-actions"><a class="fx-btn" href="'
+            . self::e($basePath->prepend($serverBase)) . '">Sunucuya dön</a>';
+        if ($canManageVoteIntegration) {
+            $headActions .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/vote-settings'))
+                . '">Oy entegrasyonu</a>';
+        }
+        $headActions .= '</div>';
+
+        $body = '<section class="minecraft-server-page minecraft-team-page discovery-page">'
+            . '<header class="surface-head"><div><span class="forum-eyebrow">MINECRAFT · EKİP</span><h1>'
+            . self::e($server->name) . ' Ekibi</h1><p>Sunucu sahibi ve atanmış ekip üyeleri.</p></div>'
+            . $headActions . '</header>'
+            . ($updated ? '<div class="surface-notice" role="status">Ekip kaydı güncellendi.</div>' : '')
+            . $managePanel
+            . '<section class="surface-panel minecraft-team-list"><h2>Ekip</h2>' . $rows . '</section></section>';
+
+        return ProfileHtml::page('Ekip · ' . $server->name, $body, $basePath, authenticated:$authenticated);
+    }
+
+    public static function voteSettings(
+        MinecraftServer $server,
+        ?MinecraftServerVoteIntegration $integration,
+        string $csrf,
+        BasePath $basePath,
+        ?string $oneTimeToken,
+        bool $updated,
+    ): string {
+        $serverBase = '/servers/' . rawurlencode($server->serverId->value());
+        $action = self::e($basePath->prepend($serverBase . '/vote-settings'));
+        $feedPath = $basePath->prepend($serverBase . '/vote-feed');
+        $hasToken = $integration?->hasToken() ?? false;
+        $enabled = $integration?->enabled ?? false;
+        $status = $enabled ? 'Etkin' : 'Kapalı';
+        $tokenPrefix = $integration?->tokenPrefix === null ? 'Henüz oluşturulmadı' : $integration->tokenPrefix . '…';
+        $rotatedAt = $integration?->lastRotatedAt?->format('d.m.Y H:i') ?? '—';
+
+        $secretPanel = '';
+        if ($oneTimeToken !== null) {
+            $secretPanel = '<section class="surface-panel minecraft-vote-secret" role="status"><div>'
+                . '<span class="forum-eyebrow">YALNIZCA BİR KEZ GÖSTERİLİR</span><h2>Yeni integration token</h2>'
+                . '<p>Bu token veritabanında plaintext olarak tutulmaz. Şimdi güvenli bir yere kaydet.</p></div>'
+                . '<code>' . self::e($oneTimeToken) . '</code></section>';
+        }
+
+        $toggle = '';
+        if ($hasToken) {
+            $toggle = '<form class="minecraft-vote-settings-toggle" action="' . $action . '" method="post">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="toggle">'
+                . '<label><input type="checkbox" name="enabled" value="1"' . ($enabled ? ' checked' : '') . '>'
+                . '<span>Vote feed endpoint’ini etkinleştir</span></label>'
+                . '<button class="fx-btn fx-btn--primary" type="submit">Durumu kaydet</button></form>';
+        }
+
+        $body = '<section class="minecraft-server-page minecraft-vote-settings-page discovery-page">'
+            . '<header class="surface-head"><div><a class="surface-back-link" href="'
+            . self::e($basePath->prepend($serverBase . '/manage')) . '">← Sunucu yönetimi</a>'
+            . '<span class="forum-eyebrow">MINECRAFT · OY ENTEGRASYONU</span><h1>' . self::e($server->name)
+            . '</h1><p>Web oylarını sunucu tarafı entegrasyonuna güvenli bearer token ile aktar.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/team')) . '">Ekip</a></header>'
+            . ($updated ? '<div class="surface-notice" role="status">Oy entegrasyonu durumu güncellendi.</div>' : '')
+            . $secretPanel
+            . '<section class="surface-panel minecraft-vote-settings-summary"><h2>Entegrasyon durumu</h2><dl>'
+            . self::fact('Durum', $status)
+            . self::fact('Token', $tokenPrefix)
+            . self::fact('Son token yenileme', $rotatedAt)
+            . '</dl></section>'
+            . '<section class="surface-panel minecraft-vote-settings-endpoint"><div><h2>Vote feed endpoint</h2>'
+            . '<p>İsteklerde <code>Authorization: Bearer TOKEN</code> başlığı kullanılır. Son oylar newest-first döner; '
+            . 'her kayıt benzersiz <code>vote_id</code> içerir.</p></div>'
+            . '<code>GET ' . self::e($feedPath) . '?limit=100</code></section>'
+            . '<section class="surface-panel minecraft-vote-settings-actions">' . $toggle
+            . '<form action="' . $action . '" method="post">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+            . '<input type="hidden" name="action" value="rotate_token">'
+            . '<button class="fx-btn' . ($hasToken ? ' fx-btn--danger' : ' fx-btn--primary') . '" type="submit">'
+            . ($hasToken ? 'Tokenı yenile' : 'Token oluştur') . '</button></form>'
+            . '<p class="surface-help">Token yenilemek eski tokenı anında geçersiz kılar. Token olmadan endpoint etkinleştirilemez.</p>'
+            . '</section></section>';
+
+        return ProfileHtml::page('Oy Entegrasyonu · ' . $server->name, $body, $basePath, authenticated:true);
     }
 
     /** @param list<MinecraftServerClaim> $claims */

@@ -58,7 +58,43 @@ interface MinecraftServerRepository
     public function managementById(EntityId $serverId): ?MinecraftServer;
 
     /** @return list<MinecraftServer> */
-    public function managementDirectory(?EntityId $ownerUserId = null, int $limit = 100): array;
+    public function managementDirectory(?EntityId $actorUserId = null, int $limit = 100): array;
+
+    /** @return list<MinecraftServerTeamMember> */
+    public function team(EntityId $serverId): array;
+
+    public function teamRole(EntityId $serverId, EntityId $userId): ?string;
+
+    public function upsertTeamMember(
+        MinecraftServerTeamMember $member,
+        ?EntityId $expectedOwnerUserId,
+    ): void;
+
+    public function removeTeamMember(
+        EntityId $serverId,
+        EntityId $userId,
+        ?EntityId $expectedOwnerUserId,
+        EntityId $actorUserId,
+        DateTimeImmutable $now,
+    ): bool;
+
+    public function voteIntegration(EntityId $serverId): ?MinecraftServerVoteIntegration;
+
+    public function saveVoteIntegration(
+        EntityId $serverId,
+        bool $enabled,
+        ?string $tokenHash,
+        ?string $tokenPrefix,
+        bool $replaceToken,
+        ?EntityId $expectedOwnerUserId,
+        EntityId $actorUserId,
+        DateTimeImmutable $now,
+    ): void;
+
+    public function acceptsVoteIntegrationToken(EntityId $serverId, string $tokenHash): bool;
+
+    /** @return list<MinecraftServerVoteFeedEntry> */
+    public function voteFeed(EntityId $serverId, int $limit = 100): array;
 
     /** @return list<MinecraftServerClaim> */
     public function claims(?EntityId $claimantUserId = null, ?EntityId $serverId = null, int $limit = 100): array;

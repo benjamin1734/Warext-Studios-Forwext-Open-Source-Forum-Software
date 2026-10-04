@@ -363,23 +363,306 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function managementDirectory(?EntityId $ownerUserId = null, int $limit = 100): array
+    public function managementDirectory(?EntityId $actorUserId = null, int $limit = 100): array
     {
         if ($limit < 1 || $limit > 200) {
             throw new InvalidArgumentException('Minecraft server management limit is invalid.');
         }
         $where = '';
         $parameters = [];
-        if ($ownerUserId !== null) {
-            UserId::assert($ownerUserId);
-            $where = ' WHERE s.owner_user_id=:owner_user_id';
-            $parameters['owner_user_id'] = $ownerUserId->value();
+        if ($actorUserId !== null) {
+            UserId::assert($actorUserId);
+            $where = ' WHERE (s.owner_user_id=:owner_user_id OR (s.owner_user_id IS NOT NULL AND EXISTS ('
+                . 'SELECT 1 FROM forwext_minecraft_server_team_members tm '
+                . "WHERE tm.server_id=s.server_id AND tm.user_id=:team_user_id AND tm.role_key='manager')))";
+            $parameters['owner_user_id'] = $actorUserId->value();
+            $parameters['team_user_id'] = $actorUserId->value();
         }
         $rows = $this->database->fetchAll(new CompiledQuery(
             $this->selectSql() . $where . ' ORDER BY s.updated_at_utc DESC,s.server_id DESC LIMIT ' . $limit,
             $parameters,
         ));
         return array_map($this->hydrate(...), $rows);
+    }
+
+    public function team(EntityId $serverId): array
+    {
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT server_id,user_id,role_key,public_title,added_by_user_id,created_at_utc,updated_at_utc '
+            . 'FROM forwext_minecraft_server_team_members WHERE server_id=:server_id '
+            . "ORDER BY FIELD(role_key,'manager','member'),created_at_utc ASC,user_id ASC",
+            ['server_id'=>$serverId->value()],
+        ));
+        return array_map($this->hydrateTeamMember(...), $rows);
+    }
+
+    public function teamRole(EntityId $serverId, EntityId $userId): ?string
+    {
+        UserId::assert($userId);
+        $role = $this->database->fetchValue(new CompiledQuery(
+            'SELECT role_key FROM forwext_minecraft_server_team_members '
+            . 'WHERE server_id=:server_id AND user_id=:user_id LIMIT 1',
+            ['server_id'=>$serverId->value(),'user_id'=>$userId->value()],
+        ));
+        return is_string($role) ? $role : null;
+    }
+
+    public function upsertTeamMember(
+        MinecraftServerTeamMember $member,
+        ?EntityId $expectedOwnerUserId,
+    ): void {
+        if ($expectedOwnerUserId !== null) {
+            UserId::assert($expectedOwnerUserId);
+        }
+        $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+            $member,
+            $expectedOwnerUserId,
+        ): void {
+            $server = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$member->serverId->value()],
+            ));
+            if ($server === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            $storedOwner = $server['owner_user_id'] === null ? null : (string) $server['owner_user_id'];
+            if ($expectedOwnerUserId !== null
+                && ($storedOwner === null || !hash_equals($storedOwner, $expectedOwnerUserId->value()))) {
+                throw new RuntimeException('Minecraft server ownership changed concurrently.');
+            }
+            if ($storedOwner !== null && hash_equals($storedOwner, $member->userId->value())) {
+                throw new InvalidArgumentException('Minecraft server owner cannot also be a team member.');
+            }
+            $database->execute(new CompiledQuery(
+                'INSERT INTO forwext_minecraft_server_team_members '
+                . '(server_id,user_id,role_key,public_title,added_by_user_id,created_at_utc,updated_at_utc) '
+                . 'VALUES (:server_id,:user_id,:role_key,:public_title,:added_by,:created_at,:updated_at) '
+                . 'ON DUPLICATE KEY UPDATE role_key=VALUES(role_key),public_title=VALUES(public_title),'
+                . 'added_by_user_id=VALUES(added_by_user_id),updated_at_utc=VALUES(updated_at_utc)',
+                [
+                    'server_id'=>$member->serverId->value(),
+                    'user_id'=>$member->userId->value(),
+                    'role_key'=>$member->roleKey,
+                    'public_title'=>$member->publicTitle,
+                    'added_by'=>$member->addedByUserId?->value(),
+                    'created_at'=>self::format($member->createdAt),
+                    'updated_at'=>self::format($member->updatedAt),
+                ],
+                true,
+            ));
+            $this->appendOwnershipEvent(
+                $database,
+                $member->serverId,
+                'team_member_saved',
+                $member->addedByUserId,
+                null,
+                null,
+                'Team member ' . $member->userId->value() . ' saved with role ' . $member->roleKey . '.',
+                $member->updatedAt,
+            );
+        });
+    }
+
+    public function removeTeamMember(
+        EntityId $serverId,
+        EntityId $userId,
+        ?EntityId $expectedOwnerUserId,
+        EntityId $actorUserId,
+        DateTimeImmutable $now,
+    ): bool {
+        UserId::assert($userId);
+        UserId::assert($actorUserId);
+        if ($expectedOwnerUserId !== null) {
+            UserId::assert($expectedOwnerUserId);
+        }
+        return $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+            $serverId,
+            $userId,
+            $expectedOwnerUserId,
+            $actorUserId,
+            $now,
+        ): bool {
+            $server = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$serverId->value()],
+            ));
+            if ($server === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            $storedOwner = $server['owner_user_id'] === null ? null : (string) $server['owner_user_id'];
+            if ($expectedOwnerUserId !== null
+                && ($storedOwner === null || !hash_equals($storedOwner, $expectedOwnerUserId->value()))) {
+                throw new RuntimeException('Minecraft server ownership changed concurrently.');
+            }
+            $removed = $database->execute(new CompiledQuery(
+                'DELETE FROM forwext_minecraft_server_team_members '
+                . 'WHERE server_id=:server_id AND user_id=:user_id',
+                ['server_id'=>$serverId->value(),'user_id'=>$userId->value()],
+                true,
+            )) === 1;
+            if ($removed) {
+                $this->appendOwnershipEvent(
+                    $database,
+                    $serverId,
+                    'team_member_removed',
+                    $actorUserId,
+                    null,
+                    null,
+                    'Team member ' . $userId->value() . ' removed.',
+                    $now,
+                );
+            }
+            return $removed;
+        });
+    }
+
+    public function voteIntegration(EntityId $serverId): ?MinecraftServerVoteIntegration
+    {
+        $row = $this->database->fetchOne(new CompiledQuery(
+            'SELECT server_id,enabled,token_prefix,last_rotated_at_utc,updated_by_user_id,'
+            . 'created_at_utc,updated_at_utc FROM forwext_minecraft_server_vote_integrations '
+            . 'WHERE server_id=:server_id LIMIT 1',
+            ['server_id'=>$serverId->value()],
+        ));
+        return $row === null ? null : $this->hydrateVoteIntegration($row);
+    }
+
+    public function saveVoteIntegration(
+        EntityId $serverId,
+        bool $enabled,
+        ?string $tokenHash,
+        ?string $tokenPrefix,
+        bool $replaceToken,
+        ?EntityId $expectedOwnerUserId,
+        EntityId $actorUserId,
+        DateTimeImmutable $now,
+    ): void {
+        UserId::assert($actorUserId);
+        if ($expectedOwnerUserId !== null) {
+            UserId::assert($expectedOwnerUserId);
+        }
+        if ($replaceToken) {
+            if ($tokenHash === null || preg_match('/^[a-f0-9]{64}$/D', $tokenHash) !== 1
+                || $tokenPrefix === null || preg_match('/^[A-Za-z0-9_-]{6,12}$/D', $tokenPrefix) !== 1) {
+                throw new InvalidArgumentException('Minecraft vote integration token material is invalid.');
+            }
+        } elseif ($tokenHash !== null || $tokenPrefix !== null) {
+            throw new InvalidArgumentException('Minecraft vote integration token replacement flag is invalid.');
+        }
+
+        $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+            $serverId,
+            $enabled,
+            $tokenHash,
+            $tokenPrefix,
+            $replaceToken,
+            $expectedOwnerUserId,
+            $actorUserId,
+            $now,
+        ): void {
+            $server = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$serverId->value()],
+            ));
+            if ($server === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            $storedOwner = $server['owner_user_id'] === null ? null : (string) $server['owner_user_id'];
+            if ($expectedOwnerUserId !== null
+                && ($storedOwner === null || !hash_equals($storedOwner, $expectedOwnerUserId->value()))) {
+                throw new RuntimeException('Minecraft server ownership changed concurrently.');
+            }
+
+            if ($replaceToken) {
+                $database->execute(new CompiledQuery(
+                    'INSERT INTO forwext_minecraft_server_vote_integrations '
+                    . '(server_id,enabled,token_hash,token_prefix,last_rotated_at_utc,updated_by_user_id,'
+                    . 'created_at_utc,updated_at_utc) '
+                    . 'VALUES (:server_id,:enabled,:token_hash,:token_prefix,:rotated_at,:updated_by,:created_at,:updated_at) '
+                    . 'ON DUPLICATE KEY UPDATE enabled=VALUES(enabled),token_hash=VALUES(token_hash),'
+                    . 'token_prefix=VALUES(token_prefix),last_rotated_at_utc=VALUES(last_rotated_at_utc),'
+                    . 'updated_by_user_id=VALUES(updated_by_user_id),updated_at_utc=VALUES(updated_at_utc)',
+                    [
+                        'server_id'=>$serverId->value(),
+                        'enabled'=>$enabled ? 1 : 0,
+                        'token_hash'=>$tokenHash,
+                        'token_prefix'=>$tokenPrefix,
+                        'rotated_at'=>self::format($now),
+                        'updated_by'=>$actorUserId->value(),
+                        'created_at'=>self::format($now),
+                        'updated_at'=>self::format($now),
+                    ],
+                    true,
+                ));
+                $this->appendOwnershipEvent(
+                    $database,
+                    $serverId,
+                    'vote_token_rotated',
+                    $actorUserId,
+                    null,
+                    null,
+                    'Vote integration token rotated.',
+                    $now,
+                );
+                return;
+            }
+
+            $database->execute(new CompiledQuery(
+                'INSERT INTO forwext_minecraft_server_vote_integrations '
+                . '(server_id,enabled,token_hash,token_prefix,last_rotated_at_utc,updated_by_user_id,'
+                . 'created_at_utc,updated_at_utc) '
+                . 'VALUES (:server_id,:enabled,NULL,NULL,NULL,:updated_by,:created_at,:updated_at) '
+                . 'ON DUPLICATE KEY UPDATE enabled=VALUES(enabled),updated_by_user_id=VALUES(updated_by_user_id),'
+                . 'updated_at_utc=VALUES(updated_at_utc)',
+                [
+                    'server_id'=>$serverId->value(),
+                    'enabled'=>$enabled ? 1 : 0,
+                    'updated_by'=>$actorUserId->value(),
+                    'created_at'=>self::format($now),
+                    'updated_at'=>self::format($now),
+                ],
+                true,
+            ));
+            $this->appendOwnershipEvent(
+                $database,
+                $serverId,
+                $enabled ? 'vote_integration_on' : 'vote_integration_off',
+                $actorUserId,
+                null,
+                null,
+                $enabled ? 'Vote integration enabled.' : 'Vote integration disabled.',
+                $now,
+            );
+        });
+    }
+
+    public function acceptsVoteIntegrationToken(EntityId $serverId, string $tokenHash): bool
+    {
+        if (preg_match('/^[a-f0-9]{64}$/D', $tokenHash) !== 1) {
+            return false;
+        }
+        $stored = $this->database->fetchValue(new CompiledQuery(
+            'SELECT token_hash FROM forwext_minecraft_server_vote_integrations '
+            . 'WHERE server_id=:server_id AND enabled=1 AND token_hash IS NOT NULL LIMIT 1',
+            ['server_id'=>$serverId->value()],
+        ));
+        return is_string($stored) && strlen($stored) === 64 && hash_equals($stored, $tokenHash);
+    }
+
+    public function voteFeed(EntityId $serverId, int $limit = 100): array
+    {
+        if ($limit < 1 || $limit > 200) {
+            throw new InvalidArgumentException('Minecraft vote integration feed limit is invalid.');
+        }
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT v.vote_id,v.server_id,v.voter_user_id,u.username,v.created_at_utc '
+            . 'FROM forwext_minecraft_server_votes v '
+            . 'INNER JOIN forwext_users u ON u.user_id=v.voter_user_id '
+            . 'WHERE v.server_id=:server_id '
+            . 'ORDER BY v.created_at_utc DESC,v.vote_id DESC LIMIT ' . $limit,
+            ['server_id'=>$serverId->value()],
+        ));
+        return array_map($this->hydrateVoteFeedEntry(...), $rows);
     }
 
     public function claims(?EntityId $claimantUserId = null, ?EntityId $serverId = null, int $limit = 100): array
@@ -499,6 +782,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 if ($affected !== 1) {
                     throw new RuntimeException('Minecraft server ownership changed concurrently.');
                 }
+                $database->execute(new CompiledQuery(
+                    'DELETE FROM forwext_minecraft_server_team_members WHERE server_id=:server_id',
+                    ['server_id'=>$serverId->value()],
+                    true,
+                ));
+                $database->execute(new CompiledQuery(
+                    'DELETE FROM forwext_minecraft_server_vote_integrations WHERE server_id=:server_id',
+                    ['server_id'=>$serverId->value()],
+                    true,
+                ));
                 $database->execute(new CompiledQuery(
                     "UPDATE forwext_minecraft_server_claims SET state='rejected',reviewed_by_user_id=:reviewer,"
                     . "review_note='Another ownership claim was approved.',reviewed_at_utc=:reviewed_at,"
@@ -641,6 +934,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 ['owner'=>$newOwnerUserId?->value(),'updated_at'=>self::format($now),'server_id'=>$serverId->value()],
                 true,
             ));
+            $database->execute(new CompiledQuery(
+                'DELETE FROM forwext_minecraft_server_team_members WHERE server_id=:server_id',
+                ['server_id'=>$serverId->value()],
+                true,
+            ));
+            $database->execute(new CompiledQuery(
+                'DELETE FROM forwext_minecraft_server_vote_integrations WHERE server_id=:server_id',
+                ['server_id'=>$serverId->value()],
+                true,
+            ));
             $this->appendOwnershipEvent(
                 $database,$serverId,$eventType,$actorUserId,$expectedOwnerUserId,$newOwnerUserId,null,$now,
             );
@@ -683,6 +986,46 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             ],
             true,
         ));
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateTeamMember(array $row): MinecraftServerTeamMember
+    {
+        return new MinecraftServerTeamMember(
+            EntityId::fromString((string) $row['server_id']),
+            UserId::fromStored((string) $row['user_id']),
+            (string) $row['role_key'],
+            $row['public_title'] === null ? null : (string) $row['public_title'],
+            $row['added_by_user_id'] === null ? null : UserId::fromStored((string) $row['added_by_user_id']),
+            self::parse((string) $row['created_at_utc']),
+            self::parse((string) $row['updated_at_utc']),
+        );
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateVoteIntegration(array $row): MinecraftServerVoteIntegration
+    {
+        return new MinecraftServerVoteIntegration(
+            EntityId::fromString((string) $row['server_id']),
+            (int) $row['enabled'] === 1,
+            $row['token_prefix'] === null ? null : (string) $row['token_prefix'],
+            $row['last_rotated_at_utc'] === null ? null : self::parse((string) $row['last_rotated_at_utc']),
+            $row['updated_by_user_id'] === null ? null : UserId::fromStored((string) $row['updated_by_user_id']),
+            self::parse((string) $row['created_at_utc']),
+            self::parse((string) $row['updated_at_utc']),
+        );
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateVoteFeedEntry(array $row): MinecraftServerVoteFeedEntry
+    {
+        return new MinecraftServerVoteFeedEntry(
+            EntityId::fromString((string) $row['vote_id']),
+            EntityId::fromString((string) $row['server_id']),
+            UserId::fromStored((string) $row['voter_user_id']),
+            (string) $row['username'],
+            self::parse((string) $row['created_at_utc']),
+        );
     }
 
     /** @param array<string,mixed> $row */

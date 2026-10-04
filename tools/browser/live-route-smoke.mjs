@@ -383,6 +383,17 @@ try {
       fail(`minecraft server statistics: metric contract failed ${JSON.stringify(serverStatisticsState)}`);
     }
     await assertHealthyDocument("minecraft server statistics");
+
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/team", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server team: real route did not return HTTP 200");
+    const teamState = await page.evaluate(() => ({
+      lists: document.querySelectorAll(".minecraft-team-list").length,
+      members: document.querySelectorAll(".minecraft-team-member").length,
+    }));
+    if (teamState.lists !== 1 || teamState.members < 1) {
+      fail(`minecraft server team: route contract failed ${JSON.stringify(teamState)}`);
+    }
+    await assertHealthyDocument("minecraft server team");
   }
 
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
@@ -434,6 +445,81 @@ try {
     fail(`minecraft server management: route contract failed ${JSON.stringify(serverManagementState)}`);
   }
   await assertHealthyDocument("minecraft server management");
+
+  if (serverManagementState.rows > 0) {
+    const manageHref = await page.locator('.minecraft-manage-row a[href$="/manage"]').first().getAttribute("href");
+    if (!manageHref) fail("minecraft server integration: manageable row has no management href");
+    response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: management detail did not return HTTP 200");
+
+    const settingsLink = page.locator('a[href$="/vote-settings"]').first();
+    if ((await settingsLink.count()) === 1) {
+      const settingsHref = await settingsLink.getAttribute("href");
+      if (!settingsHref) fail("minecraft server integration: settings href is missing");
+      response = await page.goto(new URL(settingsHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+      if (!response || response.status() !== 200) fail("minecraft server integration: settings route did not return HTTP 200");
+      if ((await page.locator(".minecraft-vote-settings-summary").count()) !== 1) {
+        fail("minecraft server integration: settings summary is missing");
+      }
+
+      const rotateButton = page.getByRole("button", { name: /Token(ı yenile| oluştur)/ }).first();
+      if ((await rotateButton.count()) !== 1) fail("minecraft server integration: token action is missing");
+      const [rotateResponse] = await Promise.all([
+        page.waitForResponse((candidate) => {
+          const url = new URL(candidate.url());
+          return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
+        }),
+        rotateButton.click(),
+      ]);
+      if (rotateResponse.status() !== 200) {
+        fail(`minecraft server integration: rotate token returned HTTP ${rotateResponse.status()}`);
+      }
+      const token = (await page.locator(".minecraft-vote-secret code").textContent())?.trim() ?? "";
+      if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
+        fail("minecraft server integration: one-time token was not rendered");
+      }
+
+      const enabledCheckbox = page.locator('.minecraft-vote-settings-toggle input[name="enabled"]');
+      if ((await enabledCheckbox.count()) !== 1) {
+        fail("minecraft server integration: enabled toggle is missing after token creation");
+      }
+      if (!(await enabledCheckbox.isChecked())) {
+        await enabledCheckbox.check();
+        const [toggleResponse] = await Promise.all([
+          page.waitForResponse((candidate) => {
+            const url = new URL(candidate.url());
+            return candidate.request().method() === "POST" && /\/servers\/[a-f0-9]{32}\/vote-settings$/.test(url.pathname);
+          }),
+          page.getByRole("button", { name: "Durumu kaydet", exact: true }).click(),
+        ]);
+        if (toggleResponse.status() !== 303) {
+          fail(`minecraft server integration: enable toggle returned HTTP ${toggleResponse.status()}`);
+        }
+        await page.waitForLoadState("domcontentloaded");
+      }
+
+      const endpointText = (await page.locator(".minecraft-vote-settings-endpoint > code").textContent())?.trim() ?? "";
+      const endpointPath = endpointText.replace(/^GET\s+/, "");
+      if (!/\/servers\/[a-f0-9]{32}\/vote-feed\?limit=100$/.test(endpointPath)) {
+        fail(`minecraft server integration: endpoint contract failed "${endpointPath}"`);
+      }
+      const feedResponse = await page.request.get(new URL(endpointPath, baseUrl).toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (feedResponse.status() !== 200) {
+        fail(`minecraft server integration: bearer feed returned HTTP ${feedResponse.status()}`);
+      }
+      const feedPayload = await feedResponse.json();
+      if (
+        feedPayload?.order !== "newest_first"
+        || !Array.isArray(feedPayload?.votes)
+        || typeof feedPayload?.count !== "number"
+      ) {
+        fail(`minecraft server integration: feed payload contract failed ${JSON.stringify(feedPayload)}`);
+      }
+      await assertHealthyDocument("minecraft server vote integration");
+    }
+  }
 
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
@@ -701,6 +787,27 @@ try {
       fail(`minecraft server statistics mobile: responsive contract failed ${JSON.stringify(statisticsMobileState)}`);
     }
     await assertHealthyDocument("minecraft server statistics mobile");
+
+    response = await page.goto(mobileServerUrl + "/team", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server team mobile: real route did not return HTTP 200");
+    const teamMobileState = await page.evaluate(() => {
+      const list = document.querySelector(".minecraft-team-list");
+      const member = document.querySelector(".minecraft-team-member");
+      return {
+        listWidth: list instanceof HTMLElement ? Math.round(list.getBoundingClientRect().width) : 0,
+        memberColumns: member instanceof HTMLElement
+          ? getComputedStyle(member).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    if (
+      teamMobileState.listWidth > teamMobileState.viewportWidth
+      || (teamMobileState.memberColumns !== 0 && teamMobileState.memberColumns !== 2)
+    ) {
+      fail(`minecraft server team mobile: responsive contract failed ${JSON.stringify(teamMobileState)}`);
+    }
+    await assertHealthyDocument("minecraft server team mobile");
   }
 
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });

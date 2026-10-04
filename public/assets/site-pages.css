@@ -3442,3 +3442,38 @@ html,body{max-width:100%;overflow-x:clip}
 @media(pointer:coarse){
   .minecraft-update-management .fx-btn,.minecraft-update-page .fx-btn,.minecraft-statistics-page .fx-btn{min-height:44px}
 }
+
+
+/* minecraft-server-team-vote-integration-v1 */
+.minecraft-manage-head-actions,.minecraft-team-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.minecraft-team-list,.minecraft-team-manage,.minecraft-vote-settings-summary,.minecraft-vote-settings-endpoint,.minecraft-vote-settings-actions,.minecraft-vote-secret{padding:11px;border-radius:4px}
+.minecraft-team-list{display:grid;gap:0}.minecraft-team-list>h2,.minecraft-team-manage h2,.minecraft-vote-settings-summary h2,.minecraft-vote-settings-endpoint h2,.minecraft-vote-secret h2{margin:0;font-size:12px}
+.minecraft-team-member{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line)}
+.minecraft-team-member:first-of-type{border-top:0}.minecraft-team-avatar{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);font-size:12px;font-weight:800}
+.minecraft-team-member>div:nth-child(2){min-width:0}.minecraft-team-title{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.minecraft-team-title strong{font-size:10.5px}.minecraft-team-title span{color:var(--muted);font-size:8.5px;font-weight:700}
+.minecraft-team-member p{margin:3px 0 0;color:var(--muted);font-size:9px;line-height:1.4;overflow-wrap:anywhere}
+.minecraft-team-manage{display:grid;gap:10px}.minecraft-team-manage>div>p,.minecraft-vote-settings-endpoint p,.minecraft-vote-secret p{margin:3px 0 0;color:var(--muted);font-size:9px;line-height:1.45}
+.minecraft-team-manage form{display:grid;grid-template-columns:minmax(150px,.8fr) minmax(120px,.45fr) minmax(150px,1fr) auto;align-items:end;gap:8px}
+.minecraft-team-manage label{display:grid;gap:4px}.minecraft-team-manage label>span{color:var(--muted);font-size:9px;font-weight:700}.minecraft-team-manage input,.minecraft-team-manage select{min-height:36px;width:100%}
+.minecraft-vote-settings-summary{display:grid;gap:8px}.minecraft-vote-settings-summary dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0}.minecraft-vote-settings-summary dl>div{display:grid;gap:3px;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2)}
+.minecraft-vote-settings-summary dt{color:var(--muted);font-size:8.5px}.minecraft-vote-settings-summary dd{margin:0;font-size:10px;font-weight:800;overflow-wrap:anywhere}
+.minecraft-vote-settings-endpoint{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}.minecraft-vote-settings-endpoint>code,.minecraft-vote-secret>code{display:block;max-width:100%;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);font-size:9px;overflow-wrap:anywhere;user-select:all}
+.minecraft-vote-secret{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.75fr);align-items:center;gap:12px}
+.minecraft-vote-settings-actions{display:grid;gap:9px}.minecraft-vote-settings-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px}.minecraft-vote-settings-toggle label{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:700}
+@media(max-width:820px){
+  .minecraft-team-manage form{grid-template-columns:1fr 1fr}
+  .minecraft-team-manage form label:nth-of-type(3),.minecraft-team-manage form .fx-btn{grid-column:1/-1}
+  .minecraft-vote-settings-endpoint,.minecraft-vote-secret{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .minecraft-manage-head-actions,.minecraft-team-head-actions{display:grid;width:100%}
+  .minecraft-manage-head-actions .fx-btn,.minecraft-team-head-actions .fx-btn{width:100%;justify-content:center}
+  .minecraft-team-member{grid-template-columns:36px minmax(0,1fr)}
+  .minecraft-team-member>form{grid-column:1/-1}.minecraft-team-member>form .fx-btn{width:100%;justify-content:center}
+  .minecraft-team-manage form{grid-template-columns:1fr}.minecraft-team-manage form label:nth-of-type(3),.minecraft-team-manage form .fx-btn{grid-column:auto}
+  .minecraft-vote-settings-summary dl{grid-template-columns:1fr}
+  .minecraft-vote-settings-toggle{display:grid}.minecraft-vote-settings-toggle .fx-btn{width:100%;justify-content:center}
+}
+@media(pointer:coarse){
+  .minecraft-team-page .fx-btn,.minecraft-vote-settings-page .fx-btn{min-height:44px}
+}
