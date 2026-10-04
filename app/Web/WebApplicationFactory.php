@@ -110,6 +110,8 @@ use Forwext\App\Web\Marketplace\MarketplaceReviewHandler;
 use Forwext\App\Web\Marketplace\MarketplaceOrderDetailHandler;
 use Forwext\App\Web\Marketplace\MarketplaceOrdersHandler;
 use Forwext\App\Web\Marketplace\MarketplaceSellerHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerDirectoryHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerDetailHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
 use Forwext\App\Web\Payment\PaymentManageHandler;
 use Forwext\App\Web\Payment\PaymentWebhookHandler;
@@ -281,6 +283,8 @@ use Forwext\Core\EasterEgg\DatabaseEasterEggRepository;
 use Forwext\Core\EasterEgg\EasterEggService;
 use Forwext\Core\Faq\DatabaseFaqRepository;
 use Forwext\Core\Faq\FaqService;
+use Forwext\Core\Minecraft\Server\DatabaseMinecraftServerRepository;
+use Forwext\Core\Minecraft\Server\MinecraftServerService;
 use Forwext\Core\Faq\SupportBridge\DatabaseFaqSupportBridgeRepository;
 use Forwext\Core\Faq\SupportBridge\FaqSupportBridgeService;
 use Forwext\Core\Faq\Search\FaqSearchAccessScopeProvider;
@@ -1128,6 +1132,9 @@ final readonly class WebApplicationFactory
             $authorizer,
             $searchChanges,
         );
+        $minecraftServers = new MinecraftServerService(
+            new DatabaseMinecraftServerRepository($database),
+        );
         $faqSupportBridge = new FaqSupportBridgeService(
             $database,
             $faq,
@@ -1888,6 +1895,18 @@ final readonly class WebApplicationFactory
                 $authorizer,
                 new AttachmentDownloadResponseFactory(),
             ),
+        ));
+        $routes->add(new Route(
+            'server.index',
+            [HttpMethod::Get],
+            new PathTemplate('/servers'),
+            new MinecraftServerDirectoryHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.detail',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/{serverId}', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerDetailHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'faq.index',
