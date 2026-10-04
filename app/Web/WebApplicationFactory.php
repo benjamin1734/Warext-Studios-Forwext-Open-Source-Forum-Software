@@ -1592,6 +1592,7 @@ final readonly class WebApplicationFactory
         $accountSessionCsrf = $this->accountSessionCsrfMiddleware($config);
         $forumCsrf = $this->forumCsrfMiddleware($config);
         $freshnessCsrf = $this->freshnessCsrfMiddleware($config);
+        $minecraftServerCsrf = $this->minecraftServerCsrfMiddleware($config);
 
         $routes = new RouteCollection();
         $routes->add(new Route(
@@ -1930,6 +1931,7 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/servers/manage'),
             new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.manage',
@@ -1942,6 +1944,7 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/claim', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerClaimHandler($minecraftServers, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.updates',
@@ -1960,12 +1963,14 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/team', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerTeamHandler($minecraftServers, $users, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.vote-settings',
             [HttpMethod::Get,HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/vote-settings', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerVoteSettingsHandler($minecraftServers, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.vote-feed',
@@ -1978,12 +1983,14 @@ final readonly class WebApplicationFactory
             [HttpMethod::Post],
             new PathTemplate('/servers/{serverId}/vote', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerVoteHandler($minecraftServers, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'server.detail',
             [HttpMethod::Get],
             new PathTemplate('/servers/{serverId}', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerDetailHandler($minecraftServers, $viewerResolver, $basePath),
+            [$minecraftServerCsrf],
         ));
         $routes->add(new Route(
             'faq.index',
@@ -3219,6 +3226,11 @@ final readonly class WebApplicationFactory
     private function freshnessCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'thread-freshness', 'forwext.csrf.thread-freshness.v1');
+    }
+
+    private function minecraftServerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'minecraft-server', 'forwext.csrf.minecraft-server.v1');
     }
 
     private function contentManagerCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
