@@ -307,6 +307,26 @@ try {
   }
   await assertHealthyDocument("notifications");
 
+  response = await page.goto(baseUrl + "/servers", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft servers: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Minecraft Sunucuları", exact: true }).waitFor();
+  const serverDirectoryState = await page.evaluate(() => ({
+    filters: document.querySelectorAll(".minecraft-server-tabs a").length,
+    searchForms: document.querySelectorAll(".minecraft-server-filter").length,
+    panels: document.querySelectorAll(".minecraft-server-directory").length,
+    listRows: document.querySelectorAll(".minecraft-server-row").length,
+    emptyStates: document.querySelectorAll(".minecraft-server-empty").length,
+  }));
+  if (
+    serverDirectoryState.filters !== 4
+    || serverDirectoryState.searchForms !== 1
+    || serverDirectoryState.panels !== 1
+    || (serverDirectoryState.listRows === 0 && serverDirectoryState.emptyStates !== 1)
+  ) {
+    fail(`minecraft servers: directory contract failed ${JSON.stringify(serverDirectoryState)}`);
+  }
+  await assertHealthyDocument("minecraft servers");
+
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
@@ -517,6 +537,27 @@ try {
   }
   await assertHealthyDocument("direct messages mobile");
 
+  response = await page.goto(baseUrl + "/servers", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("minecraft servers mobile: real route did not return HTTP 200");
+  const serverMobileState = await page.evaluate(() => {
+    const filter = document.querySelector(".minecraft-server-filter");
+    const list = document.querySelector(".minecraft-server-list");
+    return {
+      filterColumns: filter instanceof HTMLElement
+        ? getComputedStyle(filter).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+      listWidth: list instanceof HTMLElement ? Math.round(list.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    serverMobileState.filterColumns !== 1
+    || serverMobileState.listWidth > serverMobileState.viewportWidth
+  ) {
+    fail(`minecraft servers mobile: responsive contract failed ${JSON.stringify(serverMobileState)}`);
+  }
+  await assertHealthyDocument("minecraft servers mobile");
+
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
@@ -572,4 +613,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, Minecraft server directory, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
