@@ -1288,7 +1288,7 @@ a.forum-thread-author:hover{color:var(--text)}
 .forum-thread-main h3 a{color:var(--accent);font-weight:680}
 .forum-thread-main p{font-size:9px}
 .thread-badges{margin-bottom:2px;gap:3px}
-.thread-badge{
+.thread-badges>.thread-badge{
   min-height:16px;
   padding:1px 4px;
   border-radius:2px;
