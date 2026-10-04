@@ -3116,7 +3116,7 @@ html,body{max-width:100%;overflow-x:clip}
 
 /* minecraft-server-directory-v1 */
 .minecraft-server-page{display:grid;gap:10px}
-.minecraft-server-tabs{width:max-content;max-width:100%}
+.minecraft-server-tabs{display:flex;width:max-content;max-width:100%}
 .minecraft-server-filter{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
