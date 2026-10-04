@@ -49,7 +49,8 @@ final class ForumLayoutWebSurfaceTest extends TestCase
         self::assertStringContainsString("'/activity/threads/trending'", $index);
         self::assertStringContainsString("'/activity/threads/featured'", $index);
         self::assertStringContainsString("'/activity/profile-posts'", $index);
-        self::assertStringContainsString("number_format(count(\$forums), 0, ',', '.') . ' forum'", $index);
+        self::assertStringContainsString("number_format(count(\$forums), 0, ',', '.')", $index);
+        self::assertStringContainsString(" forum</span>", $index);
         self::assertStringContainsString('/* reference-forum-r2 */', $css);
     }
 
