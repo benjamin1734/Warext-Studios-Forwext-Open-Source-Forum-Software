@@ -28,6 +28,7 @@ final readonly class CreateFirstPartyModuleManager implements Migration
         'trophies',
         'rewards',
         'promotions',
+        'minecraft-servers',
         'marketplace',
         'payments',
         'subscriptions',
