@@ -838,7 +838,7 @@ a.forum-thread-author:hover{color:var(--text)}
   .thread-post-footer .thread-post-interactions{width:100%;margin-left:0}
   .thread-pagination-nav{justify-content:flex-start}
 }
-@media(max-width:440px){
+@media(max-width:520px){
   .thread-view-action-main{grid-template-columns:1fr}
   .thread-pagination-nav>.pagination-edge{width:100%}
 }
