@@ -86,6 +86,29 @@ final readonly class MinecraftServerService
         return $this->servers->publicSeasons($state, $limit, $offset);
     }
 
+    public function voteSummary(
+        EntityId $serverId,
+        ?EntityId $actor,
+        DateTimeImmutable $now,
+    ): MinecraftServerVoteSummary {
+        return $this->servers->voteSummary($serverId, $actor, $now);
+    }
+
+    public function canVote(EntityId $actor, MinecraftServerVoteSummary $summary): bool
+    {
+        return !$summary->votedToday
+            && $this->gate($actor)->allows(self::permission('minecraft_server.vote'));
+    }
+
+    public function vote(EntityId $actor, EntityId $serverId, DateTimeImmutable $now): bool
+    {
+        $this->gate($actor)->require(self::permission('minecraft_server.vote'));
+        if ($this->servers->publicById($serverId) === null) {
+            throw new InvalidArgumentException('Minecraft server is unavailable for voting.');
+        }
+        return $this->servers->castVote($serverId, $actor, $now);
+    }
+
     /** @return list<MinecraftServer> */
     public function manageable(EntityId $actor, int $limit = 100): array
     {
