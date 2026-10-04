@@ -32,16 +32,17 @@ Current second slice: authenticated member profiles expose Konuları/Mesajları 
 Phase 3 verification: security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/live-route accessibility, release contract and installation package all passed on main commit d885af3f.
 Next: Phase 4 thread-view/editor density.
 
-04 THREAD VIEW / EDITOR — IN PROGRESS
+04 THREAD VIEW / EDITOR — VERIFIED
 Current: thread view, reply, reactions, bookmarks, attachments, preview, quote, mention, spellcheck and editor text/attachment metrics already exist.
-Verified first Phase 4 slice: thread header actions are grouped into compact primary/follow areas; post footer actions use a dedicated dense toolbar; long-thread pagination gains previous/next, first/last context and bounded ellipsis windows; responsive browser fixtures exercise the controls. Security, performance/observability, database migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/accessibility and installation package all passed on main commit a480d81b.
-Current final Phase 4 slice: author cards distinguish the real thread starter without exposing internal group data; authenticated viewers receive existing profile/thread/post discovery links; locked/reply-disabled/permission-denied states are presented explicitly; quick reply advertises only capabilities already provided by the existing rich editor.
+Verified Phase 4: thread header actions are grouped into compact primary/follow areas; post footer actions use a dedicated dense toolbar; long-thread pagination includes previous/next, first/last context and bounded ellipsis windows; author cards distinguish the real thread starter without exposing internal group data; authenticated viewers receive existing profile/thread/post discovery links; locked/reply-disabled/permission-denied states are presented explicitly; quick reply advertises only capabilities already provided by the existing rich editor.
 Moderation boundary: the public thread reader intentionally exposes only visible posts, so pending/rejected staff presentation is not fabricated here and remains owned by the moderation phase.
-Verification pending: run the complete CI gate for the final author/editor polish slice.
+Phase 4 verification: security, performance/observability, MySQL/MariaDB migration smoke, PHP 8.4/8.5 qualification, Chromium responsive/accessibility, release contract and installation package all passed on main commit a5f81099.
 
 05 MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
 Current: member directory/profile, online users, account dashboard/security/sessions, profile settings, bookmarks, relationships and presence exist.
-Gap: privacy/preferences/signature/reactions/style controls are fragmented or absent as dedicated account surfaces.
+Current Phase 5 privacy slice: /account/privacy reuses the existing ProfileService visibility fields and PresenceService visibility source as two explicit CSRF-protected actions. /account/profile now owns identity/about/media only and preserves stored visibility values; the JSON /account/presence endpoint remains available to existing clients but is no longer presented as a human navigation page.
+Verification pending: PHP/source contracts and live Chromium acceptance for the privacy ownership split, followed by the full CI gate.
+Gap after this slice: dedicated preferences, reaction preferences, signature and member style controls remain absent or fragmented; member/staff/current-visitor density still needs reference review.
 
 06 DIRECT MESSAGES / NOTIFICATIONS — IN PROGRESS
 Current: DM inbox/detail/start/reply and notification inbox/realtime/settings exist.
