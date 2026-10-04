@@ -59,6 +59,75 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         return $row === null ? null : $this->hydrate($row);
     }
 
+    public function publicByIds(array $serverIds): array
+    {
+        if ($serverIds === []) {
+            return [];
+        }
+        if (count($serverIds) > 4) {
+            throw new \InvalidArgumentException('Minecraft server comparison limit is invalid.');
+        }
+
+        $placeholders = [];
+        $parameters = [];
+        foreach (array_values($serverIds) as $index => $serverId) {
+            if (!$serverId instanceof EntityId) {
+                throw new \InvalidArgumentException('Minecraft server comparison id is invalid.');
+            }
+            $key = 'server_' . $index;
+            $placeholders[] = ':' . $key;
+            $parameters[$key] = $serverId->value();
+        }
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            $this->selectSql() . " WHERE s.listing_state='published' AND s.server_id IN ("
+            . implode(',', $placeholders) . ')',
+            $parameters,
+        ));
+        $byId = [];
+        foreach ($rows as $row) {
+            $server = $this->hydrate($row);
+            $byId[$server->serverId->value()] = $server;
+        }
+
+        $ordered = [];
+        foreach ($serverIds as $serverId) {
+            $server = $byId[$serverId->value()] ?? null;
+            if ($server !== null) {
+                $ordered[] = $server;
+            }
+        }
+        return $ordered;
+    }
+
+    public function publicSeasons(?string $state = null, int $limit = 30, int $offset = 0): array
+    {
+        if ($limit < 1 || $limit > 100 || $offset < 0 || $offset > 1_000_000) {
+            throw new \InvalidArgumentException('Minecraft season pagination is invalid.');
+        }
+        $where = '';
+        $parameters = [];
+        if ($state !== null) {
+            $where = ' WHERE s.state=:state';
+            $parameters['state'] = $state;
+        }
+
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT s.season_id,s.slug,s.name,s.summary,s.state,s.starts_at_utc,s.ends_at_utc,'
+            . 's.created_at_utc,s.updated_at_utc,COUNT(e.server_id) AS server_count '
+            . 'FROM forwext_minecraft_server_seasons s '
+            . 'LEFT JOIN forwext_minecraft_server_season_entries e ON e.season_id=s.season_id'
+            . $where
+            . ' GROUP BY s.season_id,s.slug,s.name,s.summary,s.state,s.starts_at_utc,s.ends_at_utc,'
+            . 's.created_at_utc,s.updated_at_utc '
+            . "ORDER BY FIELD(s.state,'active','upcoming','closed'),s.starts_at_utc DESC,s.season_id DESC "
+            . 'LIMIT ' . $limit . ' OFFSET ' . $offset,
+            $parameters,
+        ));
+
+        return array_map($this->hydrateSeason(...), $rows);
+    }
+
     private function selectSql(): string
     {
         return 'SELECT s.server_id,s.owner_user_id,s.slug,s.name,s.summary,s.description,s.host,s.port,'
@@ -67,6 +136,23 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             . 'st.online_players,st.max_players,st.latency_ms,st.motd,st.checked_at_utc '
             . 'FROM forwext_minecraft_servers s '
             . 'LEFT JOIN forwext_minecraft_server_status st ON st.server_id=s.server_id';
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateSeason(array $row): MinecraftServerSeason
+    {
+        return new MinecraftServerSeason(
+            EntityId::fromString((string) $row['season_id']),
+            (string) $row['slug'],
+            (string) $row['name'],
+            (string) $row['summary'],
+            (string) $row['state'],
+            self::parse((string) $row['starts_at_utc']),
+            self::parse((string) $row['ends_at_utc']),
+            (int) $row['server_count'],
+            self::parse((string) $row['created_at_utc']),
+            self::parse((string) $row['updated_at_utc']),
+        );
     }
 
     /** @param array<string,mixed> $row */
