@@ -28,6 +28,29 @@ final class ResponsiveWebSurfaceTest extends TestCase
         self::assertStringContainsString('<html lang="tr" dir="ltr">', $html);
     }
 
+    public function testReferenceShellUsesDensePrimarySecondaryAndToolPopoverContracts(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $html = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        $css = (string) file_get_contents($root . '/public/assets/site-components.css');
+        $script = (string) file_get_contents($root . '/public/assets/mobile-nav.js');
+
+        self::assertStringContainsString('/* xenforo-reference-density-v1 */', $css);
+        self::assertStringContainsString('data-nav-section-link="portfolio"', $html);
+        self::assertStringContainsString('data-nav-section-link="faq"', $html);
+        self::assertStringContainsString('class="nav-account-grid"', $html);
+        self::assertStringContainsString('nav-tool-menu--messages', $html);
+        self::assertStringContainsString('nav-tool-menu--alerts', $html);
+        self::assertStringContainsString('class="nav-search-menu"', $html);
+        self::assertStringContainsString('class="nav-search-form"', $html);
+        self::assertStringContainsString('name="q"', $html);
+        self::assertStringContainsString('nav-tool-popover', $css);
+        self::assertStringContainsString('nav-search-popover', $css);
+        self::assertStringContainsString('details.classList.contains("nav-search-menu")', $script);
+        self::assertStringContainsString('details.classList.contains("nav-tool-menu")', $script);
+        self::assertStringContainsString('searchInput.focus()', $script);
+    }
+
     public function testMobileNavIsProgressivelyEnhancedAndKeyboardClosable(): void
     {
         $root = dirname(__DIR__, 4);
