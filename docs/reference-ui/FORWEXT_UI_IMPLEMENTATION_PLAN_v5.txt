@@ -42,9 +42,12 @@ PHASE 4 — THREAD VIEW / EDITOR — VERIFIED
 - [DONE] Source contracts, responsive browser fixtures and the complete Phase 4 CI gate passed on main commit a5f81099.
 - [DONE] Phase 4 is VERIFIED; execution moved to Phase 5 members/profile/account.
 
-PHASE 5 — MEMBERS / PROFILE / ACCOUNT
-- Member directory/staff/current visitors.
-- Details/security/privacy/preferences/reactions/signature/follow/ignore/style controls using existing services where available.
+PHASE 5 — MEMBERS / PROFILE / ACCOUNT — IN PROGRESS
+- [DONE] Preserve the existing public member directory and current-online presence surface.
+- [DONE] Add a public staff directory using authoritative staff-role assignments, active-user state and public profile visibility; expose it through member navigation with bounded search/pagination and live-route acceptance.
+- [NEXT] Consolidate account privacy/preferences around existing profile visibility, presence and notification services without introducing duplicate settings state.
+- [NEXT] Add or complete reactions/signature/style controls only where authoritative persistence and permission ownership exist.
+- [NEXT] Finish member/profile/account density, responsive/accessibility coverage and the complete Phase 5 CI gate.
 
 PHASE 6 — DM / ALERTS / ACTIVITY
 - Conversation management states, notification summaries and member activity/recent-content views.
