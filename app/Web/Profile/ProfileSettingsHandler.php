@@ -18,11 +18,9 @@ use Forwext\Core\Profile\ProfileException;
 use Forwext\Core\Profile\ProfileMediaKind;
 use Forwext\Core\Profile\ProfileMediaService;
 use Forwext\Core\Profile\ProfileService;
-use Forwext\Core\Profile\ProfileVisibility;
 use Forwext\Core\Profile\UserProfile;
 use Forwext\Core\Routing\BasePath;
 use InvalidArgumentException;
-use ValueError;
 
 final readonly class ProfileSettingsHandler implements RequestHandlerInterface
 {
@@ -58,7 +56,7 @@ final readonly class ProfileSettingsHandler implements RequestHandlerInterface
                 $this->submit($request, $profile, $now);
                 return Response::redirect($this->basePath->prepend('/account/profile?updated=1'), 303)
                     ->withHeader('Cache-Control', 'no-store');
-            } catch (InvalidArgumentException|ValueError|ProfileException|HttpException) {
+            } catch (InvalidArgumentException|ProfileException|HttpException) {
                 return $this->view($request, $profile, $user->username()->display(), true);
             }
         }
@@ -83,24 +81,18 @@ final readonly class ProfileSettingsHandler implements RequestHandlerInterface
 
         if ($action === 'save_profile') {
             $about = $body['about'] ?? null;
-            $profileVisibility = $body['profile_visibility'] ?? null;
-            $aboutVisibility = $body['about_visibility'] ?? null;
-            $socialVisibility = $body['social_visibility'] ?? null;
-            $mediaVisibility = $body['media_visibility'] ?? null;
-            foreach ([$about, $profileVisibility, $aboutVisibility, $socialVisibility, $mediaVisibility] as $value) {
-                if (!is_string($value)) {
-                    throw new InvalidArgumentException('Profile settings form is incomplete.');
-                }
+            if (!is_string($about)) {
+                throw new InvalidArgumentException('Profile settings form is incomplete.');
             }
 
             $this->profiles->update(
                 $actor,
                 $actor,
                 $about,
-                ProfileVisibility::from($profileVisibility),
-                ProfileVisibility::from($aboutVisibility),
-                ProfileVisibility::from($socialVisibility),
-                ProfileVisibility::from($mediaVisibility),
+                $profile->profileVisibility,
+                $profile->aboutVisibility,
+                $profile->socialVisibility,
+                $profile->mediaVisibility,
                 $profile->socialLinks,
                 $profile->tabs,
                 $now,
