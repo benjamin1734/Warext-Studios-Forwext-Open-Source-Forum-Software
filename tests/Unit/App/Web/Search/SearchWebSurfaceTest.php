@@ -23,6 +23,8 @@ final class SearchWebSurfaceTest extends TestCase
         self::assertStringContainsString('name="tag"', $html);
         self::assertStringContainsString('type="date"', $html);
         self::assertStringContainsString('surface-tabs search-tabs', $html);
+        self::assertStringContainsString('<h1>Ara</h1>', $html);
+        self::assertStringNotContainsString('forum-eyebrow">KEŞİF', $html);
         self::assertStringContainsString('surface-pagination search-pagination', $html);
         self::assertStringContainsString('$actor = $this->viewers->resolve($request);', $handler);
         self::assertStringContainsString('$fetchLimit = $pageSize + 1;', $handler);
