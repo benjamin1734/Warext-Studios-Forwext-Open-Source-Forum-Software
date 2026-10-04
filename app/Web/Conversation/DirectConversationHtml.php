@@ -52,7 +52,7 @@ final class DirectConversationHtml
             . '<h1>Özel Mesajlar</h1><p>Topluluk üyeleriyle yalnız katılımcıların görebildiği konuşmalar.</p></div></header>'
             . '<div class="conversation-layout"><section class="surface-panel conversation-list-panel">'
             . '<div class="conversation-list">' . $list . '</div>' . $pagination . '</section>'
-            . '<aside class="surface-panel conversation-start"><h2>Yeni konuşma</h2>'
+            . '<aside id="new-conversation" class="surface-panel conversation-start"><h2>Yeni konuşma</h2>'
             . '<p>Bir kullanıcı adı ve ilk mesajı gir.</p>'
             . '<form method="post" action="' . $action . '">'
             . self::csrf($csrfToken) . '<input type="hidden" name="action" value="start">'
