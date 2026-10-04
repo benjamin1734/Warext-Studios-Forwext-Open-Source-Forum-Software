@@ -87,6 +87,8 @@ final readonly class MinecraftServerManageHandler implements RequestHandlerInter
                 $this->basePath,
                 $this->servers->canReviewClaims($actor),
                 ($request->query()['updated'] ?? null) === '1',
+                $this->servers->canManageTeam($actor, $server),
+                $this->servers->canManageVoteIntegration($actor, $server),
             ))->withHeader('Cache-Control', 'private, no-store')
                 ->withHeader('X-Robots-Tag', 'noindex,nofollow');
         } catch (PermissionDeniedException) {
