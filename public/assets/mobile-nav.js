@@ -183,6 +183,35 @@
     return "home";
   };
 
+  const sectionFromNavigationLinks = (path) => {
+    let matchedSection = null;
+    let matchedLength = -1;
+
+    for (const anchor of header.querySelectorAll("[data-nav-key][href]")) {
+      if (!(anchor instanceof HTMLAnchorElement)) continue;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) continue;
+
+      const candidate = relativeToBasePath(normalizePath(url.pathname));
+      const matches = candidate === "/"
+        ? path === "/"
+        : path === candidate || path.startsWith(candidate + "/");
+      if (!matches || candidate.length <= matchedLength) continue;
+
+      const direct = anchor.dataset.navSectionLink;
+      const owningSection = anchor.closest("[data-nav-section-link]");
+      const nested = owningSection instanceof HTMLElement ? owningSection.dataset.navSectionLink : null;
+      const account = anchor.closest(".nav-account-menu") !== null ? "account" : null;
+      const section = direct || nested || account;
+      if (section) {
+        matchedSection = section;
+        matchedLength = candidate.length;
+      }
+    }
+
+    return matchedSection;
+  };
+
   const visibleFocusable = () => [...navigation.querySelectorAll(focusableSelector)].filter((element) => {
     if (!(element instanceof HTMLElement)) return false;
     if (element.closest("[hidden]")) return false;
@@ -233,7 +262,8 @@
 
   const markCurrentNavigation = () => {
     const currentPath = normalizePath(window.location.pathname);
-    let activeSection = sectionForPath(relativeToBasePath(currentPath));
+    const relativePath = relativeToBasePath(currentPath);
+    let activeSection = sectionFromNavigationLinks(relativePath) ?? sectionForPath(relativePath);
     if (
       activeSection === "marketplace"
       && header.querySelector('[data-nav-section-link="marketplace"]') === null
