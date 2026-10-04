@@ -327,8 +327,9 @@ try {
   }
   await assertHealthyDocument("minecraft servers");
 
+  let firstServerHref = null;
   if (serverDirectoryState.listRows > 0) {
-    const firstServerHref = await page.locator(".minecraft-server-row a").first().getAttribute("href");
+    firstServerHref = await page.locator(".minecraft-server-row a").first().getAttribute("href");
     if (!firstServerHref) fail("minecraft server voting: published server row has no detail href");
     response = await page.goto(new URL(firstServerHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
     if (!response || response.status() !== 200) fail("minecraft server voting: detail route did not return HTTP 200");
@@ -353,6 +354,35 @@ try {
       await page.getByText("Oyun kaydedildi.", { exact: true }).waitFor();
       await assertHealthyDocument("minecraft server voting");
     }
+
+    const serverDetailUrl = new URL(firstServerHref, baseUrl);
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/updates", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server updates: real route did not return HTTP 200");
+    await page.getByRole("heading", { name: "Sunucu Güncellemeleri", exact: true }).waitFor();
+    const updateFeedState = await page.evaluate(() => ({
+      panels: document.querySelectorAll(".minecraft-update-list").length,
+      rows: document.querySelectorAll(".minecraft-update-row").length,
+      emptyStates: document.querySelectorAll(".minecraft-update-empty").length,
+    }));
+    if (
+      updateFeedState.panels !== 1
+      || (updateFeedState.rows === 0 && updateFeedState.emptyStates !== 1)
+    ) {
+      fail(`minecraft server updates: route contract failed ${JSON.stringify(updateFeedState)}`);
+    }
+    await assertHealthyDocument("minecraft server updates");
+
+    response = await page.goto(serverDetailUrl.toString().replace(/\/$/, "") + "/statistics", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server statistics: real route did not return HTTP 200");
+    await page.getByRole("heading", { name: "Sunucu İstatistikleri", exact: true }).waitFor();
+    const serverStatisticsState = await page.evaluate(() => ({
+      cards: document.querySelectorAll(".minecraft-stat-card").length,
+      trendRows: document.querySelectorAll(".minecraft-vote-trend li").length,
+    }));
+    if (serverStatisticsState.cards !== 6 || serverStatisticsState.trendRows !== 30) {
+      fail(`minecraft server statistics: metric contract failed ${JSON.stringify(serverStatisticsState)}`);
+    }
+    await assertHealthyDocument("minecraft server statistics");
   }
 
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
@@ -635,6 +665,43 @@ try {
     fail(`minecraft servers mobile: responsive contract failed ${JSON.stringify(serverMobileState)}`);
   }
   await assertHealthyDocument("minecraft servers mobile");
+
+  if (firstServerHref) {
+    const mobileServerUrl = new URL(firstServerHref, baseUrl).toString().replace(/\/$/, "");
+    response = await page.goto(mobileServerUrl + "/updates", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server updates mobile: real route did not return HTTP 200");
+    const updateMobileState = await page.evaluate(() => ({
+      width: document.querySelector(".minecraft-update-list") instanceof HTMLElement
+        ? Math.round(document.querySelector(".minecraft-update-list").getBoundingClientRect().width)
+        : 0,
+      viewportWidth: window.innerWidth,
+    }));
+    if (updateMobileState.width > updateMobileState.viewportWidth) {
+      fail(`minecraft server updates mobile: overflow contract failed ${JSON.stringify(updateMobileState)}`);
+    }
+    await assertHealthyDocument("minecraft server updates mobile");
+
+    response = await page.goto(mobileServerUrl + "/statistics", { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server statistics mobile: real route did not return HTTP 200");
+    const statisticsMobileState = await page.evaluate(() => {
+      const grid = document.querySelector(".minecraft-stat-grid");
+      const trend = document.querySelector(".minecraft-vote-trend");
+      return {
+        columns: grid instanceof HTMLElement
+          ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        trendWidth: trend instanceof HTMLElement ? Math.round(trend.getBoundingClientRect().width) : 0,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    if (
+      statisticsMobileState.columns !== 1
+      || statisticsMobileState.trendWidth > statisticsMobileState.viewportWidth
+    ) {
+      fail(`minecraft server statistics mobile: responsive contract failed ${JSON.stringify(statisticsMobileState)}`);
+    }
+    await assertHealthyDocument("minecraft server statistics mobile");
+  }
 
   response = await page.goto(baseUrl + "/servers/manage", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server management mobile: real route did not return HTTP 200");

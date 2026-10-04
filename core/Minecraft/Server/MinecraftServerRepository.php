@@ -37,6 +37,24 @@ interface MinecraftServerRepository
         DateTimeImmutable $now,
     ): bool;
 
+    /** @return list<MinecraftServerUpdate> */
+    public function publicUpdates(EntityId $serverId, int $limit = 20, int $offset = 0): array;
+
+    /** @return list<MinecraftServerUpdate> */
+    public function managementUpdates(EntityId $serverId, int $limit = 100): array;
+
+    public function createUpdate(MinecraftServerUpdate $update, ?EntityId $requiredOwnerUserId = null): void;
+
+    public function setUpdateState(
+        EntityId $serverId,
+        EntityId $updateId,
+        string $state,
+        DateTimeImmutable $now,
+        ?EntityId $requiredOwnerUserId = null,
+    ): bool;
+
+    public function statistics(EntityId $serverId, DateTimeImmutable $now): MinecraftServerStatistics;
+
     public function managementById(EntityId $serverId): ?MinecraftServer;
 
     /** @return list<MinecraftServer> */

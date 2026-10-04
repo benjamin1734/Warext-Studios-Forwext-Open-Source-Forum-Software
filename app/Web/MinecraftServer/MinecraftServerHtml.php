@@ -8,6 +8,8 @@ use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Minecraft\Server\MinecraftServer;
 use Forwext\Core\Minecraft\Server\MinecraftServerClaim;
 use Forwext\Core\Minecraft\Server\MinecraftServerSeason;
+use Forwext\Core\Minecraft\Server\MinecraftServerStatistics;
+use Forwext\Core\Minecraft\Server\MinecraftServerUpdate;
 use Forwext\Core\Minecraft\Server\MinecraftServerVoteSummary;
 use Forwext\Core\Routing\BasePath;
 
@@ -87,6 +89,9 @@ final class MinecraftServerHtml
         if ($discord !== null) {
             $links .= '<a class="fx-btn" href="' . self::e($discord) . '" rel="nofollow noopener noreferrer">Discord</a>';
         }
+        $serverBase = '/servers/' . rawurlencode($server->serverId->value());
+        $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/updates')) . '">Güncellemeler</a>';
+        $links .= '<a class="fx-btn" href="' . self::e($basePath->prepend($serverBase . '/statistics')) . '">İstatistikler</a>';
         if ($canManage) {
             $links .= '<a class="fx-btn fx-btn--primary" href="'
                 . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/manage'))
@@ -257,6 +262,81 @@ final class MinecraftServerHtml
     }
 
     /**
+     * @param list<MinecraftServerUpdate> $updates
+     */
+    public static function updates(
+        MinecraftServer $server,
+        array $updates,
+        int $page,
+        bool $hasMore,
+        BasePath $basePath,
+        bool $authenticated,
+    ): string {
+        $rows = '';
+        foreach ($updates as $update) {
+            $rows .= '<article class="minecraft-update-row"><header><h2>' . self::e($update->title) . '</h2>'
+                . '<time datetime="' . self::e($update->createdAt->format(DATE_ATOM)) . '">'
+                . self::e($update->createdAt->format('d.m.Y H:i')) . '</time></header>'
+                . '<div>' . nl2br(self::e($update->body), false) . '</div></article>';
+        }
+        if ($rows === '') {
+            $rows = '<div class="surface-empty minecraft-update-empty"><strong>Henüz güncelleme yok.</strong>'
+                . '<span>Sunucu ekibi yayınladığında güncellemeler burada görünür.</span></div>';
+        }
+
+        $pagination = self::updatePagination($server, $page, $hasMore, $basePath);
+        $body = '<section class="minecraft-server-page minecraft-update-page discovery-page">'
+            . '<header class="surface-head"><div><a class="surface-back-link" href="'
+            . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()))) . '">← '
+            . self::e($server->name) . '</a><span class="forum-eyebrow">MINECRAFT · GÜNCELLEMELER</span>'
+            . '<h1>Sunucu Güncellemeleri</h1><p>Sunucu sahibi veya yetkili ekip tarafından yayınlanan güncelleme notları.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/servers/' . rawurlencode($server->serverId->value()) . '/statistics',
+            )) . '">İstatistikler</a></header>'
+            . '<section class="surface-panel minecraft-update-list">' . $rows . $pagination . '</section></section>';
+
+        return ProfileHtml::page('Güncellemeler · ' . $server->name, $body, $basePath, authenticated:$authenticated);
+    }
+
+    public static function statistics(
+        MinecraftServer $server,
+        MinecraftServerStatistics $statistics,
+        BasePath $basePath,
+        bool $authenticated,
+    ): string {
+        $maxVotes = max(1, ...array_values($statistics->dailyVotes));
+        $trend = '';
+        foreach ($statistics->dailyVotes as $day=>$votes) {
+            $trend .= '<li><time datetime="' . self::e($day) . '">' . self::e(self::shortDay($day)) . '</time>'
+                . '<meter min="0" max="' . $maxVotes . '" value="' . $votes . '">'
+                . $votes . '</meter><strong>' . $votes . '</strong></li>';
+        }
+
+        $body = '<section class="minecraft-server-page minecraft-statistics-page discovery-page">'
+            . '<header class="surface-head"><div><a class="surface-back-link" href="'
+            . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()))) . '">← '
+            . self::e($server->name) . '</a><span class="forum-eyebrow">MINECRAFT · İSTATİSTİK</span>'
+            . '<h1>Sunucu İstatistikleri</h1><p>Oy geçmişi ve mevcut durum kaydından hesaplanan gerçek sunucu ölçümleri.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/servers/' . rawurlencode($server->serverId->value()) . '/updates',
+            )) . '">Güncellemeler</a></header>'
+            . '<section class="minecraft-stat-grid">'
+            . self::statCard('Toplam oy', (string) $statistics->totalVotes)
+            . self::statCard('Son 30 gün', (string) $statistics->votesLast30Days)
+            . self::statCard('Yayınlanmış güncelleme', (string) $statistics->publishedUpdates)
+            . self::statCard('Mevcut oyuncular', self::players($server))
+            . self::statCard('Gecikme', $server->latencyMs === null ? '—' : $server->latencyMs . ' ms')
+            . self::statCard('Durum', self::statusLabel($server))
+            . '</section>'
+            . '<section class="surface-panel minecraft-vote-trend"><header><div><h2>30 günlük oy trendi</h2>'
+            . '<p>UTC günleri temel alınır. Boş günler sıfır olarak gösterilir.</p></div>'
+            . '<span>Son oy: ' . self::e($statistics->lastVoteAt?->format('d.m.Y H:i') ?? '—') . '</span></header>'
+            . '<ol>' . $trend . '</ol></section></section>';
+
+        return ProfileHtml::page('İstatistikler · ' . $server->name, $body, $basePath, authenticated:$authenticated);
+    }
+
+    /**
      * @param list<MinecraftServer> $servers
      * @param list<MinecraftServerClaim> $claims
      * @param array<string,string> $claimantNames
@@ -301,11 +381,13 @@ final class MinecraftServerHtml
     /**
      * @param list<MinecraftServerClaim> $claims
      * @param array<string,string> $claimantNames
+     * @param list<MinecraftServerUpdate> $updates
      */
     public static function manage(
         MinecraftServer $server,
         array $claims,
         array $claimantNames,
+        array $updates,
         string $csrf,
         BasePath $basePath,
         bool $canReviewClaims,
@@ -353,6 +435,20 @@ final class MinecraftServerHtml
             . self::e($server->description) . '</textarea></label></div>'
             . '<div class="minecraft-manage-actions"><button class="fx-btn fx-btn--primary" type="submit">Değişiklikleri kaydet</button></div>'
             . '</form>';
+
+        $updateRows = self::updateManagementRows($updates, $action, $csrf);
+        $body .= '<section class="surface-panel minecraft-update-management"><div class="minecraft-update-management-head">'
+            . '<div><h2>Sunucu güncellemeleri</h2><p>Yayınlanan notlar public güncelleme akışında görünür.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/servers/' . rawurlencode($server->serverId->value()) . '/updates',
+            )) . '">Public akış</a></div>'
+            . '<form class="minecraft-update-compose" action="' . $action . '" method="post">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+            . '<input type="hidden" name="action" value="publish_update">'
+            . '<label><span>Başlık</span><input name="update_title" maxlength="160" required></label>'
+            . '<label><span>Güncelleme notu</span><textarea name="update_body" maxlength="10000" rows="6" required></textarea></label>'
+            . '<button class="fx-btn fx-btn--primary" type="submit">Güncellemeyi yayınla</button></form>'
+            . '<div class="minecraft-update-management-list">' . $updateRows . '</div></section>';
 
         if ($server->ownerUserId !== null) {
             $body .= '<section class="surface-panel minecraft-ownership-panel"><div><h2>Sahiplik</h2>'
@@ -419,6 +515,32 @@ final class MinecraftServerHtml
             . '<section class="surface-panel minecraft-claim-history"><h2>Talep geçmişin</h2>' . $history . '</section></section>';
 
         return ProfileHtml::page('Sunucu Sahipliği · ' . $server->name, $body, $basePath, authenticated:true);
+    }
+
+    /** @param list<MinecraftServerUpdate> $updates */
+    private static function updateManagementRows(array $updates, string $action, string $csrf): string
+    {
+        if ($updates === []) {
+            return '<div class="surface-empty"><strong>Henüz güncelleme yok.</strong>'
+                . '<span>İlk güncelleme notunu üstteki formdan yayınlayabilirsin.</span></div>';
+        }
+        $rows = '';
+        foreach ($updates as $update) {
+            $targetState = $update->published() ? 'hidden' : 'published';
+            $buttonLabel = $update->published() ? 'Gizle' : 'Yayınla';
+            $stateLabel = $update->published() ? 'Yayında' : 'Gizli';
+            $rows .= '<article class="minecraft-update-manage-row"><div><div><strong>' . self::e($update->title)
+                . '</strong><span>' . self::e($stateLabel) . '</span></div><p>'
+                . self::e(self::excerpt($update->body, 180)) . '</p><small>'
+                . self::e($update->createdAt->format('d.m.Y H:i')) . '</small></div>'
+                . '<form action="' . $action . '" method="post">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="update_state">'
+                . '<input type="hidden" name="update_id" value="' . self::e($update->updateId->value()) . '">'
+                . '<input type="hidden" name="update_state" value="' . self::e($targetState) . '">'
+                . '<button class="fx-btn" type="submit">' . self::e($buttonLabel) . '</button></form></article>';
+        }
+        return $rows;
     }
 
     /**
@@ -552,6 +674,45 @@ final class MinecraftServerHtml
             $params['state'] = $state;
         }
         return $basePath->prepend('/servers/seasons?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986));
+    }
+
+    private static function updatePagination(
+        MinecraftServer $server,
+        int $page,
+        bool $hasMore,
+        BasePath $basePath,
+    ): string {
+        if ($page === 1 && !$hasMore) {
+            return '';
+        }
+        $base = '/servers/' . rawurlencode($server->serverId->value()) . '/updates?page=';
+        $html = '<nav class="surface-pagination" aria-label="Sunucu güncellemeleri sayfaları">';
+        if ($page > 1) {
+            $html .= '<a href="' . self::e($basePath->prepend($base . ($page - 1))) . '">← Önceki</a>';
+        }
+        $html .= '<span aria-current="page">Sayfa ' . $page . '</span>';
+        if ($hasMore) {
+            $html .= '<a href="' . self::e($basePath->prepend($base . ($page + 1))) . '">Sonraki →</a>';
+        }
+        return $html . '</nav>';
+    }
+
+    private static function statCard(string $label, string $value): string
+    {
+        return '<article class="surface-panel minecraft-stat-card"><span>' . self::e($label)
+            . '</span><strong>' . self::e($value) . '</strong></article>';
+    }
+
+    private static function shortDay(string $day): string
+    {
+        $parts = explode('-', $day);
+        return count($parts) === 3 ? $parts[2] . '.' . $parts[1] : $day;
+    }
+
+    private static function excerpt(string $value, int $limit): string
+    {
+        $value = trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+        return mb_strlen($value) <= $limit ? $value : mb_substr($value, 0, $limit - 1) . '…';
     }
 
     private static function directoryRow(MinecraftServer $server, BasePath $basePath): string

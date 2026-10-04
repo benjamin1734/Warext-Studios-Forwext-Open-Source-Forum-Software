@@ -190,6 +190,170 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         return $affected === 1;
     }
 
+    public function publicUpdates(EntityId $serverId, int $limit = 20, int $offset = 0): array
+    {
+        if ($limit < 1 || $limit > 100 || $offset < 0 || $offset > 1_000_000) {
+            throw new InvalidArgumentException('Minecraft server update pagination is invalid.');
+        }
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT update_id,server_id,author_user_id,title,body,state,created_at_utc,updated_at_utc '
+            . 'FROM forwext_minecraft_server_updates '
+            . "WHERE server_id=:server_id AND state='published' "
+            . 'ORDER BY created_at_utc DESC,update_id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            ['server_id'=>$serverId->value()],
+        ));
+        return array_map($this->hydrateUpdate(...), $rows);
+    }
+
+    public function managementUpdates(EntityId $serverId, int $limit = 100): array
+    {
+        if ($limit < 1 || $limit > 200) {
+            throw new InvalidArgumentException('Minecraft server update management limit is invalid.');
+        }
+        $rows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT update_id,server_id,author_user_id,title,body,state,created_at_utc,updated_at_utc '
+            . 'FROM forwext_minecraft_server_updates WHERE server_id=:server_id '
+            . 'ORDER BY created_at_utc DESC,update_id DESC LIMIT ' . $limit,
+            ['server_id'=>$serverId->value()],
+        ));
+        return array_map($this->hydrateUpdate(...), $rows);
+    }
+
+    public function createUpdate(MinecraftServerUpdate $update, ?EntityId $requiredOwnerUserId = null): void
+    {
+        if ($requiredOwnerUserId !== null) {
+            UserId::assert($requiredOwnerUserId);
+        }
+        $this->database->transaction(function (TransactionalQueryExecutor $database) use ($update, $requiredOwnerUserId): void {
+            $row = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$update->serverId->value()],
+            ));
+            if ($row === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            if ($requiredOwnerUserId !== null) {
+                $storedOwner = $row['owner_user_id'] === null ? null : (string) $row['owner_user_id'];
+                if ($storedOwner === null || !hash_equals($storedOwner, $requiredOwnerUserId->value())) {
+                    throw new RuntimeException('Minecraft server ownership changed concurrently.');
+                }
+            }
+            $database->execute(new CompiledQuery(
+                'INSERT INTO forwext_minecraft_server_updates '
+                . '(update_id,server_id,author_user_id,title,body,state,created_at_utc,updated_at_utc) '
+                . 'VALUES (:update_id,:server_id,:author_user_id,:title,:body,:state,:created_at,:updated_at)',
+                [
+                    'update_id'=>$update->updateId->value(),
+                    'server_id'=>$update->serverId->value(),
+                    'author_user_id'=>$update->authorUserId?->value(),
+                    'title'=>$update->title,
+                    'body'=>$update->body,
+                    'state'=>$update->state,
+                    'created_at'=>self::format($update->createdAt),
+                    'updated_at'=>self::format($update->updatedAt),
+                ],
+                true,
+            ));
+        });
+    }
+
+    public function setUpdateState(
+        EntityId $serverId,
+        EntityId $updateId,
+        string $state,
+        DateTimeImmutable $now,
+        ?EntityId $requiredOwnerUserId = null,
+    ): bool {
+        if (!in_array($state, ['published','hidden'], true)) {
+            throw new InvalidArgumentException('Minecraft server update state is invalid.');
+        }
+        if ($requiredOwnerUserId !== null) {
+            UserId::assert($requiredOwnerUserId);
+        }
+        return $this->database->transaction(function (TransactionalQueryExecutor $database) use (
+            $serverId,
+            $updateId,
+            $state,
+            $now,
+            $requiredOwnerUserId,
+        ): bool {
+            $row = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$serverId->value()],
+            ));
+            if ($row === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            if ($requiredOwnerUserId !== null) {
+                $storedOwner = $row['owner_user_id'] === null ? null : (string) $row['owner_user_id'];
+                if ($storedOwner === null || !hash_equals($storedOwner, $requiredOwnerUserId->value())) {
+                    throw new RuntimeException('Minecraft server ownership changed concurrently.');
+                }
+            }
+            return $database->execute(new CompiledQuery(
+                'UPDATE forwext_minecraft_server_updates SET state=:state,updated_at_utc=:updated_at '
+                . 'WHERE update_id=:update_id AND server_id=:server_id',
+                [
+                    'state'=>$state,
+                    'updated_at'=>self::format($now),
+                    'update_id'=>$updateId->value(),
+                    'server_id'=>$serverId->value(),
+                ],
+                true,
+            )) === 1;
+        });
+    }
+
+    public function statistics(EntityId $serverId, DateTimeImmutable $now): MinecraftServerStatistics
+    {
+        $utc = $now->setTimezone(new DateTimeZone('UTC'));
+        $since = $utc->modify('-30 days');
+        $row = $this->database->fetchOne(new CompiledQuery(
+            'SELECT '
+            . '(SELECT COUNT(*) FROM forwext_minecraft_server_votes v WHERE v.server_id=:server_total) AS total_votes,'
+            . '(SELECT COUNT(*) FROM forwext_minecraft_server_votes v '
+            . 'WHERE v.server_id=:server_30 AND v.created_at_utc>=:since_30) AS votes_30d,'
+            . '(SELECT COUNT(*) FROM forwext_minecraft_server_updates u '
+            . "WHERE u.server_id=:server_updates AND u.state='published') AS published_updates,"
+            . '(SELECT MAX(v.created_at_utc) FROM forwext_minecraft_server_votes v '
+            . 'WHERE v.server_id=:server_last) AS last_vote_at',
+            [
+                'server_total'=>$serverId->value(),
+                'server_30'=>$serverId->value(),
+                'since_30'=>self::format($since),
+                'server_updates'=>$serverId->value(),
+                'server_last'=>$serverId->value(),
+            ],
+        ));
+        if ($row === null) {
+            throw new RuntimeException('Minecraft server statistics query failed.');
+        }
+
+        $startDay = $utc->modify('-29 days')->format('Y-m-d');
+        $trendRows = $this->database->fetchAll(new CompiledQuery(
+            'SELECT vote_day,COUNT(*) AS vote_count FROM forwext_minecraft_server_votes '
+            . 'WHERE server_id=:server_id AND vote_day>=:start_day GROUP BY vote_day ORDER BY vote_day ASC',
+            ['server_id'=>$serverId->value(),'start_day'=>$startDay],
+        ));
+        $rawTrend = [];
+        foreach ($trendRows as $trendRow) {
+            $rawTrend[(string) $trendRow['vote_day']] = (int) $trendRow['vote_count'];
+        }
+        $dailyVotes = [];
+        for ($daysAgo = 29; $daysAgo >= 0; $daysAgo--) {
+            $day = $utc->modify('-' . $daysAgo . ' days')->format('Y-m-d');
+            $dailyVotes[$day] = $rawTrend[$day] ?? 0;
+        }
+
+        return new MinecraftServerStatistics(
+            (int) $row['total_votes'],
+            (int) $row['votes_30d'],
+            (int) $row['published_updates'],
+            $row['last_vote_at'] === null ? null : self::parse((string) $row['last_vote_at']),
+            $dailyVotes,
+        );
+    }
+
     public function managementById(EntityId $serverId): ?MinecraftServer
     {
         $row = $this->database->fetchOne(new CompiledQuery(
@@ -519,6 +683,21 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
             ],
             true,
         ));
+    }
+
+    /** @param array<string,mixed> $row */
+    private function hydrateUpdate(array $row): MinecraftServerUpdate
+    {
+        return new MinecraftServerUpdate(
+            EntityId::fromString((string) $row['update_id']),
+            EntityId::fromString((string) $row['server_id']),
+            $row['author_user_id'] === null ? null : UserId::fromStored((string) $row['author_user_id']),
+            (string) $row['title'],
+            (string) $row['body'],
+            (string) $row['state'],
+            self::parse((string) $row['created_at_utc']),
+            self::parse((string) $row['updated_at_utc']),
+        );
     }
 
     /** @param array<string,mixed> $row */
