@@ -17,9 +17,11 @@ PHASE 1 — GLOBAL SHELL / NAV / ACCOUNT / SEARCH / ALERTS / DM — IN PROGRESS
 4. [DONE] Reuse the authorized DM/alert inbox handlers for lazy recent-item previews; no duplicated inbox source of truth.
 5. [VERIFYING] Group account tools, verify exact account active state, add authenticated mobile coverage and exercise lazy message/alert previews in live browser acceptance.
 
-PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW
-- Compact category/node rows, counts, last-post metadata, side widgets.
-- New posts, featured content, latest activity and profile-post discovery as real flows.
+PHASE 2 — FORUM INDEX / DISCOVERY / WHAT IS NEW — IN PROGRESS
+- [DONE] Expose existing permission-aware new, unread, trending, featured and recent thread discovery as real routed pages.
+- [DONE] Connect forum-home and "Neler yeni?" navigation to the discovery routes with compact list rendering.
+- [VERIFYING] Cover the first discovery slice in PHP 8.4/8.5 and live Chromium acceptance.
+- [NEXT] Add profile-post discovery and finish forum-index/sidebar density without duplicating existing activity/search sources.
 
 PHASE 3 — THREAD LIST / SEARCH / WATCH
 - Watched threads/forums, no-reply, started-by-user, posts-by-user and mark-read flows.
