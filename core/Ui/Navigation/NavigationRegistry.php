@@ -47,7 +47,7 @@ final class NavigationRegistry
             placement: NavigationPlacement::More,
         ));
         $registry->register(new NavigationItem(
-            'marketplace', 'Marketplace', '/marketplace', 245,
+            'marketplace', 'Marketplace', '/marketplace', 180,
             placement: NavigationPlacement::Primary,
         ));
         $registry->register(new NavigationItem(
