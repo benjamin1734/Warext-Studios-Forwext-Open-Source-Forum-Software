@@ -52,12 +52,11 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $groups = $this->groups($hierarchy, $forums);
         $body = '<div class="forum-home-layout"><div class="forum-home-main">'
-            . '<section class="forum-hero"><div><span class="forum-eyebrow">TOPLULUK</span>'
-            . '<h1>Forumlar</h1><p>Tüm forumlar, konu sayıları ve son topluluk hareketliliği.</p></div>'
+            . '<section class="forum-hero forum-page-head"><div>'
+            . '<h1>Forumlar</h1><p>Topluluk kategorileri, forumlar ve son hareketler.</p></div>'
             . '<div class="forum-hero-actions">'
-            . '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/search')) . '">İçerik ara</a>'
-            . ($actor === null ? '' : '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/activity')) . '">Neler yeni?</a>')
-            . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/members')) . '">Üyeler</a>'
+            . ($actor === null ? '' : '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/activity')) . '">Yeni mesajlar</a>')
+            . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Forumlarda ara</a>'
             . '</div></section>';
 
         if ($groups === []) {
@@ -71,13 +70,14 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         }
 
         $body .= '</div><aside class="forum-home-side" aria-label="Forum özeti">'
-            . $this->renderStats($summaries)
             . $this->renderRecent($recent)
-            . '<section class="card forum-side-card"><h2>Hızlı bağlantılar</h2>'
+            . '<section class="card forum-side-card"><h2>Topluluk</h2>'
             . '<a href="' . self::e($this->basePath->prepend('/members/online')) . '">Çevrimiçi üyeler <span>→</span></a>'
             . ($actor === null ? '' : '<a href="' . self::e($this->basePath->prepend('/stats')) . '">Forum istatistikleri <span>→</span></a>')
             . '<a href="' . self::e($this->basePath->prepend('/faq')) . '">SSS <span>→</span></a>'
-            . '</section></aside></div>';
+            . '</section>'
+            . $this->renderStats($summaries)
+            . '</aside></div>';
 
         $path = parse_url($request->uri(), PHP_URL_PATH);
         $routePath = is_string($path) && $path !== '' ? $this->basePath->strip($path) : null;
@@ -158,7 +158,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         if ($description !== '') {
             $html .= '<p>' . self::e($description) . '</p>';
         }
-        $html .= '</div><span>' . count($forums) . ' forum</span></header><div class="forum-node-list">';
+        $html .= '</div></header><div class="forum-node-list">';
 
         foreach ($forums as $forum) {
             $summary = $summaries[$forum->id()->value()] ?? [
@@ -241,7 +241,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             $posts += $summary['post_count'];
         }
 
-        return '<section class="card forum-side-card"><h2>Topluluk özeti</h2>'
+        return '<section class="card forum-side-card forum-side-card--stats"><h2>Forum istatistikleri</h2>'
             . '<div class="forum-mini-stats"><div><strong>' . number_format(count($summaries), 0, ',', '.')
             . '</strong><span>Forum</span></div><div><strong>' . number_format($threads, 0, ',', '.')
             . '</strong><span>Konu</span></div><div><strong>' . number_format($posts, 0, ',', '.')
@@ -253,9 +253,9 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
      */
     private function renderRecent(array $recent): string
     {
-        $html = '<section class="card forum-side-card"><h2>Son hareketlilik</h2>';
+        $html = '<section class="card forum-side-card"><h2>Gündem</h2>';
         if ($recent === []) {
-            return '<section class="card forum-side-card forum-side-card--empty"><h2>Son hareketlilik</h2>'
+            return '<section class="card forum-side-card forum-side-card--empty"><h2>Gündem</h2>'
                 . '<p class="forum-side-empty">Henüz görünür konu bulunmuyor.</p></section>';
         }
 
