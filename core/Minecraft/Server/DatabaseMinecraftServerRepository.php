@@ -319,6 +319,7 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
 
     public function updateDetails(
         EntityId $serverId,
+        ?EntityId $expectedOwnerUserId,
         EntityId $actorUserId,
         string $name,
         string $summary,
@@ -334,10 +335,25 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         DateTimeImmutable $now,
     ): void {
         UserId::assert($actorUserId);
+        if ($expectedOwnerUserId !== null) {
+            UserId::assert($expectedOwnerUserId);
+        }
         $this->database->transaction(function (TransactionalQueryExecutor $database) use (
-            $serverId,$actorUserId,$name,$summary,$description,$host,$port,$edition,$versionLabel,$gameMode,
+            $serverId,$expectedOwnerUserId,$actorUserId,$name,$summary,$description,$host,$port,$edition,$versionLabel,$gameMode,
             $websiteUrl,$discordUrl,$listingState,$now,
         ): void {
+            $ownership = $database->fetchOne(new CompiledQuery(
+                'SELECT owner_user_id FROM forwext_minecraft_servers WHERE server_id=:server_id FOR UPDATE',
+                ['server_id'=>$serverId->value()],
+            ));
+            if ($ownership === null) {
+                throw new InvalidArgumentException('Minecraft server was not found.');
+            }
+            $storedOwner = $ownership['owner_user_id'] === null ? null : (string) $ownership['owner_user_id'];
+            $expectedOwner = $expectedOwnerUserId?->value();
+            if (($storedOwner === null) !== ($expectedOwner === null) || ($storedOwner !== null && !hash_equals($storedOwner, (string) $expectedOwner))) {
+                throw new RuntimeException('Minecraft server ownership changed concurrently.');
+            }
             $affected = $database->execute(new CompiledQuery(
                 'UPDATE forwext_minecraft_servers SET name=:name,summary=:summary,description=:description,'
                 . 'host=:host,port=:port,edition=:edition,version_label=:version_label,game_mode=:game_mode,'
