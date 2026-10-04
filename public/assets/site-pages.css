@@ -3017,6 +3017,13 @@ html,body{max-width:100%;overflow-x:clip}
   }
 }
 @media(max-width:520px){
+  .profile-reference-shell .profile-tabs{
+    flex-wrap:wrap;
+    overflow-x:visible;
+  }
+  .profile-reference-shell .profile-tabs a{
+    min-height:44px;
+  }
   .member-pagination{
     justify-content:flex-start;
   }
