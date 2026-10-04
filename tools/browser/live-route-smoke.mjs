@@ -255,6 +255,58 @@ try {
   }
   await assertHealthyDocument("account security");
 
+  response = await page.goto(baseUrl + "/account/conversations", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("direct messages: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Özel Mesajlar", exact: true }).waitFor();
+  const conversationState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    filters: document.querySelectorAll(".conversation-filters a").length,
+    currentFilter: (document.querySelector(".conversation-filters [aria-current='page']")?.textContent ?? "").trim(),
+    startForms: document.querySelectorAll("#new-conversation form").length,
+    listPanels: document.querySelectorAll(".conversation-list-panel").length,
+  }));
+  if (
+    conversationState.section !== "account"
+    || conversationState.accountActive !== "1"
+    || conversationState.filters !== 2
+    || conversationState.currentFilter !== "Tümü"
+    || conversationState.startForms !== 1
+    || conversationState.listPanels !== 1
+  ) {
+    fail(`direct messages: active/density contract failed ${JSON.stringify(conversationState)}`);
+  }
+  await assertHealthyDocument("direct messages");
+
+  response = await page.goto(baseUrl + "/account/conversations?filter=starred", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("direct messages starred: real route did not return HTTP 200");
+  const starredFilter = (await page.locator(".conversation-filters [aria-current='page']").textContent() ?? "").trim();
+  if (starredFilter !== "Yıldızlı") {
+    fail(`direct messages starred: expected active starred filter, got "${starredFilter}"`);
+  }
+  await assertHealthyDocument("direct messages starred");
+
+  response = await page.goto(baseUrl + "/account/notifications", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("notifications: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Bildirimler", exact: true }).waitFor();
+  const notificationState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    panels: document.querySelectorAll(".notification-panel").length,
+    unreadCounters: document.querySelectorAll(".notification-unread").length,
+    settingsLinks: document.querySelectorAll('.notification-head-actions a[href*="/account/notification-settings"]').length,
+  }));
+  if (
+    notificationState.section !== "account"
+    || notificationState.accountActive !== "1"
+    || notificationState.panels !== 1
+    || notificationState.unreadCounters !== 1
+    || notificationState.settingsLinks !== 1
+  ) {
+    fail(`notifications: active/density contract failed ${JSON.stringify(notificationState)}`);
+  }
+  await assertHealthyDocument("notifications");
+
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
@@ -440,6 +492,31 @@ try {
     fail(`member profile mobile: responsive contract failed ${JSON.stringify(memberProfileMobileState)}`);
   }
   await assertHealthyDocument("member profile mobile");
+
+  response = await page.goto(baseUrl + "/account/conversations", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("direct messages mobile: real route did not return HTTP 200");
+  const conversationMobileState = await page.evaluate(() => {
+    const headerAction = document.querySelector('.conversation-head > .fx-btn');
+    const filters = document.querySelector(".conversation-filters");
+    const layout = document.querySelector(".conversation-layout");
+    return {
+      headerActionWidth: headerAction instanceof HTMLElement ? Math.round(headerAction.getBoundingClientRect().width) : 0,
+      filterWidth: filters instanceof HTMLElement ? Math.round(filters.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+      layoutColumns: layout instanceof HTMLElement
+        ? getComputedStyle(layout).gridTemplateColumns.split(" ").filter(Boolean).length
+        : 0,
+    };
+  });
+  if (
+    conversationMobileState.headerActionWidth < 250
+    || conversationMobileState.filterWidth > conversationMobileState.viewportWidth
+    || conversationMobileState.layoutColumns !== 1
+  ) {
+    fail(`direct messages mobile: responsive contract failed ${JSON.stringify(conversationMobileState)}`);
+  }
+  await assertHealthyDocument("direct messages mobile");
+
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
@@ -495,4 +572,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, message/notification routes, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
