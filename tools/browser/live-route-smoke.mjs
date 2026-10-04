@@ -396,6 +396,17 @@ try {
     await assertHealthyDocument("minecraft server team");
   }
 
+  const unownedServerId = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  response = await page.goto(baseUrl + "/servers/" + unownedServerId + "/verify", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail("minecraft server verify: canonical reference route did not return HTTP 200");
+  }
+  await page.getByRole("heading", { name: "Sahipliği talep et", exact: true }).waitFor();
+  if ((await page.locator(".minecraft-claim-form").count()) !== 1) {
+    fail("minecraft server verify: verification form is missing");
+  }
+  await assertHealthyDocument("minecraft server verify");
+
   response = await page.goto(baseUrl + "/servers/compare", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("minecraft server compare: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Sunucu Karşılaştırma", exact: true }).waitFor();
@@ -447,22 +458,28 @@ try {
   await assertHealthyDocument("minecraft server management");
 
   if (serverManagementState.rows > 0) {
-    const manageHref = await page.locator('.minecraft-manage-row a[href$="/manage"]').first().getAttribute("href");
-    if (!manageHref) fail("minecraft server integration: manageable row has no management href");
-    response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-    if (!response || response.status() !== 200) fail("minecraft server integration: management detail did not return HTTP 200");
-
-    const manageUrl = new URL(manageHref, baseUrl);
-    const manageBase = manageUrl.pathname.replace(/\/manage$/, "");
-    for (const [suffix, label] of [["/edit", "edit"], ["/transfer", "transfer"]]) {
-      response = await page.goto(new URL(manageBase + suffix, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-      if (!response || response.status() !== 200) {
-        fail(`minecraft server ${label}: canonical reference route did not return HTTP 200`);
-      }
-      await assertHealthyDocument(`minecraft server ${label}`);
+    const editHref = await page.locator('.minecraft-manage-row a[href$="/edit"]').first().getAttribute("href");
+    if (!editHref) fail("minecraft server integration: manageable row has no canonical edit href");
+    response = await page.goto(new URL(editHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server edit: canonical route did not return HTTP 200");
+    if ((await page.locator(".minecraft-manage-form").count()) !== 1) {
+      fail("minecraft server edit: edit form is missing");
     }
-    response = await page.goto(new URL(manageHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
-    if (!response || response.status() !== 200) fail("minecraft server integration: management detail reload failed");
+    await assertHealthyDocument("minecraft server edit");
+
+    const editUrl = new URL(editHref, baseUrl);
+    const manageBase = editUrl.pathname.replace(/\/edit$/, "");
+    response = await page.goto(new URL(manageBase + "/transfer", baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) {
+      fail("minecraft server transfer: canonical reference route did not return HTTP 200");
+    }
+    if ((await page.locator(".minecraft-ownership-panel").count()) !== 1) {
+      fail("minecraft server transfer: ownership controls are missing");
+    }
+    await assertHealthyDocument("minecraft server transfer");
+
+    response = await page.goto(new URL(editHref, baseUrl).toString(), { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail("minecraft server integration: edit route reload failed");
 
     const settingsLink = page.locator('a[href$="/vote-settings"]').first();
     if ((await settingsLink.count()) === 1) {
