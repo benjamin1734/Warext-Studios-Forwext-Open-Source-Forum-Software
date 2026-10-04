@@ -1226,6 +1226,38 @@ select:focus{
   .thread-discovery-meta{display:grid;gap:3px}
 }
 
+/* discussion-watch-controls-v1 */
+.discussion-watch-form,
+.discussion-mark-read-form{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:0;
+}
+.discussion-watch-form select{
+  min-height:34px;
+  max-width:168px;
+  padding:6px 28px 6px 8px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--panel2);
+  color:var(--text);
+  font-size:11px;
+}
+.discussion-watch-form .fx-btn,
+.discussion-mark-read-form .fx-btn{white-space:nowrap}
+@media(max-width:700px){
+  .discussion-watch-form{
+    width:100%;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  .discussion-watch-form label,
+  .discussion-watch-form select{width:100%;max-width:none}
+  .discussion-mark-read-form{width:100%}
+  .discussion-mark-read-form .fx-btn{width:100%}
+}
+
 /* watched-content-surface-v1 */
 .watched-content{display:grid;gap:12px}
 .watched-head h1{margin:2px 0 4px;font-size:clamp(24px,3vw,31px);letter-spacing:-.025em}
