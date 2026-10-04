@@ -2593,3 +2593,22 @@ body.forwext-nav-open{overflow:hidden}
   .account-preference-card>header>.fx-btn{justify-self:start;min-height:44px}
   .account-presence-preference-form .fx-btn{width:100%;min-height:44px;justify-content:center}
 }
+
+
+/* mobile-secondary-navigation-wrap-v1 */
+@media(max-width:700px){
+  .top-subin{align-items:stretch}
+  .nav-secondary-group{
+    max-width:100%;
+    flex-wrap:wrap;
+    overflow-x:visible;
+  }
+  .nav-secondary-group>a{
+    min-width:0;
+    flex:1 1 auto;
+    justify-content:center;
+    padding-inline:6px;
+    white-space:normal;
+    text-align:center;
+  }
+}
