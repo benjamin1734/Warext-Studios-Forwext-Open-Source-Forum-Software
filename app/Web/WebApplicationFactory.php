@@ -73,6 +73,7 @@ use Forwext\App\Web\Forum\AttachmentStageHandler;
 use Forwext\App\Web\Forum\ForumIndexHandler;
 use Forwext\App\Web\Forum\ForumViewHandler;
 use Forwext\App\Web\Forum\ThreadViewHandler;
+use Forwext\App\Web\Forum\WatchedContentHandler;
 use Forwext\App\Web\Forum\ThreadCreateHandler;
 use Forwext\App\Web\Forum\ThreadReplyHandler;
 use Forwext\App\Web\Forum\ThreadFreshnessHandler;
@@ -2368,6 +2369,32 @@ final readonly class WebApplicationFactory
         $routes->add(new Route(
             'account.bookmarks', [HttpMethod::Get], new PathTemplate('/account/bookmarks'),
             new BookmarkListHandler($socialInteractions, $viewerResolver, $basePath), [$interactionCsrf],
+        ));
+        $routes->add(new Route(
+            'account.watched.threads', [HttpMethod::Get], new PathTemplate('/account/watched/threads'),
+            new WatchedContentHandler(
+                $discussionState,
+                $nodes,
+                $threads,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+                true,
+            ),
+        ));
+        $routes->add(new Route(
+            'account.watched.forums', [HttpMethod::Get], new PathTemplate('/account/watched/forums'),
+            new WatchedContentHandler(
+                $discussionState,
+                $nodes,
+                $threads,
+                $viewerResolver,
+                $authorizer,
+                $basePath,
+                new DateTimeZone($config->requireString('site.timezone')),
+                false,
+            ),
         ));
         $routes->add(new Route(
             'account.relationships', [HttpMethod::Get], new PathTemplate('/account/relationships'),
