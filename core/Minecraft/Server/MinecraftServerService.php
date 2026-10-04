@@ -213,7 +213,8 @@ final readonly class MinecraftServerService
         if ($server->ownerUserId !== null && $server->ownerUserId->equals($actor)) {
             return true;
         }
-        return $this->servers->teamRole($server->serverId, $actor) === 'manager';
+        return $server->ownerUserId !== null
+            && $this->servers->teamRole($server->serverId, $actor) === 'manager';
     }
 
     /** @return list<MinecraftServerTeamMember> */
@@ -592,7 +593,8 @@ final readonly class MinecraftServerService
         if ($server->ownerUserId !== null && $server->ownerUserId->equals($actor)) {
             return;
         }
-        if ($this->servers->teamRole($server->serverId, $actor) === 'manager') {
+        if ($server->ownerUserId !== null
+            && $this->servers->teamRole($server->serverId, $actor) === 'manager') {
             return;
         }
         $gate->require(self::permission('minecraft_server.manage_any'));
