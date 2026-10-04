@@ -76,9 +76,11 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — VERIFIED
 - [VERIFIED] Phase 7 is closed. CI package artifact: forwext-packages-1.0.16-1333, SHA-256 4a37f0938477eefad29b3957ec6e7cba1547afccb1704bcc65dc517a6871fa0c.
 - [NEXT] Phase 8: raise portfolio/FAQ/referral/bug surfaces to v5 density and implement the absent clans/groups family with real persistence, permissions and responsive flows.
 
-PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
-- Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.
-- Build clans/groups because the implementation family is currently absent.
+PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
+- [DONE] Groups foundation implementation: first-party groups module, additive group/member persistence, group.view/create/join/manage-own/moderate-any permissions, shared navigation, /groups, /groups/mine and /groups/{id}, CSRF-protected create/join/request/leave/member moderation, owner/moderator role boundaries and compact responsive surfaces.
+- [DONE] Groups browser acceptance is wired to deterministic post-install fixture data and covers create, approval-request, moderation approval and leave lifecycles so reference routes cannot pass only on empty-state rendering.
+- [NEXT] Qualify the groups foundation across PHP 8.4/8.5, MySQL/MariaDB, security, performance, real Chromium desktop/390px and package/installer gates.
+- [NEXT] Then raise existing portfolio/FAQ/referral/bug modules to the same v5 shell/list/form density and flow standard.
 
 PHASE 9 — MODERATION / INDEPENDENT AUDIT
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
