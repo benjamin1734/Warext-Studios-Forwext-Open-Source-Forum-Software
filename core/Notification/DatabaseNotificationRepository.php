@@ -269,6 +269,19 @@ final readonly class DatabaseNotificationRepository implements NotificationRepos
         )) > 0;
     }
 
+    public function markAllRead(EntityId $userId, DateTimeImmutable $now): int
+    {
+        UserId::assert($userId);
+        return $this->database->execute(new CompiledQuery(
+            'UPDATE `forwext_notifications` SET `read_at_utc` = :read_at_utc, `updated_at_utc` = `updated_at_utc` '
+            . 'WHERE `recipient_user_id` = :recipient_user_id AND `in_app_visible` = 1 AND `read_at_utc` IS NULL',
+            [
+                'read_at_utc' => $this->format($now),
+                'recipient_user_id' => $userId->value(),
+            ],
+        ));
+    }
+
     private function findById(EntityId $notificationId): ?Notification
     {
         $row = $this->database->fetchOne(new CompiledQuery(
