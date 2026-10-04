@@ -68,11 +68,20 @@ final class NotificationInboxHtml
         }
         $pagination .= '</nav>';
 
+        $bulkRead = $unreadCount > 0
+            ? '<form class="notification-bulk-read" method="post" action="'
+                . self::e($basePath->prepend('/account/notifications')) . '">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="mark_all_read">'
+                . '<input type="hidden" name="page" value="' . $page . '">'
+                . '<button class="fx-btn" type="submit">Tümünü okundu işaretle</button></form>'
+            : '';
+
         $content = '<section class="notification-center discovery-page"><header class="surface-head notification-head">'
             . '<div><span class="forum-eyebrow">HESAP</span><h1>Bildirimler</h1>'
             . '<p>Forum, destek, Marketplace, moderasyon ve diğer sistem bildirimlerini takip et.</p></div>'
             . '<div class="notification-head-actions"><div class="notification-unread"><strong>' . $unreadCount
-            . '</strong><span>okunmamış</span></div><a class="fx-btn" href="'
+            . '</strong><span>okunmamış</span></div>' . $bulkRead . '<a class="fx-btn" href="'
             . self::e($basePath->prepend('/account/notification-settings')) . '">Ayarlar</a></div></header>'
             . '<section class="surface-panel notification-panel"><div class="notification-list">' . $items
             . '</div>' . $pagination . '</section></section>';
