@@ -110,7 +110,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
         ): DirectMessage {
             $participant = $database->fetchOne(new CompiledQuery(
                 'SELECT user_id FROM forwext_direct_conversation_participants '
-                . 'WHERE conversation_id=:conversation_id AND user_id=:user_id LIMIT 1 FOR UPDATE',
+                . 'WHERE conversation_id=:conversation_id AND user_id=:user_id AND left_at_utc IS NULL LIMIT 1 FOR UPDATE',
                 ['conversation_id'=>$conversationId->value(),'user_id'=>$actorId->value()],
                 true,
             ));
@@ -124,14 +124,15 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
         });
     }
 
-    public function summaries(EntityId $actorId, int $limit = 30, int $offset = 0): array
+    public function summaries(EntityId $actorId, int $limit = 30, int $offset = 0, bool $starredOnly = false): array
     {
         UserId::assert($actorId);
         self::assertPage($limit, $offset);
+        $starredFilter = $starredOnly ? ' AND p.starred_at_utc IS NOT NULL ' : ' ';
 
         $rows = $this->database->fetchAll(new CompiledQuery(
             'SELECT c.conversation_id,op.user_id AS other_user_id,COALESCE(u.username,\'Silinmiş kullanıcı\') AS other_username,'
-            . 'COALESCE(lm.body,\'\') AS last_message_body,c.updated_at_utc,'
+            . 'COALESCE(lm.body,\'\') AS last_message_body,c.updated_at_utc,(p.starred_at_utc IS NOT NULL) AS starred,'
             . '(SELECT COUNT(*) FROM forwext_direct_messages um '
             . 'WHERE um.conversation_id=c.conversation_id AND (um.author_user_id IS NULL OR um.author_user_id<>:unread_actor_id) '
             . 'AND (p.last_read_at_utc IS NULL OR um.created_at_utc>p.last_read_at_utc)) AS unread_count '
@@ -141,7 +142,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
             . 'ON op.conversation_id=c.conversation_id AND op.user_id<>p.user_id '
             . 'LEFT JOIN forwext_users u ON u.user_id=op.user_id '
             . 'LEFT JOIN forwext_direct_messages lm ON lm.message_id=c.last_message_id '
-            . 'WHERE p.user_id=:actor_id '
+            . 'WHERE p.user_id=:actor_id AND p.left_at_utc IS NULL' . $starredFilter
             . 'ORDER BY c.updated_at_utc DESC,c.conversation_id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['actor_id'=>$actorId->value(),'unread_actor_id'=>$actorId->value()],
         ));
@@ -158,7 +159,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
 
         $row = $this->database->fetchOne(new CompiledQuery(
             'SELECT c.conversation_id,op.user_id AS other_user_id,COALESCE(u.username,\'Silinmiş kullanıcı\') AS other_username,'
-            . 'COALESCE(lm.body,\'\') AS last_message_body,c.updated_at_utc,'
+            . 'COALESCE(lm.body,\'\') AS last_message_body,c.updated_at_utc,(p.starred_at_utc IS NOT NULL) AS starred,'
             . '(SELECT COUNT(*) FROM forwext_direct_messages um '
             . 'WHERE um.conversation_id=c.conversation_id AND (um.author_user_id IS NULL OR um.author_user_id<>:unread_actor_id) '
             . 'AND (p.last_read_at_utc IS NULL OR um.created_at_utc>p.last_read_at_utc)) AS unread_count '
@@ -168,7 +169,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
             . 'ON op.conversation_id=c.conversation_id AND op.user_id<>p.user_id '
             . 'LEFT JOIN forwext_users u ON u.user_id=op.user_id '
             . 'LEFT JOIN forwext_direct_messages lm ON lm.message_id=c.last_message_id '
-            . 'WHERE p.user_id=:actor_id AND c.conversation_id=:conversation_id LIMIT 1',
+            . 'WHERE p.user_id=:actor_id AND p.left_at_utc IS NULL AND c.conversation_id=:conversation_id LIMIT 1',
             [
                 'actor_id'=>$actorId->value(),
                 'unread_actor_id'=>$actorId->value(),
@@ -199,7 +200,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
             'SELECT op.user_id FROM forwext_direct_conversation_participants p '
             . 'INNER JOIN forwext_direct_conversation_participants op '
             . 'ON op.conversation_id=p.conversation_id AND op.user_id<>p.user_id '
-            . 'WHERE p.conversation_id=:conversation_id AND p.user_id=:actor_id LIMIT 1',
+            . 'WHERE p.conversation_id=:conversation_id AND p.user_id=:actor_id AND p.left_at_utc IS NULL LIMIT 1',
             ['conversation_id'=>$conversationId->value(),'actor_id'=>$actorId->value()],
         ));
         return $row === null ? null : UserId::fromStored((string) $row['user_id']);
@@ -212,13 +213,91 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
             'UPDATE forwext_direct_conversation_participants p '
             . 'INNER JOIN forwext_direct_conversations c ON c.conversation_id=p.conversation_id '
             . 'SET p.last_read_message_id=c.last_message_id,p.last_read_at_utc=:read_at '
-            . 'WHERE p.conversation_id=:conversation_id AND p.user_id=:actor_id',
+            . 'WHERE p.conversation_id=:conversation_id AND p.user_id=:actor_id AND p.left_at_utc IS NULL',
             [
                 'read_at'=>self::format(self::utc($at)),
                 'conversation_id'=>$conversationId->value(),
                 'actor_id'=>$actorId->value(),
             ],
         ));
+    }
+
+    public function setStarred(
+        EntityId $actorId,
+        EntityId $conversationId,
+        bool $starred,
+        DateTimeImmutable $at,
+    ): bool {
+        UserId::assert($actorId);
+        if (!$this->activeParticipantExists($actorId, $conversationId)) {
+            return false;
+        }
+
+        $this->database->execute(new CompiledQuery(
+            'UPDATE forwext_direct_conversation_participants SET starred_at_utc='
+            . ($starred ? ':starred_at' : 'NULL')
+            . ' WHERE conversation_id=:conversation_id AND user_id=:actor_id AND left_at_utc IS NULL',
+            $starred
+                ? [
+                    'starred_at'=>self::format(self::utc($at)),
+                    'conversation_id'=>$conversationId->value(),
+                    'actor_id'=>$actorId->value(),
+                ]
+                : [
+                    'conversation_id'=>$conversationId->value(),
+                    'actor_id'=>$actorId->value(),
+                ],
+        ));
+        return true;
+    }
+
+    public function leave(EntityId $actorId, EntityId $conversationId, DateTimeImmutable $at): bool
+    {
+        UserId::assert($actorId);
+        if (!$this->activeParticipantExists($actorId, $conversationId)) {
+            return false;
+        }
+
+        $this->database->execute(new CompiledQuery(
+            'UPDATE forwext_direct_conversation_participants '
+            . 'SET left_at_utc=:left_at,starred_at_utc=NULL '
+            . 'WHERE conversation_id=:conversation_id AND user_id=:actor_id AND left_at_utc IS NULL',
+            [
+                'left_at'=>self::format(self::utc($at)),
+                'conversation_id'=>$conversationId->value(),
+                'actor_id'=>$actorId->value(),
+            ],
+        ));
+        return true;
+    }
+
+    public function reactivate(EntityId $actorId, EntityId $conversationId): bool
+    {
+        UserId::assert($actorId);
+        $exists = $this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_direct_conversation_participants '
+            . 'WHERE conversation_id=:conversation_id AND user_id=:actor_id',
+            ['conversation_id'=>$conversationId->value(),'actor_id'=>$actorId->value()],
+        ));
+        if ((int) $exists !== 1) {
+            return false;
+        }
+
+        $this->database->execute(new CompiledQuery(
+            'UPDATE forwext_direct_conversation_participants SET left_at_utc=NULL '
+            . 'WHERE conversation_id=:conversation_id AND user_id=:actor_id',
+            ['conversation_id'=>$conversationId->value(),'actor_id'=>$actorId->value()],
+        ));
+        return true;
+    }
+
+    private function activeParticipantExists(EntityId $actorId, EntityId $conversationId): bool
+    {
+        return (int) $this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_direct_conversation_participants '
+            . 'WHERE conversation_id=:conversation_id AND user_id=:actor_id AND left_at_utc IS NULL',
+            ['conversation_id'=>$conversationId->value(),'actor_id'=>$actorId->value()],
+        )) === 1;
     }
 
     private function insertMessage(
@@ -280,6 +359,7 @@ final readonly class DatabaseDirectConversationRepository implements DirectConve
             (string) $row['last_message_body'],
             self::parse((string) $row['updated_at_utc']),
             (int) $row['unread_count'],
+            (bool) $row['starred'],
         );
     }
 
