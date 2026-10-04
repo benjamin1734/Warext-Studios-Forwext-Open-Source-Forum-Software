@@ -253,6 +253,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '<header class="thread-quick-reply-head"><div>'
             . '<h2>Yanıt yaz</h2><p>Konu sayfasından ayrılmadan mesajını gönderebilirsin.</p></div>'
             . '<a class="fx-btn" href="' . self::e($action) . '">Tam editörü aç</a></header>'
+            . '<div class="thread-quick-reply-capabilities" aria-label="Düzenleyici özellikleri">'
+            . '<span>Önizleme</span><span>Alıntı</span><span>Yazım denetimi</span><span>Dosya ekleme</span></div>'
             . '<form class="thread-quick-reply-form" method="post" action="' . self::e($action) . '">'
             . '<input type="hidden" name="_csrf" value="' . self::e($token) . '">'
             . RichEditorView::render(
@@ -270,9 +272,14 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '</form></section>';
     }
 
-    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
-    private function renderPost(array $post, ?EntityId $actor, bool $canReply, array $attachments): string
-    {
+    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string,author_group_name:?string} $post */
+    private function renderPost(
+        array $post,
+        Thread $thread,
+        ?EntityId $actor,
+        bool $canReply,
+        array $attachments,
+    ): string {
         $username = $post['author_username'] ?? 'Silinmiş üye';
         $profileUrl = $post['author_username'] === null
             ? null
@@ -295,12 +302,32 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
         $edited = $post['updated_at'] !== $post['created_at']
             ? '<span class="thread-post-edited">Düzenlendi · ' . self::e(self::date($post['updated_at'])) . '</span>'
             : '';
+        $threadAuthorId = $thread->authorUserId();
+        $isThreadStarter = $threadAuthorId !== null
+            && $post['author_user_id'] !== null
+            && hash_equals($threadAuthorId->value(), $post['author_user_id']);
+        $groupName = $profileUrl === null
+            ? 'Silinmiş hesap'
+            : ($post['author_group_name'] ?? 'Topluluk üyesi');
+        $authorBadges = '<div class="thread-post-author-badges"><span class="thread-author-badge">'
+            . self::e($groupName) . '</span>'
+            . ($isThreadStarter ? '<span class="thread-author-badge thread-author-badge--starter">Konu sahibi</span>' : '')
+            . '</div>';
+        $authorLinks = '';
+        if ($profileUrl !== null) {
+            $authorLinks = '<nav class="thread-post-author-links" aria-label="' . self::e($username) . ' bağlantıları">'
+                . '<a href="' . self::e($profileUrl) . '">Profil</a>';
+            if ($actor !== null) {
+                $authorLinks .= '<a href="' . self::e($profileUrl . '/content/threads') . '">Konular</a>'
+                    . '<a href="' . self::e($profileUrl . '/content/posts') . '">Mesajlar</a>';
+            }
+            $authorLinks .= '</nav>';
+        }
 
-        return '<article class="thread-post" id="post-' . self::e($post['post_id']) . '">'
+        return '<article class="thread-post' . ($isThreadStarter ? ' is-thread-starter' : '') . '" id="post-'
+            . self::e($post['post_id']) . '">'
             . '<aside class="thread-post-author">' . $avatar
-            . '<div class="thread-post-author-copy">' . $author
-            . '<span class="thread-post-author-role">' . ($profileUrl === null ? 'Silinmiş hesap' : 'Topluluk üyesi')
-            . '</span></div></aside>'
+            . '<div class="thread-post-author-copy">' . $author . $authorBadges . $authorLinks . '</div></aside>'
             . '<div class="thread-post-body"><header class="thread-post-meta">'
             . '<time datetime="' . self::e($post['created_at']) . '">' . self::e(self::date($post['created_at'])) . '</time>'
             . '<a class="thread-post-permalink" href="#post-' . self::e($post['post_id']) . '" aria-label="Mesaj '
@@ -340,7 +367,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '<div class="thread-attachment-list">' . $items . '</div></section>';
     }
 
-    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
+    /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string,author_group_name:?string} $post */
     private function interactionControls(array $post, ?EntityId $actor, bool $canReply): string
     {
         if ($actor === null) {
