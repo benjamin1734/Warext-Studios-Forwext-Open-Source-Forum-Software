@@ -66,8 +66,8 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — IN PROGRESS
 - [DONE] Management/ownership implementation: owner-scoped and staff-wide management, CSRF-protected editing, transactional ownership claims/review, transfer/release lifecycle, ownership event history, permission-engine integration and responsive management surfaces are implemented without dead controls.
 - [VERIFIED] Management/ownership qualification at d5ffc37: PHP 8.4/8.5 qualification, MySQL 8.4, MariaDB 10.11, security, dependency advisory, low-resource performance, real installed Chromium desktop/390px, full package PHPUnit/build/integrity and packaged-installer smoke are green.
 - [DONE] Voting implementation: additive daily vote persistence, one-vote-per-account-per-UTC-day uniqueness, minecraft_server.vote permission, public vote totals/30-day summary, CSRF-protected vote action and responsive detail-state UI are implemented.
-- [NEXT] Qualify voting across PHP 8.4/8.5, MySQL/MariaDB, security, performance, Chromium and package/installer gates.
-- [NEXT] Then implement server update feed/statistics, vote integration settings and team management.
+- [VERIFIED] Voting qualification at 28be076: PHP 8.4/8.5 qualification, MySQL 8.4, MariaDB 10.11, security/dependency advisory, low-resource performance, real installed Chromium, full package PHPUnit/SDK/React/Next/build/integrity and packaged-installer smoke are green.
+- [NEXT] Implement server update feed and statistics as the next backed slice; then vote integration settings and team management.
 
 PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS
 - Raise existing portfolio/FAQ/referral/bug modules to the same shell/list/form standard.
