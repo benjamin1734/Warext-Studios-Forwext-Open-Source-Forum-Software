@@ -82,6 +82,7 @@ final readonly class MinecraftServerManageHandler implements RequestHandlerInter
                 $server,
                 $claims,
                 $this->claimantNames($claims),
+                $this->servers->managementUpdates($actor, $serverId, 50),
                 $csrf,
                 $this->basePath,
                 $this->servers->canReviewClaims($actor),
@@ -149,6 +150,28 @@ final readonly class MinecraftServerManageHandler implements RequestHandlerInter
                 $claimId,
                 $decision === 'approve',
                 self::optional($body, 'review_note', 1000),
+                $now,
+            );
+            return;
+        }
+
+        if ($action === 'publish_update') {
+            $this->servers->publishUpdate(
+                $actor,
+                $serverId,
+                self::required($body, 'update_title', 160),
+                self::required($body, 'update_body', 10000),
+                $now,
+            );
+            return;
+        }
+
+        if ($action === 'update_state') {
+            $this->servers->changeUpdateState(
+                $actor,
+                $serverId,
+                self::id($body['update_id'] ?? null),
+                self::choice($body, 'update_state', ['published','hidden']),
                 $now,
             );
             return;
