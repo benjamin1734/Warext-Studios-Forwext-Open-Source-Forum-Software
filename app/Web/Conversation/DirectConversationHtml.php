@@ -23,14 +23,17 @@ final class DirectConversationHtml
         DateTimeZone $timezone,
         int $page,
         bool $hasMore,
+        string $filter = 'all',
     ): string {
         $list = '';
         foreach ($conversations as $conversation) {
-            $href = $basePath->prepend(
-                '/account/conversations/' . rawurlencode($conversation->conversationId->value()),
-            );
-            $list .= '<a class="conversation-row' . ($conversation->unreadCount > 0 ? ' is-unread' : '')
-                . '" href="' . self::e($href) . '">'
+            $conversationPath = '/account/conversations/' . rawurlencode($conversation->conversationId->value());
+            $href = self::e($basePath->prepend($conversationPath));
+            $starAction = self::e($basePath->prepend($conversationPath));
+            $starred = $conversation->starred;
+            $list .= '<article class="conversation-row-shell' . ($starred ? ' is-starred' : '') . '">'
+                . '<a class="conversation-row' . ($conversation->unreadCount > 0 ? ' is-unread' : '')
+                . '" href="' . $href . '">'
                 . '<span class="conversation-avatar" aria-hidden="true">'
                 . self::initial($conversation->otherUsername) . '</span>'
                 . '<span class="conversation-row-copy"><span><strong>' . self::e($conversation->otherUsername)
@@ -39,17 +42,34 @@ final class DirectConversationHtml
                     : '') . '</span><small class="conversation-preview">'
                 . self::e(self::preview($conversation->lastMessageBody)) . '</small></span>'
                 . '<time datetime="' . self::e($conversation->updatedAt->format(DATE_ATOM)) . '">'
-                . self::e(self::date($conversation->updatedAt, $timezone)) . '</time></a>';
+                . self::e(self::date($conversation->updatedAt, $timezone)) . '</time></a>'
+                . '<form class="conversation-row-action" method="post" action="' . $starAction . '">'
+                . self::csrf($csrfToken)
+                . '<input type="hidden" name="action" value="' . ($starred ? 'unstar' : 'star') . '">'
+                . '<button type="submit" class="conversation-star-button" aria-label="'
+                . ($starred ? 'Yıldızı kaldır' : 'Konuşmayı yıldızla') . '">'
+                . ($starred ? '★' : '☆') . '</button></form></article>';
         }
         if ($list === '') {
-            $list = '<div class="surface-empty">Henüz özel konuşman yok.</div>';
+            $list = '<div class="surface-empty">'
+                . ($filter === 'starred' ? 'Yıldızlı konuşman yok.' : 'Henüz özel konuşman yok.')
+                . '</div>';
         }
 
-        $pagination = self::pagination($page, $hasMore, $basePath);
+        $allHref = self::e($basePath->prepend('/account/conversations'));
+        $starredHref = self::e($basePath->prepend('/account/conversations?filter=starred'));
+        $filterTabs = '<nav class="surface-tabs conversation-filters" aria-label="Mesaj filtreleri">'
+            . '<a href="' . $allHref . '"' . ($filter === 'all' ? ' aria-current="page"' : '') . '>Tümü</a>'
+            . '<a href="' . $starredHref . '"' . ($filter === 'starred' ? ' aria-current="page"' : '') . '>Yıldızlı</a>'
+            . '</nav>';
+
+        $pagination = self::pagination($page, $hasMore, $basePath, $filter);
         $action = self::e($basePath->prepend('/account/conversations'));
         $body = '<section class="conversation-page discovery-page">'
             . '<header class="surface-head conversation-head"><div><span class="forum-eyebrow">MESAJLAR</span>'
-            . '<h1>Özel Mesajlar</h1><p>Topluluk üyeleriyle yalnız katılımcıların görebildiği konuşmalar.</p></div></header>'
+            . '<h1>Özel Mesajlar</h1><p>Topluluk üyeleriyle yalnız katılımcıların görebildiği konuşmalar.</p></div>'
+            . '<a class="fx-btn fx-btn--primary" href="#new-conversation">Yeni mesaj</a></header>'
+            . $filterTabs
             . '<div class="conversation-layout"><section class="surface-panel conversation-list-panel">'
             . '<div class="conversation-list">' . $list . '</div>' . $pagination . '</section>'
             . '<aside id="new-conversation" class="surface-panel conversation-start"><h2>Yeni konuşma</h2>'
@@ -87,11 +107,20 @@ final class DirectConversationHtml
                 $basePath->prepend('/members/' . rawurlencode($view->summary->otherUsername)),
             ) . '">' . $counterpart . '</a>';
         }
+        $starred = $view->summary->starred;
+        $management = '<div class="conversation-actions">'
+            . '<form method="post" action="' . $action . '">' . self::csrf($csrfToken)
+            . '<input type="hidden" name="action" value="' . ($starred ? 'unstar' : 'star') . '">'
+            . '<button class="fx-btn" type="submit">' . ($starred ? '★ Yıldızı kaldır' : '☆ Yıldızla') . '</button></form>'
+            . '<form method="post" action="' . $action . '">' . self::csrf($csrfToken)
+            . '<input type="hidden" name="action" value="leave">'
+            . '<button class="fx-btn" type="submit">Konuşmadan ayrıl</button></form></div>';
+
         $body = '<section class="conversation-page conversation-detail discovery-page">'
             . '<header class="surface-head conversation-head"><div>'
             . '<a class="surface-back-link" href="' . self::e($basePath->prepend('/account/conversations')) . '">← Mesajlar</a>'
             . '<span class="forum-eyebrow">ÖZEL KONUŞMA</span><h1>' . $counterpart . '</h1>'
-            . '<p>Bu konuşmayı yalnız katılımcılar görüntüleyebilir.</p></div></header>'
+            . '<p>Bu konuşmayı yalnız katılımcılar görüntüleyebilir.</p></div>' . $management . '</header>'
             . '<section class="surface-panel conversation-thread"><div class="conversation-message-list">'
             . $messages . '</div></section>'
             . '<section class="surface-panel conversation-reply"><h2>Yanıtla</h2>'
@@ -127,19 +156,20 @@ final class DirectConversationHtml
             . nl2br(self::e($message->body), false) . '</div></article>';
     }
 
-    private static function pagination(int $page, bool $hasMore, BasePath $basePath): string
+    private static function pagination(int $page, bool $hasMore, BasePath $basePath, string $filter): string
     {
         if ($page === 1 && !$hasMore) {
             return '';
         }
+        $queryPrefix = $filter === 'starred' ? 'filter=starred&amp;' : '';
         $html = '<nav class="surface-pagination" aria-label="Mesaj sayfaları">';
         if ($page > 1) {
-            $html .= '<a href="' . self::e($basePath->prepend('/account/conversations?page=' . ($page - 1)))
+            $html .= '<a href="' . self::e($basePath->prepend('/account/conversations?' . $queryPrefix . 'page=' . ($page - 1)))
                 . '">← Önceki</a>';
         }
         $html .= '<span aria-current="page">Sayfa ' . $page . '</span>';
         if ($hasMore) {
-            $html .= '<a href="' . self::e($basePath->prepend('/account/conversations?page=' . ($page + 1)))
+            $html .= '<a href="' . self::e($basePath->prepend('/account/conversations?' . $queryPrefix . 'page=' . ($page + 1)))
                 . '">Sonraki →</a>';
         }
         return $html . '</nav>';
