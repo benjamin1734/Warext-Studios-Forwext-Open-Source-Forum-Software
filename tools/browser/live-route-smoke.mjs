@@ -213,6 +213,31 @@ try {
   }
   await assertHealthyDocument("account security");
 
+  response = await page.goto(baseUrl + "/activity/threads/featured", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    fail(`thread discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
+  }
+  await page.getByRole("heading", { name: "Öne çıkan konular", exact: true }).waitFor();
+  const discoveryState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    currentTab: (document.querySelector(".thread-discovery-tabs [aria-current='page']")?.textContent ?? "").trim(),
+    panelCount: document.querySelectorAll(".thread-discovery-panel").length,
+    rowColumns: (() => {
+      const row = document.querySelector(".thread-discovery-row");
+      if (!(row instanceof HTMLElement)) return 0;
+      return getComputedStyle(row).gridTemplateColumns.split(" ").filter(Boolean).length;
+    })(),
+  }));
+  if (
+    discoveryState.section !== "whatsnew"
+    || discoveryState.currentTab !== "Öne çıkanlar"
+    || discoveryState.panelCount !== 1
+    || (discoveryState.rowColumns !== 0 && discoveryState.rowColumns !== 2)
+  ) {
+    fail(`thread discovery: active/layout contract failed ${JSON.stringify(discoveryState)}`);
+  }
+  await assertHealthyDocument("thread discovery");
+
   response = await page.goto(baseUrl + "/members", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("members: real route did not return HTTP 200");
   const subnavState = await page.evaluate(() => {
@@ -285,4 +310,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, thread discovery, members subnav and ACP GET/POST.");
