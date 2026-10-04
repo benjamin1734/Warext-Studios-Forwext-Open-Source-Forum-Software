@@ -73,5 +73,13 @@ final class ThreadDiscoveryWebSurfaceTest extends TestCase
         self::assertStringContainsString("'/activity/threads/new'", $profile);
         self::assertStringContainsString("'/activity/threads/unread'", $profile);
         self::assertStringContainsString("'/activity/threads/featured'", $profile);
+
+        $forumIndex = (string) file_get_contents($root . '/app/Web/Forum/ForumIndexHandler.php');
+        self::assertStringContainsString("'/activity/threads/new'", $forumIndex);
+        self::assertStringContainsString('Yeni konular', $forumIndex);
+
+        $live = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
+        self::assertStringContainsString('/activity/threads/featured', $live);
+        self::assertStringContainsString('thread discovery: active/layout contract failed', $live);
     }
 }
