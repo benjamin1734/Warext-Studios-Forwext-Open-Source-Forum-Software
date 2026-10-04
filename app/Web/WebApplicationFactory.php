@@ -119,6 +119,9 @@ use Forwext\App\Web\MinecraftServer\MinecraftServerUpdatesHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerStatisticsHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerManageHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerClaimHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerTeamHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerVoteSettingsHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerVoteFeedHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
 use Forwext\App\Web\Payment\PaymentManageHandler;
 use Forwext\App\Web\Payment\PaymentWebhookHandler;
@@ -1951,6 +1954,24 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/servers/{serverId}/statistics', ['serverId'=>'[0-9a-f]{32}']),
             new MinecraftServerStatisticsHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.team',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/team', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerTeamHandler($minecraftServers, $users, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.vote-settings',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/vote-settings', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerVoteSettingsHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.vote-feed',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/{serverId}/vote-feed', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerVoteFeedHandler($minecraftServers),
         ));
         $routes->add(new Route(
             'server.vote',
