@@ -3394,3 +3394,51 @@ html,body{max-width:100%;overflow-x:clip}
 @media(pointer:coarse){
   .minecraft-server-vote-action .fx-btn,.minecraft-server-vote-state{min-height:44px}
 }
+
+
+/* minecraft-server-updates-statistics-v1 */
+.minecraft-update-list,.minecraft-vote-trend,.minecraft-update-management{display:grid;gap:10px;padding:11px;border-radius:4px}
+.minecraft-update-row{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.minecraft-update-row:last-child{border-bottom:0}
+.minecraft-update-row header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.minecraft-update-row h2{margin:0;font-size:12px}.minecraft-update-row time{color:var(--muted);font-size:8.5px;white-space:nowrap}
+.minecraft-update-row>div{font-size:10px;line-height:1.55;overflow-wrap:anywhere}
+.minecraft-stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.minecraft-stat-card{display:grid;gap:4px;padding:10px;border-radius:4px}
+.minecraft-stat-card span{color:var(--muted);font-size:8.5px;font-weight:700}
+.minecraft-stat-card strong{font-size:17px;line-height:1.1;overflow-wrap:anywhere}
+.minecraft-vote-trend>header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.minecraft-vote-trend h2{margin:0;font-size:12px}.minecraft-vote-trend p{margin:3px 0 0;color:var(--muted);font-size:9px}
+.minecraft-vote-trend>header>span{color:var(--muted);font-size:8.5px;white-space:nowrap}
+.minecraft-vote-trend ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.minecraft-vote-trend li{display:grid;grid-template-columns:42px minmax(0,1fr) 32px;align-items:center;gap:7px;font-size:8.5px}
+.minecraft-vote-trend li time{color:var(--muted)}.minecraft-vote-trend li strong{text-align:right;font-size:9px}
+.minecraft-vote-trend meter{width:100%;height:8px}
+.minecraft-update-management-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.minecraft-update-management-head h2{margin:0;font-size:12px}
+.minecraft-update-management-head p{margin:3px 0 0;color:var(--muted);font-size:9px}
+.minecraft-update-compose{display:grid;grid-template-columns:minmax(180px,.55fr) minmax(0,1fr) auto;align-items:end;gap:8px}
+.minecraft-update-compose label{display:grid;gap:4px}.minecraft-update-compose label>span{color:var(--muted);font-size:9px;font-weight:700}
+.minecraft-update-compose input,.minecraft-update-compose textarea{width:100%;min-width:0;border-radius:3px;font-size:10.5px}
+.minecraft-update-compose input{min-height:36px}.minecraft-update-compose textarea{min-height:86px;resize:vertical}
+.minecraft-update-management-list{display:grid;gap:0}
+.minecraft-update-manage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.minecraft-update-manage-row>div{min-width:0;display:grid;gap:3px}
+.minecraft-update-manage-row>div>div{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.minecraft-update-manage-row strong{font-size:10px}.minecraft-update-manage-row span,.minecraft-update-manage-row small{color:var(--muted);font-size:8.5px}
+.minecraft-update-manage-row p{margin:0;font-size:9px;line-height:1.45;overflow-wrap:anywhere}
+@media(max-width:800px){
+  .minecraft-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .minecraft-update-compose{grid-template-columns:1fr}
+  .minecraft-update-compose .fx-btn{width:100%;justify-content:center}
+}
+@media(max-width:700px){
+  .minecraft-update-row header,.minecraft-vote-trend>header,.minecraft-update-management-head{display:grid}
+  .minecraft-update-row time,.minecraft-vote-trend>header>span{white-space:normal}
+  .minecraft-stat-grid{grid-template-columns:1fr}
+  .minecraft-update-manage-row{grid-template-columns:1fr}
+  .minecraft-update-manage-row .fx-btn{width:100%;justify-content:center}
+}
+@media(pointer:coarse){
+  .minecraft-update-management .fx-btn,.minecraft-update-page .fx-btn,.minecraft-statistics-page .fx-btn{min-height:44px}
+}
