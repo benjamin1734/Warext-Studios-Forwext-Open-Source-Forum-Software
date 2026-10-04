@@ -63,6 +63,54 @@ final class NavigationRegistry
             placement: NavigationPlacement::Utility,
         ));
         $registry->register(new NavigationItem(
+            'profile.settings.own',
+            'Profil ve kimlik',
+            '/account/profile',
+            256,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'sessions.own',
+            'Oturumlar',
+            '/account/sessions',
+            258,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'bookmarks.own',
+            'Kaydedilenler',
+            '/account/bookmarks',
+            262,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'relationships.own',
+            'Takip ve engelleme',
+            '/account/relationships',
+            263,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'notification-settings.own',
+            'Bildirim ayarları',
+            '/account/notification-settings',
+            269,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
+            'presence.own',
+            'Çevrimiçi görünürlük',
+            '/account/presence',
+            269,
+            NavigationAudience::Member,
+            placement: NavigationPlacement::Utility,
+        ));
+        $registry->register(new NavigationItem(
             'security.own',
             'Güvenlik',
             '/account/security',
