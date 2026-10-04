@@ -69,6 +69,7 @@ final class ProfileHtml
             'servers' => 'servers',
             'members' => 'members',
             'portfolio' => 'portfolio',
+            'groups' => 'groups',
             'faq' => 'faq',
         ];
         $primaryNav = $navItem('home', 'Ana Sayfa', '/', ' data-nav-section-link="home"');
@@ -162,6 +163,9 @@ final class ProfileHtml
             . (isset($visibleNavigation['giveaways'])
                 ? $navItem('portfolio.giveaways', 'Çekilişler', '/giveaways')
                 : '');
+
+        $groupsSubNav = $visibleNavItem('groups', 'Klanlar & Gruplar', '/groups')
+            . ($authenticated ? $navItem('groups.mine', 'Klanlarım', '/groups/mine') : '');
 
         $faqSubNav = $visibleNavItem('faq', 'SSS', '/faq')
             . $visibleNavItem('search', 'Toplulukta ara', '/search');
@@ -307,6 +311,7 @@ final class ProfileHtml
             . '<div class="nav-secondary-group" data-nav-section="servers" hidden>' . $serversSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="members" hidden>' . $membersSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="portfolio" hidden>' . $portfolioSubNav . '</div>'
+            . '<div class="nav-secondary-group" data-nav-section="groups" hidden>' . $groupsSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="faq" hidden>' . $faqSubNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="more" hidden>' . $moreNav . '</div>'
             . '<div class="nav-secondary-group" data-nav-section="account" hidden>' . $accountSubNav . '</div>'

@@ -160,6 +160,7 @@ jobs:
           set -euo pipefail
           php tools/quality/smoke-post-install-web.php
           php tools/browser/seed-minecraft-fixtures.php
+          php tools/browser/seed-group-fixtures.php
 
       - name: Start real Forwext runtime
         shell: bash

@@ -171,6 +171,9 @@ use Forwext\App\Web\Giveaway\GiveawayEnterHandler;
 use Forwext\App\Web\Giveaway\GiveawayIndexHandler;
 use Forwext\App\Web\Giveaway\GiveawayManageHandler;
 use Forwext\App\Web\Giveaway\GiveawayProofHandler;
+use Forwext\App\Web\CommunityGroup\CommunityGroupIndexHandler;
+use Forwext\App\Web\CommunityGroup\CommunityGroupMineHandler;
+use Forwext\App\Web\CommunityGroup\CommunityGroupDetailHandler;
 use Forwext\App\Web\Support\MyTicketsHandler;
 use Forwext\App\Web\Support\SupportAttachmentDownloadHandler;
 use Forwext\App\Web\Support\SupportStaffDashboardHandler;
@@ -398,6 +401,8 @@ use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
 use Forwext\Core\Payment\DatabasePaymentRepository;
 use Forwext\Core\Payment\PaymentProviderRegistry;
 use Forwext\Core\Payment\PaymentService;
+use Forwext\Core\CommunityGroup\DatabaseCommunityGroupRepository;
+use Forwext\Core\CommunityGroup\CommunityGroupService;
 use Forwext\Core\Portfolio\DatabasePortfolioRepository;
 use Forwext\Core\Portfolio\PortfolioMediaService;
 use Forwext\Core\Portfolio\PortfolioService;
@@ -1156,6 +1161,9 @@ final readonly class WebApplicationFactory
         $attachmentQuota = new AttachmentQuotaPolicy();
         $attachmentInspector = new AttachmentInspector(new ImageMetadataSanitizer(), $attachmentQuota);
 
+        $groupRepository = new DatabaseCommunityGroupRepository($database);
+        $groups = new CommunityGroupService($groupRepository, $authorizer);
+
         $portfolioRepository = new DatabasePortfolioRepository($database);
         $portfolio = new PortfolioService(
             $database,
@@ -1559,6 +1567,7 @@ final readonly class WebApplicationFactory
         $bugCsrf = $this->bugCsrfMiddleware($config);
         $faqCsrf = $this->faqCsrfMiddleware($config);
         $portfolioCsrf = $this->portfolioCsrfMiddleware($config);
+        $groupCsrf = $this->groupCsrfMiddleware($config);
         $referralCsrf = $this->referralCsrfMiddleware($config);
         $giveawayCsrf = $this->giveawayCsrfMiddleware($config);
         $easterEggCsrf = $this->easterEggCsrfMiddleware($config);
@@ -2432,6 +2441,26 @@ final readonly class WebApplicationFactory
             [$referralCsrf],
         ));
         $routes->add(new Route(
+            'group.index',
+            [HttpMethod::Get],
+            new PathTemplate('/groups'),
+            new CommunityGroupIndexHandler($groups, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'group.mine',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/groups/mine'),
+            new CommunityGroupMineHandler($groups, $viewerResolver, $basePath),
+            [$groupCsrf],
+        ));
+        $routes->add(new Route(
+            'group.detail',
+            [HttpMethod::Get, HttpMethod::Post],
+            new PathTemplate('/groups/{groupId}', ['groupId'=>'[0-9a-f]{32}']),
+            new CommunityGroupDetailHandler($groups, $users, $viewerResolver, $basePath),
+            [$groupCsrf],
+        ));
+        $routes->add(new Route(
             'portfolio.index',
             [HttpMethod::Get],
             new PathTemplate('/portfolio'),
@@ -3299,6 +3328,11 @@ final readonly class WebApplicationFactory
     private function portfolioCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
     {
         return $this->csrfMiddleware($config, 'portfolio', 'forwext.csrf.portfolio.v1');
+    }
+
+    private function groupCsrfMiddleware(ConfigRepository $config): CsrfMiddleware
+    {
+        return $this->csrfMiddleware($config, 'groups', 'forwext.csrf.groups.v1');
     }
 
     private function referralCsrfMiddleware(ConfigRepository $config): CsrfMiddleware

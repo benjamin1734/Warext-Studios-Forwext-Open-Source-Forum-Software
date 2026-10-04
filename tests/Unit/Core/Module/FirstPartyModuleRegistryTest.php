@@ -16,9 +16,10 @@ final class FirstPartyModuleRegistryTest extends TestCase
         $registry = FirstPartyModuleRegistry::withCoreDefaults();
         $definitions = $registry->all();
 
-        self::assertCount(20, $definitions);
+        self::assertCount(21, $definitions);
         self::assertSame('marketplace', $registry->moduleForRoute('marketplace.detail')?->key);
         self::assertSame('minecraft-servers', $registry->moduleForRoute('server.detail')?->key);
+        self::assertSame('groups', $registry->moduleForRoute('group.detail')?->key);
         self::assertSame('payments', $registry->moduleForRoute('payment.webhook')?->key);
         self::assertSame('spellcheck', $registry->moduleForRoute('editor.spellcheck')?->key);
         self::assertSame('analytics', $registry->moduleForRoute('analytics.reports')?->key);
