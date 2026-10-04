@@ -1165,6 +1165,67 @@ select:focus{
   background:var(--panel2);
 }
 
+/* thread-discovery-surface-v1 */
+.thread-discovery{display:grid;gap:12px}
+.thread-discovery-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.thread-discovery-head h1{margin:2px 0 4px;font-size:clamp(24px,3vw,31px);letter-spacing:-.025em}
+.thread-discovery-head p{margin:0;color:var(--muted)}
+.thread-discovery-tabs{margin:0}
+.thread-discovery-panel{padding:0;overflow:hidden}
+.thread-discovery-list{display:grid}
+.thread-discovery-row{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.thread-discovery-row:last-child{border-bottom:0}
+.thread-discovery-row:hover{background:color-mix(in srgb,var(--panel2) 62%,var(--panel))}
+.thread-discovery-row.is-unread{box-shadow:inset 3px 0 0 var(--accent)}
+.thread-discovery-main{min-width:0}
+.thread-discovery-main h2{margin:4px 0 5px;font-size:14px;line-height:1.35}
+.thread-discovery-main h2 a{color:var(--text);text-decoration:none}
+.thread-discovery-main h2 a:hover,.thread-discovery-main h2 a:focus-visible{color:var(--accent)}
+.thread-discovery-badges{min-height:18px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.thread-discovery-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:18px;
+  padding:1px 6px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel2);
+  color:var(--muted);
+  font-size:9.5px;
+  font-weight:750;
+}
+.thread-discovery-badge.is-unread{
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line));
+  color:var(--accent);
+}
+.thread-discovery-meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:10.5px}
+.thread-discovery-stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(54px,auto));
+  gap:1px;
+  border:1px solid var(--line);
+  background:var(--line);
+}
+.thread-discovery-stats>div{min-width:60px;padding:6px 8px;background:var(--panel2);text-align:center}
+.thread-discovery-stats strong{display:block;font-size:12px;color:var(--text)}
+.thread-discovery-stats span{display:block;margin-top:1px;color:var(--muted);font-size:9.5px}
+@media(max-width:700px){
+  .thread-discovery-head{align-items:stretch;display:grid}
+  .thread-discovery-head>.fx-btn{justify-self:start}
+  .thread-discovery-row{grid-template-columns:1fr;gap:9px;padding:12px}
+  .thread-discovery-stats{grid-template-columns:repeat(2,1fr)}
+  .thread-discovery-meta{display:grid;gap:3px}
+}
+
 /* notification-surface-ownership-v2 */
 .notification-settings{display:grid;gap:16px}
 .notification-list{display:grid;gap:9px}
