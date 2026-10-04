@@ -372,9 +372,9 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
         $parameters = [];
         if ($actorUserId !== null) {
             UserId::assert($actorUserId);
-            $where = ' WHERE (s.owner_user_id=:owner_user_id OR EXISTS ('
+            $where = ' WHERE (s.owner_user_id=:owner_user_id OR (s.owner_user_id IS NOT NULL AND EXISTS ('
                 . 'SELECT 1 FROM forwext_minecraft_server_team_members tm '
-                . "WHERE tm.server_id=s.server_id AND tm.user_id=:team_user_id AND tm.role_key='manager'))";
+                . "WHERE tm.server_id=s.server_id AND tm.user_id=:team_user_id AND tm.role_key='manager')))";
             $parameters['owner_user_id'] = $actorUserId->value();
             $parameters['team_user_id'] = $actorUserId->value();
         }
@@ -783,6 +783,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                     throw new RuntimeException('Minecraft server ownership changed concurrently.');
                 }
                 $database->execute(new CompiledQuery(
+                    'DELETE FROM forwext_minecraft_server_team_members WHERE server_id=:server_id',
+                    ['server_id'=>$serverId->value()],
+                    true,
+                ));
+                $database->execute(new CompiledQuery(
+                    'DELETE FROM forwext_minecraft_server_vote_integrations WHERE server_id=:server_id',
+                    ['server_id'=>$serverId->value()],
+                    true,
+                ));
+                $database->execute(new CompiledQuery(
                     "UPDATE forwext_minecraft_server_claims SET state='rejected',reviewed_by_user_id=:reviewer,"
                     . "review_note='Another ownership claim was approved.',reviewed_at_utc=:reviewed_at,"
                     . 'updated_at_utc=:updated_at WHERE server_id=:server_id AND state=\'pending\' AND claim_id<>:claim_id',
@@ -922,6 +932,16 @@ final readonly class DatabaseMinecraftServerRepository implements MinecraftServe
                 'UPDATE forwext_minecraft_servers SET owner_user_id=:owner,updated_at_utc=:updated_at '
                 . 'WHERE server_id=:server_id',
                 ['owner'=>$newOwnerUserId?->value(),'updated_at'=>self::format($now),'server_id'=>$serverId->value()],
+                true,
+            ));
+            $database->execute(new CompiledQuery(
+                'DELETE FROM forwext_minecraft_server_team_members WHERE server_id=:server_id',
+                ['server_id'=>$serverId->value()],
+                true,
+            ));
+            $database->execute(new CompiledQuery(
+                'DELETE FROM forwext_minecraft_server_vote_integrations WHERE server_id=:server_id',
+                ['server_id'=>$serverId->value()],
                 true,
             ));
             $this->appendOwnershipEvent(
