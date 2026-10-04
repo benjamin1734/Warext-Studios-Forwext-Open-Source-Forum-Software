@@ -19,6 +19,7 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         $navigation = (string) file_get_contents($root . '/core/Ui/Navigation/NavigationRegistry.php');
         $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
+        $liveSmoke = (string) file_get_contents($root . '/tools/browser/live-route-smoke.mjs');
 
         self::assertStringContainsString("new PathTemplate('/servers')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}'", $factory);
@@ -41,6 +42,8 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('@media(max-width:700px)', $css);
         self::assertStringContainsString('@media(pointer:coarse)', $css);
         self::assertStringContainsString('min-height:44px', $css);
+        self::assertStringContainsString('minecraft servers: real route did not return HTTP 200', $liveSmoke);
+        self::assertStringContainsString('minecraft servers mobile', $liveSmoke);
     }
 
     public function testFirstPartyModuleOwnsServerRoutesWithoutDeadFutureLinks(): void
