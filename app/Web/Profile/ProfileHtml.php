@@ -144,7 +144,8 @@ final class ProfileHtml
 
         $serversSubNav = $visibleNavItem('servers', 'Sunucu dizini', '/servers')
             . $navItem('servers.compare', 'Karşılaştır', '/servers/compare')
-            . $navItem('servers.seasons', 'Sezonlar', '/servers/seasons');
+            . $navItem('servers.seasons', 'Sezonlar', '/servers/seasons')
+            . ($authenticated ? $navItem('servers.manage', 'Yönetim', '/servers/manage') : '');
 
         $membersSubNav = $visibleNavItem('members', 'Kayıtlı üyeler', '/members')
             . (isset($visibleNavigation['members.online'])

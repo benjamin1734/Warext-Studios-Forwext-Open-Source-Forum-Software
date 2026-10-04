@@ -6,6 +6,7 @@ namespace Forwext\App\Web\MinecraftServer;
 
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Minecraft\Server\MinecraftServer;
+use Forwext\Core\Minecraft\Server\MinecraftServerClaim;
 use Forwext\Core\Minecraft\Server\MinecraftServerSeason;
 use Forwext\Core\Routing\BasePath;
 
@@ -58,7 +59,13 @@ final class MinecraftServerHtml
         return ProfileHtml::page('Minecraft Sunucuları', $body, $basePath, authenticated:$authenticated);
     }
 
-    public static function detail(MinecraftServer $server, BasePath $basePath, bool $authenticated): string
+    public static function detail(
+        MinecraftServer $server,
+        BasePath $basePath,
+        bool $authenticated,
+        bool $canManage = false,
+        bool $canClaim = false,
+    ): string
     {
         $status = self::statusLabel($server);
         $verified = $server->verified()
@@ -74,6 +81,15 @@ final class MinecraftServerHtml
         }
         if ($discord !== null) {
             $links .= '<a class="fx-btn" href="' . self::e($discord) . '" rel="nofollow noopener noreferrer">Discord</a>';
+        }
+        if ($canManage) {
+            $links .= '<a class="fx-btn fx-btn--primary" href="'
+                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/manage'))
+                . '">Sunucuyu yönet</a>';
+        } elseif ($canClaim) {
+            $links .= '<a class="fx-btn fx-btn--primary" href="'
+                . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()) . '/claim'))
+                . '">Sahipliği talep et</a>';
         }
 
         $body = '<section class="minecraft-server-page minecraft-server-detail discovery-page">'
@@ -204,6 +220,248 @@ final class MinecraftServerHtml
             . $tabs . '<section class="surface-panel minecraft-season-list">' . $rows . $pagination . '</section></section>';
 
         return ProfileHtml::page('Sunucu Sezonları', $body, $basePath, authenticated:$authenticated);
+    }
+
+    /**
+     * @param list<MinecraftServer> $servers
+     * @param list<MinecraftServerClaim> $claims
+     * @param array<string,string> $claimantNames
+     */
+    public static function manageIndex(
+        array $servers,
+        array $claims,
+        array $claimantNames,
+        BasePath $basePath,
+    ): string {
+        $rows = '';
+        foreach ($servers as $server) {
+            $href = self::e($basePath->prepend(
+                '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
+            ));
+            $rows .= '<article class="minecraft-manage-row"><div><strong>' . self::e($server->name)
+                . '</strong><span>' . self::e($server->address()) . '</span></div><div class="minecraft-manage-row-meta">'
+                . '<span>' . self::e(self::listingStateLabel($server->listingState)) . '</span>'
+                . '<span>' . ($server->ownerUserId === null ? 'Sahipsiz' : 'Sahipli') . '</span>'
+                . '<a class="fx-btn" href="' . $href . '">Yönet</a></div></article>';
+        }
+        if ($rows === '') {
+            $rows = '<div class="surface-empty"><strong>Yönetilebilir sunucu yok.</strong>'
+                . '<span>Hesabına bağlı veya yetkin dahilindeki sunucular burada görünür.</span></div>';
+        }
+
+        $claimRows = self::claimManagementRows($claims, $claimantNames, $basePath, false, '');
+        $body = '<section class="minecraft-server-page minecraft-manage-page discovery-page">'
+            . '<header class="surface-head"><div><span class="forum-eyebrow">MINECRAFT</span>'
+            . '<h1>Sunucu Yönetimi</h1><p>Sahip olduğun veya yetkin bulunan sunucu kayıtlarını tek yerden yönet.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend('/servers')) . '">Dizine dön</a></header>'
+            . '<section class="surface-panel minecraft-manage-list"><h2>Sunucular</h2>' . $rows . '</section>';
+        if ($claimRows !== '') {
+            $body .= '<section class="surface-panel minecraft-claim-review-list"><h2>Bekleyen sahiplik talepleri</h2>'
+                . $claimRows . '</section>';
+        }
+        $body .= '</section>';
+
+        return ProfileHtml::page('Sunucu Yönetimi', $body, $basePath, authenticated:true);
+    }
+
+    /**
+     * @param list<MinecraftServerClaim> $claims
+     * @param array<string,string> $claimantNames
+     */
+    public static function manage(
+        MinecraftServer $server,
+        array $claims,
+        array $claimantNames,
+        string $csrf,
+        BasePath $basePath,
+        bool $canReviewClaims,
+        bool $updated,
+    ): string {
+        $action = self::e($basePath->prepend(
+            '/servers/' . rawurlencode($server->serverId->value()) . '/manage',
+        ));
+        $notice = $updated
+            ? '<div class="surface-notice" role="status">Sunucu yönetim değişikliği kaydedildi.</div>'
+            : '';
+        $stateOptions = self::option('draft', 'Taslak', $server->listingState)
+            . self::option('published', 'Yayında', $server->listingState);
+        if ($canReviewClaims || $server->listingState === 'suspended') {
+            $stateOptions .= self::option('suspended', 'Askıya alındı', $server->listingState);
+        }
+
+        $body = '<section class="minecraft-server-page minecraft-manage-page discovery-page">'
+            . '<header class="surface-head"><div><a class="surface-back-link" href="'
+            . self::e($basePath->prepend('/servers/manage')) . '">← Sunucu yönetimi</a>'
+            . '<span class="forum-eyebrow">MINECRAFT · YÖNETİM</span><h1>' . self::e($server->name) . '</h1>'
+            . '<p>Listeleme bilgileri, yayın durumu ve sahiplik işlemleri sunucu tarafı yetkileriyle korunur.</p></div>'
+            . '<a class="fx-btn" href="' . self::e($basePath->prepend(
+                '/servers/' . rawurlencode($server->serverId->value()),
+            )) . '">Public görünüm</a></header>' . $notice
+            . '<form class="surface-panel minecraft-manage-form" action="' . $action . '" method="post">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+            . '<input type="hidden" name="action" value="save"><h2>Sunucu bilgileri</h2>'
+            . '<div class="minecraft-manage-fields">'
+            . self::field('Sunucu adı', 'name', $server->name, 120)
+            . self::field('Kısa açıklama', 'summary', $server->summary, 240)
+            . self::field('Sunucu adresi', 'host', $server->host, 255)
+            . self::field('Port', 'port', (string) $server->port, 5, 'number')
+            . self::field('Sürüm etiketi', 'version_label', $server->versionLabel, 64)
+            . self::field('Oyun modu', 'game_mode', $server->gameMode, 64)
+            . self::field('Web sitesi', 'website_url', $server->websiteUrl ?? '', 1000, 'url')
+            . self::field('Discord', 'discord_url', $server->discordUrl ?? '', 1000, 'url')
+            . '<label><span>Edition</span><select name="edition">'
+            . self::option('java', 'Java', $server->edition)
+            . self::option('bedrock', 'Bedrock', $server->edition)
+            . self::option('crossplay', 'Crossplay', $server->edition)
+            . '</select></label>'
+            . '<label><span>Liste durumu</span><select name="listing_state">' . $stateOptions . '</select></label>'
+            . '<label class="minecraft-manage-wide"><span>Açıklama</span><textarea name="description" maxlength="20000" rows="10">'
+            . self::e($server->description) . '</textarea></label></div>'
+            . '<div class="minecraft-manage-actions"><button class="fx-btn fx-btn--primary" type="submit">Değişiklikleri kaydet</button></div>'
+            . '</form>';
+
+        if ($server->ownerUserId !== null) {
+            $body .= '<section class="surface-panel minecraft-ownership-panel"><div><h2>Sahiplik</h2>'
+                . '<p>Transfer yalnızca aktif bir hesaba yapılır. Bırakma işlemi kaydı sahipsiz duruma döndürür.</p></div>'
+                . '<div class="minecraft-ownership-actions"><form action="' . $action . '" method="post">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="transfer">'
+                . '<label><span>Yeni sahip kullanıcı adı</span><input name="target_username" maxlength="64" required></label>'
+                . '<button class="fx-btn" type="submit">Sahipliği aktar</button></form>'
+                . '<form action="' . $action . '" method="post">'
+                . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                . '<input type="hidden" name="action" value="release">'
+                . '<button class="fx-btn fx-btn--danger" type="submit">Sahipliği bırak</button></form></div></section>';
+        }
+
+        if ($canReviewClaims) {
+            $claimRows = self::claimManagementRows($claims, $claimantNames, $basePath, true, $csrf);
+            $body .= '<section class="surface-panel minecraft-claim-review-list"><h2>Sahiplik talepleri</h2>'
+                . ($claimRows !== '' ? $claimRows : '<div class="surface-empty"><strong>Talep yok.</strong>'
+                . '<span>Bu sunucu için incelenecek sahiplik talebi bulunmuyor.</span></div>') . '</section>';
+        }
+        $body .= '</section>';
+
+        return ProfileHtml::page('Sunucu Yönetimi · ' . $server->name, $body, $basePath, authenticated:true);
+    }
+
+    /** @param list<MinecraftServerClaim> $claims */
+    public static function claim(
+        MinecraftServer $server,
+        array $claims,
+        string $csrf,
+        BasePath $basePath,
+        bool $submitted,
+    ): string {
+        $action = self::e($basePath->prepend(
+            '/servers/' . rawurlencode($server->serverId->value()) . '/claim',
+        ));
+        $history = '';
+        foreach ($claims as $claim) {
+            $history .= '<article class="minecraft-claim-history-row"><div><strong>'
+                . self::e(self::claimStateLabel($claim->state)) . '</strong><span>'
+                . self::e($claim->createdAt->format('d.m.Y H:i')) . '</span></div><p>'
+                . self::e($claim->proofNote) . '</p>'
+                . ($claim->reviewNote === null ? '' : '<small>İnceleme notu: ' . self::e($claim->reviewNote) . '</small>')
+                . '</article>';
+        }
+        if ($history === '') {
+            $history = '<div class="surface-empty"><strong>Daha önce talep göndermedin.</strong>'
+                . '<span>Sunucuyla ilişkini açıklayan doğrulanabilir bilgi ekle.</span></div>';
+        }
+
+        $body = '<section class="minecraft-server-page minecraft-claim-page discovery-page">'
+            . '<header class="surface-head"><div><a class="surface-back-link" href="'
+            . self::e($basePath->prepend('/servers/' . rawurlencode($server->serverId->value()))) . '">← '
+            . self::e($server->name) . '</a><span class="forum-eyebrow">MINECRAFT · SAHİPLİK</span>'
+            . '<h1>Sahipliği talep et</h1><p>Talep otomatik sahiplik vermez; yetkili incelemesinden sonra sonuçlandırılır.</p></div></header>'
+            . ($submitted ? '<div class="surface-notice" role="status">Sahiplik talebin incelemeye gönderildi.</div>' : '')
+            . '<form class="surface-panel minecraft-claim-form" action="' . $action . '" method="post">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+            . '<h2>Doğrulama bilgisi</h2><label><span>Sunucuyla ilişkini ve doğrulanabilir kanıtı açıkla</span>'
+            . '<textarea name="proof_note" minlength="20" maxlength="1000" rows="7" required></textarea></label>'
+            . '<p class="surface-help">Hassas parola veya özel anahtar gönderme. Yetkilinin sahipliği doğrulayabileceği güvenli bilgiyi paylaş.</p>'
+            . '<button class="fx-btn fx-btn--primary" type="submit">Talebi gönder</button></form>'
+            . '<section class="surface-panel minecraft-claim-history"><h2>Talep geçmişin</h2>' . $history . '</section></section>';
+
+        return ProfileHtml::page('Sunucu Sahipliği · ' . $server->name, $body, $basePath, authenticated:true);
+    }
+
+    /**
+     * @param list<MinecraftServerClaim> $claims
+     * @param array<string,string> $claimantNames
+     */
+    private static function claimManagementRows(
+        array $claims,
+        array $claimantNames,
+        BasePath $basePath,
+        bool $withActions,
+        string $csrf,
+    ): string {
+        $rows = '';
+        foreach ($claims as $claim) {
+            if (!$withActions && $claim->state !== 'pending') {
+                continue;
+            }
+            $serverHref = self::e($basePath->prepend(
+                '/servers/' . rawurlencode($claim->serverId->value()) . '/manage',
+            ));
+            $name = $claimantNames[$claim->claimantUserId->value()] ?? $claim->claimantUserId->value();
+            $rows .= '<article class="minecraft-claim-review-row"><div class="minecraft-claim-review-copy"><div><strong>'
+                . self::e($name) . '</strong><span>' . self::e(self::claimStateLabel($claim->state)) . '</span></div>'
+                . '<p>' . self::e($claim->proofNote) . '</p><small>' . self::e($claim->createdAt->format('d.m.Y H:i'))
+                . '</small></div>';
+            if ($withActions && $claim->state === 'pending') {
+                $rows .= '<form action="' . $serverHref . '" method="post" class="minecraft-claim-review-actions">'
+                    . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '">'
+                    . '<input type="hidden" name="action" value="claim_review">'
+                    . '<input type="hidden" name="claim_id" value="' . self::e($claim->claimId->value()) . '">'
+                    . '<label><span>İnceleme notu</span><input name="review_note" maxlength="1000"></label>'
+                    . '<button class="fx-btn fx-btn--primary" name="decision" value="approve" type="submit">Onayla</button>'
+                    . '<button class="fx-btn fx-btn--danger" name="decision" value="reject" type="submit">Reddet</button></form>';
+            } elseif (!$withActions) {
+                $rows .= '<a class="fx-btn" href="' . $serverHref . '">İncele</a>';
+            }
+            $rows .= '</article>';
+        }
+        return $rows;
+    }
+
+    private static function field(
+        string $label,
+        string $name,
+        string $value,
+        int $maxlength,
+        string $type = 'text',
+    ): string {
+        $extra = $type === 'number' ? ' min="1" max="65535"' : '';
+        return '<label><span>' . self::e($label) . '</span><input type="' . self::e($type) . '" name="'
+            . self::e($name) . '" maxlength="' . $maxlength . '" value="' . self::e($value) . '"' . $extra . '></label>';
+    }
+
+    private static function option(string $value, string $label, string $current): string
+    {
+        return '<option value="' . self::e($value) . '"' . ($value === $current ? ' selected' : '') . '>'
+            . self::e($label) . '</option>';
+    }
+
+    private static function listingStateLabel(string $state): string
+    {
+        return match ($state) {
+            'published' => 'Yayında',
+            'suspended' => 'Askıda',
+            default => 'Taslak',
+        };
+    }
+
+    private static function claimStateLabel(string $state): string
+    {
+        return match ($state) {
+            'approved' => 'Onaylandı',
+            'rejected' => 'Reddedildi',
+            'cancelled' => 'İptal edildi',
+            default => 'İncelemede',
+        };
     }
 
     private static function seasonRow(MinecraftServerSeason $season): string

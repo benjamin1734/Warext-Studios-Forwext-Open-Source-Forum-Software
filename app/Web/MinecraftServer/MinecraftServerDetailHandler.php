@@ -38,6 +38,8 @@ final readonly class MinecraftServerDetailHandler implements RequestHandlerInter
             $server,
             $this->basePath,
             $actor !== null,
+            $actor !== null && $this->servers->canManage($actor, $server),
+            $actor !== null && $this->servers->canClaim($actor, $server),
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=60' : 'private, no-store');
     }
 

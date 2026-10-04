@@ -3297,3 +3297,66 @@ html,body{max-width:100%;overflow-x:clip}
 @media(pointer:coarse){
   .minecraft-compare-option,.minecraft-compare-form-head .fx-btn{min-height:44px}
 }
+
+
+/* minecraft-server-management-v1 */
+.minecraft-manage-list,.minecraft-claim-review-list,.minecraft-manage-form,.minecraft-ownership-panel,
+.minecraft-claim-form,.minecraft-claim-history{display:grid;gap:10px;padding:11px;border-radius:4px}
+.minecraft-manage-list h2,.minecraft-claim-review-list h2,.minecraft-manage-form h2,.minecraft-ownership-panel h2,
+.minecraft-claim-form h2,.minecraft-claim-history h2{margin:0;font-size:13px}
+.minecraft-manage-row,.minecraft-claim-review-row,.minecraft-claim-history-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:9px 0;border-bottom:1px solid var(--line)
+}
+.minecraft-manage-row:last-child,.minecraft-claim-review-row:last-child,.minecraft-claim-history-row:last-child{border-bottom:0}
+.minecraft-manage-row>div:first-child{min-width:0;display:grid;gap:2px}
+.minecraft-manage-row strong{font-size:10.5px}.minecraft-manage-row span{color:var(--muted);font-size:9px;overflow-wrap:anywhere}
+.minecraft-manage-row-meta{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.minecraft-manage-row-meta>span{padding:2px 6px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);font-size:8.5px}
+.minecraft-manage-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.minecraft-manage-fields label,.minecraft-ownership-actions label,.minecraft-claim-form label,.minecraft-claim-review-actions label{
+  min-width:0;display:grid;gap:4px
+}
+.minecraft-manage-fields label>span,.minecraft-ownership-actions label>span,.minecraft-claim-form label>span,
+.minecraft-claim-review-actions label>span{color:var(--muted);font-size:9px;font-weight:700}
+.minecraft-manage-fields input,.minecraft-manage-fields select,.minecraft-manage-fields textarea,
+.minecraft-ownership-actions input,.minecraft-claim-form textarea,.minecraft-claim-review-actions input{
+  width:100%;min-width:0;border-radius:3px;font-size:10.5px
+}
+.minecraft-manage-fields input,.minecraft-manage-fields select,.minecraft-ownership-actions input,.minecraft-claim-review-actions input{min-height:36px}
+.minecraft-manage-wide{grid-column:1/-1}.minecraft-manage-wide textarea{resize:vertical}
+.minecraft-manage-actions{display:flex;justify-content:flex-end}
+.minecraft-ownership-panel{grid-template-columns:minmax(0,1fr) minmax(300px,1fr);align-items:start}
+.minecraft-ownership-panel p,.minecraft-claim-form p{margin:3px 0 0;color:var(--muted);font-size:9.5px;line-height:1.5}
+.minecraft-ownership-actions{display:grid;gap:8px}
+.minecraft-ownership-actions form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:7px}
+.minecraft-ownership-actions form:last-child{grid-template-columns:1fr;justify-items:end}
+.minecraft-claim-review-copy{min-width:0;display:grid;gap:4px}
+.minecraft-claim-review-copy>div{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.minecraft-claim-review-copy strong{font-size:10.5px}.minecraft-claim-review-copy span,.minecraft-claim-review-copy small{color:var(--muted);font-size:8.5px}
+.minecraft-claim-review-copy p,.minecraft-claim-history-row p{margin:0;font-size:9.5px;line-height:1.5;overflow-wrap:anywhere}
+.minecraft-claim-review-actions{display:grid;grid-template-columns:minmax(140px,1fr) auto auto;align-items:end;gap:6px;min-width:min(100%,430px)}
+.minecraft-claim-history-row{grid-template-columns:1fr;align-items:start}
+.minecraft-claim-history-row>div{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.minecraft-claim-history-row strong{font-size:10px}.minecraft-claim-history-row span,.minecraft-claim-history-row small{color:var(--muted);font-size:8.5px}
+.minecraft-claim-form textarea{resize:vertical;min-height:130px}
+.minecraft-claim-form .surface-help{margin:0}
+@media(max-width:820px){
+  .minecraft-ownership-panel{grid-template-columns:1fr}
+  .minecraft-claim-review-row{grid-template-columns:1fr}
+  .minecraft-claim-review-actions{min-width:0;width:100%}
+}
+@media(max-width:700px){
+  .minecraft-manage-row{grid-template-columns:1fr}
+  .minecraft-manage-row-meta{justify-content:flex-start}
+  .minecraft-manage-fields{grid-template-columns:1fr}
+  .minecraft-manage-wide{grid-column:auto}
+  .minecraft-manage-actions .fx-btn{width:100%;justify-content:center}
+  .minecraft-ownership-actions form,.minecraft-claim-review-actions{grid-template-columns:1fr}
+  .minecraft-ownership-actions form:last-child{justify-items:stretch}
+  .minecraft-ownership-actions .fx-btn,.minecraft-claim-review-actions .fx-btn{width:100%;justify-content:center}
+}
+@media(pointer:coarse){
+  .minecraft-manage-row .fx-btn,.minecraft-manage-actions .fx-btn,.minecraft-ownership-actions .fx-btn,
+  .minecraft-claim-form .fx-btn,.minecraft-claim-review-actions .fx-btn{min-height:44px}
+}

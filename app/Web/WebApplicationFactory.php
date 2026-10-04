@@ -114,6 +114,8 @@ use Forwext\App\Web\MinecraftServer\MinecraftServerDirectoryHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerDetailHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerCompareHandler;
 use Forwext\App\Web\MinecraftServer\MinecraftServerSeasonsHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerManageHandler;
+use Forwext\App\Web\MinecraftServer\MinecraftServerClaimHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
 use Forwext\App\Web\Payment\PaymentManageHandler;
 use Forwext\App\Web\Payment\PaymentWebhookHandler;
@@ -1136,6 +1138,7 @@ final readonly class WebApplicationFactory
         );
         $minecraftServers = new MinecraftServerService(
             new DatabaseMinecraftServerRepository($database),
+            $authorizer,
         );
         $faqSupportBridge = new FaqSupportBridgeService(
             $database,
@@ -1915,6 +1918,24 @@ final readonly class WebApplicationFactory
             [HttpMethod::Get],
             new PathTemplate('/servers/seasons'),
             new MinecraftServerSeasonsHandler($minecraftServers, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.manage.index',
+            [HttpMethod::Get],
+            new PathTemplate('/servers/manage'),
+            new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.manage',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/manage', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerManageHandler($minecraftServers, $users, $viewerResolver, $basePath),
+        ));
+        $routes->add(new Route(
+            'server.claim',
+            [HttpMethod::Get,HttpMethod::Post],
+            new PathTemplate('/servers/{serverId}/claim', ['serverId'=>'[0-9a-f]{32}']),
+            new MinecraftServerClaimHandler($minecraftServers, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'server.detail',
