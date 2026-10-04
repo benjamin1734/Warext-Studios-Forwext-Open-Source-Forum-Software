@@ -213,6 +213,29 @@ try {
   }
   await assertHealthyDocument("account security");
 
+  response = await page.goto(baseUrl + "/account/privacy", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("account privacy: real route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Gizlilik ve görünürlük", exact: true }).waitFor();
+  const privacyState = await page.evaluate(() => ({
+    section: document.querySelector(".top")?.getAttribute("data-active-nav-section") ?? "",
+    accountActive: document.querySelector(".nav-account-menu")?.getAttribute("data-active") ?? "",
+    privacyCurrent: document.querySelector('[data-nav-key="privacy.own"]')?.getAttribute("aria-current") ?? "",
+    formCount: document.querySelectorAll(".account-privacy-form").length,
+    profileVisibility: document.querySelector('select[name="profile_visibility"]') instanceof HTMLSelectElement,
+    presenceVisibility: document.querySelector('select[name="presence_visibility"]') instanceof HTMLSelectElement,
+  }));
+  if (
+    privacyState.section !== "account"
+    || privacyState.accountActive !== "1"
+    || privacyState.privacyCurrent !== "page"
+    || privacyState.formCount !== 2
+    || !privacyState.profileVisibility
+    || !privacyState.presenceVisibility
+  ) {
+    fail(`account privacy: active/layout contract failed ${JSON.stringify(privacyState)}`);
+  }
+  await assertHealthyDocument("account privacy");
+
   response = await page.goto(baseUrl + "/activity/profile-posts", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) {
     fail(`profile post discovery: real route returned HTTP ${response?.status() ?? "no response"}`);
@@ -372,4 +395,4 @@ try {
   await browser.close();
 }
 
-console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, active account navigation, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
+console.log("Forwext live-route browser acceptance passed for login, grouped account tools, inbox previews, account privacy, watched content, member content, thread discovery, members subnav and ACP GET/POST.");
