@@ -36,6 +36,7 @@ final class ProfileActivityWebSurfaceTest extends TestCase
         self::assertStringContainsString('<h1>Neler yeni?</h1>', $activity);
         self::assertStringNotContainsString('forum-eyebrow">TOPLULUK', $activity . $members);
         self::assertStringContainsString('surface-pagination activity-pagination', $activity);
+        self::assertStringContainsString('$routePath . \'?page=\'', $activity);
         self::assertStringContainsString('surface-head member-directory-head', $members);
         self::assertStringContainsString('member-directory-grid', $members);
         self::assertStringContainsString('surface-head online-users-head', $online);
@@ -43,6 +44,13 @@ final class ProfileActivityWebSurfaceTest extends TestCase
         $settings = (string) file_get_contents($root . '/app/Web/Profile/ProfileActivitySettingsHtml.php');
         self::assertStringContainsString('surface-head profile-activity-head', $settings);
         self::assertStringContainsString('profile-activity-form', $settings);
+
+        $factory = (string) file_get_contents($root . '/app/Web/WebApplicationFactory.php');
+        $profile = (string) file_get_contents($root . '/app/Web/Profile/ProfileHtml.php');
+        self::assertStringContainsString("new PathTemplate('/activity/profile-posts')", $factory);
+        self::assertStringContainsString('[ActivityFeedType::ProfilePostCreated]', $factory);
+        self::assertStringContainsString("'Yeni profil gönderileri'", $factory);
+        self::assertStringContainsString("'/activity/profile-posts'", $profile);
     }
 
 }
