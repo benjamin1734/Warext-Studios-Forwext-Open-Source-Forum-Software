@@ -25,10 +25,14 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString("new PathTemplate('/servers/compare')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/seasons')", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/manage')", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/{serverId}/edit'", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/{serverId}/transfer'", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/{serverId}/verify'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/manage'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/claim'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/vote'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/updates'", $factory);
+        self::assertStringContainsString("new PathTemplate('/servers/{serverId}/stats'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/statistics'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/team'", $factory);
         self::assertStringContainsString("new PathTemplate('/servers/{serverId}/vote-settings'", $factory);
@@ -164,6 +168,10 @@ final class MinecraftServerDirectoryWebSurfaceTest extends TestCase
         self::assertStringContainsString('WHERE server_id=:server_id FOR UPDATE', $repository);
         self::assertStringContainsString('Sunucu Güncellemeleri', $html);
         self::assertStringContainsString('Sunucu İstatistikleri', $html);
+        self::assertStringContainsString("'/stats'", $html);
+        self::assertStringContainsString("'/edit'", $html);
+        self::assertStringContainsString("'/transfer'", $html);
+        self::assertStringContainsString("'/verify'", $html);
         self::assertStringContainsString('minecraft server statistics mobile', $liveSmoke);
     }
 
