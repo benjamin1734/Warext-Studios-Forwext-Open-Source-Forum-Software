@@ -27,7 +27,7 @@ final class NotificationInboxWebSurfaceTest extends TestCase
         self::assertStringContainsString("'notification-inbox'", $factory);
 
         self::assertStringContainsString('$this->inbox->markRead($actor, EntityId::fromString($rawId))', $handler);
-        self::assertStringContainsString("$action === 'mark_all_read'", $handler);
+        self::assertStringContainsString("\$action === 'mark_all_read'", $handler);
         self::assertStringContainsString('$this->inbox->markAllRead($actor)', $handler);
         self::assertStringContainsString("preg_match('/^[a-f0-9]{32}$/D'", $handler);
         self::assertStringContainsString('private, no-store', $handler);
