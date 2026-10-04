@@ -3062,3 +3062,53 @@ html,body{max-width:100%;overflow-x:clip}
   }
   .profile-reference-shell .profile-overview-facts>div:last-child{border-bottom:0}
 }
+
+
+/* direct-conversations-v2 */
+.conversation-filters{width:max-content;max-width:100%}
+.conversation-list-panel{padding:0;overflow:hidden}
+.conversation-list{display:grid}
+.conversation-row-shell{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 38px;
+  align-items:stretch;
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.conversation-row-shell:last-child{border-bottom:0}
+.conversation-row-shell.is-starred{box-shadow:inset 2px 0 0 color-mix(in srgb,var(--accent) 70%,transparent)}
+.conversation-row-shell .conversation-row{
+  min-width:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+.conversation-row-shell .conversation-row:hover{background:var(--panel2)}
+.conversation-row-action{display:grid;place-items:center;border-left:1px solid var(--line)}
+.conversation-star-button{
+  width:100%;
+  height:100%;
+  min-height:38px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font:inherit;
+  font-size:17px;
+  cursor:pointer;
+}
+.conversation-row-shell.is-starred .conversation-star-button{color:var(--accent)}
+.conversation-star-button:hover,
+.conversation-star-button:focus-visible{background:var(--panel2);color:var(--accent)}
+.conversation-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.conversation-actions form{margin:0}
+.conversation-actions .fx-btn{min-height:30px;padding:5px 8px;border-radius:4px;font-size:10px}
+.conversation-detail .conversation-head{align-items:flex-end}
+@media(max-width:760px){
+  .conversation-head{align-items:stretch;flex-direction:column}
+  .conversation-head>.fx-btn{width:100%;justify-content:center}
+  .conversation-actions{width:100%;justify-content:stretch}
+  .conversation-actions form{flex:1 1 150px}
+  .conversation-actions .fx-btn{width:100%;justify-content:center}
+  .conversation-row-shell{grid-template-columns:minmax(0,1fr) 44px}
+  .conversation-star-button{min-height:44px}
+}
