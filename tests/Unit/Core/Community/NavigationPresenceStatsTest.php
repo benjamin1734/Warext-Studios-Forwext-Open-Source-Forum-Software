@@ -32,7 +32,7 @@ final class NavigationPresenceStatsTest extends TestCase
         ));
 
         self::assertSame(
-            ['forums', 'search', 'members', 'members.online', 'portfolio', 'marketplace', 'faq'],
+            ['forums', 'search', 'marketplace', 'members', 'members.online', 'portfolio', 'faq'],
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(false)),
         );
         self::assertContains(
@@ -59,6 +59,38 @@ final class NavigationPresenceStatsTest extends TestCase
             'conversations.own',
             array_map(static fn (NavigationItem $item): string => $item->key, $registry->visible(true)),
         );
+    }
+
+    public function testManagedNavigationCanReorderHideAndAddSafeCustomLinks(): void
+    {
+        $registry = NavigationRegistry::withCoreDefaults(managed: [
+            'forums' => [
+                'label' => 'Topluluk',
+                'path' => '/forums',
+                'order' => 190,
+                'audience' => 'public',
+                'placement' => 'primary',
+                'enabled' => true,
+            ],
+            'faq' => ['enabled' => false],
+            'custom.wiki' => [
+                'label' => 'Wiki',
+                'path' => '/wiki',
+                'order' => 185,
+                'audience' => 'public',
+                'placement' => 'primary',
+                'enabled' => true,
+            ],
+        ]);
+
+        $items = $registry->visible(false);
+        $keys = array_map(static fn (NavigationItem $item): string => $item->key, $items);
+        self::assertNotContains('faq', $keys);
+        self::assertContains('custom.wiki', $keys);
+        self::assertSame('Topluluk', $registry->all()[array_search('forums', array_map(
+            static fn (NavigationItem $item): string => $item->key,
+            $registry->all(),
+        ), true)]->label);
     }
 
     public function testMemberDirectoryEscapesLikeWildcardsAndKeepsPublicProfileFilter(): void
