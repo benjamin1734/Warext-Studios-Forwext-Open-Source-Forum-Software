@@ -142,6 +142,35 @@ final class OversightSystemTest extends TestCase
         }
     }
 
+    public function testAuditViewerCanReadDedicatedCaseDetail(): void
+    {
+        $reviewer = $this->id('1');
+        $entry = $this->entryForActor($this->id('2'));
+        $store = new OversightMemoryStore([$entry], new OversightChainState(1, $entry->chainHash));
+        $reviews = new OversightMemoryReviewRepository();
+        $case = new OversightReviewCase(
+            $this->id('c'),
+            $entry->sourceAuditId,
+            $reviewer,
+            'Dedicated case detail.',
+            \Forwext\Core\Moderation\Oversight\OversightReviewStatus::Open,
+            $this->time('2026-09-18 14:05:00.000000'),
+        );
+        $reviews->cases[] = $case;
+        $service = new ModerationOversightService(
+            new OversightTransactionDatabase(),
+            $store,
+            $reviews,
+            new ModerationOversightVerifier($store),
+            $this->gate($reviewer, ['audit.view']),
+        );
+
+        $detail = $service->caseDetail($case->caseId);
+
+        self::assertSame($case->caseId->value(), $detail->case->caseId->value());
+        self::assertSame($entry->chainHash, $detail->source->chainHash);
+    }
+
     public function testIndependentReviewerCanOpenCaseForAnotherModeratorsEntry(): void
     {
         $reviewer = $this->id('1');
