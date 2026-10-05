@@ -56,5 +56,8 @@ final class Phase13AdminAccessQualificationTest extends TestCase
         self::assertStringContainsString('save_appearance', $html);
         self::assertStringContainsString('$analysis->layers()', $html);
         self::assertStringContainsString('acp-access-density-v2', $css);
+        self::assertStringContainsString('.ac-access-table{display:block;min-width:0;width:100%}', $css);
+        self::assertStringContainsString('content:"Primary"', $css);
+        self::assertStringContainsString('content:"Priority"', $css);
     }
 }
