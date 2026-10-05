@@ -877,3 +877,34 @@
   .acp-queue-action .acp-button{width:100%}
   .acp-heading-actions{justify-content:flex-start}
 }
+
+
+/* acp-users-density-v2 */
+.ac-users-shell{display:grid;gap:12px}
+.ac-users-selected{display:grid;gap:12px}
+.ac-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+.ac-heading h1,.ac-heading h2,.ac-heading h3{margin:0}.ac-heading p{margin:4px 0 0}
+.ac-count{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);font-weight:800}
+.ac-users-toolbar{grid-template-columns:minmax(0,1fr) auto auto;margin-bottom:8px}
+.ac-user-result-summary{margin:4px 0 9px;color:var(--muted);font-size:.78rem}
+.ac-user-table{min-width:920px}
+.ac-user-table td{vertical-align:middle}
+.ac-user-table td:first-child strong{display:block}.ac-user-id,.ac-user-subline{display:block;margin-top:3px;color:var(--muted);font-size:.72rem;line-height:1.3}
+.ac-user-email{overflow-wrap:anywhere}
+.ac-user-status{font-size:.74rem}.ac-user-status[data-status="active"]{font-weight:800}.ac-user-status[data-status="deactivated"],.ac-user-status[data-status="deletion_pending"]{opacity:.72}
+.ac-user-empty{display:grid;gap:4px;border:1px dashed var(--line);border-radius:11px;background:var(--panel);padding:16px}.ac-user-empty span{color:var(--muted);font-size:.86rem}
+.ac-user-detail{display:grid;gap:12px}
+.ac-user-summary-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.ac-user-summary-head h2{margin:2px 0}.ac-user-summary-head p{margin:0;color:var(--muted)}
+.ac-user-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:12px}
+.ac-user-fact,.ac-user-access-fact{display:grid;gap:3px;min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:9px 10px}
+.ac-user-fact span,.ac-user-access-fact span{color:var(--muted);font-size:.72rem}.ac-user-fact strong,.ac-user-access-fact strong{min-width:0;overflow-wrap:anywhere;font-size:.83rem}
+.ac-user-lockout-note{margin-top:10px;border:1px dashed var(--line);border-radius:9px;background:var(--panel2);padding:9px 10px;color:var(--muted);font-size:.8rem}
+.ac-user-access-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ac-user-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ac-user-history .ac-table{min-width:720px}
+@media(max-width:700px){
+  .ac-heading,.ac-user-summary-head{display:grid}
+  .ac-users-toolbar{grid-template-columns:1fr}
+  .ac-users-toolbar .ac-btn{width:100%}
+  .ac-user-facts,.ac-user-access-grid,.ac-user-edit-grid{grid-template-columns:1fr}
+}
