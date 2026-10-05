@@ -37,6 +37,7 @@ use Forwext\Core\Forum\Moderation\ModerationAuditStore;
 use Forwext\Core\Forum\Moderation\ModerationReasonCode;
 use Forwext\Core\Forum\Moderation\ModerationRequestId;
 use Forwext\Core\Moderation\Discipline\DatabaseDisciplineAuthenticationAvailability;
+use Forwext\Core\Moderation\Discipline\DatabaseDisciplineRepository;
 use Forwext\Core\Moderation\Discipline\DisciplineAction;
 use Forwext\Core\Moderation\Discipline\DisciplineActionType;
 use Forwext\Core\Moderation\Discipline\DisciplineAppealHookEvent;
@@ -167,6 +168,33 @@ final class DisciplineSystemTest extends TestCase
         } finally {
             self::assertSame([], $repository->actions);
         }
+    }
+
+    public function testDatabaseRepositoryUsesUniqueNativePdoTimeParameters(): void
+    {
+        $database = new DisciplineQueryCaptureDatabase();
+        $repository = new DatabaseDisciplineRepository($database);
+        $at = new DateTimeImmutable('2026-09-18T10:00:00+00:00');
+        $userId = EntityId::fromString(str_repeat('a', 32));
+
+        $repository->activeCount([DisciplineActionType::Warning], $at);
+        $countQuery = $database->lastQuery;
+        self::assertNotNull($countQuery);
+        self::assertStringContainsString(':starts_at', $countQuery->sql);
+        self::assertStringContainsString(':expires_at', $countQuery->sql);
+        self::assertArrayHasKey('starts_at', $countQuery->parameters);
+        self::assertArrayHasKey('expires_at', $countQuery->parameters);
+        self::assertStringNotContainsString('> :at)', $countQuery->sql);
+
+        $repository->activePoints($userId, $at);
+        $pointsQuery = $database->lastQuery;
+        self::assertNotNull($pointsQuery);
+        self::assertStringContainsString(':starts_at', $pointsQuery->sql);
+        self::assertStringContainsString(':expires_at', $pointsQuery->sql);
+        self::assertSame(
+            ['user_id', 'starts_at', 'expires_at'],
+            array_keys($pointsQuery->parameters),
+        );
     }
 
     public function testDatabaseAuthenticationAvailabilityFailsClosedForActiveBanOrSuspension(): void
@@ -468,5 +496,28 @@ final class DisciplineAvailabilityDatabase implements QueryExecutor
     {
         $this->lastQuery = $query;
         return $this->value;
+    }
+}
+
+
+final class DisciplineQueryCaptureDatabase implements TransactionalQueryExecutor
+{
+    public ?CompiledQuery $lastQuery = null;
+    private bool $inside = false;
+
+    public function execute(CompiledQuery $query): int { $this->lastQuery = $query; return 0; }
+    public function fetchOne(CompiledQuery $query): ?array { $this->lastQuery = $query; return null; }
+    public function fetchAll(CompiledQuery $query): array { $this->lastQuery = $query; return []; }
+    public function fetchValue(CompiledQuery $query): mixed { $this->lastQuery = $query; return 0; }
+    public function inTransaction(): bool { return $this->inside; }
+    public function transaction(Closure $callback): mixed
+    {
+        $previous = $this->inside;
+        $this->inside = true;
+        try {
+            return $callback($this);
+        } finally {
+            $this->inside = $previous;
+        }
     }
 }
