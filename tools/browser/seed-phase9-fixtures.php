@@ -41,6 +41,25 @@ if (!is_string($administratorId) || preg_match('/^[a-f0-9]{32}$/D', $administrat
     throw new RuntimeException('Phase 9 browser fixture administrator is unavailable.');
 }
 
+$requiredPermissions = ['moderation.access','moderation.manage','audit.view','audit.review'];
+$permissionRows = $database->fetchAll(new CompiledQuery(
+    "SELECT permission_key,effect FROM forwext_permission_global_rules "
+    . "WHERE subject_type='user' AND subject_id=:user_id "
+    . "AND permission_key IN ('moderation.access','moderation.manage','audit.view','audit.review') "
+    . 'ORDER BY permission_key',
+    ['user_id'=>$administratorId],
+));
+$permissionMap = [];
+foreach ($permissionRows as $permissionRow) {
+    $permissionMap[(string) $permissionRow['permission_key']] = (string) $permissionRow['effect'];
+}
+foreach ($requiredPermissions as $permissionKey) {
+    if (($permissionMap[$permissionKey] ?? null) !== 'allow') {
+        throw new RuntimeException('Phase 9 browser administrator is missing permission: ' . $permissionKey);
+    }
+}
+echo 'Phase 9 administrator permissions: ' . implode(',', array_keys($permissionMap)) . "\n";
+
 $sourceAuditId = EntityId::fromString(str_repeat('ce', 16));
 $caseId = str_repeat('cd', 16);
 $sourceExists = (int) $database->fetchValue(new CompiledQuery(
