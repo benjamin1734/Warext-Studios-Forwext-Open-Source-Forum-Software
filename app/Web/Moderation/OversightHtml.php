@@ -117,7 +117,9 @@ final class OversightHtml
             . '<div><dt>Hedef</dt><dd>' . self::e($source->targetType . ':' . $source->targetId) . '</dd></div>'
             . '<div><dt>Request</dt><dd>' . self::e($source->requestId) . '</dd></div>'
             . '<div><dt>Zincir</dt><dd>#' . $source->sequence . ' · ' . self::e(substr($source->chainHash, 0, 24)) . '…</dd></div></dl></section></div>'
-            . $resolution . '</section>';
+            . $resolution
+            . '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script>'
+            . '</section>';
 
         return ProfileHtml::page('Denetim vakası', $content, $basePath, authenticated: true);
     }
