@@ -192,11 +192,12 @@ final readonly class DatabaseDisciplineRepository implements DisciplineRepositor
     public function activeCount(array $types, DateTimeImmutable $at): int
     {
         [$in, $parameters] = self::typeFilter($types);
-        $parameters['at'] = self::format($at);
+        $parameters['starts_at'] = self::format($at);
+        $parameters['expires_at'] = self::format($at);
         return (int) $this->database->fetchValue(new CompiledQuery(
             "SELECT COUNT(*) FROM forwext_discipline_actions "
             . "WHERE action_type IN (" . $in . ") AND revoked_at_utc IS NULL "
-            . "AND starts_at_utc <= :at AND (expires_at_utc IS NULL OR expires_at_utc > :at)",
+            . "AND starts_at_utc <= :starts_at AND (expires_at_utc IS NULL OR expires_at_utc > :expires_at)",
             $parameters,
         ));
     }
@@ -207,8 +208,12 @@ final readonly class DatabaseDisciplineRepository implements DisciplineRepositor
         return (int) $this->database->fetchValue(new CompiledQuery(
             "SELECT COALESCE(SUM(points),0) FROM forwext_discipline_actions "
             . "WHERE user_id=:user_id AND action_type='warning' AND revoked_at_utc IS NULL "
-            . "AND starts_at_utc <= :at AND (expires_at_utc IS NULL OR expires_at_utc > :at)",
-            ['user_id' => $userId->value(), 'at' => self::format($at)],
+            . "AND starts_at_utc <= :starts_at AND (expires_at_utc IS NULL OR expires_at_utc > :expires_at)",
+            [
+                'user_id' => $userId->value(),
+                'starts_at' => self::format($at),
+                'expires_at' => self::format($at),
+            ],
         ));
     }
 
