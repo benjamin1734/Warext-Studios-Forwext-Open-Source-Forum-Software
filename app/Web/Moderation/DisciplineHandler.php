@@ -29,6 +29,7 @@ final readonly class DisciplineHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private DisciplineCapabilities $capabilities,
+        private bool $canViewAudit = false,
     ) {
     }
 
@@ -50,6 +51,7 @@ final readonly class DisciplineHandler
             $usernames,
             $this->basePath,
             $this->capabilities,
+            $this->canViewAudit,
         )));
     }
 
