@@ -8,6 +8,7 @@ use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Moderation\Oversight\ModerationOversightService;
+use Forwext\Core\Moderation\Oversight\OversightReviewerDirectory;
 use Forwext\Core\Moderation\Oversight\OversightAnomalySeverity;
 use Forwext\Core\Routing\BasePath;
 use InvalidArgumentException;
@@ -19,6 +20,7 @@ final readonly class OversightHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private OversightCapabilities $capabilities,
+        private ?OversightReviewerDirectory $reviewers = null,
     ) {
     }
 
@@ -29,6 +31,16 @@ final readonly class OversightHandler
             $this->oversight->overview(100, $verify),
             $this->basePath,
             $this->capabilities,
+            $this->reviewers?->list(50) ?? [],
+        )));
+    }
+
+    public function viewCase(string $caseId): Response
+    {
+        return $this->secure(Response::html(OversightHtml::caseDetail(
+            $this->oversight->caseDetail(EntityId::fromString($caseId)),
+            $this->basePath,
+            $this->capabilities,
         )));
     }
 
@@ -36,11 +48,11 @@ final readonly class OversightHandler
     {
         $this->requireMutation($request);
         $body = $request->parsedBody();
-        $this->oversight->openCase(
+        $case = $this->oversight->openCase(
             $this->id($body, 'source_audit_id'),
             $this->string($body, 'summary', 1000),
         );
-        return $this->redirect();
+        return $this->redirectCase($case->caseId->value());
     }
 
     public function resolveCase(Request $request, string $caseId): Response
@@ -50,7 +62,7 @@ final readonly class OversightHandler
             EntityId::fromString($caseId),
             $this->string($request->parsedBody(), 'resolution', 1000),
         );
-        return $this->redirect();
+        return $this->redirectCase($caseId);
     }
 
     public function flag(Request $request): Response
@@ -105,6 +117,14 @@ final readonly class OversightHandler
             throw new InvalidArgumentException('Oversight form field is invalid: ' . $key);
         }
         return $value;
+    }
+
+    private function redirectCase(string $caseId): Response
+    {
+        return $this->secure(Response::redirect(
+            $this->basePath->prepend('/moderation/oversight/cases/' . rawurlencode($caseId)),
+            303,
+        ));
     }
 
     private function redirect(): Response
