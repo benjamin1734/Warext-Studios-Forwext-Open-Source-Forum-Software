@@ -19,6 +19,7 @@ final readonly class ReportModerationHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private bool $canManage,
+        private bool $canViewAudit = false,
     ) {
     }
 
@@ -31,6 +32,7 @@ final readonly class ReportModerationHandler
             $this->reports->comments($id, 200),
             $this->basePath,
             $this->canManage,
+            $this->canViewAudit,
         )));
     }
 
