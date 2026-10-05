@@ -248,6 +248,7 @@ final class ModerationApplicationFactory
                 $gate->allows(PermissionKey::fromString(DisciplineService::BAN_MANAGE_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(DisciplineService::REVOKE_PERMISSION)),
             ),
+            $canViewAudit,
         );
         $abuseHandler = new AbuseHandler(
             $abuseService,
@@ -257,6 +258,7 @@ final class ModerationApplicationFactory
                 $gate->allows(PermissionKey::fromString(AbuseModerationService::MANAGE_RULES_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(AbuseModerationService::CLEANUP_PERMISSION)),
             ),
+            $canViewAudit,
         );
 
         try {
