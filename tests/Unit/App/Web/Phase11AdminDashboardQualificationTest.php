@@ -23,6 +23,15 @@ final class Phase11AdminDashboardQualificationTest extends TestCase
             'acp-queue-strip',
         ] as $marker) {
             self::assertStringContainsString($marker, $html);
+        }
+
+        self::assertStringContainsString('acp-dashboard-density-v2', $css);
+        foreach ([
+            'acp-overview',
+            'acp-section-index',
+            'acp-directory-row',
+            'acp-queue-strip',
+        ] as $marker) {
             self::assertStringContainsString($marker, $css);
         }
 
