@@ -76,13 +76,16 @@ Qualification pending: the new Phase 8 pull-request runs and the existing main p
 09 MODERATION / INDEPENDENT AUDIT — VERIFIED
 Verified: shared moderation navigation, effective-permission audit reviewer pool, dedicated case detail/resolve flow, native PDO-safe discipline queries, deterministic fixtures and installed-runtime desktop/mobile Chromium coverage passed with PHP 8.4/8.5, MySQL 8.4 and MariaDB 10.11 qualification.
 
-10 HELP / LEGAL / REFERENCE PAGES — IN PROGRESS
-Current: `/help` now owns contact, terms, privacy, cookies, BB-code, emoji/smilies, trophy and feed reference pages under one responsive shell; footer and sitemap discovery are wired. RSS/Atom, editor references and trophies reuse real first-party sources instead of duplicated demo data.
-Gap: qualification remains pending until PHP contracts and installed-runtime desktop/mobile Chromium pass on the Phase 10 PR.
+10 HELP / LEGAL / REFERENCE PAGES — VERIFIED
+Verified: `/help` owns contact, terms, privacy, cookies, BB-code, emoji/smilies, trophy and feed reference pages under one responsive shell; footer/sitemap discovery, first-party data reuse, desktop/mobile Chromium and full main qualification/package gates passed.
 
-11-18 ACP — IN PROGRESS
-Current: dashboard, managed public navigation, community sections, modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
-Gap: v5 reference shows denser table/list patterns, deeper user/group/node/theme/template/log/job surfaces and clearer management hierarchy. Existing generic card-heavy areas must be converted to compact data-oriented layouts where appropriate.
+11 ACP SHELL / DASHBOARD / SEARCH — IN PROGRESS
+Current: dashboard now uses a compact permission-filtered management directory, overview metrics, section index, dense action queues, path-aware search results and responsive desktop/mobile browser contracts.
+Gap: qualification remains pending until Phase 11 PR gates pass.
+
+12-18 ACP — IN PROGRESS
+Current: users/access/forums/content/moderation, modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
+Gap: v5 reference shows deeper user/group/node/theme/template/log/job surfaces and denser data-oriented layouts; remaining generic card-heavy areas must be converted where appropriate.
 
 19 RESPONSIVE / ACCESSIBILITY — IN PROGRESS
 Current: browser fixture regression covers guest/member/moderator/admin layouts, overflow, keyboard navigation, Escape, focus return and 44px touch targets on representative surfaces.
