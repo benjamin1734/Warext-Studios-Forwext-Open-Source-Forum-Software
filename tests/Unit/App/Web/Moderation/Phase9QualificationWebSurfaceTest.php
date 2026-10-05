@@ -59,5 +59,12 @@ final class Phase9QualificationWebSurfaceTest extends TestCase
         self::assertIsString($caseDetail);
         self::assertStringContainsString('/assets/moderation-workspace.js', $caseDetail);
         self::assertStringContainsString('data-moderation-form', $caseDetail);
+
+        $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
+        self::assertStringContainsString(
+            '.moderation-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}',
+            $css,
+        );
+        self::assertStringContainsString('white-space:normal;text-align:center', $css);
     }
 }
