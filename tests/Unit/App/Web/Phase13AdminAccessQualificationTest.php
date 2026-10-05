@@ -19,6 +19,8 @@ final class Phase13AdminAccessQualificationTest extends TestCase
         self::assertStringContainsString('Phase 13 Browser Group', $live);
         self::assertStringContainsString('Phase 13 Browser Role', $live);
         self::assertStringContainsString('admin access: analyzer contract failed', $live);
+        self::assertStringContainsString('.ac-access-editor form input[name="action"][value="save_group"]', $live);
+        self::assertStringContainsString('.ac-access-role-grid form input[name="action"][value="save_role"]', $live);
         self::assertStringContainsString('admin access mobile: responsive contract failed', $live);
         self::assertStringContainsString('seed-phase13-fixtures.php', $workflow);
         self::assertStringContainsString('forwext_user_primary_groups', $fixture);
