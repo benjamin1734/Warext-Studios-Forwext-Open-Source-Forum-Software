@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\PdoConnectionFactory;
+use Forwext\Core\Domain\Entity\EntityId;
+use Forwext\Core\Domain\User\DatabaseUserRepository;
 
 $root = dirname(__DIR__, 2);
 require $root . '/vendor/autoload.php';
@@ -66,4 +68,9 @@ if ($userCount !== 1 || $historyCount < 1) {
     throw new RuntimeException('Phase 12 browser user fixture was not created completely.');
 }
 
-echo "Phase 12 browser user fixture seeded.\n";
+$hydrated = (new DatabaseUserRepository($database))->find(EntityId::fromString($userId));
+if ($hydrated === null || $hydrated->username()->display() !== 'phase12-member') {
+    throw new RuntimeException('Phase 12 browser user fixture could not be hydrated through the real repository.');
+}
+
+echo "Phase 12 browser user fixture seeded and hydrated.\n";
