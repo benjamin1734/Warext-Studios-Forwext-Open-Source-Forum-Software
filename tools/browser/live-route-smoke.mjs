@@ -1654,6 +1654,109 @@ try {
   }
   await assertHealthyDocument("admin users mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  response = await page.goto(baseUrl + "/admin/access?q=phase13", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin access: filter route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Grup, Rol ve Yetki Yönetimi", exact: true }).waitFor();
+  const accessDirectoryState = await page.evaluate(() => ({
+    overview: document.querySelectorAll(".ac-access-stat").length,
+    groupRows: document.querySelectorAll(".ac-access-directory-grid section:first-child tbody tr").length,
+    roleRows: document.querySelectorAll(".ac-access-directory-grid section:last-child tbody tr").length,
+    filter: document.querySelector('.ac-access-filter input[name="q"]')?.value ?? "",
+  }));
+  if (
+    accessDirectoryState.overview !== 4
+    || accessDirectoryState.groupRows !== 1
+    || accessDirectoryState.roleRows !== 1
+    || accessDirectoryState.filter !== "phase13"
+  ) {
+    fail(`admin access: directory contract failed ${JSON.stringify(accessDirectoryState)}`);
+  }
+
+  const phase13Group = page.getByRole("link", { name: "Phase 13 Browser Group", exact: true });
+  if ((await phase13Group.count()) !== 1) fail("admin access: seeded group link is missing");
+  await phase13Group.click();
+  await page.waitForLoadState("domcontentloaded");
+  const groupEditorState = await page.evaluate(() => ({
+    editor: document.querySelectorAll(".ac-access-editor").length,
+    saveGroup: document.querySelectorAll('form input[name="action"][value="save_group"]').length,
+    facts: document.querySelectorAll(".ac-access-facts .ac-user-access-fact").length,
+  }));
+  if (groupEditorState.editor < 1 || groupEditorState.saveGroup !== 1 || groupEditorState.facts !== 3) {
+    fail(`admin access: selected group contract failed ${JSON.stringify(groupEditorState)}`);
+  }
+  await assertHealthyDocument("admin access group");
+
+  response = await page.goto(baseUrl + "/admin/access?q=phase13", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin access role reset: route did not return HTTP 200");
+  const phase13Role = page.getByRole("link", { name: "Phase 13 Browser Role", exact: true });
+  if ((await phase13Role.count()) !== 1) fail("admin access: seeded role link is missing");
+  await phase13Role.click();
+  await page.waitForLoadState("domcontentloaded");
+  const roleEditorState = await page.evaluate(() => ({
+    roleGrid: document.querySelectorAll(".ac-access-role-grid").length,
+    saveRole: document.querySelectorAll('form input[name="action"][value="save_role"]').length,
+    saveAppearance: document.querySelectorAll('form input[name="action"][value="save_appearance"]').length,
+  }));
+  if (roleEditorState.roleGrid !== 1 || roleEditorState.saveRole !== 1 || roleEditorState.saveAppearance !== 1) {
+    fail(`admin access: selected role contract failed ${JSON.stringify(roleEditorState)}`);
+  }
+  await assertHealthyDocument("admin access role");
+
+  response = await page.goto(baseUrl + "/admin/access", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin access analyzer: base route did not return HTTP 200");
+  const analyzerForm = page.locator(".ac-permission-analyzer form");
+  await analyzerForm.locator('select[name="analyze_user"]').selectOption({ label: "phase12-member" });
+  await analyzerForm.locator('select[name="permission"]').selectOption("acp.access");
+  await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "GET"
+        && url.pathname === "/admin/access"
+        && url.searchParams.get("permission") === "acp.access";
+    }),
+    analyzerForm.getByRole("button", { name: "Analiz et", exact: true }).click(),
+  ]);
+  await page.waitForLoadState("domcontentloaded");
+  const analyzerState = await page.evaluate(() => ({
+    result: document.querySelectorAll(".ac-permission-result").length,
+    user: document.querySelector('.ac-permission-analyzer select[name="analyze_user"]')?.value ?? "",
+    permission: document.querySelector('.ac-permission-analyzer select[name="permission"]')?.value ?? "",
+    layers: document.querySelectorAll(".ac-analysis-layer").length,
+  }));
+  if (
+    analyzerState.result !== 1
+    || analyzerState.user !== "12121212121212121212121212121212"
+    || analyzerState.permission !== "acp.access"
+    || analyzerState.layers < 1
+  ) {
+    fail(`admin access: analyzer contract failed ${JSON.stringify(analyzerState)}`);
+  }
+  await assertHealthyDocument("admin access analyzer");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin/access?role=31313131313131313131313131313131", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin access mobile: route did not return HTTP 200");
+  const accessMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".ac-access-overview");
+    const roleGrid = document.querySelector(".ac-access-role-grid");
+    const shell = document.querySelector(".ac-access-shell");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      roleColumns: roleGrid instanceof HTMLElement ? getComputedStyle(roleGrid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      shellWidth: shell instanceof HTMLElement ? Math.round(shell.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    accessMobileState.overviewColumns !== 2
+    || accessMobileState.roleColumns !== 1
+    || accessMobileState.shellWidth > accessMobileState.viewportWidth
+  ) {
+    fail(`admin access mobile: responsive contract failed ${JSON.stringify(accessMobileState)}`);
+  }
+  await assertHealthyDocument("admin access mobile");
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
