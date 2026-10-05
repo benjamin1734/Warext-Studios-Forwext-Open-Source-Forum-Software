@@ -73,12 +73,12 @@ Phase 8 implementation gap: closed for groups, portfolio, FAQ, referrals and bug
 Qualification wiring: deterministic Phase 8 portfolio/FAQ/bug fixtures are installed after the real browser runtime, and Chromium now asserts the new portfolio, FAQ, referral and bug density surfaces on desktop plus 390px responsive layouts. Qualification and database workflows are pull-request observable as well as main-branch gates.
 Qualification pending: the new Phase 8 pull-request runs and the existing main package/installer gates must be green before Phase 8 can be marked VERIFIED.
 
-09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
-Current: moderation workspace, approval queue, report review and audit surfaces now share one navigation language; independent oversight includes a real effective-permission reviewer pool and dedicated case-detail state flow.
-Gap: add deterministic live-route fixtures/desktop-mobile acceptance for moderation/audit/case-detail routes, then close responsive/state qualification.
+09 MODERATION / INDEPENDENT AUDIT — VERIFIED
+Verified: shared moderation navigation, effective-permission audit reviewer pool, dedicated case detail/resolve flow, native PDO-safe discipline queries, deterministic fixtures and installed-runtime desktop/mobile Chromium coverage passed with PHP 8.4/8.5, MySQL 8.4 and MariaDB 10.11 qualification.
 
 10 HELP / LEGAL / REFERENCE PAGES — IN PROGRESS
-Gap: help/legal/reference family is incomplete as a coherent route set; smilies, BB-code, trophies, cookie usage, terms/privacy/contact/RSS need explicit final route ownership and consistent shell.
+Current: `/help` now owns contact, terms, privacy, cookies, BB-code, emoji/smilies, trophy and feed reference pages under one responsive shell; footer and sitemap discovery are wired. RSS/Atom, editor references and trophies reuse real first-party sources instead of duplicated demo data.
+Gap: qualification remains pending until PHP contracts and installed-runtime desktop/mobile Chromium pass on the Phase 10 PR.
 
 11-18 ACP — IN PROGRESS
 Current: dashboard, managed public navigation, community sections, modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
