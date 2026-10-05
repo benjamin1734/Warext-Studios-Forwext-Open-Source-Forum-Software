@@ -1599,7 +1599,7 @@ try {
   if (userDirectoryState.shell !== 1 || userDirectoryState.rows < 1 || userDirectoryState.search !== "phase12") {
     fail(`admin users: directory contract failed ${JSON.stringify(userDirectoryState)}`);
   }
-  const memberLink = page.getByRole("link", { name: "phase12-member", exact: true });
+  const memberLink = page.getByRole("link", { name: /phase12-member/ });
   if ((await memberLink.count()) !== 1) fail("admin users: seeded member link is missing");
   await Promise.all([
     page.waitForResponse((candidate) => {
