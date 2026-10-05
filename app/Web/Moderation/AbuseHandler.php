@@ -25,6 +25,7 @@ final readonly class AbuseHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private AbuseCapabilities $capabilities,
+        private bool $canViewAudit = false,
     ) {
     }
 
@@ -34,6 +35,7 @@ final readonly class AbuseHandler
             $this->abuse->overview(),
             $this->basePath,
             $this->capabilities,
+            $this->canViewAudit,
         )));
     }
 
