@@ -108,7 +108,10 @@ final readonly class AdminCommunityService
      *   selected_group:?array<string,mixed>,
      *   selected_role:?array<string,mixed>,
      *   selected_appearance:?RoleAppearance,
-     *   analysis:?PermissionAnalysis
+     *   analysis:?PermissionAnalysis,
+     *   analyze_user_id:?string,
+     *   permission_key:string,
+     *   node_id:?string
      * }
      */
     public function accessSnapshot(
@@ -205,6 +208,9 @@ final readonly class AdminCommunityService
             'selected_role'=>$selectedRole,
             'selected_appearance'=>$selectedAppearance,
             'analysis'=>$analysis,
+            'analyze_user_id'=>$analyzeUserId?->value(),
+            'permission_key'=>$permissionKey,
+            'node_id'=>$nodeId?->value(),
         ];
     }
 
