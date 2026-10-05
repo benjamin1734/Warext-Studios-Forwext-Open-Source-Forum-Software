@@ -3638,6 +3638,9 @@ html,body{max-width:100%;overflow-x:clip}
   .referral-manage-head>.fx-btn{width:100%;justify-content:center}
   .referral-campaign-editor>summary{display:grid}
   .referral-campaign-editor>summary small{text-align:left}
+  .referral-campaign-form{grid-template-columns:1fr}
+  .referral-campaign-form>label,.referral-campaign-form input,.referral-campaign-form select{min-width:0;max-width:100%}
+  .referral-campaign-form .search-actions{grid-column:1}
   .referral-review-row{grid-template-columns:1fr}
   .referral-review-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
   .referral-review-actions .fx-btn{width:100%;justify-content:center}
@@ -3709,7 +3712,7 @@ html,body{max-width:100%;overflow-x:clip}
 .portfolio-manage-summary dt{color:var(--muted);font-size:8.5px}.portfolio-manage-summary dd{margin:0;font-size:9px;font-weight:700;overflow-wrap:anywhere}
 .portfolio-manage-summary>p{margin:0;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel2);color:var(--muted);font-size:8.5px;line-height:1.45}
 .module-manage-section .portfolio-media figure>form{margin:6px 0 0}.module-manage-section .portfolio-media figure>form .fx-btn{width:100%;justify-content:center}
-@media(max-width:900px){
+@media(max-width:920px){
   .portfolio-project-main-grid,.portfolio-manage-grid{grid-template-columns:1fr}
   .portfolio-manage-summary{position:static;grid-row:1}
 }
