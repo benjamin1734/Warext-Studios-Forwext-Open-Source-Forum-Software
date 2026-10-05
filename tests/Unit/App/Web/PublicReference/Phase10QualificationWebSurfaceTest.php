@@ -42,7 +42,7 @@ final class Phase10QualificationWebSurfaceTest extends TestCase
 
         self::assertStringContainsString('public-reference-v1', $css);
         self::assertStringContainsString('@media(max-width:760px)', $css);
-        self::assertStringContainsString('@media(max-width:560px)', $css);
+        self::assertStringContainsString('@media(max-width:520px)', $css);
         self::assertStringContainsString('@media(pointer:coarse)', $css);
         self::assertStringNotContainsString('@media(max-width:900px)', $css);
     }
