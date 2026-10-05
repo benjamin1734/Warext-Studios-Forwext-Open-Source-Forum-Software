@@ -765,6 +765,82 @@ try {
   }
   await assertHealthyDocument("bug report form");
 
+  const oversightCaseId = "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+  response = await page.goto(baseUrl + "/moderation", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    const moderationFailureBody = response ? (await response.text()).slice(0, 800) : "<no response>";
+    fail(`moderation: workspace route returned HTTP ${response?.status() ?? "none"}; body=${moderationFailureBody}`);
+  }
+  await page.getByRole("heading", { name: "Çalışma alanı", exact: true }).waitFor();
+  const moderationWorkspaceState = await page.evaluate(() => ({
+    navs: document.querySelectorAll(".moderation-nav").length,
+    stats: document.querySelectorAll(".moderation-stat").length,
+    sections: document.querySelectorAll(".moderation-section").length,
+  }));
+  if (moderationWorkspaceState.navs !== 1 || moderationWorkspaceState.stats < 1 || moderationWorkspaceState.sections < 1) {
+    fail(`moderation: workspace contract failed ${JSON.stringify(moderationWorkspaceState)}`);
+  }
+  await assertHealthyDocument("moderation workspace");
+
+  response = await page.goto(baseUrl + "/moderation/approval", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("moderation approval: route did not return HTTP 200");
+  const approvalNavigationState = await page.evaluate(() => ({
+    navs: document.querySelectorAll(".moderation-nav").length,
+    active: document.querySelectorAll('.moderation-nav a[aria-current="page"]').length,
+  }));
+  if (approvalNavigationState.navs !== 1 || approvalNavigationState.active !== 1) {
+    fail(`moderation approval: navigation contract failed ${JSON.stringify(approvalNavigationState)}`);
+  }
+  await assertHealthyDocument("moderation approval");
+
+  response = await page.goto(baseUrl + "/moderation/audit", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("moderation audit: route did not return HTTP 200");
+  if ((await page.locator('.moderation-nav a[aria-current="page"]').count()) !== 1) {
+    fail("moderation audit: active navigation item is missing");
+  }
+  await assertHealthyDocument("moderation audit");
+
+  response = await page.goto(baseUrl + "/moderation/oversight", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("moderation oversight: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Bağımsız Moderasyon Denetimi", exact: true }).waitFor();
+  const oversightState = await page.evaluate(() => ({
+    navs: document.querySelectorAll(".moderation-nav").length,
+    pools: document.querySelectorAll(".oversight-reviewer-panel").length,
+    reviewers: document.querySelectorAll(".oversight-reviewer").length,
+    caseLinks: document.querySelectorAll('.moderation-note a[href*="/moderation/oversight/cases/"]').length,
+  }));
+  if (oversightState.navs !== 1 || oversightState.pools !== 1 || oversightState.reviewers < 1 || oversightState.caseLinks < 1) {
+    fail(`moderation oversight: pool/case contract failed ${JSON.stringify(oversightState)}`);
+  }
+  await assertHealthyDocument("moderation oversight");
+
+  response = await page.goto(baseUrl + "/moderation/oversight/cases/" + oversightCaseId, { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("moderation oversight case: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Phase 9 tarayıcı denetim vakası", exact: true }).waitFor();
+  const oversightCaseState = await page.evaluate(() => ({
+    grids: document.querySelectorAll(".oversight-case-grid").length,
+    cards: document.querySelectorAll(".oversight-case-card").length,
+    resolution: document.querySelectorAll(".oversight-case-resolution form").length,
+  }));
+  if (oversightCaseState.grids !== 1 || oversightCaseState.cards !== 2 || oversightCaseState.resolution !== 1) {
+    fail(`moderation oversight case: detail contract failed ${JSON.stringify(oversightCaseState)}`);
+  }
+  await page.locator('.oversight-case-resolution textarea[name="resolution"]').fill("Phase 9 Chromium doğrulaması ile sonuçlandırıldı.");
+  const [oversightResolveResponse] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "POST"
+        && url.pathname === "/moderation/oversight/cases/" + oversightCaseId + "/resolve";
+    }),
+    page.getByRole("button", { name: "Vakayı kapat", exact: true }).click(),
+  ]);
+  if (oversightResolveResponse.status() !== 303) {
+    fail(`moderation oversight case: resolve POST returned HTTP ${oversightResolveResponse.status()} instead of 303`);
+  }
+  await page.waitForLoadState("domcontentloaded");
+  await page.getByRole("heading", { name: "Vaka sonucu", exact: true }).waitFor();
+  await assertHealthyDocument("moderation oversight case resolved");
+
   response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("community groups: directory route did not return HTTP 200");
   await page.getByRole("heading", { name: "Klanlar & Gruplar", exact: true }).waitFor();
@@ -1027,6 +1103,27 @@ try {
   await assertHealthyDocument("member profile");
 
   await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/moderation/oversight/cases/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("moderation oversight case mobile: route did not return HTTP 200");
+  const oversightCaseMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".oversight-case-grid");
+    const nav = document.querySelector(".moderation-nav");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      gridWidth: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      navWidth: nav instanceof HTMLElement ? Math.round(nav.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    oversightCaseMobileState.columns !== 1
+    || oversightCaseMobileState.gridWidth > oversightCaseMobileState.viewportWidth
+    || oversightCaseMobileState.navWidth > oversightCaseMobileState.viewportWidth
+  ) {
+    fail(`moderation oversight case mobile: responsive contract failed ${JSON.stringify(oversightCaseMobileState)}`);
+  }
+  await assertHealthyDocument("moderation oversight case mobile");
+
   response = await page.goto(baseUrl + "/portfolio?category=general&featured=1", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("portfolio mobile: browse route did not return HTTP 200");
   const portfolioMobileState = await page.evaluate(() => {

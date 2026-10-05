@@ -52,6 +52,8 @@ final class OversightHtmlTest extends TestCase
 
         self::assertStringContainsString('/community/moderation/oversight?verify=1', $html);
         self::assertStringContainsString('/community/moderation/oversight/cases', $html);
+        self::assertStringContainsString('/community/moderation/oversight/cases/' . str_repeat('f', 32), $html);
+        self::assertStringContainsString('class="moderation-nav"', $html);
         self::assertStringContainsString('/community/moderation/oversight/flags', $html);
         self::assertStringContainsString('data-moderation-form', $html);
         self::assertStringContainsString('req-oversight-ui', $html);

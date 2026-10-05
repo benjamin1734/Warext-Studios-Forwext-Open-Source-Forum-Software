@@ -76,7 +76,7 @@ PHASE 7 — MINECRAFT SERVER SYSTEM — VERIFIED
 - [VERIFIED] Phase 7 is closed. CI package artifact: forwext-packages-1.0.16-1333, SHA-256 4a37f0938477eefad29b3957ec6e7cba1547afccb1704bcc65dc517a6871fa0c.
 - [NEXT] Phase 8: raise portfolio/FAQ/referral/bug surfaces to v5 density and implement the absent clans/groups family with real persistence, permissions and responsive flows.
 
-PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
+PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — VERIFIED
 - [DONE] Groups foundation implementation: first-party groups module, additive group/member persistence, group.view/create/join/manage-own/moderate-any permissions, shared navigation, /groups, /groups/mine and /groups/{id}, CSRF-protected create/join/request/leave/member moderation, owner/moderator role boundaries and compact responsive surfaces.
 - [DONE] Groups browser acceptance is wired to deterministic post-install fixture data and covers create, approval-request, moderation approval and leave lifecycles so reference routes cannot pass only on empty-state rendering.
 - [DONE] Portfolio browse-density slice: category and featured filters are backed by bounded public project data; the browse toolbar exposes current filter state, cards show real tag/media/update metadata, and coarse-pointer/mobile controls preserve usable touch targets without adding fake data.

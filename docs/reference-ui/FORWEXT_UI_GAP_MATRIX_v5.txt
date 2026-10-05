@@ -62,7 +62,7 @@ Current final Phase 7 slice: /servers/{id}/team exposes owner plus real account-
 Reference-route alignment is now implemented: the v5 page-map routes /servers/{id}/edit, /transfer, /verify and /stats are first-class backed routes, visible links/forms post through those canonical paths, and the former /manage, /claim and /statistics paths remain compatibility aliases. The live browser runtime now seeds one owned and one unowned published Minecraft server so canonical edit POST, ownership verification POST, transfer surface, stats, vote/team states and bearer vote integration are mandatory acceptance paths rather than optional empty-data branches.
 Final verification at 969f157 is green across PHP 8.4/8.5, release contract, security/dependency advisory, shared-hosting performance, MySQL 8.4, MariaDB 10.11, fixture-backed real Chromium canonical edit/verify/transfer/stats/team/vote-integration acceptance and full package/installer qualification. Phase 7 has no remaining critical/high gap and is VERIFIED.
 
-08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — IN PROGRESS
+08 PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — VERIFIED
 Current: portfolio, FAQ, referrals and bug systems exist with persistence and web surfaces. The previously absent clans/groups family now has a first-party module, group/member persistence, permission defaults, shared navigation, /groups, /groups/mine and /groups/{id}, real create/join/request/leave/member moderation flows, and responsive UI. Owner membership is immutable through member actions; moderators can handle ordinary members while moderator role changes remain owner/global-moderator authority.
 Portfolio browse density implemented: the public route accepts whitelisted category selection and an explicit featured-only state, filters the bounded authoritative published project set, renders a compact filter/result toolbar, and enriches cards with real tags, media counts and update dates. Responsive/coarse-pointer CSS keeps the filter bar and controls usable without inventing project metadata.
 FAQ public density implemented: the existing language-scoped FAQ service now renders compact category/article totals, explicit active language state, category counts, bounded tag chips and a separate helpfulness panel. Helpful votes remain authenticated, permission-owned and CSRF-protected by the existing route; no duplicate FAQ persistence was introduced.
@@ -74,8 +74,8 @@ Qualification wiring: deterministic Phase 8 portfolio/FAQ/bug fixtures are insta
 Qualification pending: the new Phase 8 pull-request runs and the existing main package/installer gates must be green before Phase 8 can be marked VERIFIED.
 
 09 MODERATION / INDEPENDENT AUDIT — IN PROGRESS
-Current: approval queue, report moderation, moderation workspace and independent oversight/audit services exist.
-Gap: dashboard/report/pool/case-detail flows need unified visual language and state coverage.
+Current: moderation workspace, approval queue, report review and audit surfaces now share one navigation language; independent oversight includes a real effective-permission reviewer pool and dedicated case-detail state flow.
+Gap: add deterministic live-route fixtures/desktop-mobile acceptance for moderation/audit/case-detail routes, then close responsive/state qualification.
 
 10 HELP / LEGAL / REFERENCE PAGES — IN PROGRESS
 Gap: help/legal/reference family is incomplete as a coherent route set; smilies, BB-code, trophies, cookie usage, terms/privacy/contact/RSS need explicit final route ownership and consistent shell.

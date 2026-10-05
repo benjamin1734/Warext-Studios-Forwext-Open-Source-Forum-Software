@@ -164,6 +164,7 @@ jobs:
           php tools/browser/seed-minecraft-fixtures.php
           php tools/browser/seed-group-fixtures.php
           php tools/browser/seed-phase8-fixtures.php
+          php tools/browser/seed-phase9-fixtures.php
 
       - name: Start real Forwext runtime
         shell: bash
@@ -181,7 +182,7 @@ jobs:
           exit 1
 
       - name: Run real routed browser acceptance
-        run: npm run browser:live
+        run: npm run browser:live || { cat /tmp/forwext-live-browser.log; exit 1; }
         env:
           FORWEXT_BROWSER_LIVE_BASE_URL: http://localhost:8124
 

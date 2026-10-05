@@ -24,13 +24,19 @@ final readonly class ApprovalQueueHandler
         private ModerationRequestGuard $guard,
         private BasePath $basePath,
         private bool $canManage,
+        private bool $canViewAudit = false,
     ) {
     }
 
     public function view(): Response
     {
         return $this->secure(Response::html(
-            ApprovalQueueHtml::page($this->queue->snapshot(), $this->basePath, $this->canManage),
+            ApprovalQueueHtml::page(
+                $this->queue->snapshot(),
+                $this->basePath,
+                $this->canManage,
+                $this->canViewAudit,
+            ),
         ));
     }
 

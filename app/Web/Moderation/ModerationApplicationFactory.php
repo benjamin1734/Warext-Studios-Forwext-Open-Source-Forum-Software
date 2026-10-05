@@ -49,6 +49,7 @@ use Forwext\Core\Moderation\Discipline\DisciplineOperationException;
 use Forwext\Core\Moderation\Discipline\DisciplineService;
 use Forwext\Core\Moderation\Discipline\NotificationDisciplineNotifier;
 use Forwext\Core\Moderation\Oversight\DatabaseModerationOversightStore;
+use Forwext\Core\Moderation\Oversight\DatabaseOversightReviewerDirectory;
 use Forwext\Core\Moderation\Oversight\DatabaseOversightReviewRepository;
 use Forwext\Core\Moderation\Oversight\ModerationOversightService;
 use Forwext\Core\Moderation\Oversight\ModerationOversightVerifier;
@@ -131,6 +132,7 @@ final class ModerationApplicationFactory
         $audit = new DatabaseModerationAuditStore($database, $oversightStore);
         $coreAudit = new CoreAuditService(new DatabaseAuditEventStore($database), $gate);
         $oversightReviews = new DatabaseOversightReviewRepository($database);
+        $oversightReviewers = new DatabaseOversightReviewerDirectory($database, $this->permissionAuthorizer());
         $oversightService = new ModerationOversightService(
             $database,
             $oversightStore,
@@ -218,18 +220,21 @@ final class ModerationApplicationFactory
             $guard,
             $this->basePath,
             new OversightCapabilities($gate->allows(PermissionKey::fromString('audit.review'))),
+            $oversightReviewers,
         );
         $reportHandler = new ReportModerationHandler(
             ReportServiceFactory::create($database, $this->permissionAuthorizer(), $gate),
             $guard,
             $this->basePath,
             $canManage,
+            $canViewAudit,
         );
         $approvalHandler = new ApprovalQueueHandler(
             $approvalService,
             $guard,
             $this->basePath,
             $canManage,
+            $canViewAudit,
         );
         $disciplineHandler = new DisciplineHandler(
             $disciplineService,
@@ -243,6 +248,7 @@ final class ModerationApplicationFactory
                 $gate->allows(PermissionKey::fromString(DisciplineService::BAN_MANAGE_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(DisciplineService::REVOKE_PERMISSION)),
             ),
+            $canViewAudit,
         );
         $abuseHandler = new AbuseHandler(
             $abuseService,
@@ -252,6 +258,7 @@ final class ModerationApplicationFactory
                 $gate->allows(PermissionKey::fromString(AbuseModerationService::MANAGE_RULES_PERMISSION)),
                 $gate->allows(PermissionKey::fromString(AbuseModerationService::CLEANUP_PERMISSION)),
             ),
+            $canViewAudit,
         );
 
         try {
@@ -267,6 +274,13 @@ final class ModerationApplicationFactory
                     return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
                 }
                 return $oversightHandler->view($request);
+            }
+
+            if (preg_match('#^/moderation/oversight/cases/([0-9a-f]{32})$#D', $routePath, $matches) === 1) {
+                if ($request->method() !== HttpMethod::Get) {
+                    return $this->secure(Response::text('Method Not Allowed', 405)->withHeader('Allow', 'GET'));
+                }
+                return $oversightHandler->viewCase($matches[1]);
             }
 
             if ($routePath === '/moderation/oversight/cases') {

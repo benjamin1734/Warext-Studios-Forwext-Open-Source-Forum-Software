@@ -38,6 +38,7 @@ final class CoreAuditHtml
             .'<span class="forum-eyebrow">AUDIT</span><h1>Core Audit Stream</h1>'
             .'<p>Moderasyon ve yönetim eylemlerini actor, target, request-id ve redacted snapshotlarla incele.</p></div>'
             .'<a class="fx-btn" href="'.self::e($basePath->prepend('/moderation/oversight')).'">Bağımsız denetim</a></header>'
+            .ModerationNavigationHtml::render($basePath, 'audit', true)
             .$filters
             .'<section class="surface-panel moderation-report-panel"><header><h2>Son olaylar</h2><span>'
             .count($events).'</span></header><div class="moderation-list">'.$rows.'</div></section></section>';

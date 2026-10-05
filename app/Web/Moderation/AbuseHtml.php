@@ -16,6 +16,7 @@ final class AbuseHtml
         AbuseOverview $overview,
         BasePath $basePath,
         AbuseCapabilities $capabilities,
+        bool $canViewAudit = false,
     ): string {
         $rules = '';
         foreach ($overview->rules as $rule) {
@@ -71,6 +72,7 @@ final class AbuseHtml
         $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
             . '<span class="forum-eyebrow">MODERASYON</span><h1>Anti-spam / Abuse</h1>'
             . '<p>Flood ve abuse sinyallerini ham hassas veri saklamadan incele ve yönet.</p></div></header>'
+            . ModerationNavigationHtml::render($basePath, 'abuse', $canViewAudit)
             . '<section class="surface-panel moderation-report-panel"><header><h2>Aktif kurallar</h2><span>'
             . count($overview->rules) . '</span></header><div class="moderation-list">' . $rules . '</div></section>'
             . $ruleEditor
