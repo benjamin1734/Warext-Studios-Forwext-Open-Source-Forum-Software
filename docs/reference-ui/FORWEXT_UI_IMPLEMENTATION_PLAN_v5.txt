@@ -102,12 +102,18 @@ PHASE 11 — ACP SHELL / DASHBOARD / SEARCH — VERIFIED
 - VERIFIED: favorites/recent actions remain POST + CSRF and backend permission filtered; no authorization logic moved into presentation.
 - VERIFIED: real Chromium desktop search/favorite flow plus 390px responsive dashboard checks.
 - QUALIFICATION: PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, installed-runtime Chromium, security, performance and package build all passed.
-PHASE 12 — ACP USERS — IN PROGRESS
-- IMPLEMENTED: denser real-user directory with bounded username/e-mail search, status, locale/timezone and account timestamps.
-- IMPLEMENTED: selected-user facts, real direct-access summary, access/status editors and aggregate history layout; self-lockout and Discipline ownership remain unchanged.
+PHASE 12 — ACP USERS — VERIFIED
+- VERIFIED: denser real-user directory with bounded username/e-mail search, status, locale/timezone and account timestamps.
+- VERIFIED: selected-user facts, real direct-access summary, access/status editors and aggregate history layout; self-lockout and Discipline ownership remain unchanged.
 - FIXED: user search uses unique native-PDO-safe username/e-mail placeholders.
-- QUALIFICATION: deterministic non-self user/history fixture plus desktop/mobile installed-runtime Chromium coverage added; PR gates pending.
-PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS
+- QUALIFICATION: deterministic non-self user/history fixture, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1350`.
+
+PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS — IN PROGRESS
+- IMPLEMENTED: dense group/role directory with real primary/secondary/direct membership counts, selected group/role facts and existing safe mutation forms.
+- IMPLEMENTED: role appearance editor remains bound to the first-party RoleAppearance model; no duplicate appearance storage.
+- IMPLEMENTED: permission analyzer retains selected user/permission/node context and renders the real production PermissionEngine layer trace.
+- IMPLEMENTED: deterministic Phase 13 group/role assignments plus desktop/mobile live-route coverage; access tables reflow to mobile cards instead of horizontal overflow.
+- QUALIFICATION PENDING: Phase 13 PR PHP/DB/browser gates.
 PHASE 14 — ACP FORUMS / NODES / CONTENT
 PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES
 PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS

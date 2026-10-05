@@ -205,6 +205,9 @@ final readonly class AdminCommunityService
             'selected_role'=>$selectedRole,
             'selected_appearance'=>$selectedAppearance,
             'analysis'=>$analysis,
+            'analyze_user_id'=>$analyzeUserId?->value(),
+            'permission_key'=>$permissionKey,
+            'node_id'=>$nodeId?->value(),
         ];
     }
 

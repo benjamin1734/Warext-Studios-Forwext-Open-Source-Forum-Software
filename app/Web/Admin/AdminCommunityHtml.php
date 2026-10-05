@@ -229,23 +229,40 @@ final class AdminCommunityHtml
     {
         $action = self::e($basePath->prepend('/admin/access'));
         $query = trim((string) ($snapshot['ux_query'] ?? ''));
+        $selectedAnalyzeUser = (string) ($snapshot['analyze_user_id'] ?? '');
+        $selectedPermission = (string) ($snapshot['permission_key'] ?? '');
+        $selectedNode = (string) ($snapshot['node_id'] ?? '');
+
         $groups = '';
+        $filteredGroups = 0;
         foreach ($snapshot['groups'] as $group) {
-            if (!self::matches($query, [(string) $group['name'], (string) $group['group_key'], (bool) $group['is_system'] ? 'system' : 'custom'])) {
+            if (!self::matches($query, [
+                (string) $group['name'],
+                (string) $group['group_key'],
+                (bool) $group['is_system'] ? 'system' : 'custom',
+            ])) {
                 continue;
             }
+            $filteredGroups++;
             $groupUrl = $basePath->prepend('/admin/access?group=' . rawurlencode((string) $group['group_id'])
                 . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
-            $groups .= '<tr id="group-' . self::e((string) $group['group_id']) . '"><td><a href="' . self::e($groupUrl) . '">'
-                . self::e((string) $group['name']) . '</a></td><td>' . self::e((string) $group['group_key'])
-                . '</td><td>' . ((bool) $group['is_system'] ? 'system' : 'custom') . '</td><td>'
-                . ((int) $group['primary_members'] + (int) $group['secondary_members']) . '</td></tr>';
+            $groups .= '<tr id="group-' . self::e((string) $group['group_id']) . '"><td><a href="' . self::e($groupUrl) . '"><strong>'
+                . self::e((string) $group['name']) . '</strong></a></td><td><code>' . self::e((string) $group['group_key'])
+                . '</code></td><td><span class="ac-badge">' . ((bool) $group['is_system'] ? 'system' : 'custom') . '</span></td><td>'
+                . (int) $group['primary_members'] . '</td><td>' . (int) $group['secondary_members'] . '</td></tr>';
         }
 
         $selectedGroup = $snapshot['selected_group'] ?? null;
         $groupEditor = '';
         if (is_array($selectedGroup)) {
-            $groupEditor = '<section class="ac-panel"><h2>Seçili grup</h2><form class="ac-form" method="post" action="' . $action . '">'
+            $groupEditor = '<section class="ac-panel ac-access-editor"><div class="ac-heading"><div><span class="ac-muted">Seçili grup</span><h2>'
+                . self::e((string) $selectedGroup['name']) . '</h2><p><code>' . self::e((string) $selectedGroup['group_key'])
+                . '</code></p></div><span class="ac-badge">' . ((bool) $selectedGroup['is_system'] ? 'system' : 'custom') . '</span></div>'
+                . '<div class="ac-access-facts">'
+                . self::userAccessFact('Primary üyeler', (string) (int) $selectedGroup['primary_members'])
+                . self::userAccessFact('Secondary üyeler', (string) (int) $selectedGroup['secondary_members'])
+                . self::userAccessFact('Sort order', (string) (int) $selectedGroup['sort_order'])
+                . '</div><form class="ac-form" method="post" action="' . $action . '">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_group">'
                 . '<input type="hidden" name="group_id" value="' . self::e((string) $selectedGroup['group_id']) . '">'
                 . '<div class="ac-row"><label>Key<input name="group_key" maxlength="64" value="' . self::e((string) $selectedGroup['group_key']) . '"></label>'
@@ -256,34 +273,44 @@ final class AdminCommunityHtml
         }
 
         $roles = '';
+        $filteredRoles = 0;
         foreach ($snapshot['roles'] as $role) {
             if (!self::matches($query, [(string) $role['name'], (string) $role['role_key'], (string) $role['kind']])) {
                 continue;
             }
+            $filteredRoles++;
             $url = $basePath->prepend('/admin/access?role=' . rawurlencode((string) $role['role_id'])
                 . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
-            $roles .= '<tr><td><a href="' . self::e($url) . '">' . self::e((string) $role['name'])
-                . '</a></td><td>' . self::e((string) $role['role_key']) . '</td><td>'
-                . self::e((string) $role['kind']) . '</td><td>' . (int) $role['priority']
+            $roles .= '<tr><td><a href="' . self::e($url) . '"><strong>' . self::e((string) $role['name'])
+                . '</strong></a></td><td><code>' . self::e((string) $role['role_key']) . '</code></td><td><span class="ac-badge">'
+                . self::e((string) $role['kind']) . '</span></td><td>' . (int) $role['priority']
                 . '</td><td>' . (int) $role['direct_members'] . '</td></tr>';
         }
 
-        $roleEditor = '<p class="ac-muted">Bir rol seçerek banner/görünüm ayarını düzenleyebilirsin.</p>';
+        $roleEditor = '<div class="ac-user-empty"><strong>Rol seçilmedi.</strong><span>Bir rol seçerek yapılandırma ve banner görünümünü düzenle.</span></div>';
         $selectedRole = $snapshot['selected_role'];
         if (is_array($selectedRole)) {
             $appearance = $snapshot['selected_appearance'];
             if (!$appearance instanceof RoleAppearance) {
                 $appearance = new RoleAppearance(EntityId::fromString((string) $selectedRole['role_id']));
             }
-            $roleEditor = '<div class="ac-grid"><section class="ac-card"><h3>Rol</h3><form class="ac-form" method="post" action="' . $action . '">'
+            $roleEditor = '<div class="ac-access-role-grid"><section class="ac-panel ac-access-editor"><div class="ac-heading"><div><span class="ac-muted">Seçili rol</span><h2>'
+                . self::e((string) $selectedRole['name']) . '</h2><p><code>' . self::e((string) $selectedRole['role_key'])
+                . '</code></p></div><span class="ac-badge">' . self::e((string) $selectedRole['kind']) . '</span></div>'
+                . '<div class="ac-access-facts">'
+                . self::userAccessFact('Priority', (string) (int) $selectedRole['priority'])
+                . self::userAccessFact('Direct üyeler', (string) (int) $selectedRole['direct_members'])
+                . self::userAccessFact('Protected', (bool) $selectedRole['is_protected'] ? 'Evet' : 'Hayır')
+                . '</div><form class="ac-form" method="post" action="' . $action . '">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_role">'
                 . '<input type="hidden" name="role_id" value="' . self::e((string) $selectedRole['role_id']) . '">'
                 . '<label>Key<input name="role_key" value="' . self::e((string) $selectedRole['role_key']) . '" maxlength="64"></label>'
                 . '<label>Ad<input name="name" value="' . self::e((string) $selectedRole['name']) . '" maxlength="100"></label>'
-                . '<label>Kind<select name="kind">' . self::options(['custom','staff','system'], (string) $selectedRole['kind']) . '</select></label>'
-                . '<label>Priority<input type="number" name="priority" min="0" max="65535" value="' . (int) $selectedRole['priority'] . '"></label>'
+                . '<div class="ac-row"><label>Kind<select name="kind">' . self::options(['custom','staff','system'], (string) $selectedRole['kind']) . '</select></label>'
+                . '<label>Priority<input type="number" name="priority" min="0" max="65535" value="' . (int) $selectedRole['priority'] . '"></label></div>'
                 . '<button class="ac-btn" type="submit">Rolü kaydet</button></form></section>'
-                . '<section class="ac-card"><h3>Banner ve görünüm</h3><form class="ac-form" method="post" action="' . $action . '">'
+                . '<section class="ac-panel ac-access-editor"><div class="ac-heading"><div><h2>Banner ve görünüm</h2>'
+                . '<p class="ac-muted">Kaydedilmiş role appearance değerleri.</p></div></div><form class="ac-form" method="post" action="' . $action . '">'
                 . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_appearance">'
                 . '<input type="hidden" name="role_id" value="' . self::e((string) $selectedRole['role_id']) . '">'
                 . '<div class="ac-row"><label>Text color<input name="text_color" placeholder="#4F46E5" value="' . self::e($appearance->textColor()?->value() ?? '') . '"></label>'
@@ -306,7 +333,7 @@ final class AdminCommunityHtml
         }
 
         $analysis = $snapshot['analysis'];
-        $analysisHtml = '<p class="ac-muted">Kullanıcı + permission seçerek Allow/Deny sonucunun hangi katmandan geldiğini görebilirsin.</p>';
+        $analysisHtml = '<div class="ac-user-empty"><strong>Analiz bekleniyor.</strong><span>Kullanıcı + permission seçerek ALLOW/DENY sonucunun hangi katmandan geldiğini incele.</span></div>';
         if ($analysis instanceof PermissionAnalysis) {
             $layers = '';
             foreach ($analysis->layers() as $layer) {
@@ -318,44 +345,78 @@ final class AdminCommunityHtml
                     . self::e($layer->state()->value) . '</strong><p>' . self::e($layer->explanation()) . '</p>'
                     . ($steps === '' ? '' : '<ul>' . $steps . '</ul>') . '</div>';
             }
-            $analysisHtml = '<p class="' . ($analysis->isAllowed() ? 'ac-good' : 'ac-danger') . '">'
+            $analysisHtml = '<div class="ac-permission-result" data-result="' . ($analysis->isAllowed() ? 'allow' : 'deny') . '"><strong>'
                 . ($analysis->isAllowed() ? 'ALLOW' : 'DENY') . ' · ' . self::e($analysis->permissionKey()->value())
-                . '</p><p>' . self::e($analysis->summary()) . '</p><div class="ac-stack">' . $layers . '</div>';
+                . '</strong><p>' . self::e($analysis->summary()) . '</p></div><div class="ac-stack">' . $layers . '</div>';
         }
 
         $userOptions = '';
         foreach ($snapshot['users'] ?? [] as $user) {
-            $userOptions .= '<option value="' . self::e((string) $user['user_id']) . '">' . self::e((string) $user['username']) . '</option>';
+            $id = (string) $user['user_id'];
+            $userOptions .= '<option value="' . self::e($id) . '"' . ($selectedAnalyzeUser === $id ? ' selected' : '') . '>'
+                . self::e((string) $user['username']) . '</option>';
         }
         $permissionOptions = '';
         foreach ($snapshot['permissions'] as $permission) {
-            $permissionOptions .= '<option value="' . self::e((string) $permission['permission_key']) . '">'
-                . self::e((string) $permission['permission_key']) . '</option>';
+            $key = (string) $permission['permission_key'];
+            $permissionOptions .= '<option value="' . self::e($key) . '"' . ($selectedPermission === $key ? ' selected' : '') . '>'
+                . self::e($key) . '</option>';
         }
         $nodeOptions = '<option value="">Global</option>';
         foreach ($snapshot['nodes'] as $node) {
-            $nodeOptions .= '<option value="' . self::e((string) $node['node_id']) . '">'
+            $id = (string) $node['node_id'];
+            $nodeOptions .= '<option value="' . self::e($id) . '"' . ($selectedNode === $id ? ' selected' : '') . '>'
                 . self::e((string) $node['title']) . ' · ' . self::e((string) $node['node_type']) . '</option>';
         }
 
-        $filter = '<form class="ac-filter" method="get" action="' . $action . '"><label>Grup veya rol ara<input name="q" maxlength="80" value="'
+        $filter = '<form class="ac-filter ac-access-filter" method="get" action="' . $action . '"><label>Grup veya rol ara<input name="q" maxlength="80" value="'
             . self::e($query) . '" placeholder="Ad, key veya rol türü"></label><button class="ac-btn" type="submit">Filtrele</button>'
-            . '<a class="ac-btn" href="' . $action . '">Filtreyi sıfırla</a></form>';
+            . ($query !== '' ? '<a class="ac-btn" href="' . $action . '">Filtreyi sıfırla</a>' : '') . '</form>';
 
-        return '<section class="ac-panel"><h1>Grup, Rol, Banner ve Permission Analyzer</h1>' . $filter . '<div class="ac-grid">'
-            . '<section class="ac-card"><h3>Yeni grup</h3><form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_group">'
-            . '<label>Key<input name="group_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label><label>Sort order<input name="sort_order" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Grup oluştur</button></form></section>'
-            . '<section class="ac-card"><h3>Yeni rol</h3><form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_role">'
-            . '<label>Key<input name="role_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label><label>Kind<select name="kind"><option value="custom">custom</option><option value="staff">staff</option></select></label><label>Priority<input name="priority" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Rol oluştur</button></form></section></div>'
-            . '<div class="ac-grid"><section class="ac-card"><h3>Gruplar</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Tür</th><th>Üye</th></tr></thead><tbody>' . ($groups !== '' ? $groups : '<tr><td colspan="4">Filtreyle eşleşen grup yok.</td></tr>') . '</tbody></table></div></section>'
-            . '<section class="ac-card"><h3>Roller</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Ad</th><th>Key</th><th>Kind</th><th>Priority</th><th>Üye</th></tr></thead><tbody>' . ($roles !== '' ? $roles : '<tr><td colspan="5">Filtreyle eşleşen rol yok.</td></tr>') . '</tbody></table></div></section></div>'
-            . $groupEditor
-            . '<section class="ac-panel"><h2>Seçili rol</h2>' . $roleEditor . '</section>'
-            . '<section class="ac-panel"><h2>Permission analyzer</h2><form class="ac-form" method="get" action="' . $action . '"><div class="ac-row">'
+        $overview = '<section class="ac-access-overview" aria-label="Access özeti">'
+            . self::accessStat('Gruplar', count($snapshot['groups']), 'Kayıtlı group tanımları')
+            . self::accessStat('Roller', count($snapshot['roles']), 'Staff/custom/system roller')
+            . self::accessStat('Permission', count($snapshot['permissions']), 'Analyzer tarafından okunabilir izinler')
+            . self::accessStat('Node', count($snapshot['nodes']), 'Node-scope analiz hedefleri')
+            . '</section>';
+
+        $create = '<div class="ac-access-create-grid"><details class="ac-panel ac-access-create"><summary>Yeni grup oluştur</summary>'
+            . '<form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_group">'
+            . '<label>Key<input name="group_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label>'
+            . '<label>Sort order<input name="sort_order" type="number" min="0" max="65535" value="100"></label><button class="ac-btn" type="submit">Grup oluştur</button></form></details>'
+            . '<details class="ac-panel ac-access-create"><summary>Yeni rol oluştur</summary><form class="ac-form" method="post" action="' . $action . '">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_role">'
+            . '<label>Key<input name="role_key" maxlength="64" required></label><label>Ad<input name="name" maxlength="100" required></label>'
+            . '<div class="ac-row"><label>Kind<select name="kind"><option value="custom">custom</option><option value="staff">staff</option></select></label>'
+            . '<label>Priority<input name="priority" type="number" min="0" max="65535" value="100"></label></div>'
+            . '<button class="ac-btn" type="submit">Rol oluştur</button></form></details></div>';
+
+        $directories = '<div class="ac-access-directory-grid"><section class="ac-panel"><div class="ac-heading"><div><h2>Gruplar</h2>'
+            . '<p class="ac-muted">Primary/secondary üyelik sayılarını gerçek assignment tablolarından gösterir.</p></div><span class="ac-count">'
+            . $filteredGroups . '</span></div><div class="ac-table-wrap"><table class="ac-table ac-access-table"><thead><tr><th>Ad</th><th>Key</th><th>Tür</th><th>Primary</th><th>Secondary</th></tr></thead><tbody>'
+            . ($groups !== '' ? $groups : '<tr><td colspan="5">Filtreyle eşleşen grup yok.</td></tr>') . '</tbody></table></div></section>'
+            . '<section class="ac-panel"><div class="ac-heading"><div><h2>Roller</h2><p class="ac-muted">Priority ve direct member sayıları gerçek role assignment verisidir.</p></div>'
+            . '<span class="ac-count">' . $filteredRoles . '</span></div><div class="ac-table-wrap"><table class="ac-table ac-access-table"><thead><tr><th>Ad</th><th>Key</th><th>Kind</th><th>Priority</th><th>Üye</th></tr></thead><tbody>'
+            . ($roles !== '' ? $roles : '<tr><td colspan="5">Filtreyle eşleşen rol yok.</td></tr>') . '</tbody></table></div></section></div>';
+
+        $analyzer = '<section class="ac-panel ac-permission-analyzer"><div class="ac-heading"><div><h2>Permission analyzer</h2>'
+            . '<p class="ac-muted">Production permission engine katmanlarını kullanır; ayrı bir ACP yetki algoritması yoktur.</p></div></div>'
+            . '<form class="ac-form" method="get" action="' . $action . '"><div class="ac-row">'
             . '<label>Kullanıcı<select name="analyze_user" required><option value="">Seç</option>' . $userOptions . '</select></label>'
             . '<label>Permission<select name="permission" required><option value="">Seç</option>' . $permissionOptions . '</select></label>'
             . '<label>Forum/node<select name="node">' . $nodeOptions . '</select></label></div><button class="ac-btn" type="submit">Analiz et</button></form>'
             . $analysisHtml . '</section>';
+
+        return '<div class="ac-access-shell"><section class="ac-panel"><div class="ac-heading"><div><h1>Grup, Rol ve Yetki Yönetimi</h1>'
+            . '<p class="ac-muted">Gruplar, roller, role appearance ve gerçek permission analyzer tek yoğun yönetim çalışma alanında.</p></div></div>'
+            . $filter . '</section>' . $overview . $create . $directories . $groupEditor
+            . '<section class="ac-access-role-section">' . $roleEditor . '</section>' . $analyzer . '</div>';
+    }
+
+    private static function accessStat(string $label, int $value, string $description): string
+    {
+        return '<article class="ac-access-stat"><span>' . self::e($label) . '</span><strong>' . $value
+            . '</strong><small>' . self::e($description) . '</small></article>';
     }
 
     /** @param array<string,mixed> $snapshot */
