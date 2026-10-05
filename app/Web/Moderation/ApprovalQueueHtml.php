@@ -11,7 +11,12 @@ use Forwext\Core\Routing\BasePath;
 
 final class ApprovalQueueHtml
 {
-    public static function page(ApprovalQueueSnapshot $snapshot, BasePath $basePath, bool $canManage): string
+    public static function page(
+        ApprovalQueueSnapshot $snapshot,
+        BasePath $basePath,
+        bool $canManage,
+        bool $canViewAudit = false,
+    ): string
     {
         $rows = '';
         foreach ($snapshot->items as $item) {
@@ -43,6 +48,7 @@ final class ApprovalQueueHtml
             . '<span class="forum-eyebrow">MODERASYON</span><h1>Onay kuyruğu</h1>'
             . '<p>Yetkili olduğun içerik türlerindeki bekleyen kayıtları tek kuyrukta incele.</p></div>'
             . '<span class="moderation-head-count">' . $snapshot->total . ' bekleyen</span></header>'
+            . ModerationNavigationHtml::render($basePath, 'approval', $canViewAudit)
             . $formOpen . $actions . '<section class="surface-panel moderation-list-panel"><div class="moderation-list">'
             . $rows . '</div></section>' . $formClose
             . '<script src="' . self::e($basePath->prepend('/assets/moderation-workspace.js')) . '" defer></script></section>';
