@@ -22,6 +22,7 @@ final class DisciplineHtml
         array $usernames,
         BasePath $basePath,
         DisciplineCapabilities $capabilities,
+        bool $canViewAudit = false,
     ): string {
         $forms = self::actionForms($overview, $basePath, $capabilities);
         $definitions = self::definitions($overview, $basePath, $capabilities);
@@ -31,6 +32,7 @@ final class DisciplineHtml
         $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
             . '<span class="forum-eyebrow">DİSİPLİN</span><h1>Uyarı ve disiplin yönetimi</h1>'
             . '<p>Uyarı, kısıtlama, askıya alma ve ban işlemlerini permission ve audit zinciri üzerinden yönet.</p></div></header>'
+            . ModerationNavigationHtml::render($basePath, 'discipline', $canViewAudit)
             . $forms . $definitions
             . '<section class="surface-panel moderation-report-panel"><header><h2>Disiplin geçmişi</h2><span>'
             . count($overview->actions) . '</span></header><div class="moderation-list">' . $actions . '</div></section>'
