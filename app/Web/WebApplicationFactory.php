@@ -125,6 +125,7 @@ use Forwext\App\Web\MinecraftServer\MinecraftServerVoteFeedHandler;
 use Forwext\App\Web\Payment\MarketplaceOrderPaymentHandler;
 use Forwext\App\Web\Payment\PaymentManageHandler;
 use Forwext\App\Web\Payment\PaymentWebhookHandler;
+use Forwext\App\Web\PublicReference\PublicReferenceHandler;
 use Forwext\App\Web\Profile\ActivityFeedHandler;
 use Forwext\App\Web\Profile\AuthSessionProfileViewerResolver;
 use Forwext\App\Web\Profile\CustomProfileUrlHandler;
@@ -1351,6 +1352,7 @@ final readonly class WebApplicationFactory
             $rewards,
         );
         $trophyRepository = new DatabaseTrophyRepository($database);
+        $publicReferenceHandler = new PublicReferenceHandler($trophyRepository, $basePath);
         $trophyNotificationRegistry = new NotificationRegistry();
         TrophyNotifier::registerDefinitions($trophyNotificationRegistry);
         $trophies = new TrophyService(
@@ -1745,6 +1747,24 @@ final readonly class WebApplicationFactory
             [$conversationCsrf],
         ));
         $routes->add(new Route('home', [HttpMethod::Get], new PathTemplate('/'), $forumIndexHandler));
+        foreach ([
+            ['help.index','/help'],
+            ['help.contact','/help/contact'],
+            ['help.terms','/help/terms'],
+            ['help.privacy','/help/privacy'],
+            ['help.cookies','/help/cookies'],
+            ['help.bb-codes','/help/bb-codes'],
+            ['help.smilies','/help/smilies'],
+            ['help.trophies','/help/trophies'],
+            ['help.rss','/help/rss'],
+        ] as [$routeName,$routePath]) {
+            $routes->add(new Route(
+                $routeName,
+                [HttpMethod::Get],
+                new PathTemplate($routePath),
+                $publicReferenceHandler,
+            ));
+        }
         $routes->add(new Route('forum.index', [HttpMethod::Get], new PathTemplate('/forums'), $forumIndexHandler));
         $routes->add(new Route(
             'thread.create',
