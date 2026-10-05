@@ -88,11 +88,14 @@ PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — VERIFIED
 - [DONE] Phase 8 qualification wiring now seeds deterministic portfolio/FAQ/bug runtime data and exercises portfolio browse/detail/manage, FAQ browse/article, referral account/manage and bug list/detail/intake in real Chromium on desktop and 390px; qualification and database workflows also run on pull requests for observable gate evidence.
 - [NEXT] Require the Phase 8 pull-request qualification to pass PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance/release contracts and real Chromium, then confirm main package/installer gates before marking Phase 8 VERIFIED.
 
-PHASE 9 — MODERATION / INDEPENDENT AUDIT
+PHASE 9 — MODERATION / INDEPENDENT AUDIT — VERIFIED
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
 
-PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE
-- Contact, terms, privacy, help, RSS, smilies, BB codes, trophies and cookie usage.
+PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE — IN PROGRESS
+- IMPLEMENTED: coherent `/help` route family for contact, terms, privacy, cookie usage, BB-code reference, emoji/smilies, trophy catalog and RSS/Atom reference.
+- IMPLEMENTED: footer discovery links and sitemap/static discovery ownership.
+- REAL BACKENDS: RSS/Atom reuse the existing SEO feed handlers; emoji and BB-code pages use first-party catalogs; trophy page reads active database definitions.
+- QUALIFICATION PENDING: PHP 8.4/8.5 plus installed-runtime desktop/mobile Chromium must pass before VERIFIED.
 
 PHASE 11 — ACP SHELL / DASHBOARD / SEARCH
 PHASE 12 — ACP USERS

@@ -378,7 +378,15 @@ final class ProfileHtml
 
         $footerHtml = '<footer class="site-footer"><div class="footerin">'
             . $footerBefore
-            . '<div class="core-brand-footer"><strong>Forwext</strong><span>Açık kaynak, modern topluluk forum altyapısı.</span></div>'
+            . '<div class="core-brand-footer"><strong>Forwext</strong><span>Açık kaynak, modern topluluk forum altyapısı.</span>'
+            . '<nav class="footer-reference-links" aria-label="Yardım ve yasal bağlantılar">'
+            . '<a href="' . $navHref('/help') . '">Yardım</a>'
+            . '<a href="' . $navHref('/help/contact') . '">İletişim</a>'
+            . '<a href="' . $navHref('/help/terms') . '">Koşullar</a>'
+            . '<a href="' . $navHref('/help/privacy') . '">Gizlilik</a>'
+            . '<a href="' . $navHref('/help/cookies') . '">Çerezler</a>'
+            . '<a href="' . $navHref('/feed.rss') . '">RSS</a>'
+            . '</nav></div>'
             . $footerAfter . '</div></footer>';
 
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
