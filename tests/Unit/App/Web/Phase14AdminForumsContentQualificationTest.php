@@ -54,8 +54,11 @@ final class Phase14AdminForumsContentQualificationTest extends TestCase
         self::assertStringContainsString('$this->nodes->find($selectedNodeId)', $service);
         self::assertStringContainsString('forwext_threads', $service);
         self::assertStringContainsString('forwext_posts', $service);
-        self::assertStringContainsString("action="save_node"", str_replace("'", '"', $html));
+        self::assertStringContainsString('name="action" value="save_node"', $html);
         self::assertStringNotContainsString('style="margin-top:12px"', $html);
         self::assertStringContainsString('acp-forums-content-density-v2', $css);
+        self::assertStringContainsString('.ac-node-table{display:block;min-width:0;width:100%}', $css);
+        self::assertStringContainsString('content:"Parent"', $css);
+        self::assertStringContainsString('content:"Mesaj"', $css);
     }
 }
