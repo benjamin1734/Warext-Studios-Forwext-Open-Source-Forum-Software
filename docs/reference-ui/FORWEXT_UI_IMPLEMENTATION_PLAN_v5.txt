@@ -91,8 +91,11 @@ PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — VERIFIED
 PHASE 9 — MODERATION / INDEPENDENT AUDIT
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
 
-PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE
-- Contact, terms, privacy, help, RSS, smilies, BB codes, trophies and cookie usage.
+PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE — IN PROGRESS
+- IMPLEMENTED: coherent `/help` route family for contact, terms, privacy, cookie usage, BB-code reference, emoji/smilies, trophy catalog and RSS/Atom reference.
+- IMPLEMENTED: footer discovery links and sitemap/static discovery ownership.
+- REAL BACKENDS: RSS/Atom reuse the existing SEO feed handlers; emoji and BB-code pages use first-party catalogs; trophy page reads active database definitions.
+- QUALIFICATION PENDING: PHP 8.4/8.5 plus installed-runtime desktop/mobile Chromium must pass before VERIFIED.
 
 PHASE 11 — ACP SHELL / DASHBOARD / SEARCH
 PHASE 12 — ACP USERS
