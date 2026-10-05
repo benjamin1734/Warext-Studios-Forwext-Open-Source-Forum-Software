@@ -32,8 +32,11 @@ final class Phase12AdminUsersQualificationTest extends TestCase
         $html = (string) file_get_contents($root . '/app/Web/Admin/AdminCommunityHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/admin.css');
 
-        self::assertStringContainsString("'search'=>$search", $service);
-        self::assertStringContainsString("strlen($search) > 80", $service);
+        self::assertStringContainsString("'search'=>\$search", $service);
+        self::assertStringContainsString("strlen(\$search) > 80", $service);
+        self::assertStringContainsString(':username_search', $service);
+        self::assertStringContainsString(':email_search', $service);
+        self::assertStringNotContainsString('username LIKE :search OR email LIKE :search', $service);
         self::assertStringContainsString('$selected->locale()->value()', $html);
         self::assertStringContainsString('$selected->timezone()->value()', $html);
         self::assertStringContainsString('$selected->createdAt()->format', $html);
