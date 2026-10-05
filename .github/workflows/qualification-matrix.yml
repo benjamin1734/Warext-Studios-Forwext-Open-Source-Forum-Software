@@ -182,7 +182,7 @@ jobs:
           exit 1
 
       - name: Run real routed browser acceptance
-        run: npm run browser:live
+        run: npm run browser:live || { cat /tmp/forwext-live-browser.log; exit 1; }
         env:
           FORWEXT_BROWSER_LIVE_BASE_URL: http://localhost:8124
 
