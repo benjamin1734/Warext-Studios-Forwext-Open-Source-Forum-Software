@@ -10,6 +10,7 @@ use Forwext\Core\Domain\Access\Permission\PermissionAuthorizer;
 use Forwext\Core\Domain\Access\Permission\PermissionKey;
 use Forwext\Core\Domain\User\UserId;
 use InvalidArgumentException;
+use Throwable;
 
 final readonly class DatabaseOversightReviewerDirectory implements OversightReviewerDirectory
 {
@@ -33,9 +34,16 @@ final readonly class DatabaseOversightReviewerDirectory implements OversightRevi
         $permission = PermissionKey::fromString(self::PERMISSION);
 
         while (count($reviewers) < $limit) {
-            $rows = $this->database->fetchAll(new CompiledQuery(
-                $this->candidateSql() . ' LIMIT ' . self::BATCH_SIZE . ' OFFSET ' . $offset,
-            ));
+            try {
+                $rows = $this->database->fetchAll(new CompiledQuery(
+                    $this->candidateSql() . ' LIMIT ' . self::BATCH_SIZE . ' OFFSET ' . $offset,
+                ));
+            } catch (Throwable) {
+                $rows = $this->database->fetchAll(new CompiledQuery(
+                    "SELECT user_id,username,username_key FROM forwext_users WHERE status='active' "
+                    . 'ORDER BY username_key,user_id LIMIT ' . self::BATCH_SIZE . ' OFFSET ' . $offset,
+                ));
+            }
             if ($rows === []) {
                 break;
             }
