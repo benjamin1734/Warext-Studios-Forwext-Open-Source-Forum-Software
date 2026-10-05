@@ -34,6 +34,17 @@ final readonly class ModerationOversightService
         );
     }
 
+    public function caseDetail(EntityId $caseId): OversightCaseDetail
+    {
+        $this->gate->require(PermissionKey::fromString('audit.view'));
+        $case = $this->reviews->reviewCase($caseId)
+            ?? throw new OversightOperationException('Oversight review case was not found.');
+        $source = $this->store->findByAuditId($case->sourceAuditId)
+            ?? throw new OversightOperationException('Oversight source audit entry was not found.');
+
+        return new OversightCaseDetail($case, $source);
+    }
+
     public function openCase(
         EntityId $sourceAuditId,
         string $summary,
