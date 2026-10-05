@@ -66,6 +66,7 @@ final class ModerationWorkspaceHtml
             . '<span class="forum-eyebrow">MODERASYON</span><h1>Çalışma alanı</h1>'
             . '<p>Raporlar, onay bekleyen içerikler, disiplin kayıtları, anti-spam olayları ve ekip görevlerini tek yerde yönet.</p>'
             . '</div>' . $auditLink . '</header>'
+            . ModerationNavigationHtml::render($basePath, 'workspace', $canViewAudit)
             . '<nav class="moderation-stats" aria-label="Moderasyon bölümleri">' . $cards . '</nav>'
             . $create . '<div class="moderation-sections">' . $sections . '</div>' . $script . '</section>';
 
