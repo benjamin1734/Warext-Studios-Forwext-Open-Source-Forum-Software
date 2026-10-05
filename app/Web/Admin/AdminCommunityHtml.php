@@ -70,20 +70,36 @@ final class AdminCommunityHtml
         $selected = $usersSnapshot['selected'];
         $history = $usersSnapshot['selected_history'];
         $assignment = $usersSnapshot['access'];
+        $query = trim((string) ($usersSnapshot['search'] ?? ''));
         $groups = $accessSnapshot['groups'];
         $roles = $accessSnapshot['roles'];
         $action = self::e($basePath->prepend('/admin/users'));
 
-        $table = '';
-        foreach ($rows as $row) {
-            $url = $basePath->prepend('/admin/users?user=' . rawurlencode((string) $row['user_id']));
-            $table .= '<tr><td><a href="' . self::e($url) . '">' . self::e((string) $row['username'])
-                . '</a></td><td>' . self::e((string) $row['email']) . '</td><td>'
-                . self::e((string) $row['status']) . '</td><td>'
-                . self::e((string) $row['updated_at_utc']) . '</td></tr>';
+        $groupNames = [];
+        foreach ($groups as $group) {
+            $groupNames[(string) $group['group_id']] = (string) $group['name'];
+        }
+        $roleNames = [];
+        foreach ($roles as $role) {
+            $roleNames[(string) $role['role_id']] = (string) $role['name'];
         }
 
-        $detail = '<p class="ac-muted">Bir kullanıcı seçildiğinde hesap geçmişi ve doğrudan grup/rol atamaları burada yönetilir. Ban ve suspension bu ekranda yazılmaz; Discipline workflow kullanılır.</p>';
+        $table = '';
+        foreach ($rows as $row) {
+            $url = $basePath->prepend('/admin/users?user=' . rawurlencode((string) $row['user_id'])
+                . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
+            $table .= '<tr><td><a href="' . self::e($url) . '"><strong>' . self::e((string) $row['username'])
+                . '</strong></a><small class="ac-user-id">' . self::e((string) $row['user_id']) . '</small></td>'
+                . '<td><span class="ac-user-email">' . self::e((string) $row['email']) . '</span></td>'
+                . '<td><span class="ac-badge ac-user-status" data-status="' . self::e((string) $row['status']) . '">'
+                . self::e((string) $row['status']) . '</span></td>'
+                . '<td><span>' . self::e((string) $row['locale']) . '</span><small class="ac-user-subline">'
+                . self::e((string) $row['timezone']) . '</small></td>'
+                . '<td><span>' . self::e((string) $row['created_at_utc']) . '</span><small class="ac-user-subline">Güncellendi '
+                . self::e((string) $row['updated_at_utc']) . '</small></td></tr>';
+        }
+
+        $detail = '<div class="ac-user-empty"><strong>Kullanıcı seçilmedi.</strong><span>Liste üzerinden bir kullanıcı seçerek hesap, access ve geçmiş ayrıntılarını aç.</span></div>';
         if ($selected instanceof User) {
             $self = $selected->id()->equals($actor);
             $primaryOptions = '<option value="">Atanmamış</option>';
@@ -101,6 +117,7 @@ final class AdminCommunityHtml
                     . (in_array($id, $assignment['secondary'], true) ? ' selected' : '') . '>'
                     . self::e((string) $group['name']) . '</option>';
             }
+
             $roleOptions = '';
             foreach ($roles as $role) {
                 $id = (string) $role['role_id'];
@@ -115,44 +132,96 @@ final class AdminCommunityHtml
                     . ($selected->status() === $status ? ' selected' : '') . '>' . self::e($status->value) . '</option>';
             }
 
+            $secondaryLabels = [];
+            foreach ($assignment['secondary'] as $id) {
+                $secondaryLabels[] = $groupNames[$id] ?? $id;
+            }
+            $roleLabels = [];
+            foreach ($assignment['roles'] as $id) {
+                $roleLabels[] = $roleNames[$id] ?? $id;
+            }
+            $primaryLabel = ($assignment['primary'] ?? null) === null
+                ? 'Atanmamış'
+                : ($groupNames[$assignment['primary']] ?? $assignment['primary']);
+
             $historyRows = '';
             foreach ($history as $entry) {
-                $historyRows .= '<tr><td>' . self::e($entry->eventType) . '</td><td>'
+                $historyRows .= '<tr><td><strong>' . self::e($entry->eventType) . '</strong></td><td>'
                     . self::e(implode(', ', $entry->changedFields)) . '</td><td>'
                     . self::e($entry->occurredAt->format('Y-m-d H:i:s')) . '</td><td>'
                     . self::e($entry->reasonCode ?? '—') . '</td></tr>';
             }
 
-            $detail = '<div class="ac-grid"><section class="ac-card"><h3>' . self::e($selected->username()->display())
-                . '</h3><p>' . self::e($selected->email()->value()) . '</p><p><span class="ac-badge">'
-                . self::e($selected->status()->value) . '</span></p>'
-                . ($self ? '<p class="ac-muted">Kendi access/status kaydın burada değiştirilemez; accidental lockout koruması aktif.</p>' : '')
+            $detail = '<div class="ac-user-detail">'
+                . '<section class="ac-panel ac-user-summary"><div class="ac-user-summary-head"><div><span class="ac-muted">Seçili hesap</span><h2>'
+                . self::e($selected->username()->display()) . '</h2><p>' . self::e($selected->email()->value()) . '</p></div>'
+                . '<span class="ac-badge ac-user-status" data-status="' . self::e($selected->status()->value) . '">'
+                . self::e($selected->status()->value) . '</span></div>'
+                . '<div class="ac-user-facts">'
+                . self::userFact('Kullanıcı ID', $selected->id()->value())
+                . self::userFact('Locale', $selected->locale()->value())
+                . self::userFact('Timezone', $selected->timezone()->value())
+                . self::userFact('Oluşturuldu', $selected->createdAt()->format('Y-m-d H:i:s') . ' UTC')
+                . self::userFact('Güncellendi', $selected->updatedAt()->format('Y-m-d H:i:s') . ' UTC')
+                . self::userFact('Aggregate version', (string) $selected->version())
+                . '</div>'
+                . ($self ? '<div class="ac-user-lockout-note">Kendi access/status kaydın burada değiştirilemez; accidental lockout koruması aktif.</div>' : '')
                 . '<div class="ac-actions"><a class="ac-btn" href="' . self::e($basePath->prepend('/moderation/discipline'))
                 . '">Ban / warning / restriction</a><a class="ac-btn" href="'
                 . self::e($basePath->prepend('/admin/access?analyze_user=' . rawurlencode($selected->id()->value())))
                 . '">Yetkiyi analiz et</a></div></section>'
-                . '<section class="ac-card"><h3>Grup ve rol ataması</h3><form class="ac-form" method="post" action="' . $action . '">'
+                . '<section class="ac-panel ac-user-access-summary"><div class="ac-heading"><div><h2>Doğrudan access özeti</h2>'
+                . '<p class="ac-muted">Permission sonucu değil; bu hesaba doğrudan bağlı primary/secondary group ve role atamalarının özeti.</p></div></div>'
+                . '<div class="ac-user-access-grid">'
+                . self::userAccessFact('Primary group', $primaryLabel)
+                . self::userAccessFact('Secondary groups', $secondaryLabels === [] ? 'Yok' : implode(', ', $secondaryLabels))
+                . self::userAccessFact('Direct roles', $roleLabels === [] ? 'Yok' : implode(', ', $roleLabels))
+                . '</div></section>'
+                . '<div class="ac-user-edit-grid"><section class="ac-panel"><h2>Grup ve rol ataması</h2><form class="ac-form" method="post" action="' . $action . '">'
                 . self::hidden($csrf, 'replace_access', $selected->id()->value())
                 . '<label>Primary group<select name="primary_group_id">' . $primaryOptions . '</select></label>'
                 . '<label>Secondary groups<select multiple name="secondary_group_ids[]">' . $secondaryOptions . '</select></label>'
                 . '<label>Direct roles<select multiple name="role_ids[]">' . $roleOptions . '</select></label>'
                 . '<button class="ac-btn" type="submit"' . ($self ? ' disabled' : '') . '>Atamaları kaydet</button></form></section>'
-                . '<section class="ac-card"><h3>Hesap durumu</h3><form class="ac-form" method="post" action="' . $action . '">'
+                . '<section class="ac-panel"><h2>Hesap durumu</h2><form class="ac-form" method="post" action="' . $action . '">'
                 . self::hidden($csrf, 'change_status', $selected->id()->value())
                 . '<label>Durum<select name="status">' . $statusOptions . '</select></label>'
                 . '<label>Neden<input name="reason" maxlength="120" required placeholder="Örn. account review completed"></label>'
                 . '<button class="ac-btn" type="submit"' . ($self ? ' disabled' : '') . '>Durumu güncelle</button></form>'
                 . '<p class="ac-muted">Suspended/Banned durumları yalnız moderation discipline üzerinden değiştirilir.</p></section></div>'
-                . '<section class="ac-panel"><h3>Kullanıcı geçmişi</h3><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Olay</th><th>Alanlar</th><th>Zaman</th><th>Neden</th></tr></thead><tbody>'
+                . '<section class="ac-panel ac-user-history"><div class="ac-heading"><div><h2>Kullanıcı geçmişi</h2>'
+                . '<p class="ac-muted">User aggregate tarafından tutulan son değişiklik kayıtları.</p></div><span class="ac-count">'
+                . count($history) . '</span></div><div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Olay</th><th>Alanlar</th><th>Zaman</th><th>Neden</th></tr></thead><tbody>'
                 . ($historyRows !== '' ? $historyRows : '<tr><td colspan="4">Geçmiş yok.</td></tr>')
-                . '</tbody></table></div></section>';
+                . '</tbody></table></div></section></div>';
         }
 
-        return '<section class="ac-panel"><h1>Kullanıcı Yönetimi</h1>'
-            . '<form class="ac-form" method="get" action="' . $action . '"><div class="ac-row"><label>Kullanıcı/e-posta ara<input name="q" maxlength="80"></label></div><button class="ac-btn" type="submit">Ara</button></form>'
-            . '<div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Durum</th><th>Güncellendi</th></tr></thead><tbody>'
-            . ($table !== '' ? $table : '<tr><td colspan="4">Kullanıcı bulunamadı.</td></tr>')
-            . '</tbody></table></div></section><section class="ac-panel"><h2>Seçili kullanıcı</h2>' . $detail . '</section>';
+        $searchSummary = $query === ''
+            ? count($rows) . ' son kullanıcı'
+            : '“' . self::e($query) . '” için ' . count($rows) . ' sonuç';
+
+        return '<div class="ac-users-shell"><section class="ac-panel ac-users-directory"><div class="ac-heading"><div><h1>Kullanıcı Yönetimi</h1>'
+            . '<p class="ac-muted">Gerçek kullanıcı dizininde ara; hesap ayrıntısını aç ve güvenli access/status araçlarını kullan.</p></div>'
+            . '<span class="ac-count">' . count($rows) . '</span></div>'
+            . '<form class="ac-filter ac-users-toolbar" method="get" action="' . $action . '">'
+            . '<label>Kullanıcı/e-posta ara<input name="q" maxlength="80" value="' . self::e($query) . '" placeholder="Kullanıcı adı veya e-posta"></label>'
+            . '<button class="ac-btn" type="submit">Ara</button>'
+            . ($query !== '' ? '<a class="ac-btn" href="' . $action . '">Temizle</a>' : '')
+            . '</form><div class="ac-user-result-summary">' . $searchSummary . '</div>'
+            . '<div class="ac-table-wrap"><table class="ac-table ac-user-table"><thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Durum</th><th>Yerel ayar</th><th>Hesap zamanı</th></tr></thead><tbody>'
+            . ($table !== '' ? $table : '<tr><td colspan="5">Kullanıcı bulunamadı.</td></tr>')
+            . '</tbody></table></div></section>'
+            . '<section class="ac-users-selected">' . $detail . '</section></div>';
+    }
+
+    private static function userFact(string $label, string $value): string
+    {
+        return '<div class="ac-user-fact"><span>' . self::e($label) . '</span><strong>' . self::e($value) . '</strong></div>';
+    }
+
+    private static function userAccessFact(string $label, string $value): string
+    {
+        return '<div class="ac-user-access-fact"><span>' . self::e($label) . '</span><strong>' . self::e($value) . '</strong></div>';
     }
 
     /** @param array<string,mixed> $snapshot */
