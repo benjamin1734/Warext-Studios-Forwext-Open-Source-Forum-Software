@@ -51,5 +51,13 @@ final class Phase9QualificationWebSurfaceTest extends TestCase
         self::assertStringContainsString("require(PermissionKey::fromString('audit.view'))", $service);
         self::assertStringContainsString('function caseDetail', $service);
         self::assertStringContainsString('viewCase($matches[1])', $factory);
+
+        $oversight = (string) file_get_contents(
+            $root . '/app/Web/Moderation/OversightHtml.php',
+        );
+        $caseDetail = strstr($oversight, 'public static function caseDetail');
+        self::assertIsString($caseDetail);
+        self::assertStringContainsString('/assets/moderation-workspace.js', $caseDetail);
+        self::assertStringContainsString('data-moderation-form', $caseDetail);
     }
 }
