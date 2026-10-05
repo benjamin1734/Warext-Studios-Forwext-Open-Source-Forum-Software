@@ -943,4 +943,26 @@
 @media(max-width:700px){
   .ac-forum-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ac-content-overview,.ac-content-actions{grid-template-columns:1fr}
+  .ac-node-table{display:block;min-width:0;width:100%}
+  .ac-node-table thead{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0
+  }
+  .ac-node-table tbody{display:grid;gap:8px;width:100%}
+  .ac-node-table tr{
+    display:grid;grid-template-columns:1fr;min-width:0;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel2);padding:4px
+  }
+  .ac-node-table td{
+    display:grid;grid-template-columns:minmax(92px,.38fr) minmax(0,1fr);gap:8px;
+    align-items:start;min-width:0;width:100%;padding:7px 8px;border:0;border-bottom:1px solid var(--line)
+  }
+  .ac-node-table td:last-child{border-bottom:0}
+  .ac-node-table td::before{color:var(--muted);font-size:.7rem;font-weight:700;line-height:1.35}
+  .ac-node-table td:nth-child(1)::before{content:"Node"}
+  .ac-node-table td:nth-child(2)::before{content:"Tür"}
+  .ac-node-table td:nth-child(3)::before{content:"Visibility"}
+  .ac-node-table td:nth-child(4)::before{content:"Parent"}
+  .ac-node-table td:nth-child(5)::before{content:"Konu"}
+  .ac-node-table td:nth-child(6)::before{content:"Mesaj"}
 }
