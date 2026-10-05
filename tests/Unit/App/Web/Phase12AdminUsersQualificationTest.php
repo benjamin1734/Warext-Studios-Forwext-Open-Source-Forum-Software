@@ -46,5 +46,8 @@ final class Phase12AdminUsersQualificationTest extends TestCase
         self::assertStringContainsString('change_status', $html);
         self::assertStringContainsString('acp-users-density-v2', $css);
         self::assertStringContainsString('.ac-user-edit-grid', $css);
+        self::assertStringContainsString('.ac-user-table,.ac-user-history .ac-table{display:block;min-width:0;width:100%}', $css);
+        self::assertStringContainsString('content:"Kullanıcı"', $css);
+        self::assertStringContainsString('content:"Olay"', $css);
     }
 }
