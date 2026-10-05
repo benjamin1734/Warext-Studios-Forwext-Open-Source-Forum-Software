@@ -227,12 +227,14 @@ final class ModerationApplicationFactory
             $guard,
             $this->basePath,
             $canManage,
+            $canViewAudit,
         );
         $approvalHandler = new ApprovalQueueHandler(
             $approvalService,
             $guard,
             $this->basePath,
             $canManage,
+            $canViewAudit,
         );
         $disciplineHandler = new DisciplineHandler(
             $disciplineService,
