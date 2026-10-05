@@ -6,12 +6,13 @@ namespace Forwext\App\Web\PublicReference;
 
 use Forwext\Core\Forum\Editor\BbCodeReferenceCatalog;
 use Forwext\Core\Forum\Editor\EmojiCatalog;
+use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
 use Forwext\Core\Routing\BasePath;
 use Forwext\Core\Trophy\TrophyRepository;
 
-final readonly class PublicReferenceHandler
+final readonly class PublicReferenceHandler implements RequestHandlerInterface
 {
     public function __construct(
         private TrophyRepository $trophies,
