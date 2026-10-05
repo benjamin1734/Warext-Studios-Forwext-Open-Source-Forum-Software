@@ -841,6 +841,63 @@ try {
   await page.getByRole("heading", { name: "Vaka sonucu", exact: true }).waitFor();
   await assertHealthyDocument("moderation oversight case resolved");
 
+  response = await page.goto(baseUrl + "/help", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help: landing route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Forwext yardım ve referans", exact: true }).waitFor();
+  const helpState = await page.evaluate(() => ({
+    grids: document.querySelectorAll(".public-reference-grid").length,
+    cards: document.querySelectorAll(".public-reference-card").length,
+    footerLinks: document.querySelectorAll(".footer-reference-links a").length,
+  }));
+  if (helpState.grids !== 1 || helpState.cards < 9 || helpState.footerLinks < 6) {
+    fail(`help: landing contract failed ${JSON.stringify(helpState)}`);
+  }
+  await assertHealthyDocument("help landing");
+
+  for (const [route, heading] of [
+    ["/help/contact", "İletişim ve destek"],
+    ["/help/terms", "Kullanım koşulları"],
+    ["/help/privacy", "Gizlilik"],
+    ["/help/cookies", "Çerez kullanımı"],
+  ]) {
+    response = await page.goto(baseUrl + route, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`help document ${route}: route did not return HTTP 200`);
+    await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+    if ((await page.locator(".public-document-section").count()) < 3) {
+      fail(`help document ${route}: document sections are missing`);
+    }
+    await assertHealthyDocument("help document " + route);
+  }
+
+  response = await page.goto(baseUrl + "/help/bb-codes", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help bb-codes: route did not return HTTP 200");
+  if ((await page.locator(".reference-row").count()) < 10) fail("help bb-codes: reference rows are incomplete");
+  await assertHealthyDocument("help bb-codes");
+
+  response = await page.goto(baseUrl + "/help/smilies", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help smilies: route did not return HTTP 200");
+  if ((await page.locator(".emoji-reference").count()) < 16) fail("help smilies: emoji catalog is incomplete");
+  await assertHealthyDocument("help smilies");
+
+  response = await page.goto(baseUrl + "/help/trophies", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help trophies: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Kupalar ve rozetler", exact: true }).waitFor();
+  await assertHealthyDocument("help trophies");
+
+  response = await page.goto(baseUrl + "/help/rss", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help feeds: route did not return HTTP 200");
+  if ((await page.locator(".public-reference-card").count()) !== 2) fail("help feeds: RSS/Atom cards are missing");
+  await assertHealthyDocument("help feeds");
+
+  const rssResponse = await page.request.get(baseUrl + "/feed.rss");
+  if (rssResponse.status() !== 200 || !(rssResponse.headers()["content-type"] || "").includes("application/rss+xml")) {
+    fail(`RSS feed contract failed: ${rssResponse.status()} ${rssResponse.headers()["content-type"] || ""}`);
+  }
+  const atomResponse = await page.request.get(baseUrl + "/feed.atom");
+  if (atomResponse.status() !== 200 || !(atomResponse.headers()["content-type"] || "").includes("application/atom+xml")) {
+    fail(`Atom feed contract failed: ${atomResponse.status()} ${atomResponse.headers()["content-type"] || ""}`);
+  }
+
   response = await page.goto(baseUrl + "/groups", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("community groups: directory route did not return HTTP 200");
   await page.getByRole("heading", { name: "Klanlar & Gruplar", exact: true }).waitFor();
@@ -1103,6 +1160,36 @@ try {
   await assertHealthyDocument("member profile");
 
   await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/help", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help mobile: route did not return HTTP 200");
+  const helpMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".public-reference-grid");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (helpMobileState.columns !== 1 || helpMobileState.width > helpMobileState.viewportWidth) {
+    fail(`help mobile: responsive contract failed ${JSON.stringify(helpMobileState)}`);
+  }
+  await assertHealthyDocument("help mobile");
+
+  response = await page.goto(baseUrl + "/help/smilies", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("help smilies mobile: route did not return HTTP 200");
+  const emojiMobileState = await page.evaluate(() => {
+    const grid = document.querySelector(".emoji-reference-grid");
+    return {
+      columns: grid instanceof HTMLElement ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      width: grid instanceof HTMLElement ? Math.round(grid.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (emojiMobileState.columns !== 1 || emojiMobileState.width > emojiMobileState.viewportWidth) {
+    fail(`help smilies mobile: responsive contract failed ${JSON.stringify(emojiMobileState)}`);
+  }
+  await assertHealthyDocument("help smilies mobile");
+
   response = await page.goto(baseUrl + "/moderation/oversight/cases/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("moderation oversight case mobile: route did not return HTTP 200");
   const oversightCaseMobileState = await page.evaluate(() => {
