@@ -927,4 +927,30 @@
 @media(max-width:700px){
   .ac-access-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ac-access-create-grid,.ac-access-directory-grid,.ac-access-role-grid,.ac-access-facts{grid-template-columns:1fr}
+  .ac-access-table{display:block;min-width:0;width:100%}
+  .ac-access-table thead{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0
+  }
+  .ac-access-table tbody{display:grid;gap:8px;width:100%}
+  .ac-access-table tr{
+    display:grid;grid-template-columns:1fr;min-width:0;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel2);padding:4px
+  }
+  .ac-access-table td{
+    display:grid;grid-template-columns:minmax(92px,.38fr) minmax(0,1fr);gap:8px;
+    align-items:start;min-width:0;width:100%;padding:7px 8px;border:0;border-bottom:1px solid var(--line)
+  }
+  .ac-access-table td:last-child{border-bottom:0}
+  .ac-access-table td::before{color:var(--muted);font-size:.7rem;font-weight:700;line-height:1.35}
+  .ac-access-directory-grid section:first-child .ac-access-table td:nth-child(1)::before{content:"Ad"}
+  .ac-access-directory-grid section:first-child .ac-access-table td:nth-child(2)::before{content:"Key"}
+  .ac-access-directory-grid section:first-child .ac-access-table td:nth-child(3)::before{content:"Tür"}
+  .ac-access-directory-grid section:first-child .ac-access-table td:nth-child(4)::before{content:"Primary"}
+  .ac-access-directory-grid section:first-child .ac-access-table td:nth-child(5)::before{content:"Secondary"}
+  .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(1)::before{content:"Ad"}
+  .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(2)::before{content:"Key"}
+  .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(3)::before{content:"Kind"}
+  .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(4)::before{content:"Priority"}
+  .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(5)::before{content:"Üye"}
 }
