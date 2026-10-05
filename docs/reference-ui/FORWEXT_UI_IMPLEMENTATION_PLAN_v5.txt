@@ -91,13 +91,17 @@ PHASE 8 — PORTFOLIO / FAQ / REFERRALS / CLANS / BUGS — VERIFIED
 PHASE 9 — MODERATION / INDEPENDENT AUDIT — VERIFIED
 - Unify workspace, approval queue, reports, audit reports, auditor pool and case detail.
 
-PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE — IN PROGRESS
-- IMPLEMENTED: coherent `/help` route family for contact, terms, privacy, cookie usage, BB-code reference, emoji/smilies, trophy catalog and RSS/Atom reference.
-- IMPLEMENTED: footer discovery links and sitemap/static discovery ownership.
+PHASE 10 — HELP / LEGAL / PUBLIC REFERENCE — VERIFIED
+- VERIFIED: coherent `/help` route family for contact, terms, privacy, cookie usage, BB-code reference, emoji/smilies, trophy catalog and RSS/Atom reference.
+- VERIFIED: footer discovery links and sitemap/static discovery ownership.
 - REAL BACKENDS: RSS/Atom reuse the existing SEO feed handlers; emoji and BB-code pages use first-party catalogs; trophy page reads active database definitions.
-- QUALIFICATION PENDING: PHP 8.4/8.5 plus installed-runtime desktop/mobile Chromium must pass before VERIFIED.
+- QUALIFICATION: PHP 8.4/8.5, installed-runtime desktop/mobile Chromium, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1348`.
 
-PHASE 11 — ACP SHELL / DASHBOARD / SEARCH
+PHASE 11 — ACP SHELL / DASHBOARD / SEARCH — IN PROGRESS
+- IMPLEMENTED: dense permission-filtered dashboard summary, section index, compact management directory rows, compact operational queues and path-aware search results.
+- IMPLEMENTED: favorites/recent actions remain POST + CSRF and backend permission filtered; no authorization logic moved into presentation.
+- IMPLEMENTED: real Chromium desktop search/favorite flow plus 390px responsive dashboard checks.
+- QUALIFICATION PENDING: Phase 11 PR PHP/DB/browser gates.
 PHASE 12 — ACP USERS
 PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS
 PHASE 14 — ACP FORUMS / NODES / CONTENT
