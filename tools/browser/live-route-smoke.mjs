@@ -1681,7 +1681,7 @@ try {
   await page.waitForLoadState("domcontentloaded");
   const groupEditorState = await page.evaluate(() => ({
     editor: document.querySelectorAll(".ac-access-editor").length,
-    saveGroup: document.querySelectorAll('form input[name="action"][value="save_group"]').length,
+    saveGroup: document.querySelectorAll('.ac-access-editor form input[name="action"][value="save_group"]').length,
     facts: document.querySelectorAll(".ac-access-facts .ac-user-access-fact").length,
   }));
   if (groupEditorState.editor < 1 || groupEditorState.saveGroup !== 1 || groupEditorState.facts !== 3) {
@@ -1697,8 +1697,8 @@ try {
   await page.waitForLoadState("domcontentloaded");
   const roleEditorState = await page.evaluate(() => ({
     roleGrid: document.querySelectorAll(".ac-access-role-grid").length,
-    saveRole: document.querySelectorAll('form input[name="action"][value="save_role"]').length,
-    saveAppearance: document.querySelectorAll('form input[name="action"][value="save_appearance"]').length,
+    saveRole: document.querySelectorAll('.ac-access-role-grid form input[name="action"][value="save_role"]').length,
+    saveAppearance: document.querySelectorAll('.ac-access-role-grid form input[name="action"][value="save_appearance"]').length,
   }));
   if (roleEditorState.roleGrid !== 1 || roleEditorState.saveRole !== 1 || roleEditorState.saveAppearance !== 1) {
     fail(`admin access: selected role contract failed ${JSON.stringify(roleEditorState)}`);
