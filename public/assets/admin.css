@@ -908,3 +908,23 @@
   .ac-users-toolbar .ac-btn{width:100%}
   .ac-user-facts,.ac-user-access-grid,.ac-user-edit-grid{grid-template-columns:1fr}
 }
+
+
+/* acp-access-density-v2 */
+.ac-access-shell{display:grid;gap:12px}
+.ac-access-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ac-access-stat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 9px;align-items:start;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 11px}
+.ac-access-stat>span{color:var(--muted);font-size:.76rem;font-weight:700}.ac-access-stat>strong{grid-row:1/span 2;grid-column:2;font-size:1.4rem;line-height:1}.ac-access-stat>small{color:var(--muted);font-size:.7rem;line-height:1.35}
+.ac-access-filter{margin:0}
+.ac-access-create-grid,.ac-access-directory-grid,.ac-access-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ac-access-create{padding:0;overflow:hidden}.ac-access-create summary{cursor:pointer;padding:12px 14px;font-weight:800;list-style-position:inside}.ac-access-create[open] summary{border-bottom:1px solid var(--line)}.ac-access-create .ac-form{padding:13px}
+.ac-access-table{min-width:650px}.ac-access-table code{color:var(--muted);font-size:.78rem}
+.ac-access-editor{display:grid;gap:11px}.ac-access-editor .ac-heading{margin-bottom:0}.ac-access-editor .ac-heading h2{margin:2px 0}.ac-access-editor .ac-heading p{margin:0}
+.ac-access-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.ac-access-role-section{display:grid;gap:12px}
+.ac-permission-analyzer{display:grid;gap:12px}.ac-permission-analyzer .ac-form{margin-bottom:0}
+.ac-permission-result{display:grid;gap:4px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:11px 12px}.ac-permission-result p{margin:0;color:var(--muted);font-size:.82rem}.ac-permission-result[data-result="allow"]>strong{font-weight:900}.ac-permission-result[data-result="deny"]{border-style:dashed}
+@media(max-width:700px){
+  .ac-access-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ac-access-create-grid,.ac-access-directory-grid,.ac-access-role-grid,.ac-access-facts{grid-template-columns:1fr}
+}
