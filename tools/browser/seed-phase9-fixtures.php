@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DateTimeImmutable;
 use Forwext\Core\Database\CompiledQuery;
 use Forwext\Core\Database\DatabaseConfig;
 use Forwext\Core\Database\PdoConnectionFactory;
