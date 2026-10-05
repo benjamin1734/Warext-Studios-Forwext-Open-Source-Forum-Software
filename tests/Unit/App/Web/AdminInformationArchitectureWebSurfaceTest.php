@@ -29,6 +29,11 @@ final class AdminInformationArchitectureWebSurfaceTest extends TestCase
         self::assertStringContainsString('Favoriler', $html);
         self::assertStringContainsString('Son kullanılanlar', $html);
         self::assertStringContainsString('Breadcrumb', $html);
+        self::assertStringContainsString('acp-overview', $html);
+        self::assertStringContainsString('acp-section-index', $html);
+        self::assertStringContainsString('acp-directory-row', $html);
+        self::assertStringContainsString('acp-search-results', $html);
+        self::assertStringContainsString('acp-queue-strip', $html);
         self::assertStringContainsString('X-Robots-Tag', $handler);
         self::assertStringContainsString('private, no-store', $handler);
         self::assertStringNotContainsString('<script', $html);
