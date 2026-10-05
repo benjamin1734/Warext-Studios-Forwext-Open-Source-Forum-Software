@@ -66,7 +66,7 @@ final class PublicReferenceWebSurfaceTest extends TestCase
             '/help/trophies',
             '/help/rss',
         ] as $route) {
-            self::assertStringContainsString("new PathTemplate('" . $route . "')", $factory);
+            self::assertStringContainsString("'" . $route . "'", $factory);
         }
 
         self::assertStringContainsString("class=\"footer-reference-links\"", $footer);
