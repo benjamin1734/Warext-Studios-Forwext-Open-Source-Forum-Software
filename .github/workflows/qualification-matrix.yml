@@ -167,6 +167,7 @@ jobs:
           php tools/browser/seed-phase9-fixtures.php
           php tools/browser/seed-phase12-fixtures.php
           php tools/browser/seed-phase13-fixtures.php
+          php tools/browser/seed-phase14-fixtures.php
 
       - name: Start real Forwext runtime
         shell: bash
