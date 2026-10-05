@@ -34,9 +34,9 @@ final class Phase13AdminAccessQualificationTest extends TestCase
         $html = (string) file_get_contents($root . '/app/Web/Admin/AdminCommunityHtml.php');
         $css = (string) file_get_contents($root . '/public/assets/admin.css');
 
-        self::assertStringContainsString("'analyze_user_id'=>$analyzeUserId?->value()", $service);
-        self::assertStringContainsString("'permission_key'=>$permissionKey", $service);
-        self::assertStringContainsString("'node_id'=>$nodeId?->value()", $service);
+        self::assertStringContainsString("'analyze_user_id'=>\$analyzeUserId?->value()", $service);
+        self::assertStringContainsString("'permission_key'=>\$permissionKey", $service);
+        self::assertStringContainsString("'node_id'=>\$nodeId?->value()", $service);
 
         foreach ([
             'ac-access-shell',
