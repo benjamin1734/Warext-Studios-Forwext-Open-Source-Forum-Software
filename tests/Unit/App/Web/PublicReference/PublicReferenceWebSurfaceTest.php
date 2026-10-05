@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\App\Web\PublicReference;
 
+use DateTimeImmutable;
+use Forwext\App\Web\PublicReference\PublicReferenceHandler;
 use Forwext\App\Web\PublicReference\PublicReferenceHtml;
 use Forwext\Core\Forum\Editor\BbCodeReferenceCatalog;
 use Forwext\Core\Forum\Editor\EmojiCatalog;
+use Forwext\Core\Http\Middleware\RequestHandlerInterface;
+use Forwext\Core\Domain\Entity\EntityId;
 use Forwext\Core\Routing\BasePath;
+use Forwext\Core\Trophy\TrophyDefinition;
+use Forwext\Core\Trophy\TrophyKind;
+use Forwext\Core\Trophy\TrophyRuleType;
 use PHPUnit\Framework\TestCase;
 
 final class PublicReferenceWebSurfaceTest extends TestCase
@@ -45,6 +52,33 @@ final class PublicReferenceWebSurfaceTest extends TestCase
         foreach ([':smile:', ':fire:', ':party:'] as $needle) {
             self::assertStringContainsString($needle, $smilies);
         }
+    }
+
+    public function testTrophyReferenceUsesRealDefinitionsAndHandlerSatisfiesRouterContract(): void
+    {
+        self::assertTrue(is_a(PublicReferenceHandler::class, RequestHandlerInterface::class, true));
+
+        $definition = new TrophyDefinition(
+            EntityId::fromString(str_repeat('a', 32)),
+            'phase10.reference',
+            'Phase 10 Rozeti',
+            'Gerçek trophy tanımından gelen açıklama.',
+            TrophyKind::Badge,
+            true,
+            100,
+            null,
+            null,
+            TrophyRuleType::Manual,
+            null,
+            new DateTimeImmutable('2026-10-05T10:00:00+00:00'),
+            new DateTimeImmutable('2026-10-05T10:00:00+00:00'),
+        );
+
+        $html = PublicReferenceHtml::trophies([$definition], new BasePath(''));
+
+        self::assertStringContainsString('Phase 10 Rozeti', $html);
+        self::assertStringContainsString('Gerçek trophy tanımından gelen açıklama.', $html);
+        self::assertStringContainsString('manual', $html);
     }
 
     public function testPhase10RoutesFooterAndDiscoveryStayWired(): void
