@@ -71,8 +71,10 @@ final readonly class AdminCommunityService
         $parameters = [];
         $where = '';
         if ($search !== '') {
-            $where = ' WHERE username LIKE :search OR email LIKE :search';
-            $parameters['search'] = '%' . $search . '%';
+            $where = ' WHERE username LIKE :username_search OR email LIKE :email_search';
+            $needle = '%' . $search . '%';
+            $parameters['username_search'] = $needle;
+            $parameters['email_search'] = $needle;
         }
 
         $rows = $this->database->fetchAll(new CompiledQuery(
