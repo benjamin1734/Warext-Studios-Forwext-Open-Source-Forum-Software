@@ -1587,6 +1587,73 @@ try {
   }
   await assertHealthyDocument("admin mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  response = await page.goto(baseUrl + "/admin/users?q=phase12", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin users: search route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Kullanıcı Yönetimi", exact: true }).waitFor();
+  const userDirectoryState = await page.evaluate(() => ({
+    shell: document.querySelectorAll(".ac-users-shell").length,
+    rows: document.querySelectorAll(".ac-user-table tbody tr").length,
+    search: document.querySelector('.ac-users-toolbar input[name="q"]')?.value ?? "",
+  }));
+  if (userDirectoryState.shell !== 1 || userDirectoryState.rows < 1 || userDirectoryState.search !== "phase12") {
+    fail(`admin users: directory contract failed ${JSON.stringify(userDirectoryState)}`);
+  }
+  const memberLink = page.getByRole("link", { name: /phase12-member/ });
+  if ((await memberLink.count()) !== 1) fail("admin users: seeded member link is missing");
+  await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return candidate.request().method() === "GET"
+        && url.pathname === "/admin/users"
+        && url.searchParams.get("user") === "12121212121212121212121212121212";
+    }),
+    memberLink.click(),
+  ]);
+  await page.waitForLoadState("domcontentloaded");
+  const userDetailState = await page.evaluate(() => ({
+    detail: document.querySelectorAll(".ac-user-detail").length,
+    facts: document.querySelectorAll(".ac-user-fact").length,
+    accessFacts: document.querySelectorAll(".ac-user-access-fact").length,
+    historyRows: document.querySelectorAll(".ac-user-history tbody tr").length,
+    accessSubmitDisabled: document.querySelector('form input[name="action"][value="replace_access"]')?.closest("form")?.querySelector('button[type="submit"]')?.disabled ?? true,
+    statusSubmitDisabled: document.querySelector('form input[name="action"][value="change_status"]')?.closest("form")?.querySelector('button[type="submit"]')?.disabled ?? true,
+  }));
+  if (
+    userDetailState.detail !== 1
+    || userDetailState.facts < 6
+    || userDetailState.accessFacts !== 3
+    || userDetailState.historyRows < 1
+    || userDetailState.accessSubmitDisabled
+    || userDetailState.statusSubmitDisabled
+  ) {
+    fail(`admin users: selected user contract failed ${JSON.stringify(userDetailState)}`);
+  }
+  await assertHealthyDocument("admin users desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin/users?user=12121212121212121212121212121212&q=phase12", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin users mobile: route did not return HTTP 200");
+  const userMobileState = await page.evaluate(() => {
+    const edit = document.querySelector(".ac-user-edit-grid");
+    const facts = document.querySelector(".ac-user-facts");
+    const shell = document.querySelector(".ac-users-shell");
+    return {
+      editColumns: edit instanceof HTMLElement ? getComputedStyle(edit).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      factColumns: facts instanceof HTMLElement ? getComputedStyle(facts).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      shellWidth: shell instanceof HTMLElement ? Math.round(shell.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    userMobileState.editColumns !== 1
+    || userMobileState.factColumns !== 1
+    || userMobileState.shellWidth > userMobileState.viewportWidth
+  ) {
+    fail(`admin users mobile: responsive contract failed ${JSON.stringify(userMobileState)}`);
+  }
+  await assertHealthyDocument("admin users mobile");
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
