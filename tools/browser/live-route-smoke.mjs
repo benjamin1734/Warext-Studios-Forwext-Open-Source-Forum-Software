@@ -1509,7 +1509,32 @@ try {
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail(`admin: real route returned HTTP ${response?.status() ?? "no response"}`);
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
+  const adminDensityState = await page.evaluate(() => ({
+    overview: document.querySelectorAll(".acp-overview-stat").length,
+    sectionIndex: document.querySelectorAll(".acp-section-index a").length,
+    directoryRows: document.querySelectorAll(".acp-directory-row").length,
+    queueRows: document.querySelectorAll(".acp-queue-row").length,
+  }));
+  if (adminDensityState.overview !== 4 || adminDensityState.sectionIndex < 1 || adminDensityState.directoryRows < 1) {
+    fail(`admin: dense dashboard contract failed ${JSON.stringify(adminDensityState)}`);
+  }
   await assertHealthyDocument("admin GET");
+
+  response = await page.goto(baseUrl + "/admin?q=user", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin search: route did not return HTTP 200");
+  const adminSearchState = await page.evaluate(() => ({
+    panel: document.querySelectorAll(".acp-search-results").length,
+    rows: document.querySelectorAll(".acp-search-results .acp-directory-row").length,
+    clear: document.querySelectorAll('.acp-search-results a[href$="/admin"]').length,
+  }));
+  if (adminSearchState.panel !== 1 || adminSearchState.rows < 1 || adminSearchState.clear !== 1) {
+    fail(`admin search: dense results contract failed ${JSON.stringify(adminSearchState)}`);
+  }
+  await assertHealthyDocument("admin search");
+
+  response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin reset: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
 
   const favorite = page.getByRole("button", { name: "Favoriye ekle" }).first();
   if (!(await favorite.count())) fail("admin: no CSRF-protected favorite action was rendered");
@@ -1538,6 +1563,29 @@ try {
     path: path.join(artifactDir, "admin-live-desktop.png"),
     fullPage: true,
   });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin mobile: route did not return HTTP 200");
+  const adminMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".acp-overview");
+    const row = document.querySelector(".acp-directory-row");
+    const dashboard = document.querySelector(".acp-dashboard");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      rowColumns: row instanceof HTMLElement ? getComputedStyle(row).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      dashboardWidth: dashboard instanceof HTMLElement ? Math.round(dashboard.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    adminMobileState.overviewColumns !== 2
+    || adminMobileState.rowColumns !== 1
+    || adminMobileState.dashboardWidth > adminMobileState.viewportWidth
+  ) {
+    fail(`admin mobile: dense dashboard responsive contract failed ${JSON.stringify(adminMobileState)}`);
+  }
+  await assertHealthyDocument("admin mobile");
 
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
