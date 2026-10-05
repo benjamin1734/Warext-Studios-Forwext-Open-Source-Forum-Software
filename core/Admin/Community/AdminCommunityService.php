@@ -56,7 +56,8 @@ final readonly class AdminCommunityService
      *   users:list<array<string,mixed>>,
      *   selected:?\Forwext\Core\Domain\User\User,
      *   selected_history:list<\Forwext\Core\Domain\User\UserHistoryEntry>,
-     *   access:array{primary:?string,secondary:list<string>,roles:list<string>}
+     *   access:array{primary:?string,secondary:list<string>,roles:list<string>},
+     *   search:string
      * }
      */
     public function usersSnapshot(EntityId $actor, string $search, ?EntityId $selectedUserId): array
@@ -70,8 +71,10 @@ final readonly class AdminCommunityService
         $parameters = [];
         $where = '';
         if ($search !== '') {
-            $where = ' WHERE username LIKE :search OR email LIKE :search';
-            $parameters['search'] = '%' . $search . '%';
+            $where = ' WHERE username LIKE :username_search OR email LIKE :email_search';
+            $needle = '%' . $search . '%';
+            $parameters['username_search'] = $needle;
+            $parameters['email_search'] = $needle;
         }
 
         $rows = $this->database->fetchAll(new CompiledQuery(
@@ -91,6 +94,7 @@ final readonly class AdminCommunityService
             'selected_history'=>$selected === null ? [] : $this->users->history($selected->id(), 50),
             'access'=>$selected === null ? ['primary'=>null,'secondary'=>[],'roles'=>[]]
                 : $this->directAccess($selected->id()),
+            'search'=>$search,
         ];
     }
 
