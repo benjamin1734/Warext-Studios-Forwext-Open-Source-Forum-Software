@@ -3,6 +3,8 @@ name: Qualification test matrix
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -161,6 +163,7 @@ jobs:
           php tools/quality/smoke-post-install-web.php
           php tools/browser/seed-minecraft-fixtures.php
           php tools/browser/seed-group-fixtures.php
+          php tools/browser/seed-phase8-fixtures.php
 
       - name: Start real Forwext runtime
         shell: bash
