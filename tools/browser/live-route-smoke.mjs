@@ -767,7 +767,10 @@ try {
 
   const oversightCaseId = "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
   response = await page.goto(baseUrl + "/moderation", { waitUntil: "domcontentloaded" });
-  if (!response || response.status() !== 200) fail("moderation: workspace route did not return HTTP 200");
+  if (!response || response.status() !== 200) {
+    const moderationFailureBody = response ? (await response.text()).slice(0, 800) : "<no response>";
+    fail(`moderation: workspace route returned HTTP ${response?.status() ?? "none"}; body=${moderationFailureBody}`);
+  }
   await page.getByRole("heading", { name: "Çalışma alanı", exact: true }).waitFor();
   const moderationWorkspaceState = await page.evaluate(() => ({
     navs: document.querySelectorAll(".moderation-nav").length,
