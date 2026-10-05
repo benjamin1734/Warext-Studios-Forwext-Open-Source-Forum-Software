@@ -3768,5 +3768,5 @@ html,body{max-width:100%;overflow-x:clip}
 .trophy-reference{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:12px}.trophy-reference h2{margin:4px 0;font-size:12px}.trophy-reference p{margin:0;color:var(--muted);font-size:9px;line-height:1.55}.trophy-reference>.muted{flex:0 0 auto;font-size:8.5px}
 .footer-reference-links{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:8px}.footer-reference-links a{display:inline-flex;align-items:center;color:var(--muted);font-size:9px;text-decoration:none}.footer-reference-links a:hover,.footer-reference-links a:focus-visible{color:var(--text)}
 @media(max-width:760px){.emoji-reference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-row{grid-template-columns:1fr}.trophy-reference{display:grid}}
-@media(max-width:560px){.public-reference-grid{grid-template-columns:1fr}.emoji-reference-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.public-reference-grid{grid-template-columns:1fr}.emoji-reference-grid{grid-template-columns:1fr}}
 @media(pointer:coarse){.public-reference-card,.footer-reference-links a{min-height:44px}}
