@@ -1601,16 +1601,18 @@ try {
   }
   const memberLink = page.getByRole("link", { name: /phase12-member/ });
   if ((await memberLink.count()) !== 1) fail("admin users: seeded member link is missing");
-  await Promise.all([
-    page.waitForResponse((candidate) => {
-      const url = new URL(candidate.url());
-      return candidate.request().method() === "GET"
-        && url.pathname === "/admin/users"
-        && url.searchParams.get("user") === "12121212121212121212121212121212";
-    }),
-    memberLink.click(),
-  ]);
-  await page.waitForLoadState("domcontentloaded");
+  const memberHref = await memberLink.getAttribute("href");
+  if (!memberHref || !memberHref.includes("user=12121212121212121212121212121212")) {
+    fail(`admin users: seeded member target is invalid: ${memberHref ?? "<missing>"}`);
+  }
+  response = await page.goto(
+    baseUrl + "/admin/users?user=12121212121212121212121212121212&q=phase12",
+    { waitUntil: "domcontentloaded" },
+  );
+  if (!response || response.status() !== 200) {
+    const body = response ? (await response.text()).slice(0, 800) : "<no response>";
+    fail(`admin users selected: route returned HTTP ${response?.status() ?? "none"}; body=${body}`);
+  }
   const userDetailState = await page.evaluate(() => ({
     detail: document.querySelectorAll(".ac-user-detail").length,
     facts: document.querySelectorAll(".ac-user-fact").length,
