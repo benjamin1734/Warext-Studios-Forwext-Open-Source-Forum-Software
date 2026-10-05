@@ -23,6 +23,7 @@ final class ReportModerationHtml
         array $comments,
         BasePath $basePath,
         bool $canManage,
+        bool $canViewAudit = false,
     ): string {
         $back = self::e($basePath->prepend('/moderation#moderation-reports'));
         $content = '<section class="moderation-subpage discovery-page"><header class="surface-head moderation-subpage-head"><div>'
@@ -30,6 +31,7 @@ final class ReportModerationHtml
             . self::e($group->targetTitle) . '</h1><p>' . self::e($group->reasonLabel) . ' · '
             . self::e($group->status->label()) . ' · ' . $group->reportCount . ' rapor</p></div>'
             . '<a class="fx-btn" href="' . $back . '">Çalışma alanına dön</a></header>'
+            . ModerationNavigationHtml::render($basePath, 'reports', $canViewAudit)
             . '<section class="surface-panel moderation-report-meta"><div class="profile-stats">'
             . self::stat('Hedef', self::e($group->targetType . ' / ' . $group->targetId->value()))
             . self::stat('Durum', self::e($group->status->label()))
