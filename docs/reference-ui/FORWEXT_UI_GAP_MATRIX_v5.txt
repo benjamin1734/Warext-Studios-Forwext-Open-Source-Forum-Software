@@ -78,7 +78,8 @@ Current: moderation workspace, approval queue, report review and audit surfaces 
 Gap: add deterministic live-route fixtures/desktop-mobile acceptance for moderation/audit/case-detail routes, then close responsive/state qualification.
 
 10 HELP / LEGAL / REFERENCE PAGES — IN PROGRESS
-Gap: help/legal/reference family is incomplete as a coherent route set; smilies, BB-code, trophies, cookie usage, terms/privacy/contact/RSS need explicit final route ownership and consistent shell.
+Current: `/help` now owns contact, terms, privacy, cookies, BB-code, emoji/smilies, trophy and feed reference pages under one responsive shell; footer and sitemap discovery are wired. RSS/Atom, editor references and trophies reuse real first-party sources instead of duplicated demo data.
+Gap: qualification remains pending until PHP contracts and installed-runtime desktop/mobile Chromium pass on the Phase 10 PR.
 
 11-18 ACP — IN PROGRESS
 Current: dashboard, managed public navigation, community sections, modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
