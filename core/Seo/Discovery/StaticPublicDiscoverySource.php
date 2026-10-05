@@ -16,6 +16,7 @@ final readonly class StaticPublicDiscoverySource implements PublicDiscoverySourc
             new PublicDiscoveryEntry('/', 'Forwext', 'Forwext — Open Source Forum Platform'),
             new PublicDiscoveryEntry('/members', 'Üyeler', 'Herkese açık Forwext üye dizini'),
             new PublicDiscoveryEntry('/help', 'Yardım', 'Forwext yardım, destek ve herkese açık referans merkezi'),
+            new PublicDiscoveryEntry('/help/contact', 'İletişim ve destek', 'Forwext destek ve başvuru kanalları'),
             new PublicDiscoveryEntry('/help/terms', 'Kullanım koşulları', 'Forwext varsayılan kullanım koşulları'),
             new PublicDiscoveryEntry('/help/privacy', 'Gizlilik', 'Forwext gizlilik ve veri işleme referansı'),
             new PublicDiscoveryEntry('/help/cookies', 'Çerez kullanımı', 'Forwext oturum ve güvenlik çerezleri referansı'),
