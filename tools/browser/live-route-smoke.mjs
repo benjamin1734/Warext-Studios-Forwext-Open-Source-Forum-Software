@@ -1759,6 +1759,96 @@ try {
   }
   await assertHealthyDocument("admin access mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  response = await page.goto(baseUrl + "/admin/forums?q=phase14", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin forums: filter route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Forum ve Node Yönetimi", exact: true }).waitFor();
+  const forumDirectoryState = await page.evaluate(() => ({
+    overview: document.querySelectorAll(".ac-forum-overview .ac-access-stat").length,
+    rows: document.querySelectorAll(".ac-node-table tbody tr").length,
+    filter: document.querySelector('.ac-forum-filter input[name="q"]')?.value ?? "",
+  }));
+  if (forumDirectoryState.overview !== 4 || forumDirectoryState.rows !== 1 || forumDirectoryState.filter !== "phase14") {
+    fail(`admin forums: directory contract failed ${JSON.stringify(forumDirectoryState)}`);
+  }
+  const forumLink = page.getByRole("link", { name: /Phase 14 Browser Forum/ });
+  if ((await forumLink.count()) !== 1) fail("admin forums: seeded node link is missing");
+  response = await page.goto(
+    baseUrl + "/admin/forums?node=14141414141414141414141414141414&q=phase14",
+    { waitUntil: "domcontentloaded" },
+  );
+  if (!response || response.status() !== 200) fail("admin forums selected: route did not return HTTP 200");
+  const selectedNodeState = await page.evaluate(() => ({
+    summary: document.querySelectorAll(".ac-node-summary").length,
+    facts: document.querySelectorAll(".ac-node-summary .ac-user-access-fact").length,
+    editor: document.querySelectorAll(".ac-node-editor").length,
+    save: document.querySelectorAll('form input[name="action"][value="save_node"]').length,
+    title: document.querySelector('form.ac-node-editor input[name="title"]')?.value ?? "",
+    threadsPerPage: document.querySelector('form.ac-node-editor input[name="threads_per_page"]')?.value ?? "",
+  }));
+  if (
+    selectedNodeState.summary !== 1
+    || selectedNodeState.facts !== 6
+    || selectedNodeState.editor !== 1
+    || selectedNodeState.save !== 1
+    || selectedNodeState.title !== "Phase 14 Browser Forum"
+    || selectedNodeState.threadsPerPage !== "25"
+  ) {
+    fail(`admin forums: selected node contract failed ${JSON.stringify(selectedNodeState)}`);
+  }
+  await assertHealthyDocument("admin forums desktop");
+
+  response = await page.goto(baseUrl + "/admin/content", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin content: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "İçerik ACP", exact: true }).waitFor();
+  const contentState = await page.evaluate(() => ({
+    stats: document.querySelectorAll(".ac-content-overview .ac-access-stat").length,
+    actions: document.querySelectorAll(".ac-content-action").length,
+    inlineMargin: document.querySelectorAll('[style*="margin-top:12px"]').length,
+  }));
+  if (contentState.stats !== 6 || contentState.actions < 1 || contentState.inlineMargin !== 0) {
+    fail(`admin content: dense content contract failed ${JSON.stringify(contentState)}`);
+  }
+  await assertHealthyDocument("admin content desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin/forums?node=14141414141414141414141414141414", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin forums mobile: route did not return HTTP 200");
+  const forumMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".ac-forum-overview");
+    const facts = document.querySelector(".ac-node-summary .ac-access-facts");
+    const shell = document.querySelector(".ac-forum-shell");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      factColumns: facts instanceof HTMLElement ? getComputedStyle(facts).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      shellWidth: shell instanceof HTMLElement ? Math.round(shell.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    forumMobileState.overviewColumns !== 2
+    || forumMobileState.factColumns !== 1
+    || forumMobileState.shellWidth > forumMobileState.viewportWidth
+  ) {
+    fail(`admin forums mobile: responsive contract failed ${JSON.stringify(forumMobileState)}`);
+  }
+  await assertHealthyDocument("admin forums mobile");
+
+  response = await page.goto(baseUrl + "/admin/content", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin content mobile: route did not return HTTP 200");
+  const contentMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".ac-content-overview");
+    const actions = document.querySelector(".ac-content-actions");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      actionColumns: actions instanceof HTMLElement ? getComputedStyle(actions).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+    };
+  });
+  if (contentMobileState.overviewColumns !== 1 || contentMobileState.actionColumns !== 1) {
+    fail(`admin content mobile: responsive contract failed ${JSON.stringify(contentMobileState)}`);
+  }
+  await assertHealthyDocument("admin content mobile");
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
