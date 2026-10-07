@@ -108,13 +108,18 @@ PHASE 12 — ACP USERS — VERIFIED
 - FIXED: user search uses unique native-PDO-safe username/e-mail placeholders.
 - QUALIFICATION: deterministic non-self user/history fixture, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1350`.
 
-PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS — IN PROGRESS
-- IMPLEMENTED: dense group/role directory with real primary/secondary/direct membership counts, selected group/role facts and existing safe mutation forms.
-- IMPLEMENTED: role appearance editor remains bound to the first-party RoleAppearance model; no duplicate appearance storage.
-- IMPLEMENTED: permission analyzer retains selected user/permission/node context and renders the real production PermissionEngine layer trace.
-- IMPLEMENTED: deterministic Phase 13 group/role assignments plus desktop/mobile live-route coverage; access tables reflow to mobile cards instead of horizontal overflow.
-- QUALIFICATION PENDING: Phase 13 PR PHP/DB/browser gates.
-PHASE 14 — ACP FORUMS / NODES / CONTENT
+PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS — VERIFIED
+- VERIFIED: dense group/role directory with real primary/secondary/direct membership counts, selected group/role facts and existing safe mutation forms.
+- VERIFIED: role appearance editor remains bound to the first-party RoleAppearance model; no duplicate appearance storage.
+- VERIFIED: permission analyzer retains selected user/permission/node context and renders the real production PermissionEngine layer trace.
+- QUALIFICATION: deterministic group/role assignments, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1352`.
+
+PHASE 14 — ACP FORUMS / NODES / CONTENT — IN PROGRESS
+- IMPLEMENTED: dense node overview with real type counts, parent hierarchy labels, thread/post statistics, filter context and selected-node facts.
+- IMPLEMENTED: existing ForumNodeRepository/ForumNodeHierarchy remains mutation authority; node create/update form retains CSRF/audit ownership.
+- IMPLEMENTED: content ACP now exposes real totals plus permission-aware entry points into Forum/Node management, Content Manager, Approval Queue and Thread Freshness without duplicating mutations.
+- IMPLEMENTED: installed-runtime desktop/mobile live-route contracts cover starter forum selection, filter preservation, content operation ownership and 390px table/card reflow.
+- QUALIFICATION PENDING: Phase 14 PR PHP/DB/browser gates.
 PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES
 PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS
 PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY

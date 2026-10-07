@@ -1759,6 +1759,93 @@ try {
   }
   await assertHealthyDocument("admin access mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const starterForumId = "00000000000000000000000000000002";
+  response = await page.goto(baseUrl + "/admin/forums?node=" + starterForumId + "&q=Genel", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin forums: selected node route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Forum ve Node Yönetimi", exact: true }).waitFor();
+  const forumAdminState = await page.evaluate(() => ({
+    overview: document.querySelectorAll(".ac-forum-stat").length,
+    rows: document.querySelectorAll(".ac-forum-table tbody tr").length,
+    facts: document.querySelectorAll(".ac-forum-fact").length,
+    editor: document.querySelectorAll(".ac-forum-editor-form").length,
+    selectedId: document.querySelector('.ac-forum-editor-form input[name="node_id"]')?.value ?? "",
+    search: document.querySelector('.ac-forum-filter input[name="q"]')?.value ?? "",
+  }));
+  if (
+    forumAdminState.overview !== 4
+    || forumAdminState.rows < 2
+    || forumAdminState.facts !== 8
+    || forumAdminState.editor !== 1
+    || forumAdminState.selectedId !== starterForumId
+    || forumAdminState.search !== "Genel"
+  ) {
+    fail(`admin forums: dense node workspace contract failed ${JSON.stringify(forumAdminState)}`);
+  }
+  await assertHealthyDocument("admin forums desktop");
+
+  response = await page.goto(baseUrl + "/admin/content", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin content: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "İçerik ACP", exact: true }).waitFor();
+  const contentAdminState = await page.evaluate(() => ({
+    metrics: document.querySelectorAll(".ac-content-metric").length,
+    operations: document.querySelectorAll(".ac-content-operation").length,
+    available: document.querySelectorAll('.ac-content-operation[data-available="1"]').length,
+    unavailable: document.querySelectorAll('.ac-content-operation[data-available="0"]').length,
+  }));
+  if (contentAdminState.metrics !== 4 || contentAdminState.operations !== 4 || contentAdminState.available < 1) {
+    fail(`admin content: operations workspace contract failed ${JSON.stringify(contentAdminState)}`);
+  }
+  await assertHealthyDocument("admin content desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin/forums?node=" + starterForumId, { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin forums mobile: route did not return HTTP 200");
+  const forumAdminMobile = await page.evaluate(() => {
+    const overview = document.querySelector(".ac-forum-overview");
+    const facts = document.querySelector(".ac-forum-facts");
+    const row = document.querySelector(".ac-forum-table tbody tr");
+    const shell = document.querySelector(".ac-forums-shell");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      factColumns: facts instanceof HTMLElement ? getComputedStyle(facts).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      rowColumns: row instanceof HTMLElement ? getComputedStyle(row).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      shellWidth: shell instanceof HTMLElement ? Math.round(shell.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    forumAdminMobile.overviewColumns !== 1
+    || forumAdminMobile.factColumns !== 1
+    || forumAdminMobile.rowColumns !== 1
+    || forumAdminMobile.shellWidth > forumAdminMobile.viewportWidth
+  ) {
+    fail(`admin forums mobile: responsive contract failed ${JSON.stringify(forumAdminMobile)}`);
+  }
+  await assertHealthyDocument("admin forums mobile");
+
+  response = await page.goto(baseUrl + "/admin/content", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin content mobile: route did not return HTTP 200");
+  const contentAdminMobile = await page.evaluate(() => {
+    const overview = document.querySelector(".ac-content-overview");
+    const operation = document.querySelector(".ac-content-operation");
+    const shell = document.querySelector(".ac-content-shell");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      operationColumns: operation instanceof HTMLElement ? getComputedStyle(operation).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      shellWidth: shell instanceof HTMLElement ? Math.round(shell.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    contentAdminMobile.overviewColumns !== 1
+    || contentAdminMobile.operationColumns !== 1
+    || contentAdminMobile.shellWidth > contentAdminMobile.viewportWidth
+  ) {
+    fail(`admin content mobile: responsive contract failed ${JSON.stringify(contentAdminMobile)}`);
+  }
+  await assertHealthyDocument("admin content mobile");
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");

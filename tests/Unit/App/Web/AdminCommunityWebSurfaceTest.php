@@ -41,6 +41,14 @@ final class AdminCommunityWebSurfaceTest extends TestCase
         self::assertStringContainsString('ac-access-directory-grid', $html);
         self::assertStringContainsString('ac-access-overview', $html);
         self::assertStringContainsString('ac-access-shell', $html);
+        self::assertStringContainsString('ac-forums-shell', $html);
+        self::assertStringContainsString('ac-forum-overview', $html);
+        self::assertStringContainsString('ac-forum-table', $html);
+        self::assertStringContainsString('ac-forum-facts', $html);
+        self::assertStringContainsString('ac-forum-editor-form', $html);
+        self::assertStringContainsString('ac-content-shell', $html);
+        self::assertStringContainsString('ac-content-overview', $html);
+        self::assertStringContainsString('ac-content-operation', $html);
         self::assertStringNotContainsString('<script', $html);
     }
 

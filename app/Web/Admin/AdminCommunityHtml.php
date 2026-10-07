@@ -424,19 +424,49 @@ final class AdminCommunityHtml
     {
         $action = self::e($basePath->prepend('/admin/forums'));
         $query = trim((string) ($snapshot['ux_query'] ?? ''));
-        $rows = '';
-        foreach ($snapshot['nodes'] as $node) {
+        $nodes = $snapshot['nodes'];
+        $stats = $snapshot['stats'];
+        $totals = $snapshot['totals'];
+
+        $parentTitles = [];
+        $typeCounts = ['category'=>0,'forum'=>0,'page'=>0,'link'=>0];
+        foreach ($nodes as $node) {
             if (!$node instanceof ForumNode) {
                 continue;
             }
-            if (!self::matches($query, [$node->title(), $node->slug()->value(), $node->type()->value, $node->visibility()->value])) {
+            $parentTitles[$node->id()->value()] = $node->title();
+            if (isset($typeCounts[$node->type()->value])) {
+                ++$typeCounts[$node->type()->value];
+            }
+        }
+
+        $rows = '';
+        $visibleRows = 0;
+        foreach ($nodes as $node) {
+            if (!$node instanceof ForumNode) {
                 continue;
             }
-            $stat = $snapshot['stats'][$node->id()->value()] ?? ['threads'=>0,'posts'=>0];
+            $parentLabel = $node->parentId() === null
+                ? 'Root'
+                : ($parentTitles[$node->parentId()->value()] ?? $node->parentId()->value());
+            if (!self::matches($query, [
+                $node->title(),
+                $node->slug()->value(),
+                $node->type()->value,
+                $node->visibility()->value,
+                $parentLabel,
+            ])) {
+                continue;
+            }
+            ++$visibleRows;
+            $stat = $stats[$node->id()->value()] ?? ['threads'=>0,'posts'=>0];
             $url = $basePath->prepend('/admin/forums?node=' . rawurlencode($node->id()->value())
                 . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
-            $rows .= '<tr><td><a href="' . self::e($url) . '">' . self::e($node->title()) . '</a></td><td>'
-                . self::e($node->type()->value) . '</td><td>' . self::e($node->visibility()->value)
+            $rows .= '<tr data-node-type="' . self::e($node->type()->value) . '"><td><a href="' . self::e($url)
+                . '"><strong>' . self::e($node->title()) . '</strong></a><small class="ac-node-subline">/'
+                . self::e($node->slug()->value()) . ' · ' . self::e($node->id()->value()) . '</small></td><td>'
+                . self::e($parentLabel) . '</td><td><span class="ac-badge">' . self::e($node->type()->value)
+                . '</span></td><td>' . self::e($node->visibility()->value)
                 . '</td><td>' . (int) $stat['threads'] . '</td><td>' . (int) $stat['posts'] . '</td></tr>';
         }
 
@@ -444,8 +474,15 @@ final class AdminCommunityHtml
         $nodeId = $selected instanceof ForumNode ? $selected->id()->value() : '';
         $type = $selected instanceof ForumNode ? $selected->type()->value : ForumNodeType::Forum->value;
         $settings = $selected instanceof ForumNode ? $selected->forumSettings() : null;
+        $selectedStat = $selected instanceof ForumNode
+            ? ($stats[$selected->id()->value()] ?? ['threads'=>0,'posts'=>0])
+            : ['threads'=>0,'posts'=>0];
+        $selectedParent = $selected instanceof ForumNode && $selected->parentId() !== null
+            ? ($parentTitles[$selected->parentId()->value()] ?? $selected->parentId()->value())
+            : 'Root';
+
         $parentOptions = '<option value="">Root</option>';
-        foreach ($snapshot['nodes'] as $node) {
+        foreach ($nodes as $node) {
             if (!$node instanceof ForumNode || ($selected instanceof ForumNode && $node->id()->equals($selected->id()))) {
                 continue;
             }
@@ -454,7 +491,8 @@ final class AdminCommunityHtml
                 . '>' . self::e($node->title()) . '</option>';
         }
 
-        $editor = '<form class="ac-form" method="post" action="' . $action . '"><input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_node">'
+        $editor = '<form class="ac-form ac-forum-editor-form" method="post" action="' . $action . '">'
+            . '<input type="hidden" name="_csrf" value="' . self::e($csrf) . '"><input type="hidden" name="action" value="save_node">'
             . ($nodeId !== '' ? '<input type="hidden" name="node_id" value="' . self::e($nodeId) . '">' : '')
             . '<div class="ac-row"><label>Tür<select name="node_type">' . self::options(['category','forum','page','link'], $type) . '</select></label>'
             . '<label>Parent<select name="parent_id">' . $parentOptions . '</select></label>'
@@ -463,45 +501,142 @@ final class AdminCommunityHtml
             . '<label>Slug<input name="slug" maxlength="100" value="' . self::e($selected instanceof ForumNode ? $selected->slug()->value() : '') . '" required></label>'
             . '<label>Sort<input type="number" name="sort_order" min="0" max="4294967295" value="' . ($selected instanceof ForumNode ? $selected->sortOrder() : 0) . '"></label></div>'
             . '<label>Açıklama<textarea name="description" maxlength="500">' . self::e($selected instanceof ForumNode ? $selected->description() : '') . '</textarea></label>'
-            . '<div class="ac-card"><h3>Forum ayarları</h3><div class="ac-checks">'
+            . '<details class="ac-forum-editor-group" open><summary>Forum ayarları</summary><div class="ac-forum-editor-group-body"><div class="ac-checks">'
             . self::check('allow_new_threads','Yeni konu', $settings?->allowNewThreads() ?? true)
             . self::check('allow_replies','Yanıt', $settings?->allowReplies() ?? true)
             . self::check('require_thread_approval','Konu onayı', $settings?->requireThreadApproval() ?? false)
             . self::check('require_post_approval','Mesaj onayı', $settings?->requirePostApproval() ?? false)
             . '</div><div class="ac-row"><label>Default sort<select name="default_thread_sort">' . self::options(['last_post','created','title'], $settings?->defaultThreadSort()->value ?? 'last_post') . '</select></label>'
-            . '<label>Threads/page<input type="number" name="threads_per_page" min="5" max="100" value="' . ($settings?->threadsPerPage() ?? 20) . '"></label></div></div>'
+            . '<label>Threads/page<input type="number" name="threads_per_page" min="5" max="100" value="' . ($settings?->threadsPerPage() ?? 20) . '"></label></div></div></details>'
+            . '<details class="ac-forum-editor-group"><summary>Page / link alanları</summary><div class="ac-forum-editor-group-body">'
             . '<label>Page content<textarea name="page_content">' . self::e($selected instanceof ForumNode ? ($selected->pageContent() ?? '') : '') . '</textarea></label>'
             . '<div class="ac-row"><label>Link target<input name="link_target" maxlength="2048" value="' . self::e($selected instanceof ForumNode ? ($selected->linkTarget()?->value() ?? '') : '') . '"></label>'
-            . '<div class="ac-checks">' . self::check('link_new_window','Yeni pencere', $selected instanceof ForumNode && $selected->linkNewWindow()) . '</div></div>'
+            . '<div class="ac-checks">' . self::check('link_new_window','Yeni pencere', $selected instanceof ForumNode && $selected->linkNewWindow()) . '</div></div></div></details>'
             . '<button class="ac-btn" type="submit">' . ($selected instanceof ForumNode ? 'Node’u güncelle' : 'Yeni node oluştur') . '</button></form>';
 
-        $filter = '<form class="ac-filter" method="get" action="' . $action . '"><label>Node ara<input name="q" maxlength="80" value="'
-            . self::e($query) . '" placeholder="Başlık, slug, tür veya görünürlük"></label><button class="ac-btn" type="submit">Filtrele</button>'
+        $filter = '<form class="ac-filter ac-forum-filter" method="get" action="' . $action . '"><label>Node ara<input name="q" maxlength="80" value="'
+            . self::e($query) . '" placeholder="Başlık, slug, parent, tür veya görünürlük"></label><button class="ac-btn" type="submit">Filtrele</button>'
             . '<a class="ac-btn" href="' . $action . '">Filtreyi sıfırla</a></form>';
 
-        return '<section class="ac-panel"><h1>Forum ve Node Yönetimi</h1><p class="ac-muted">Kategori, forum, page ve link node’ları aynı hiyerarşi doğrulamasını kullanır. Mevcut node tipi bu ekrandan dönüştürülemez.</p>'
-            . $filter
-            . '<div class="ac-table-wrap"><table class="ac-table"><thead><tr><th>Node</th><th>Tür</th><th>Visibility</th><th>Konu</th><th>Mesaj</th></tr></thead><tbody>'
-            . ($rows !== '' ? $rows : '<tr><td colspan="5">Filtreyle eşleşen node yok.</td></tr>') . '</tbody></table></div></section><section class="ac-panel"><h2>'
-            . ($selected instanceof ForumNode ? 'Node düzenle' : 'Yeni node') . '</h2>' . $editor . '</section>';
+        $selectedPanel = '<section class="ac-panel ac-forum-selected"><div class="ac-heading"><div><h2>'
+            . ($selected instanceof ForumNode ? 'Seçili node' : 'Yeni node')
+            . '</h2><p class="ac-muted">'
+            . ($selected instanceof ForumNode
+                ? 'Hiyerarşi, içerik yoğunluğu ve mevcut yapılandırma tek yerde.'
+                : 'Yeni kategori, forum, page veya link node oluştur.')
+            . '</p></div></div>';
+        if ($selected instanceof ForumNode) {
+            $selectedPanel .= '<div class="ac-forum-facts">'
+                . self::forumFact('Başlık', $selected->title())
+                . self::forumFact('Tür', $selected->type()->value)
+                . self::forumFact('Parent', $selectedParent)
+                . self::forumFact('Visibility', $selected->visibility()->value)
+                . self::forumFact('Konu', (string) (int) $selectedStat['threads'])
+                . self::forumFact('Mesaj', (string) (int) $selectedStat['posts'])
+                . self::forumFact('Slug', '/' . $selected->slug()->value())
+                . self::forumFact('Sort', (string) $selected->sortOrder())
+                . '</div>';
+        }
+        $selectedPanel .= $editor . '</section>';
+
+        return '<div class="ac-forums-shell">'
+            . '<section class="ac-forum-overview" aria-label="Forum node özeti">'
+            . self::forumOverviewStat('Node', count($nodes), 'Toplam kayıt')
+            . self::forumOverviewStat('Forum', $typeCounts['forum'], 'Kategori ' . $typeCounts['category'] . ' · Page ' . $typeCounts['page'] . ' · Link ' . $typeCounts['link'])
+            . self::forumOverviewStat('Konu', (int) $totals['threads'], 'Onay bekleyen ' . (int) $totals['thread_pending'])
+            . self::forumOverviewStat('Mesaj', (int) $totals['posts'], 'Onay bekleyen ' . (int) $totals['post_pending'])
+            . '</section>'
+            . '<section class="ac-panel ac-forum-directory"><div class="ac-heading"><div><h1>Forum ve Node Yönetimi</h1>'
+            . '<p class="ac-muted">Kategori, forum, page ve link node’ları üretim hiyerarşi doğrulamasını kullanır; mevcut node tipi backend tarafından korunur.</p></div>'
+            . '<span class="ac-count">' . $visibleRows . '</span></div>' . $filter
+            . '<div class="ac-table-wrap"><table class="ac-table ac-forum-table"><thead><tr><th>Node</th><th>Parent</th><th>Tür</th><th>Visibility</th><th>Konu</th><th>Mesaj</th></tr></thead><tbody>'
+            . ($rows !== '' ? $rows : '<tr><td colspan="6">Filtreyle eşleşen node yok.</td></tr>')
+            . '</tbody></table></div></section>'
+            . $selectedPanel
+            . '</div>';
+    }
+
+    private static function forumOverviewStat(string $label, int $value, string $detail): string
+    {
+        return '<article class="ac-forum-stat"><span>' . self::e($label) . '</span><strong>' . $value
+            . '</strong><small>' . self::e($detail) . '</small></article>';
+    }
+
+    private static function forumFact(string $label, string $value): string
+    {
+        return '<div class="ac-forum-fact"><span>' . self::e($label) . '</span><strong>' . self::e($value) . '</strong></div>';
     }
 
     /** @param array<string,mixed> $snapshot */
     private static function content(array $snapshot, BasePath $basePath): string
     {
-        $t = $snapshot['totals'];
-        return '<section class="ac-panel"><h1>İçerik ACP</h1><div class="ac-kpis">'
-            . self::kpi('Konular', (int) $t['threads'])
-            . self::kpi('Mesajlar', (int) $t['posts'])
-            . self::kpi('Onay bekleyen konu', (int) $t['thread_pending'])
-            . self::kpi('Onay bekleyen mesaj', (int) $t['post_pending'])
-            . self::kpi('Silinmiş konu', (int) $t['deleted_threads'])
-            . self::kpi('Silinmiş mesaj', (int) $t['deleted_posts'])
-            . '</div><div class="ac-actions" style="margin-top:12px">'
-            . '<a class="ac-btn" href="' . self::e($basePath->prepend('/content-manager')) . '">User Content Manager</a>'
-            . '<a class="ac-btn" href="' . self::e($basePath->prepend('/moderation/approval')) . '">Approval Queue</a>'
-            . '<a class="ac-btn" href="' . self::e($basePath->prepend('/moderation/freshness')) . '">Thread Freshness</a>'
-            . '</div><p class="ac-muted">İçerik mutation’ları mevcut Content Manager ve Moderation servislerinden geçer; bu dashboard onların backend permission kontrollerini atlamaz.</p></section>';
+        $totals = $snapshot['totals'];
+        $capabilities = $snapshot['capabilities'];
+        $pending = (int) $totals['thread_pending'] + (int) $totals['post_pending'];
+        $deleted = (int) $totals['deleted_threads'] + (int) $totals['deleted_posts'];
+
+        $operations = '<div class="ac-content-operations">';
+        $operations .= self::contentOperation(
+            'Forum / node yapısı',
+            'İçeriğin bağlandığı kategori, forum, page ve link hiyerarşisini yönet.',
+            '/admin/forums',
+            true,
+            $basePath,
+        );
+        $operations .= self::contentOperation(
+            'User Content Manager',
+            'Kullanıcı içeriklerini üretim Content Manager yetkileriyle incele ve yönet.',
+            '/content-manager',
+            (bool) ($capabilities['content_manager'] ?? false),
+            $basePath,
+        );
+        $operations .= self::contentOperation(
+            'Approval Queue',
+            'Onay bekleyen konu ve mesajları mevcut moderasyon kuyruğunda işle.',
+            '/moderation/approval',
+            (bool) ($capabilities['moderation'] ?? false),
+            $basePath,
+        );
+        $operations .= self::contentOperation(
+            'Thread Freshness',
+            'Konu güncelliği ve yaşam döngüsü kontrollerini mevcut moderasyon yüzeyinde aç.',
+            '/moderation/freshness',
+            (bool) ($capabilities['moderation'] ?? false),
+            $basePath,
+        );
+        $operations .= '</div>';
+
+        return '<div class="ac-content-shell"><section class="ac-content-overview" aria-label="İçerik özeti">'
+            . self::contentMetric('Konular', (int) $totals['threads'], 'Silinmiş ' . (int) $totals['deleted_threads'])
+            . self::contentMetric('Mesajlar', (int) $totals['posts'], 'Silinmiş ' . (int) $totals['deleted_posts'])
+            . self::contentMetric('Onay bekleyen', $pending, 'Konu ' . (int) $totals['thread_pending'] . ' · Mesaj ' . (int) $totals['post_pending'])
+            . self::contentMetric('Soft-deleted', $deleted, 'Mutation sahipliği Content Manager/Moderation servislerinde')
+            . '</section>'
+            . '<section class="ac-panel ac-content-workspace"><div class="ac-heading"><div><h1>İçerik ACP</h1>'
+            . '<p class="ac-muted">Bu yüzey içerik mutation’larını kopyalamaz; ilgili üretim servislerine permission-aware giriş noktası sağlar.</p></div></div>'
+            . $operations
+            . '</section></div>';
+    }
+
+    private static function contentMetric(string $label, int $value, string $detail): string
+    {
+        return '<article class="ac-content-metric"><span>' . self::e($label) . '</span><strong>' . $value
+            . '</strong><small>' . self::e($detail) . '</small></article>';
+    }
+
+    private static function contentOperation(
+        string $title,
+        string $description,
+        string $path,
+        bool $available,
+        BasePath $basePath,
+    ): string {
+        return '<article class="ac-content-operation" data-available="' . ($available ? '1' : '0') . '"><div><h2>'
+            . self::e($title) . '</h2><p>' . self::e($description) . '</p></div>'
+            . ($available
+                ? '<a class="ac-btn" href="' . self::e($basePath->prepend($path)) . '">Aç</a>'
+                : '<span class="ac-content-unavailable">Bu hesapta gerekli backend izni yok.</span>')
+            . '</article>';
     }
 
     /** @param array<string,mixed> $snapshot */
