@@ -18,6 +18,7 @@ use Forwext\Core\Install\InstallationInput;
 use Forwext\Core\Install\InstallationService;
 use Forwext\Core\Migration\FileInstalledVersionStore;
 use Forwext\Core\Module\FirstParty\FirstPartyModuleRegistry;
+use Forwext\Core\Ui\Theme\DatabaseThemeRepository;
 
 $root = dirname(__DIR__, 2);
 require $root . '/vendor/autoload.php';
@@ -116,11 +117,11 @@ if ($admin === null || (string) $admin['status'] !== 'active' || (int) $admin['c
 $adminPermissions = (int) $database->fetchValue(new CompiledQuery(
     "SELECT COUNT(*) FROM forwext_permission_global_rules "
     . "WHERE subject_type='user' AND subject_id=:user_id "
-    . "AND permission_key IN ('acp.access','acp.manage','module.manage','system.health.view') "
+    . "AND permission_key IN ('acp.access','acp.manage','module.manage','system.health.view','appearance.manage','appearance.advanced') "
     . "AND effect='allow'",
     ['user_id'=>$administratorId],
 ));
-if ($adminPermissions !== 4) {
+if ($adminPermissions !== 6) {
     throw new RuntimeException('Installer administrator did not receive current administrator permissions.');
 }
 $enabledModules = (int) $database->fetchValue(new CompiledQuery(
@@ -134,6 +135,21 @@ $theme = $database->fetchOne(new CompiledQuery(
 ));
 if ($theme === null || !is_string($theme['published_revision_id'] ?? null) || $theme['published_revision_id'] === '') {
     throw new RuntimeException('Installer did not publish the selected initial theme.');
+}
+
+$themeRepository = new DatabaseThemeRepository($database);
+$installedTheme = $themeRepository->findByKey('forwext-balanced');
+if ($installedTheme === null
+    || $installedTheme->stagingRevisionId === null
+    || $installedTheme->publishedRevisionId === null
+) {
+    throw new RuntimeException('Installer theme repository round-trip is incomplete.');
+}
+$installedStaging = $themeRepository->revision($installedTheme->stagingRevisionId);
+$installedPublished = $themeRepository->revision($installedTheme->publishedRevisionId);
+$installedHistory = $themeRepository->revisions($installedTheme->themeId);
+if ($installedStaging === null || $installedPublished === null || $installedHistory === []) {
+    throw new RuntimeException('Installer theme revision repository round-trip is incomplete.');
 }
 
 $starterForum = (int) $database->fetchValue(new CompiledQuery(

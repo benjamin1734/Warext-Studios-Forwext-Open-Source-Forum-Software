@@ -28,6 +28,13 @@ final class ThemeManagementWebSurfaceTest extends TestCase
         self::assertStringContainsString('Staging’e al', $html);
         self::assertStringContainsString('Custom CSS', $html);
         self::assertStringContainsString('Custom JavaScript', $html);
+        self::assertStringContainsString('theme-admin--dense', $html);
+        self::assertStringContainsString('theme-overview', $html);
+        self::assertStringContainsString('theme-context-grid', $html);
+        self::assertStringContainsString('theme-workspace-grid', $html);
+        self::assertStringContainsString('theme-editor-group', $html);
+        self::assertStringContainsString('theme-code-grid', $html);
+        self::assertStringContainsString('/admin/appearance/layout', $html);
     }
 
     public function testThemeAssetsAreSameOriginRevisionAddressedAndNosniff(): void

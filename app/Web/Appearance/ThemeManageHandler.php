@@ -172,7 +172,7 @@ final readonly class ThemeManageHandler implements RequestHandlerInterface
         }
 
         $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
-        if (!is_array($decoded) || array_is_list($decoded)) {
+        if (!is_array($decoded) || ($decoded !== [] && array_is_list($decoded))) {
             throw new InvalidArgumentException('Theme ' . $label . ' JSON must be an object.');
         }
 

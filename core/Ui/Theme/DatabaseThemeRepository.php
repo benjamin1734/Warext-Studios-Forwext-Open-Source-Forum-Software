@@ -66,23 +66,26 @@ final readonly class DatabaseThemeRepository implements ThemeRepository
         if (!is_string($json) || !is_string($checksum) || preg_match('/^[a-f0-9]{64}$/D', $checksum) !== 1) {
             throw new InvalidArgumentException('Stored theme revision is invalid.');
         }
-        if (!hash_equals($checksum, hash('sha256', $json))) {
-            throw new InvalidArgumentException('Stored theme revision checksum does not match.');
-        }
 
         try {
-            $payload = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            if (!is_array($decoded)) {
+                throw new InvalidArgumentException('Stored theme revision payload is invalid.');
+            }
+            $payload = ThemePayload::fromArray($decoded);
+            $canonicalJson = self::canonicalPayloadJson($payload);
         } catch (JsonException $exception) {
             throw new InvalidArgumentException('Stored theme revision payload is invalid.', previous: $exception);
         }
-        if (!is_array($payload)) {
-            throw new InvalidArgumentException('Stored theme revision payload is invalid.');
+
+        if (!hash_equals($checksum, hash('sha256', $canonicalJson))) {
+            throw new InvalidArgumentException('Stored theme revision checksum does not match.');
         }
 
         return new ThemeRevision(
             EntityId::fromString(self::requiredString($row, 'revision_id')),
             EntityId::fromString(self::requiredString($row, 'theme_id')),
-            ThemePayload::fromArray($payload),
+            $payload,
             EntityId::fromString(self::requiredString($row, 'created_by_user_id')),
             self::date(self::requiredString($row, 'created_at_utc')),
         );
@@ -117,10 +120,7 @@ final readonly class DatabaseThemeRepository implements ThemeRepository
         EntityId $actor,
         DateTimeImmutable $updatedAt,
     ): void {
-        $json = json_encode(
-            $revision->payload->toArray(),
-            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
-        );
+        $json = self::canonicalPayloadJson($revision->payload);
         $checksum = hash('sha256', $json);
         $created = self::formatDate($theme->createdAt);
         $updated = self::formatDate($updatedAt);
@@ -230,6 +230,14 @@ final readonly class DatabaseThemeRepository implements ThemeRepository
             self::nullableId($row['published_revision_id'] ?? null),
             self::date(self::requiredString($row, 'created_at_utc')),
             self::date(self::requiredString($row, 'updated_at_utc')),
+        );
+    }
+
+    private static function canonicalPayloadJson(ThemePayload $payload): string
+    {
+        return json_encode(
+            $payload->toArray(),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
         );
     }
 
