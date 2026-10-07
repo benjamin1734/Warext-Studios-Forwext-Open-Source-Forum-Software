@@ -67,16 +67,23 @@ final readonly class DatabaseContentEngagementRepository
     /** @param array<string,string> $params @return list<array{id:string,title:string,threads:int,posts:int,reactions:int,views:int,watches:int}> */
     private function forums(array $params):array
     {
+        $queryParams=[
+            'thread_start'=>$params['start'],'thread_end'=>$params['end'],
+            'post_start'=>$params['start'],'post_end'=>$params['end'],
+            'reaction_start'=>$params['start'],'reaction_end'=>$params['end'],
+            'view_start'=>$params['start'],'view_end'=>$params['end'],
+            'watch_start'=>$params['start'],'watch_end'=>$params['end'],
+        ];
         $rows=$this->database->fetchAll(new CompiledQuery(
             "WITH thread_stats AS ("
             ." SELECT forum_node_id,COUNT(*) AS threads FROM forwext_threads"
-            ." WHERE created_at_utc>=:start AND created_at_utc<:end"
+            ." WHERE created_at_utc>=:thread_start AND created_at_utc<:thread_end"
             ." AND deleted=0 AND moderation_state='visible' AND merged_into_thread_id IS NULL"
             ." GROUP BY forum_node_id"
             ."), post_stats AS ("
             ." SELECT t.forum_node_id,COUNT(*) AS posts FROM forwext_posts p"
             ." INNER JOIN forwext_threads t ON t.thread_id=p.thread_id"
-            ." WHERE p.created_at_utc>=:start AND p.created_at_utc<:end"
+            ." WHERE p.created_at_utc>=:post_start AND p.created_at_utc<:post_end"
             ." AND p.deleted=0 AND p.moderation_state='visible'"
             ." AND t.deleted=0 AND t.moderation_state='visible' AND t.merged_into_thread_id IS NULL"
             ." GROUP BY t.forum_node_id"
@@ -84,17 +91,17 @@ final readonly class DatabaseContentEngagementRepository
             ." SELECT t.forum_node_id,COUNT(*) AS reactions FROM forwext_post_reactions r"
             ." INNER JOIN forwext_posts p ON p.post_id=r.post_id"
             ." INNER JOIN forwext_threads t ON t.thread_id=p.thread_id"
-            ." WHERE r.created_at_utc>=:start AND r.created_at_utc<:end"
+            ." WHERE r.created_at_utc>=:reaction_start AND r.created_at_utc<:reaction_end"
             ." AND p.deleted=0 AND p.moderation_state='visible'"
             ." AND t.deleted=0 AND t.moderation_state='visible' AND t.merged_into_thread_id IS NULL"
             ." GROUP BY t.forum_node_id"
             ."), view_stats AS ("
             ." SELECT forum_id,COUNT(*) AS views FROM forwext_analytics_events"
             ." WHERE event_key='forum.view' AND forum_id IS NOT NULL"
-            ." AND occurred_at_utc>=:start AND occurred_at_utc<:end GROUP BY forum_id"
+            ." AND occurred_at_utc>=:view_start AND occurred_at_utc<:view_end GROUP BY forum_id"
             ."), watch_stats AS ("
             ." SELECT forum_node_id,COUNT(*) AS watches FROM forwext_watched_forums"
-            ." WHERE updated_at_utc>=:start AND updated_at_utc<:end GROUP BY forum_node_id"
+            ." WHERE updated_at_utc>=:watch_start AND updated_at_utc<:watch_end GROUP BY forum_node_id"
             .") SELECT n.node_id,n.title,"
             ." COALESCE(ts.threads,0) AS threads,COALESCE(ps.posts,0) AS posts,"
             ." COALESCE(rs.reactions,0) AS reactions,COALESCE(vs.views,0) AS views,"
@@ -108,7 +115,7 @@ final readonly class DatabaseContentEngagementRepository
             ." WHERE n.node_type='forum'"
             ." ORDER BY (COALESCE(vs.views,0)+COALESCE(rs.reactions,0)+COALESCE(ws.watches,0)) DESC,"
             ." COALESCE(ps.posts,0) DESC,n.title,n.node_id LIMIT 50",
-            $params,
+            $queryParams,
         ));
         return array_map(static fn(array $row):array=>[
             'id'=>(string)$row['node_id'],
@@ -124,6 +131,13 @@ final readonly class DatabaseContentEngagementRepository
     /** @param array<string,string> $params @return list<array{id:string,title:string,forums:int,threads:int,posts:int,reactions:int,views:int,watches:int}> */
     private function categories(array $params):array
     {
+        $queryParams=[
+            'thread_start'=>$params['start'],'thread_end'=>$params['end'],
+            'post_start'=>$params['start'],'post_end'=>$params['end'],
+            'reaction_start'=>$params['start'],'reaction_end'=>$params['end'],
+            'view_start'=>$params['start'],'view_end'=>$params['end'],
+            'watch_start'=>$params['start'],'watch_end'=>$params['end'],
+        ];
         $rows=$this->database->fetchAll(new CompiledQuery(
             "WITH RECURSIVE node_tree AS ("
             ." SELECT node_id AS root_id,node_id,parent_id,node_type FROM forwext_nodes WHERE node_type='category'"
@@ -133,13 +147,13 @@ final readonly class DatabaseContentEngagementRepository
             ." SELECT root_id,node_id AS forum_id FROM node_tree WHERE node_type='forum'"
             ."), thread_stats AS ("
             ." SELECT forum_node_id,COUNT(*) AS threads FROM forwext_threads"
-            ." WHERE created_at_utc>=:start AND created_at_utc<:end"
+            ." WHERE created_at_utc>=:thread_start AND created_at_utc<:thread_end"
             ." AND deleted=0 AND moderation_state='visible' AND merged_into_thread_id IS NULL"
             ." GROUP BY forum_node_id"
             ."), post_stats AS ("
             ." SELECT t.forum_node_id,COUNT(*) AS posts FROM forwext_posts p"
             ." INNER JOIN forwext_threads t ON t.thread_id=p.thread_id"
-            ." WHERE p.created_at_utc>=:start AND p.created_at_utc<:end"
+            ." WHERE p.created_at_utc>=:post_start AND p.created_at_utc<:post_end"
             ." AND p.deleted=0 AND p.moderation_state='visible'"
             ." AND t.deleted=0 AND t.moderation_state='visible' AND t.merged_into_thread_id IS NULL"
             ." GROUP BY t.forum_node_id"
@@ -147,17 +161,17 @@ final readonly class DatabaseContentEngagementRepository
             ." SELECT t.forum_node_id,COUNT(*) AS reactions FROM forwext_post_reactions r"
             ." INNER JOIN forwext_posts p ON p.post_id=r.post_id"
             ." INNER JOIN forwext_threads t ON t.thread_id=p.thread_id"
-            ." WHERE r.created_at_utc>=:start AND r.created_at_utc<:end"
+            ." WHERE r.created_at_utc>=:reaction_start AND r.created_at_utc<:reaction_end"
             ." AND p.deleted=0 AND p.moderation_state='visible'"
             ." AND t.deleted=0 AND t.moderation_state='visible' AND t.merged_into_thread_id IS NULL"
             ." GROUP BY t.forum_node_id"
             ."), view_stats AS ("
             ." SELECT forum_id,COUNT(*) AS views FROM forwext_analytics_events"
             ." WHERE event_key='forum.view' AND forum_id IS NOT NULL"
-            ." AND occurred_at_utc>=:start AND occurred_at_utc<:end GROUP BY forum_id"
+            ." AND occurred_at_utc>=:view_start AND occurred_at_utc<:view_end GROUP BY forum_id"
             ."), watch_stats AS ("
             ." SELECT forum_node_id,COUNT(*) AS watches FROM forwext_watched_forums"
-            ." WHERE updated_at_utc>=:start AND updated_at_utc<:end GROUP BY forum_node_id"
+            ." WHERE updated_at_utc>=:watch_start AND updated_at_utc<:watch_end GROUP BY forum_node_id"
             .") SELECT c.node_id,c.title,COUNT(DISTINCT f.forum_id) AS forums,"
             ." COALESCE(SUM(ts.threads),0) AS threads,COALESCE(SUM(ps.posts),0) AS posts,"
             ." COALESCE(SUM(rs.reactions),0) AS reactions,COALESCE(SUM(vs.views),0) AS views,"
@@ -171,7 +185,7 @@ final readonly class DatabaseContentEngagementRepository
             ." WHERE c.node_type='category' GROUP BY c.node_id,c.title"
             ." ORDER BY (COALESCE(SUM(vs.views),0)+COALESCE(SUM(rs.reactions),0)+COALESCE(SUM(ws.watches),0)) DESC,"
             ." c.title,c.node_id LIMIT 50",
-            $params,
+            $queryParams,
         ));
         return array_map(static fn(array $row):array=>[
             'id'=>(string)$row['node_id'],
@@ -188,25 +202,32 @@ final readonly class DatabaseContentEngagementRepository
     /** @param array<string,string> $params @return list<array{id:string,title:string,forum_title:string,replies:int,views:int,reactions:int,bookmarks:int,watches:int,watch_rate:?float,bookmark_rate:?float,reaction_rate:?float}> */
     private function threads(array $params):array
     {
+        $queryParams=[
+            'view_start'=>$params['start'],'view_end'=>$params['end'],
+            'reaction_start'=>$params['start'],'reaction_end'=>$params['end'],
+            'bookmark_start'=>$params['start'],'bookmark_end'=>$params['end'],
+            'watch_start'=>$params['start'],'watch_end'=>$params['end'],
+            'reply_end'=>$params['end'],
+        ];
         $rows=$this->database->fetchAll(new CompiledQuery(
             "WITH view_stats AS ("
             ." SELECT content_id,COUNT(*) AS views FROM forwext_analytics_events"
             ." WHERE event_key='content.thread.view' AND content_type='thread' AND content_id IS NOT NULL"
-            ." AND occurred_at_utc>=:start AND occurred_at_utc<:end GROUP BY content_id"
+            ." AND occurred_at_utc>=:view_start AND occurred_at_utc<:view_end GROUP BY content_id"
             ."), reaction_stats AS ("
             ." SELECT p.thread_id,COUNT(*) AS reactions FROM forwext_post_reactions r"
             ." INNER JOIN forwext_posts p ON p.post_id=r.post_id"
-            ." WHERE r.created_at_utc>=:start AND r.created_at_utc<:end GROUP BY p.thread_id"
+            ." WHERE r.created_at_utc>=:reaction_start AND r.created_at_utc<:reaction_end GROUP BY p.thread_id"
             ."), bookmark_stats AS ("
             ." SELECT p.thread_id,COUNT(*) AS bookmarks FROM forwext_post_bookmarks b"
             ." INNER JOIN forwext_posts p ON p.post_id=b.post_id"
-            ." WHERE b.created_at_utc>=:start AND b.created_at_utc<:end GROUP BY p.thread_id"
+            ." WHERE b.created_at_utc>=:bookmark_start AND b.created_at_utc<:bookmark_end GROUP BY p.thread_id"
             ."), watch_stats AS ("
             ." SELECT thread_id,COUNT(*) AS watches FROM forwext_watched_threads"
-            ." WHERE updated_at_utc>=:start AND updated_at_utc<:end GROUP BY thread_id"
+            ." WHERE updated_at_utc>=:watch_start AND updated_at_utc<:watch_end GROUP BY thread_id"
             ."), reply_stats AS ("
             ." SELECT thread_id,GREATEST(COUNT(*)-1,0) AS replies FROM forwext_posts"
-            ." WHERE created_at_utc<:end AND deleted=0 AND moderation_state='visible' GROUP BY thread_id"
+            ." WHERE created_at_utc<:reply_end AND deleted=0 AND moderation_state='visible' GROUP BY thread_id"
             .") SELECT t.thread_id,t.title,n.title AS forum_title,"
             ." COALESCE(rep.replies,0) AS replies,COALESCE(v.views,0) AS views,"
             ." COALESCE(r.reactions,0) AS reactions,COALESCE(b.bookmarks,0) AS bookmarks,"
@@ -222,7 +243,7 @@ final readonly class DatabaseContentEngagementRepository
             ." ORDER BY COALESCE(v.views,0) DESC,"
             ." (COALESCE(r.reactions,0)+COALESCE(b.bookmarks,0)+COALESCE(w.watches,0)) DESC,"
             ." t.updated_at_utc DESC,t.thread_id LIMIT 50",
-            $params,
+            $queryParams,
         ));
 
         return array_map(static function(array $row):array{
