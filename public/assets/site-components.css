@@ -1038,6 +1038,8 @@ select:focus{
 .member-directory-form input,
 .member-directory-form select{
   width:100%;
+  min-width:0;
+  box-sizing:border-box;
   padding:10px 11px;
   border:var(--forwext-component-input-border-width) solid var(--forwext-component-input-border-color);
   border-radius:var(--forwext-component-input-radius);
@@ -1096,6 +1098,17 @@ select:focus{
   color:var(--text);
   border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
   background:var(--panel2);
+}
+@media(max-width:700px){
+  .search-form,
+  .member-directory-form{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .search-wide,
+  .search-actions{grid-column:1}
+  .search-form>label,
+  .search-form>details,
+  .member-directory-form>label{min-width:0}
 }
 .search-alert{
   margin-top:18px;
