@@ -35,11 +35,30 @@ final class PublicNavigationHtml
             $rows = '<div class="nav-admin-empty">Yönetilebilir navigasyon öğesi bulunamadı.</div>';
         }
 
+        $enabled = 0;
+        $custom = 0;
+        $memberOnly = 0;
+        $more = 0;
+        foreach ($items as $item) {
+            $enabled += $item->enabled ? 1 : 0;
+            $custom += $item->custom ? 1 : 0;
+            $memberOnly += $item->audience === NavigationAudience::Member ? 1 : 0;
+            $more += $item->placement === NavigationPlacement::More ? 1 : 0;
+        }
+        $overview = '<section class="platform-admin-overview" aria-label="Navigasyon özeti">'
+            . self::stat('Öğe', count($items), 'Yönetilebilir toplam')
+            . self::stat('Aktif', $enabled, 'Kapalı ' . (count($items) - $enabled))
+            . self::stat('Özel', $custom, 'Sistem ' . (count($items) - $custom))
+            . self::stat('Diğer menüsü', $more, 'Üye özel ' . $memberOnly)
+            . '</section>';
+
         return '<section class="nav-admin">'
+            . AdminPlatformNavigationHtml::render($basePath, 'navigation')
             . '<header class="nav-admin-head"><div><h1>Navigasyon Yönetimi</h1>'
             . '<p>Üst navigasyondaki bağlantıları, sıralamayı, görünürlüğü ve hedef kitleyi yönet.</p></div>'
             . '<a class="acp-button" href="' . self::escape($basePath->prepend('/')) . '">Siteyi görüntüle</a></header>'
             . $notice
+            . $overview
             . AdminUxQualityHtml::guidance(
                 'Kullanıcının gördüğü ana ve Diğer navigasyon bağlantılarını düzenle.',
                 'Sistem bağlantılarını silmek yerine kapat veya varsayılana döndür.',
@@ -63,6 +82,12 @@ final class PublicNavigationHtml
             . '<label><span>Konum</span>' . self::placementSelect(NavigationPlacement::More) . '</label>'
             . '<button class="acp-button primary" type="submit">Bağlantı ekle</button>'
             . '</form></section></section>';
+    }
+
+    private static function stat(string $label, int $value, string $detail): string
+    {
+        return '<article class="platform-admin-stat"><span>' . self::escape($label) . '</span><strong>'
+            . $value . '</strong><small>' . self::escape($detail) . '</small></article>';
     }
 
     private static function item(
