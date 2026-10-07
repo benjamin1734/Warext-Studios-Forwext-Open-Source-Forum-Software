@@ -120,11 +120,12 @@ PHASE 14 — ACP FORUMS / NODES / CONTENT — VERIFIED
 - VERIFIED: content ACP exposes real totals plus permission-aware entry points into Forum/Node management, Content Manager, Approval Queue and Thread Freshness without duplicating mutations.
 - QUALIFICATION: starter forum selection, filter preservation, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1353`.
 
-PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — IN PROGRESS
-- IMPLEMENTED: dense theme directory and selected-theme context with parent, staging/published pointers, revision count, template count, locale/language count and phrase count from the real ThemeSnapshot/ThemePayload.
-- IMPLEMENTED: template JSON, locale phrase dictionaries, advanced CSS/JS, publish/rollback and revision diff remain on the first-party immutable revision model; no duplicate template/language store was introduced.
-- IMPLEMENTED: theme workspace links Appearance Guide and Layout Builder and adds installed-runtime desktop/mobile live-route coverage for the default `forwext-balanced` theme plus the existing Layout Builder route.
-- QUALIFICATION PENDING: Phase 15 PR PHP/DB/browser gates.
+PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — VERIFIED
+- VERIFIED: dense theme directory and selected-theme context with parent, staging/published pointers, revision count, template count, locale/language count and phrase count from the real ThemeSnapshot/ThemePayload.
+- VERIFIED: template JSON, locale phrase dictionaries, advanced CSS/JS, publish/rollback and revision diff remain on the first-party immutable revision model; no duplicate template/language store was introduced.
+- VERIFIED: administrator appearance permissions are registered for clean installs and existing administrator roles without weakening server-side authorization.
+- VERIFIED: installer theme payload JSON round-trips through MySQL/MariaDB using canonical semantic checksum verification; empty template/phrase maps remain valid objects in the editor/runtime.
+- VERIFIED: Appearance Guide, Theme workspace and Layout Builder installed-runtime desktop/mobile coverage passed PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, Chromium responsive/accessibility/live-route and release build gates.
 PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS
 PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY
 PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS
