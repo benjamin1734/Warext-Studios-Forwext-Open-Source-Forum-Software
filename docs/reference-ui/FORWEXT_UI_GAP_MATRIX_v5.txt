@@ -101,8 +101,9 @@ Verified: first-party module lifecycle/scoped settings, public navigation mutati
 Verified: overview, content engagement, moderation/support/bug operations, commerce and report-builder analytics continue to use authoritative first-party services. All analytics surfaces share one Observability navigation shell with bounded 7/30/90 day range navigation and a direct bridge to the existing selected-user history workspace; no duplicate history store was introduced. Dedicated unit coverage and installed-runtime Chromium desktop/390px checks passed across all five analytics routes together with PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build qualification.
 
 18 ACP CRON / JOBS / SYSTEM OPERATIONS — IN PROGRESS
-Current: system operations, logs, maintenance, backup and scheduling surfaces exist.
-Gap: the remaining operations/cron/job family still needs its v5 dense pass and route-level qualification.
+Current: the authoritative SystemOperationsService already owns permission-scoped health/integrity, maintenance, updater, scheduler tasks, queue/failed jobs, logical backups, redacted structured logs and bounded repair actions. Phase 18 now presents this through one dense permission-aware operations workspace with real queue/task/failure/backup/log summary metrics and direct section tabs.
+Security boundary: existing CSRF, typed confirmations, audit events, symlink-safe cache/update staging, write-only job payload boundary and per-operation backend permissions remain unchanged.
+Qualification: dedicated unit coverage and installed-runtime Chromium desktop/390px routes are wired for all/health/maintenance/updates/jobs/backups/logs/repairs; PHP/DB/browser/release PR gates must pass before VERIFIED.
 
 19 RESPONSIVE / ACCESSIBILITY — IN PROGRESS
 Current: browser fixture regression covers guest/member/moderator/admin layouts, overflow, keyboard navigation, Escape, focus return and 44px touch targets on representative surfaces.
