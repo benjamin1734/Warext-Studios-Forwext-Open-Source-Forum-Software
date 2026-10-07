@@ -902,7 +902,7 @@
 .ac-user-access-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .ac-user-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ac-user-history .ac-table{min-width:720px}
-@media(max-width:700px){
+@media(max-width:960px){
   .ac-heading,.ac-user-summary-head{display:grid}
   .ac-users-toolbar{grid-template-columns:1fr}
   .ac-users-toolbar .ac-btn{width:100%}
@@ -1076,6 +1076,9 @@
   .theme-sidebar{position:static;max-height:none}
   .theme-directory{grid-template-columns:repeat(2,minmax(0,1fr))}
   .theme-workspace-grid{grid-template-columns:1fr}
+  .theme-diff-scroll{overflow:visible}
+  .theme-diff table{min-width:0;width:100%;table-layout:fixed}
+  .theme-diff th,.theme-diff td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
 }
 @media(max-width:700px){
   .theme-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1186,6 +1189,11 @@
 .ops--dense .ops-card{padding:11px;border-radius:10px}
 @media(max-width:900px){
   .ops-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ops-section-tabs{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    overflow:visible;padding:3px
+  }
+  .ops-section-tabs a{min-width:0;white-space:normal;text-align:center}
 }
 @media(max-width:700px){
   .ops--dense .ops-hero{display:grid}
