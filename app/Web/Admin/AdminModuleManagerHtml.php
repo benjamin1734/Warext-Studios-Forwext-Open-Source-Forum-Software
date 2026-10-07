@@ -56,6 +56,24 @@ final class AdminModuleManagerHtml
             },
         ));
 
+        $enabledCount = 0;
+        $disabledCount = 0;
+        $uninstalledCount = 0;
+        foreach ($records as $record) {
+            match ($record->state) {
+                FirstPartyModuleState::Enabled => ++$enabledCount,
+                FirstPartyModuleState::Disabled => ++$disabledCount,
+                FirstPartyModuleState::Uninstalled => ++$uninstalledCount,
+            };
+        }
+
+        $overview = '<section class="platform-admin-overview" aria-label="Modül özeti">'
+            . self::platformStat('Modüller', count($definitions), count($visibleDefinitions) . ' görünür')
+            . self::platformStat('Aktif', $enabledCount, 'Kapalı ' . $disabledCount)
+            . self::platformStat('Kaldırılmış', $uninstalledCount, 'Lifecycle kayıtları')
+            . self::platformStat('Purge bekleyen', $pendingStorage, 'Storage kaynakları')
+            . '</section>';
+
         $action = self::escape($basePath->prepend('/admin/modules'));
         $breadcrumbs = AdminBreadcrumbsHtml::render([
             ['label'=>'Admin', 'path'=>'/admin'],
@@ -108,8 +126,10 @@ final class AdminModuleManagerHtml
             . '</select></label><button class="mod-button primary" type="submit">Filtrele</button>'
             . '<a class="mod-button" href="' . $action . '">Filtreyi sıfırla</a></form>';
 
-        return '<section class="module-manager">'
+        return '<section class="module-manager module-manager--dense">'
             . $breadcrumbs
+            . AdminPlatformNavigationHtml::render($basePath, 'modules')
+            . $overview
             . AdminUxQualityHtml::guidance(
                 'First-party modülleri ad/key/açıklama ve lifecycle durumuna göre filtrele; dependency graph ile etki alanını kontrol et.',
                 'Scoped ayarlar post → thread → forum → group → global → güvenli varsayılan sırasıyla çözülür; filtreleme hiçbir state değiştirmez.',
@@ -120,6 +140,12 @@ final class AdminModuleManagerHtml
             . $filter
             . '<div class="mod-shell"><aside class="mod-sidebar" aria-label="First-party modüller">' . $moduleList
             . '</aside><main class="mod-detail">' . $detail . '</main></div></section>';
+    }
+
+    private static function platformStat(string $label, int $value, string $detail): string
+    {
+        return '<article class="platform-admin-stat"><span>' . self::escape($label) . '</span><strong>'
+            . $value . '</strong><small>' . self::escape($detail) . '</small></article>';
     }
 
     /**
