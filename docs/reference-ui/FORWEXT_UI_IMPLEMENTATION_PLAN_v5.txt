@@ -147,15 +147,17 @@ PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS — VERIFIED
 - PRESERVED: CSRF, typed destructive confirmations, audit mutation, environment maintenance override, update ZIP validation, symlink-safe cache cleanup and secret/job-payload boundaries.
 - RESPONSIVE FIX: mobile section navigation uses a wrapping grid and operation tables use stacked responsive rows, eliminating the live-route horizontal-overflow failure without weakening the test.
 - QUALIFICATION: every section route passed installed-runtime desktop + 390px Chromium acceptance together with PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates.
-PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA — IN PROGRESS
-- IMPLEMENTED: high-priority public, account, moderation and ACP routes are rechecked at 390px, 768px and 1024px after their dedicated feature tests.
-- IMPLEMENTED: the shared live document health contract now rejects duplicate DOM IDs in addition to Internal Server Error and horizontal overflow.
-- IMPLEMENTED: a real keyboard Tab focus audit verifies that the first ACP focus target is visible and contained by the mobile viewport.
-- IMPLEMENTED: Platform, Analytics/Observability and System Operations tabs are included in shared :focus-visible and pointer:coarse >=44px contracts.
-- IMPLEMENTED: mobile Platform tabs and Theme diff tables no longer rely on scroll-only overflow; public surface tabs, staff tables, Portfolio filters and FAQ tabs now wrap or reflow at mobile widths.
-- IMPLEMENTED: the Phase 19 unit contract locks those non-overflow layout fallbacks so later CSS changes cannot silently restore horizontal scroll.
-- QUALIFICATION WIRED: dedicated Phase 19 unit contract plus the expanded installed-runtime Chromium route corpus.
-- QUALIFICATION PENDING: fix every defect exposed by the expanded corpus, then pass PHP/DB/browser/release gates.
+PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA — VERIFIED
+- VERIFIED: high-priority public, account, moderation and ACP routes are rechecked at 390px, 768px and 1024px after their dedicated feature tests.
+- VERIFIED: the shared live document health contract rejects duplicate DOM IDs in addition to Internal Server Error and horizontal overflow.
+- VERIFIED: a real keyboard Tab focus audit verifies that the first ACP focus target is visible and contained by the mobile viewport.
+- VERIFIED: Platform, Analytics/Observability and System Operations tabs are included in shared :focus-visible and pointer:coarse >=44px contracts.
+- VERIFIED: mobile Platform/System Operations navigation, secondary navigation, Theme diff tables, staff tables, public surface tabs, Portfolio filters and FAQ tabs use non-overflowing wrap/grid/reflow contracts instead of hidden horizontal scroll.
+- VERIFIED FIX: /moderation at 390px now enforces the late-cascade one-column search-form contract and min-width:0/border-box controls.
+- VERIFIED FIX: /admin/access reflows table rows at 768px and collapses the directory grid at compact-desktop 1024px while retaining desktop tables where they fit.
+- VERIFIED FIX: /admin/appearance/themes collapses to the single-column theme workspace below 1100px, removing the 1024px revision-history overflow.
+- VERIFIED: dedicated Phase 19 unit contracts lock the mobile/tablet/compact-desktop responsive fallbacks.
+- QUALIFICATION: PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, release build, fixture Chromium and installed-runtime Chromium route corpus are green.
 PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE
 
 EVERY IMPLEMENTATION BATCH
