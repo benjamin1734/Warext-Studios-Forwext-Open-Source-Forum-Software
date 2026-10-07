@@ -116,11 +116,11 @@ if ($admin === null || (string) $admin['status'] !== 'active' || (int) $admin['c
 $adminPermissions = (int) $database->fetchValue(new CompiledQuery(
     "SELECT COUNT(*) FROM forwext_permission_global_rules "
     . "WHERE subject_type='user' AND subject_id=:user_id "
-    . "AND permission_key IN ('acp.access','acp.manage','module.manage','system.health.view') "
+    . "AND permission_key IN ('acp.access','acp.manage','module.manage','system.health.view','appearance.manage','appearance.advanced') "
     . "AND effect='allow'",
     ['user_id'=>$administratorId],
 ));
-if ($adminPermissions !== 4) {
+if ($adminPermissions !== 6) {
     throw new RuntimeException('Installer administrator did not receive current administrator permissions.');
 }
 $enabledModules = (int) $database->fetchValue(new CompiledQuery(
