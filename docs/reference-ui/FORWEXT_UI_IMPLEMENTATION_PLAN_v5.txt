@@ -140,13 +140,13 @@ PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY — VERIFIED
 - VERIFIED: Operations analytics continues to expose moderation/support/bug workload and aggregate audit-action volume without reading sensitive free-text/audit snapshots.
 - QUALIFICATION: all five analytics routes passed installed-runtime desktop + 390px Chromium contracts together with PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates.
 
-PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS — IN PROGRESS
-- IMPLEMENTED: the existing SystemOperationsService remains the single authority for health/integrity, maintenance, updater, queue/failed jobs, scheduled tasks, backups, redacted logs and bounded repair tools.
-- IMPLEMENTED: one compact permission-aware section navigation exposes General, Health, Maintenance, Updater, Jobs/Cron, Backups, Logs and Repairs without introducing duplicate stores or client-side authorization.
-- IMPLEMENTED: overview metrics derive from authoritative scheduled-task, queue, failed-job, backup and loaded-log snapshot data.
+PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS — VERIFIED
+- VERIFIED: the existing SystemOperationsService remains the single authority for health/integrity, maintenance, updater, queue/failed jobs, scheduled tasks, backups, redacted logs and bounded repair tools.
+- VERIFIED: one compact permission-aware section navigation exposes General, Health, Maintenance, Updater, Jobs/Cron, Backups, Logs and Repairs without introducing duplicate stores or client-side authorization.
+- VERIFIED: overview metrics derive from authoritative scheduled-task, queue, failed-job, backup and loaded-log snapshot data.
 - PRESERVED: CSRF, typed destructive confirmations, audit mutation, environment maintenance override, update ZIP validation, symlink-safe cache cleanup and secret/job-payload boundaries.
-- QUALIFICATION WIRED: installed-runtime desktop + 390px Chromium checks cover every section route plus a dedicated Phase 18 unit contract.
-- QUALIFICATION PENDING: Phase 18 PR PHP/DB/browser/release gates.
+- RESPONSIVE FIX: mobile section navigation uses a wrapping grid and operation tables use stacked responsive rows, eliminating the live-route horizontal-overflow failure without weakening the test.
+- QUALIFICATION: every section route passed installed-runtime desktop + 390px Chromium acceptance together with PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates.
 PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA
 PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE
 
