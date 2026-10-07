@@ -1082,6 +1082,9 @@
   .theme-context-grid,.theme-field-grid,.theme-code-grid{grid-template-columns:1fr}
   .theme-directory{grid-template-columns:1fr}
   .theme-diff-form{grid-template-columns:1fr}
+  .theme-diff-scroll{overflow:visible}
+  .theme-diff table{min-width:0;width:100%;table-layout:fixed}
+  .theme-diff th,.theme-diff td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
   .theme-revision{display:grid}
   .theme-revision form button{width:100%}
 }
@@ -1117,14 +1120,19 @@
 @media(max-width:700px){
   .platform-head{display:grid}
   .platform-head>.acp-button,.platform-head>.platform-badge{justify-self:start}
-  .platform-tabs{padding:3px}
-  .platform-tab{min-height:44px}
+  .platform-tabs{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:3px
+  }
+  .platform-tab{min-width:0;min-height:44px;white-space:normal;text-align:center}
   .platform-filter{grid-template-columns:1fr}
   .platform-filter>label:first-child{grid-column:auto}
   .platform-filter .acp-button{width:100%}
 }
 @media(max-width:520px){
   .platform-overview{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+  .platform-tabs{grid-template-columns:1fr}
 }
 
 
