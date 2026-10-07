@@ -46,6 +46,7 @@ use Forwext\Database\Migrations\Core\CreateFaqSupportBridge;
 use Forwext\Database\Migrations\Core\CreateFirstPartyModuleManager;
 use Forwext\Database\Migrations\Core\CreateGiveawayDomain;
 use Forwext\Database\Migrations\Core\CreateGiveawayParticipation;
+use Forwext\Database\Migrations\Core\GrantAppearanceAdministrationPermissions;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawSystem;
 use Forwext\Database\Migrations\Core\CreateGiveawayDrawPopulation;
 use Forwext\Database\Migrations\Core\CreateEasterEggSystem;
@@ -201,6 +202,7 @@ final class CoreMigrationRegistry
             new CreateAnalyticsReportBuilder(),
             new CreateLayoutBuilderSystem(),
             new CreateThemeTemplateLanguageRevisionSystem(),
+            new GrantAppearanceAdministrationPermissions(),
             new CreateAdminInformationArchitecture(),
             new CreateFirstPartyModuleManager(),
             new CreateSystemIntegrationAcp(),
