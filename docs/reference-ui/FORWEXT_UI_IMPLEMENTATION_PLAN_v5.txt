@@ -126,13 +126,12 @@ PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — VERIFIED
 - VERIFIED: administrator appearance permissions are registered for clean installs and existing administrator roles without weakening server-side authorization.
 - VERIFIED: installer theme payload JSON round-trips through MySQL/MariaDB using canonical semantic checksum verification; empty template/phrase maps remain valid objects in the editor/runtime.
 - VERIFIED: Appearance Guide, Theme workspace and Layout Builder installed-runtime desktop/mobile coverage passed PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, Chromium responsive/accessibility/live-route and release build gates.
-PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS — IN PROGRESS
-- IMPLEMENTED: Navigation, First-party Modules and System Integrations share one compact Platform tab shell; no duplicate settings/module/navigation persistence was introduced.
-- IMPLEMENTED: navigation GET filters are bounded server-side (search, enabled state and placement), while create/save/reset/delete remain owned by the existing CSRF/audit-backed PublicNavigationService.
-- IMPLEMENTED: module overview metrics derive from the authoritative lifecycle records; existing dependency/conflict graph, data policy and scoped settings remain the mutation authority.
-- IMPLEMENTED: integration overview metrics derive from authoritative settings, encrypted-secret configured state, environment overrides and runtime capability entries; secret values remain write-only.
-- QUALIFICATION WIRED: desktop + 390px installed-runtime Chromium coverage for /admin/navigation, /admin/modules and /admin/integrations plus a dedicated Phase 16 unit contract.
-- QUALIFICATION PENDING: Phase 16 PR PHP/DB/browser/release gates.
+PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS — VERIFIED
+- VERIFIED: Navigation, First-party Modules and System Integrations share one compact Platform tab shell; no duplicate settings/module/navigation persistence was introduced.
+- VERIFIED: navigation GET filters are bounded server-side (search, enabled state and placement), while create/save/reset/delete remain owned by the existing CSRF/audit-backed PublicNavigationService.
+- VERIFIED: module overview metrics derive from authoritative lifecycle records; dependency/conflict graph, data policy and scoped settings remain the mutation authority.
+- VERIFIED: integration overview metrics derive from authoritative settings, encrypted-secret configured state, environment overrides and runtime capability entries; secret values remain write-only.
+- QUALIFICATION: desktop + 390px installed-runtime Chromium coverage for /admin/navigation, /admin/modules and /admin/integrations, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates passed.
 
 PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY
 PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS
