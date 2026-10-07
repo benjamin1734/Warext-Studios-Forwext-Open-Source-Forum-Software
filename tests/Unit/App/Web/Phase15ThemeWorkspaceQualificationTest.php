@@ -15,6 +15,8 @@ final class Phase15ThemeWorkspaceQualificationTest extends TestCase
         $handler = (string) file_get_contents($root . '/app/Web/Appearance/ThemeManageHandler.php');
         $service = (string) file_get_contents($root . '/core/Ui/Theme/ThemeService.php');
         $payload = (string) file_get_contents($root . '/core/Ui/Theme/ThemePayload.php');
+        $migration = (string) file_get_contents($root . '/database/migrations/core/GrantAppearanceAdministrationPermissions.php');
+        $registry = (string) file_get_contents($root . '/core/Install/CoreMigrationRegistry.php');
         $css = (string) file_get_contents($root . '/public/assets/admin.css');
 
         foreach ([
@@ -38,6 +40,10 @@ final class Phase15ThemeWorkspaceQualificationTest extends TestCase
         self::assertStringContainsString('public array $templates', $payload);
         self::assertStringContainsString('public array $phrases', $payload);
         self::assertStringContainsString('Theme cannot contain more than 32 languages.', $payload);
+        self::assertStringContainsString("'appearance.manage'", $migration);
+        self::assertStringContainsString("'appearance.advanced'", $migration);
+        self::assertStringContainsString("$templateKey === 'administrator' ? 'allow' : 'deny'", $migration);
+        self::assertStringContainsString('new GrantAppearanceAdministrationPermissions()', $registry);
     }
 
     public function testLiveBrowserCoversThemeAndLayoutAppearanceRoutes(): void
