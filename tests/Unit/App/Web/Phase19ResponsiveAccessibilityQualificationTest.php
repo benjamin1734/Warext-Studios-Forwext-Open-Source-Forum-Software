@@ -44,6 +44,8 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
 
         foreach ([
             'grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible',
+            'grid-template-columns:repeat(4,minmax(0,1fr));',
+            '.ac-user-history .ac-table{min-width:720px}' . PHP_EOL . '@media(max-width:960px){',
             '.theme-diff-scroll{overflow:visible}',
             '.theme-diff table{min-width:0;width:100%;table-layout:fixed}',
         ] as $contract) {
@@ -56,6 +58,7 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
         foreach ([
             '.surface-tabs{display:flex;flex-wrap:wrap;overflow-x:visible}',
             '.staff-table-wrap{overflow-x:visible}',
+            '.staff-filter-form{margin:0;padding:12px 13px}' . PHP_EOL . '@media(max-width:820px){',
             '.portfolio-filter-tabs{flex-wrap:wrap;overflow-x:visible}',
             '.faq-tabs{flex-wrap:wrap;overflow-x:visible}',
             '.moderation-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}',
