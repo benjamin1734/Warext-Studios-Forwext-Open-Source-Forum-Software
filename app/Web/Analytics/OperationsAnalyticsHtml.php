@@ -19,18 +19,14 @@ final class OperationsAnalyticsHtml
         $commerce = self::e($basePath->prepend('/admin/analytics/commerce'));
         $reports = self::e($basePath->prepend('/admin/analytics/reports'));
 
-        $body = '<section class="card"><h1 class="acp-title-reset">Moderasyon, Destek ve Hata Analizleri</h1>'
-            . '<p class="muted">Operasyon hacmi, çözüm süreleri, SLA, disiplin, hata kategorileri ve personel iş yükü. '
-            . 'Zaman aralıkları UTC tabanlıdır.</p>'
-            . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
-            . '<a href="'.$content.'">İçerik & engagement</a>';
-        $body .= '<a href="'.$commerce.'">Marketplace & gelir</a>';
-        $body .= '<a href="'.$reports.'">Rapor builder</a>';
-        foreach ([7, 30, 90] as $days) {
-            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
-            $body .= '<a'.$class.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
-        }
-        $body .= '</div></section>';
+        $body = AnalyticsAdminNavHtml::header(
+            $basePath,
+            'operations',
+            'Moderasyon, Destek ve Hata Analizleri',
+            'Operasyon hacmi, çözüm süreleri, SLA, disiplin, hata kategorileri ve personel iş yükü. Zaman aralıkları UTC tabanlıdır.',
+            $snapshot->windowDays,
+            '/admin/analytics/operations',
+        );
 
         $body .= '<section class="card acp-stack"><h2>Moderasyon</h2><div class="stats-grid">'
             . self::stat('Rapor', $snapshot->reportVolume, 'Seçili dönemde tekil report gönderimi')
