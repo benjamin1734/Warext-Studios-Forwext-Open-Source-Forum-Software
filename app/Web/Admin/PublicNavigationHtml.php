@@ -17,8 +17,50 @@ final class PublicNavigationHtml
         BasePath $basePath,
         string $csrf,
         ?string $updated = null,
+        string $search = '',
+        string $state = 'all',
+        string $placement = 'all',
     ): string {
         $action = self::escape($basePath->prepend('/admin/navigation'));
+        $search = trim($search);
+
+        $total = count($items);
+        $active = count(array_filter($items, static fn (ManagedPublicNavigationItem $item): bool => $item->enabled));
+        $custom = count(array_filter($items, static fn (ManagedPublicNavigationItem $item): bool => $item->custom));
+        $primary = count(array_filter(
+            $items,
+            static fn (ManagedPublicNavigationItem $item): bool => $item->placement === NavigationPlacement::Primary,
+        ));
+
+        $visible = array_values(array_filter(
+            $items,
+            static function (ManagedPublicNavigationItem $item) use ($search, $state, $placement): bool {
+                if ($state === 'enabled' && !$item->enabled) {
+                    return false;
+                }
+                if ($state === 'disabled' && $item->enabled) {
+                    return false;
+                }
+                if ($placement !== 'all' && $item->placement->value !== $placement) {
+                    return false;
+                }
+                if ($search === '') {
+                    return true;
+                }
+
+                $haystack = strtolower(implode(' ', [
+                    $item->key,
+                    $item->label,
+                    $item->path,
+                    $item->audience->value,
+                    $item->placement->value,
+                    $item->custom ? 'custom özel' : 'system sistem',
+                ]));
+
+                return str_contains($haystack, strtolower($search));
+            },
+        ));
+
         $notice = match ($updated) {
             'saved' => '<div class="ops-notice">Navigasyon öğesi kaydedildi.</div>',
             'created' => '<div class="ops-notice">Özel navigasyon öğesi eklendi.</div>',
@@ -28,27 +70,59 @@ final class PublicNavigationHtml
         };
 
         $rows = '';
-        foreach ($items as $item) {
+        foreach ($visible as $item) {
             $rows .= self::item($item, $action, $csrf);
         }
         if ($rows === '') {
-            $rows = '<div class="nav-admin-empty">Yönetilebilir navigasyon öğesi bulunamadı.</div>';
+            $rows = '<div class="nav-admin-empty">Bu filtrelerle eşleşen navigasyon öğesi bulunamadı.</div>';
         }
 
-        return '<section class="nav-admin">'
-            . '<header class="nav-admin-head"><div><h1>Navigasyon Yönetimi</h1>'
-            . '<p>Üst navigasyondaki bağlantıları, sıralamayı, görünürlüğü ve hedef kitleyi yönet.</p></div>'
+        $stateOptions = self::options(
+            ['all'=>'Tüm durumlar','enabled'=>'Aktif','disabled'=>'Kapalı'],
+            $state,
+        );
+        $placementOptions = self::options(
+            ['all'=>'Tüm konumlar','primary'=>'Ana navigasyon','more'=>'Diğer menüsü'],
+            $placement,
+        );
+
+        $filter = '<form class="nav-admin-filter platform-filter" method="get" action="' . $action . '">'
+            . '<label>Ara<input name="q" maxlength="80" value="' . self::escape($search)
+            . '" placeholder="Başlık, key veya yol"></label>'
+            . '<label>Durum<select name="state">' . $stateOptions . '</select></label>'
+            . '<label>Konum<select name="placement">' . $placementOptions . '</select></label>'
+            . '<button class="acp-button primary" type="submit">Filtrele</button>'
+            . '<a class="acp-button" href="' . $action . '">Sıfırla</a></form>';
+
+        $overview = '<section class="platform-overview" aria-label="Navigasyon özeti">'
+            . AdminPlatformNavHtml::stat('Toplam', $total, 'Yönetilebilir öğe')
+            . AdminPlatformNavHtml::stat('Aktif', $active, 'Canlı navigasyonda')
+            . AdminPlatformNavHtml::stat('Özel', $custom, 'Kullanıcı tanımlı')
+            . AdminPlatformNavHtml::stat('Primary', $primary, 'Ana navigasyonda')
+            . '</section>';
+
+        return '<section class="nav-admin platform-workspace">'
+            . AdminBreadcrumbsHtml::render([
+                ['label'=>'Admin', 'path'=>'/admin'],
+                ['label'=>'Platform', 'path'=>null],
+                ['label'=>'Navigasyon', 'path'=>null],
+            ], $basePath)
+            . AdminPlatformNavHtml::render($basePath, 'navigation')
+            . '<header class="platform-head nav-admin-head"><div><span class="platform-kicker">ACP PLATFORM</span>'
+            . '<h1>Navigasyon Yönetimi</h1><p>Üst navigasyondaki bağlantıları, sıralamayı, görünürlüğü ve hedef kitleyi gerçek runtime yapılandırması üzerinden yönet.</p></div>'
             . '<a class="acp-button" href="' . self::escape($basePath->prepend('/')) . '">Siteyi görüntüle</a></header>'
             . $notice
+            . $overview
+            . $filter
             . AdminUxQualityHtml::guidance(
-                'Kullanıcının gördüğü ana ve Diğer navigasyon bağlantılarını düzenle.',
-                'Sistem bağlantılarını silmek yerine kapat veya varsayılana döndür.',
-                'Kaydetmeden sonra siteyi yeni sekmede kontrol et; yollar aynı origin içinde kalır.',
-                'Sistem öğelerinde “Varsayılana dön”, özel öğelerde “Sil” kullan.',
+                'Başlık, key, yol, durum ve konum filtresiyle yönetilebilir navigasyonu daralt.',
+                'Sistem bağlantılarını silmek yerine kapat veya varsayılana döndür; özel bağlantılar ayrı tutulur.',
+                'Her satır canlı NavigationRuntime verisini düzenler; kaydetmeden önce hedef kitle ve placement görünür.',
+                'Create/Save/Reset/Delete işlemleri server-side doğrulama, CSRF ve audit akışını kullanır.',
             )
             . '<section class="nav-admin-panel"><div class="nav-admin-section-head"><div><h2>Navigasyon öğeleri</h2>'
-            . '<p>Değişiklikler sonraki sayfa isteğinde canlı navigasyona uygulanır.</p></div>'
-            . '<span>' . count($items) . ' öğe</span></div>'
+            . '<p>' . count($visible) . ' / ' . $total . ' öğe gösteriliyor. Değişiklikler sonraki request ile canlı navigasyona uygulanır.</p></div>'
+            . '<span>' . count($visible) . ' sonuç</span></div>'
             . '<div class="nav-admin-list">' . $rows . '</div></section>'
             . '<section class="nav-admin-panel"><div class="nav-admin-section-head"><div><h2>Özel bağlantı ekle</h2>'
             . '<p>Forwext route’u veya aynı site içindeki güvenli bir yolu navigasyona ekle.</p></div></div>'
@@ -77,9 +151,11 @@ final class PublicNavigationHtml
             : '<button class="nav-admin-secondary" type="submit" name="action" value="reset">Varsayılana dön</button>';
 
         return '<article class="nav-admin-row" data-enabled="' . ($item->enabled ? '1' : '0') . '">'
-            . '<div class="nav-admin-row-meta"><strong>' . self::escape($item->label) . '</strong>'
-            . '<code>' . self::escape($item->key) . '</code>'
-            . '<span>' . $kind . ' · ' . $status . '</span></div>'
+            . '<div class="nav-admin-row-meta"><div class="platform-row-title"><strong>' . self::escape($item->label) . '</strong>'
+            . '<span class="platform-badge">' . self::escape($kind) . '</span><span class="platform-badge">'
+            . self::escape($status) . '</span></div><code>' . self::escape($item->key) . '</code>'
+            . '<small>' . self::escape($item->path) . ' · ' . self::escape($item->audience->value)
+            . ' · ' . self::escape($item->placement->value) . '</small></div>'
             . '<form class="nav-admin-row-form" method="post" action="' . $action . '">'
             . '<input type="hidden" name="_csrf" value="' . self::escape($csrf) . '">'
             . '<input type="hidden" name="key" value="' . self::escape($item->key) . '">'
@@ -94,6 +170,17 @@ final class PublicNavigationHtml
             . $secondaryAction . '</div></form></article>';
     }
 
+    private static function options(array $options, string $selected): string
+    {
+        $html = '';
+        foreach ($options as $value => $label) {
+            $html .= '<option value="' . self::escape((string) $value) . '"'
+                . ($selected === $value ? ' selected' : '') . '>' . self::escape((string) $label) . '</option>';
+        }
+
+        return $html;
+    }
+
     private static function hidden(string $csrf, string $action): string
     {
         return '<input type="hidden" name="_csrf" value="' . self::escape($csrf) . '">'
@@ -105,8 +192,8 @@ final class PublicNavigationHtml
         $html = '<select name="audience">';
         foreach (NavigationAudience::cases() as $case) {
             $label = $case === NavigationAudience::Public ? 'Herkes' : 'Üyeler';
-            $html .= '<option value="' . $case->value . '"'
-                . ($case === $selected ? ' selected' : '') . '>' . $label . '</option>';
+            $html .= '<option value="' . $case->value . '"' . ($case === $selected ? ' selected' : '') . '>'
+                . $label . '</option>';
         }
 
         return $html . '</select>';
@@ -117,8 +204,8 @@ final class PublicNavigationHtml
         $html = '<select name="placement">';
         foreach ([NavigationPlacement::Primary, NavigationPlacement::More] as $case) {
             $label = $case === NavigationPlacement::Primary ? 'Ana navigasyon' : 'Diğer menüsü';
-            $html .= '<option value="' . $case->value . '"'
-                . ($case === $selected ? ' selected' : '') . '>' . $label . '</option>';
+            $html .= '<option value="' . $case->value . '"' . ($case === $selected ? ' selected' : '') . '>'
+                . $label . '</option>';
         }
 
         return $html . '</select>';

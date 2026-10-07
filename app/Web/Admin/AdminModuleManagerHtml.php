@@ -56,6 +56,26 @@ final class AdminModuleManagerHtml
             },
         ));
 
+        $enabledCount = 0;
+        $disabledCount = 0;
+        $uninstalledCount = 0;
+        foreach ($records as $record) {
+            if ($record->state === FirstPartyModuleState::Enabled) {
+                ++$enabledCount;
+            } elseif ($record->state === FirstPartyModuleState::Disabled) {
+                ++$disabledCount;
+            } else {
+                ++$uninstalledCount;
+            }
+        }
+
+        $overview = '<section class="platform-overview" aria-label="Modül özeti">'
+            . AdminPlatformNavHtml::stat('Toplam', count($definitions), 'First-party modül')
+            . AdminPlatformNavHtml::stat('Aktif', $enabledCount, 'Runtime açık')
+            . AdminPlatformNavHtml::stat('Kapalı', $disabledCount, 'Kurulu ama pasif')
+            . AdminPlatformNavHtml::stat('Kaldırılmış', $uninstalledCount, 'Uninstalled state')
+            . '</section>';
+
         $action = self::escape($basePath->prepend('/admin/modules'));
         $breadcrumbs = AdminBreadcrumbsHtml::render([
             ['label'=>'Admin', 'path'=>'/admin'],
@@ -108,8 +128,13 @@ final class AdminModuleManagerHtml
             . '</select></label><button class="mod-button primary" type="submit">Filtrele</button>'
             . '<a class="mod-button" href="' . $action . '">Filtreyi sıfırla</a></form>';
 
-        return '<section class="module-manager">'
+        return '<section class="module-manager platform-workspace">'
             . $breadcrumbs
+            . AdminPlatformNavHtml::render($basePath, 'modules')
+            . '<header class="platform-head"><div><span class="platform-kicker">ACP PLATFORM</span><h1>First-party Modüller</h1>'
+            . '<p>Lifecycle, dependency/conflict graph, veri politikası ve scoped ayarları tek yoğun çalışma alanında yönet.</p></div>'
+            . '<span class="platform-badge">' . count($visibleDefinitions) . ' / ' . count($definitions) . ' görünür</span></header>'
+            . $overview
             . AdminUxQualityHtml::guidance(
                 'First-party modülleri ad/key/açıklama ve lifecycle durumuna göre filtrele; dependency graph ile etki alanını kontrol et.',
                 'Scoped ayarlar post → thread → forum → group → global → güvenli varsayılan sırasıyla çözülür; filtreleme hiçbir state değiştirmez.',

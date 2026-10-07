@@ -94,15 +94,39 @@ final class SystemIntegrationHtml
             $capabilities .= self::capability($capability);
         }
 
-        return '<section class="integration-admin">'
+        $configuredSecrets = count(array_filter(
+            $snapshot->secretConfigured,
+            static fn (bool $configured): bool => $configured,
+        ));
+        $environmentOverrides = count(array_filter(
+            $snapshot->environmentOverrides,
+            static fn (bool $overridden): bool => $overridden,
+        ));
+        $availableCapabilities = count(array_filter(
+            $snapshot->capabilities,
+            static fn (CapabilityEntry $capability): bool => $capability->available,
+        ));
+        $overview = '<section class="platform-overview" aria-label="Entegrasyon özeti">'
+            . AdminPlatformNavHtml::stat('Ayarlar', count($snapshot->settings), 'Yönetilebilir config')
+            . AdminPlatformNavHtml::stat('Secrets', $configuredSecrets, count($snapshot->secrets) . ' tanımdan configured')
+            . AdminPlatformNavHtml::stat('Env override', $environmentOverrides, 'Runtime öncelikli')
+            . AdminPlatformNavHtml::stat('Capabilities', $availableCapabilities, count($snapshot->capabilities) . ' kontrolden available')
+            . '</section>';
+
+        return '<section class="integration-admin platform-workspace">'
             . $breadcrumbs
+            . AdminPlatformNavHtml::render($basePath, 'integrations')
+            . '<header class="platform-head"><div><span class="platform-kicker">ACP PLATFORM</span><h1>Sistem ve Entegrasyonlar</h1>'
+            . '<p>Config precedence, encrypted secrets ve runtime capability durumunu tek veri-odaklı çalışma alanında yönet.</p></div>'
+            . '<span class="platform-badge">' . $visibleCount . ' görünür giriş</span></header>'
+            . $overview
             . AdminUxQualityHtml::guidance(
                 'Entegrasyon ayarlarını metin ve bölüm filtresiyle daralt; secret değerlerini ekrana geri taşımadan yönet.',
                 'Defaults → generated → environment precedence kullanılır; environment override en yüksek önceliktedir.',
                 'Görünen effective değer ve runtime capability bilgisi kaydetmeden önce etkiyi doğrulamaya yardım eder.',
                 'Generated override tek tıkla kaldırılabilir; secret silme exact key onayı ister ve audit yalnız configured-state kaydeder.',
             )
-            . '<header class="int-hero"><div><h1>Sistem ve Entegrasyonlar</h1>'
+            . '<header class="int-hero"><div><h2>Yapılandırma dizini</h2>'
             . '<p class="int-muted">Mail, OAuth, Turnstile, AI, storage, cache, queue, search, realtime ve API/webhook hazırlığını tek yerde yönet. Secret değerleri hiçbir zaman ekrana geri basılmaz.</p></div>'
             . $notice
             . '<form class="int-search" method="get" action="' . $action . '">'

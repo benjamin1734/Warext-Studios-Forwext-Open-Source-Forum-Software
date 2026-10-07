@@ -1909,6 +1909,89 @@ try {
   }
   await assertHealthyDocument("admin theme mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  response = await page.goto(baseUrl + "/admin/navigation?state=all&placement=all", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin navigation: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Navigasyon Yönetimi", exact: true }).waitFor();
+  const platformNavigation = await page.evaluate(() => ({
+    tabs: document.querySelectorAll(".platform-tabs .platform-tab").length,
+    stats: document.querySelectorAll(".platform-overview .platform-stat").length,
+    rows: document.querySelectorAll(".nav-admin-list .nav-admin-row").length,
+    filter: document.querySelectorAll(".nav-admin-filter").length,
+  }));
+  if (
+    platformNavigation.tabs !== 3
+    || platformNavigation.stats !== 4
+    || platformNavigation.rows < 1
+    || platformNavigation.filter !== 1
+  ) {
+    fail(`admin navigation: platform workspace contract failed ${JSON.stringify(platformNavigation)}`);
+  }
+  await assertHealthyDocument("admin navigation desktop");
+
+  response = await page.goto(baseUrl + "/admin/modules?state=all", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin modules: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "First-party Modüller", exact: true }).waitFor();
+  const platformModules = await page.evaluate(() => ({
+    tabs: document.querySelectorAll(".platform-tabs .platform-tab").length,
+    stats: document.querySelectorAll(".platform-overview .platform-stat").length,
+    modules: document.querySelectorAll(".mod-sidebar .mod-list-item").length,
+    shell: document.querySelectorAll(".mod-shell").length,
+  }));
+  if (
+    platformModules.tabs !== 3
+    || platformModules.stats !== 4
+    || platformModules.modules < 1
+    || platformModules.shell !== 1
+  ) {
+    fail(`admin modules: platform workspace contract failed ${JSON.stringify(platformModules)}`);
+  }
+  await assertHealthyDocument("admin modules desktop");
+
+  response = await page.goto(baseUrl + "/admin/integrations", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin integrations: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Sistem ve Entegrasyonlar", exact: true }).waitFor();
+  const platformIntegrations = await page.evaluate(() => ({
+    tabs: document.querySelectorAll(".platform-tabs .platform-tab").length,
+    stats: document.querySelectorAll(".platform-overview .platform-stat").length,
+    cards: document.querySelectorAll(".int-grid .int-card").length,
+    capabilities: document.querySelectorAll(".int-capability").length,
+  }));
+  if (
+    platformIntegrations.tabs !== 3
+    || platformIntegrations.stats !== 4
+    || platformIntegrations.cards < 1
+    || platformIntegrations.capabilities < 1
+  ) {
+    fail(`admin integrations: platform workspace contract failed ${JSON.stringify(platformIntegrations)}`);
+  }
+  await assertHealthyDocument("admin integrations desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [label, path, extraSelector] of [
+    ["navigation", "/admin/navigation", ".nav-admin"],
+    ["modules", "/admin/modules?state=all", ".module-manager"],
+    ["integrations", "/admin/integrations", ".integration-admin"],
+  ]) {
+    response = await page.goto(baseUrl + path, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`admin ${label} mobile: route did not return HTTP 200`);
+    const mobile = await page.evaluate((selector) => {
+      const overview = document.querySelector(".platform-overview");
+      const workspace = document.querySelector(selector);
+      return {
+        overviewColumns: overview instanceof HTMLElement
+          ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        workspaceWidth: workspace instanceof HTMLElement ? Math.round(workspace.getBoundingClientRect().width) : 0,
+        viewportWidth: window.innerWidth,
+      };
+    }, extraSelector);
+    if (mobile.overviewColumns !== 1 || mobile.workspaceWidth > mobile.viewportWidth) {
+      fail(`admin ${label} mobile: responsive contract failed ${JSON.stringify(mobile)}`);
+    }
+    await assertHealthyDocument(`admin ${label} mobile`);
+  }
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
