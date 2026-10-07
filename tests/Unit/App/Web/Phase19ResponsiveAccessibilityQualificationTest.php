@@ -39,6 +39,7 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
     {
         $root = dirname(__DIR__, 4);
         $adminCss = (string) file_get_contents($root . '/public/assets/admin.css');
+        $siteComponentsCss = (string) file_get_contents($root . '/public/assets/site-components.css');
         $siteCss = (string) file_get_contents($root . '/public/assets/site-pages.css');
 
         foreach ([
@@ -48,6 +49,9 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
         ] as $contract) {
             self::assertStringContainsString($contract, $adminCss);
         }
+
+        self::assertStringContainsString('grid-template-columns:repeat(3,minmax(0,1fr));', $siteComponentsCss);
+        self::assertStringContainsString('.nav-secondary-group{grid-template-columns:repeat(2,minmax(0,1fr))}', $siteComponentsCss);
 
         foreach ([
             '.surface-tabs{display:flex;flex-wrap:wrap;overflow-x:visible}',
