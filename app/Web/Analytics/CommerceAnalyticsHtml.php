@@ -19,30 +19,14 @@ final class CommerceAnalyticsHtml
         $operations = self::e($basePath->prepend('/admin/analytics/operations'));
         $reports = self::e($basePath->prepend('/admin/analytics/reports'));
 
-        $body = '<section class="card"><h1 class="acp-title-reset">Marketplace, Gelir, Referral ve Giveaway Analizleri</h1>'
-            . '<p class="muted">Marketplace funnel, para akışı, external yönlendirme, referral conversion ve giveaway participation. '
-            . 'Tüm dönemler UTC tabanlıdır.</p>'
-            . '<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>'
-            . '<a href="'.$content.'">İçerik & engagement</a>'
-            . '<a href="'.$operations.'">Moderasyon & operasyon</a>'
-            . '<a href="'.$reports.'">Rapor builder</a>';
-        foreach ([7, 30, 90] as $days) {
-            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
-            $body .= '<a'.$class.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
-        }
-        $body .= '</div></section>';
-
-        $body .= '<section class="card acp-stack"><h2>Marketplace funnel</h2><div class="stats-grid">'
-            . self::stat('Yeni ilan', $snapshot->listingsCreated, 'Dönemde oluşturulan listing')
-            . self::stat('Aktif ilan', $snapshot->activeListings, 'Şu an active durumda')
-            . self::stat('Listing view', $snapshot->listingViews, '15.05 producer sonrası kaydedilen görünüm')
-            . self::stat('External click', $snapshot->externalClicks, 'Dönemde outbound satış yönlendirmesi')
-            . self::stat('External CTR', self::rate($snapshot->externalCtr), 'External click / listing view')
-            . self::stat('Yeni order', $snapshot->ordersCreated, 'Dönemde oluşturulan')
-            . self::stat('Paid transition', $snapshot->ordersPaid, 'İlk kez paid durumuna geçen order')
-            . self::stat('Completed', $snapshot->ordersCompleted, 'Dönemde completed durumuna geçen')
-            . self::stat('Cancelled', $snapshot->ordersCancelled, 'Dönemde cancelled durumuna geçen')
-            . '</div></section>';
+        $body = AnalyticsAdminNavHtml::header(
+            $basePath,
+            'commerce',
+            'Marketplace, Gelir, Referral ve Giveaway Analizleri',
+            'Marketplace funnel, para akışı, external yönlendirme, referral conversion ve giveaway participation. Tüm dönemler UTC tabanlıdır.',
+            $snapshot->windowDays,
+            '/admin/analytics/commerce',
+        );
 
         $body .= self::moneyTable($snapshot);
         $body .= self::advertisingTable($snapshot);

@@ -1992,6 +1992,60 @@ try {
     await assertHealthyDocument(`admin ${label} mobile`);
   }
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const analyticsRoutes = [
+    ["overview", "/admin/analytics", "Forum Analiz Dashboardu", true],
+    ["content", "/admin/analytics/content", "İçerik ve Engagement Analizleri", true],
+    ["operations", "/admin/analytics/operations", "Moderasyon, Destek ve Hata Analizleri", true],
+    ["commerce", "/admin/analytics/commerce", "Marketplace, Gelir, Referral ve Giveaway Analizleri", true],
+    ["reports", "/admin/analytics/reports", "Analytics Report Builder", false],
+  ];
+  for (const [label, analyticsPath, heading, hasRange] of analyticsRoutes) {
+    response = await page.goto(baseUrl + analyticsPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`admin analytics ${label}: route did not return HTTP 200`);
+    await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+    const state = await page.evaluate((rangeExpected) => ({
+      tabs: document.querySelectorAll(".analytics-tabs a").length,
+      activeTabs: document.querySelectorAll('.analytics-tabs a[aria-current="page"]').length,
+      ranges: document.querySelectorAll(".analytics-range a").length,
+      stats: document.querySelectorAll(".stats-grid .stat").length,
+      reportForms: document.querySelectorAll('form[action*="/admin/analytics/reports"]').length,
+      rangeExpected,
+    }), hasRange);
+    if (
+      state.tabs !== 6
+      || state.activeTabs !== 1
+      || (state.rangeExpected && state.ranges !== 3)
+      || (!state.rangeExpected && state.ranges !== 0)
+      || (label !== "reports" && state.stats < 1)
+      || (label === "reports" && state.reportForms < 1)
+    ) {
+      fail(`admin analytics: observability workspace contract failed ${label} ${JSON.stringify(state)}`);
+    }
+    await assertHealthyDocument(`admin analytics ${label} desktop`);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [label, analyticsPath] of analyticsRoutes) {
+    response = await page.goto(baseUrl + analyticsPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`admin analytics ${label} mobile: route did not return HTTP 200`);
+    const mobile = await page.evaluate(() => {
+      const tabs = document.querySelector(".analytics-tabs");
+      const head = document.querySelector(".analytics-head");
+      return {
+        tabColumns: tabs instanceof HTMLElement
+          ? getComputedStyle(tabs).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        headWidth: head instanceof HTMLElement ? Math.round(head.getBoundingClientRect().width) : 0,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    if (mobile.tabColumns !== 1 || mobile.headWidth > mobile.viewportWidth) {
+      fail(`admin analytics ${label} mobile: responsive contract failed ${JSON.stringify(mobile)}`);
+    }
+    await assertHealthyDocument(`admin analytics ${label} mobile`);
+  }
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");

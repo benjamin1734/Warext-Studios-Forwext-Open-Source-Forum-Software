@@ -37,10 +37,12 @@ final class AnalyticsReportHtml
         $base = $basePath->prepend('/admin/analytics/reports');
         $commerce = self::e($basePath->prepend('/admin/analytics/commerce'));
         $overview = self::e($basePath->prepend('/admin/analytics'));
-        $body = '<section class="card"><h1 class="acp-title-reset">Analytics Report Builder</h1>'
-            . '<p class="muted">Tarih aralığı, güvenli dataset filtreleri, kaydedilmiş raporlar, privacy aggregation ve CSV/JSON export.</p>'
-            . '<div class="market-actions"><a href="'.$overview.'">Analytics dashboard</a>'
-            . '<a href="'.$commerce.'">Marketplace & gelir</a></div></section>';
+        $body = AnalyticsAdminNavHtml::header(
+            $basePath,
+            'reports',
+            'Analytics Report Builder',
+            'Tarih aralığı, güvenli dataset filtreleri, kaydedilmiş raporlar, privacy aggregation ve CSV/JSON export.',
+        );
 
         if ($saved) {
             $body .= '<section class="card acp-stack"><strong>Rapor kaydedildi.</strong></section>';

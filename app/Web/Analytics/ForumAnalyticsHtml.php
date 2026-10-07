@@ -18,19 +18,14 @@ final class ForumAnalyticsHtml
         $operations = self::e($basePath->prepend('/admin/analytics/operations'));
         $commerce = self::e($basePath->prepend('/admin/analytics/commerce'));
         $reports = self::e($basePath->prepend('/admin/analytics/reports'));
-        $body = '<section class="card acp-report-head"><h1 class="acp-title-reset">Forum Analiz Dashboardu</h1>'
-            . '<p class="muted">Site geneli büyüme, aktif kullanıcı ve içerik üretim metrikleri. Saatler UTC tabanlıdır.</p>'
-            . '<div class="market-actions">';
-        $body .= '<a href="'.$content.'">İçerik & engagement</a>';
-        $body .= '<a href="'.$operations.'">Moderasyon & operasyon</a>';
-        $body .= '<a href="'.$commerce.'">Marketplace & gelir</a>';
-        $body .= '<a href="'.$reports.'">Rapor builder</a>';
-        foreach ([7,30,90] as $days) {
-            $label = $days . ' gün';
-            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
-            $body .= '<a'.$class.' href="'.$base.'?days='.$days.'">'.self::e($label).'</a>';
-        }
-        $body .= '</div></section>';
+        $body = AnalyticsAdminNavHtml::header(
+            $basePath,
+            'overview',
+            'Forum Analiz Dashboardu',
+            'Site geneli büyüme, aktif kullanıcı ve içerik üretim metrikleri. Saatler UTC tabanlıdır.',
+            $snapshot->windowDays,
+            '/admin/analytics',
+        );
 
         $body .= '<div class="stats-grid acp-stack acp-stat-grid">'
             . self::stat('DAU', $snapshot->dau, 'Bugün benzersiz aktif hesap')
