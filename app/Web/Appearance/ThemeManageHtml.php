@@ -40,11 +40,11 @@ final class ThemeManageHtml
 
         try {
             $templatesJson = json_encode(
-                $templates,
+                $templates === [] ? (object) [] : $templates,
                 JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
             );
             $phrasesJson = json_encode(
-                $phrases,
+                $phrases === [] ? (object) [] : $phrases,
                 JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
             );
         } catch (JsonException) {
