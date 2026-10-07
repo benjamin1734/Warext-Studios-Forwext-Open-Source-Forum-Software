@@ -32,9 +32,9 @@ final class Phase15ThemeWorkspaceQualificationTest extends TestCase
 
         self::assertStringContainsString("private const MANAGE_PERMISSION = 'appearance.manage'", $service);
         self::assertStringContainsString("private const ADVANCED_PERMISSION = 'appearance.advanced'", $service);
-        self::assertStringContainsString("if ($action === 'stage')", $handler);
-        self::assertStringContainsString("if ($action === 'publish')", $handler);
-        self::assertStringContainsString("if ($action === 'rollback')", $handler);
+        self::assertStringContainsString('if ($action === \'stage\')', $handler);
+        self::assertStringContainsString('if ($action === \'publish\')', $handler);
+        self::assertStringContainsString('if ($action === \'rollback\')', $handler);
         self::assertStringContainsString('public array $templates', $payload);
         self::assertStringContainsString('public array $phrases', $payload);
         self::assertStringContainsString('Theme cannot contain more than 32 languages.', $payload);
