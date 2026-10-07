@@ -50,16 +50,29 @@ final readonly class PublicNavigationHandler implements RequestHandlerInterface
             if (!is_string($csrf) || $csrf === '') {
                 throw new RuntimeException('Navigation management CSRF render token is unavailable.');
             }
-            $updated = $request->query()['updated'] ?? null;
+            $query = $request->query();
+            $updated = $query['updated'] ?? null;
             $updated = is_string($updated) && in_array($updated, ['saved','created','reset','deleted'], true)
                 ? $updated
                 : null;
+            $search = self::optionalQueryString($query['q'] ?? null, 80) ?? '';
+            $state = self::optionalQueryString($query['state'] ?? null, 16) ?? 'all';
+            $placement = self::optionalQueryString($query['placement'] ?? null, 16) ?? 'all';
+            if (!in_array($state, ['all','enabled','disabled'], true)) {
+                throw new InvalidArgumentException('Navigation state filter is invalid.');
+            }
+            if (!in_array($placement, ['all','primary','more'], true)) {
+                throw new InvalidArgumentException('Navigation placement filter is invalid.');
+            }
 
             $content = PublicNavigationHtml::page(
                 $this->navigation->snapshot($actor),
                 $this->basePath,
                 $csrf,
                 $updated,
+                $search,
+                $state,
+                $placement,
             );
 
             return Response::html(ProfileHtml::page(
@@ -140,6 +153,20 @@ final readonly class PublicNavigationHandler implements RequestHandlerInterface
             $this->basePath->prepend('/admin/navigation') . '?updated=' . $updated,
             303,
         )->withHeader('Cache-Control', 'no-store');
+    }
+
+    private static function optionalQueryString(mixed $value, int $max): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (!is_string($value) || strlen($value) > $max || preg_match('//u', $value) !== 1) {
+            throw new InvalidArgumentException('Navigation filter is invalid.');
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 
     private static function string(mixed $value, int $max): string
