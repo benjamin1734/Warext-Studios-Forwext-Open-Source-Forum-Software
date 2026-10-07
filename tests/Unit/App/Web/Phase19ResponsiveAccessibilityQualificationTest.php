@@ -54,6 +54,8 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
 
         self::assertStringContainsString('grid-template-columns:repeat(3,minmax(0,1fr));', $siteComponentsCss);
         self::assertStringContainsString('.nav-secondary-group{grid-template-columns:repeat(2,minmax(0,1fr))}', $siteComponentsCss);
+        self::assertStringContainsString('grid-template-columns:minmax(0,1fr);', $siteComponentsCss);
+        self::assertStringContainsString('min-width:0;' . PHP_EOL . '  box-sizing:border-box;', $siteComponentsCss);
 
         foreach ([
             '.surface-tabs{display:flex;flex-wrap:wrap;overflow-x:visible}',
