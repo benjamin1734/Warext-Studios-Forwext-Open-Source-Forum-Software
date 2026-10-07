@@ -47,7 +47,8 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
             'grid-template-columns:repeat(4,minmax(0,1fr));',
             '.ac-user-history .ac-table{min-width:720px}' . PHP_EOL . '@media(max-width:960px){',
             '@media(max-width:1100px){' . PHP_EOL . '  .ac-access-directory-grid{grid-template-columns:1fr}',
-            '.ac-permission-result[data-result="allow"]>strong{font-weight:900}.ac-permission-result[data-result="deny"]{border-style:dashed}' . PHP_EOL . '@media(max-width:900px){',
+            '@media(max-width:900px){' . PHP_EOL . '  .ac-access-overview{grid-template-columns:repeat(2,minmax(0,1fr))}',
+            '.ac-access-table{display:block;min-width:0;width:100%}',
             '.theme-diff-scroll{overflow:visible}',
             '.theme-diff table{min-width:0;width:100%;table-layout:fixed}',
         ] as $contract) {
