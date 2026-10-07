@@ -88,13 +88,16 @@ Verified: dense real-user directory/search, selected-account facts, direct-acces
 13 ACP ROLES / GROUPS / PERMISSIONS — VERIFIED
 Verified: dense group/role directories, real membership counts, selected group/role facts, first-party role appearance editing, production PermissionEngine analysis, deterministic fixtures and desktop/mobile installed-runtime coverage passed full main qualification/package gates.
 
-14 ACP FORUMS / NODES / CONTENT — IN PROGRESS
-Current: forum/node ACP now exposes dense real hierarchy/type/content statistics, selected-node facts and existing safe editor ownership; content ACP exposes real totals and permission-aware links into the first-party mutation systems. Desktop/mobile route contracts are wired.
-Gap: qualification remains pending until Phase 14 PR PHP/DB/browser gates pass.
+14 ACP FORUMS / NODES / CONTENT — VERIFIED
+Verified: dense real hierarchy/type/content statistics, selected-node facts, first-party node mutation ownership, permission-aware content operations and desktop/mobile installed-runtime coverage passed full main qualification/package gates.
 
-15-18 ACP — IN PROGRESS
-Current: modules, integrations, operations, appearance/layout/themes, analytics and multiple management modules exist.
-Gap: remaining theme/template/log/job surfaces still need the v5 dense data-oriented pass and route-level qualification.
+15 ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — IN PROGRESS
+Current: theme management now presents the real immutable revision model as a dense directory/context/editor/history workspace with template counts, locale/language and phrase counts, staging/published state, diff and advanced assets; Layout Builder remains first-party and is included in live-route qualification.
+Gap: qualification remains pending until Phase 15 PR PHP/DB/browser gates pass.
+
+16-18 ACP — IN PROGRESS
+Current: modules, integrations, operations, analytics and multiple management modules exist.
+Gap: remaining integration/log/job/operations surfaces still need the v5 dense data-oriented pass and route-level qualification.
 
 19 RESPONSIVE / ACCESSIBILITY — IN PROGRESS
 Current: browser fixture regression covers guest/member/moderator/admin layouts, overflow, keyboard navigation, Escape, focus return and 44px touch targets on representative surfaces.
