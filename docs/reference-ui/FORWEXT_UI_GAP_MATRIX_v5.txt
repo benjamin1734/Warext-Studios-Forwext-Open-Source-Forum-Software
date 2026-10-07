@@ -97,10 +97,8 @@ Verified: dense theme directory/context/editor/history workspace stays on the re
 16 ACP MODULES / NAVIGATION / INTEGRATIONS — VERIFIED
 Verified: first-party module lifecycle/scoped settings, public navigation mutation and system integration/secret services remain authoritative. Navigation, Modules and Integrations share one compact ACP platform shell with real summary metrics; Navigation uses bounded search/state/placement filters without duplicating runtime state. Desktop and 390px installed-runtime Chromium route coverage, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates passed on the Phase 16 PR.
 
-17 ACP ANALYTICS / LOGS / USER HISTORY — IN PROGRESS
-Current: overview, content engagement, moderation/support/bug operations, commerce and report-builder analytics already use authoritative first-party services. Phase 17 now gives all analytics surfaces one Observability navigation shell with bounded 7/30/90 day range navigation and a direct bridge to the existing selected-user history surface.
-Qualification: dedicated unit coverage plus installed-runtime Chromium desktop/390px checks are wired across all five analytics routes; PR gates must pass before VERIFIED.
-Gap: final Phase 17 qualification/merge remains open.
+17 ACP ANALYTICS / LOGS / USER HISTORY — VERIFIED
+Verified: overview, content engagement, moderation/support/bug operations, commerce and report-builder analytics continue to use authoritative first-party services. All analytics surfaces share one Observability navigation shell with bounded 7/30/90 day range navigation and a direct bridge to the existing selected-user history workspace; no duplicate history store was introduced. Dedicated unit coverage and installed-runtime Chromium desktop/390px checks passed across all five analytics routes together with PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build qualification.
 
 18 ACP CRON / JOBS / SYSTEM OPERATIONS — IN PROGRESS
 Current: system operations, logs, maintenance, backup and scheduling surfaces exist.
