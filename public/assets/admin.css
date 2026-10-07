@@ -1140,12 +1140,16 @@
   .analytics-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .analytics-tabs a,.analytics-range a{min-height:44px}
   .analytics-range{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-  .analytics-head~.acp-table-wrap{max-width:100%;overflow:hidden}
-  .analytics-head~.acp-table-wrap .acp-data-table{
+  .analytics-head~.acp-table-wrap,
+  .analytics-head~* .acp-table-wrap{max-width:100%;overflow:hidden}
+  .analytics-head~.acp-table-wrap .acp-data-table,
+  .analytics-head~* .acp-data-table{
     width:100%!important;min-width:0!important;max-width:100%;table-layout:fixed
   }
   .analytics-head~.acp-table-wrap .acp-data-table th,
-  .analytics-head~.acp-table-wrap .acp-data-table td{
+  .analytics-head~.acp-table-wrap .acp-data-table td,
+  .analytics-head~* .acp-data-table th,
+  .analytics-head~* .acp-data-table td{
     min-width:0!important;max-width:none!important;padding:6px 4px;
     white-space:normal!important;overflow-wrap:anywhere;word-break:break-word;
     font-size:.64rem;line-height:1.3
