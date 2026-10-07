@@ -42,7 +42,7 @@ final class Phase15ThemeWorkspaceQualificationTest extends TestCase
         self::assertStringContainsString('Theme cannot contain more than 32 languages.', $payload);
         self::assertStringContainsString("'appearance.manage'", $migration);
         self::assertStringContainsString("'appearance.advanced'", $migration);
-        self::assertStringContainsString("$templateKey === 'administrator' ? 'allow' : 'deny'", $migration);
+        self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $migration);
         self::assertStringContainsString('new GrantAppearanceAdministrationPermissions()', $registry);
     }
 
