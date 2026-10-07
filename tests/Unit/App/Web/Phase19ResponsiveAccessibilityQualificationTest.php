@@ -35,6 +35,31 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
         self::assertStringContainsString('phase19 route corpus', $live);
     }
 
+    public function testHighRiskMobileNavigationAndTableFamiliesUseNonOverflowLayouts(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $adminCss = (string) file_get_contents($root . '/public/assets/admin.css');
+        $siteCss = (string) file_get_contents($root . '/public/assets/site-pages.css');
+
+        foreach ([
+            'grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible',
+            '.theme-diff-scroll{overflow:visible}',
+            '.theme-diff table{min-width:0;width:100%;table-layout:fixed}',
+        ] as $contract) {
+            self::assertStringContainsString($contract, $adminCss);
+        }
+
+        foreach ([
+            '.surface-tabs{display:flex;flex-wrap:wrap;overflow-x:visible}',
+            '.staff-table-wrap{overflow-x:visible}',
+            '.portfolio-filter-tabs{flex-wrap:wrap;overflow-x:visible}',
+            '.faq-tabs{flex-wrap:wrap;overflow-x:visible}',
+            '.moderation-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}',
+        ] as $contract) {
+            self::assertStringContainsString($contract, $siteCss);
+        }
+    }
+
     public function testNewAcpNavigationFamiliesHaveFocusAndCoarseTargetContracts(): void
     {
         $root = dirname(__DIR__, 4);
