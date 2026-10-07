@@ -981,3 +981,64 @@
   .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(4)::before{content:"Priority"}
   .ac-access-directory-grid section:last-child .ac-access-table td:nth-child(5)::before{content:"Üye"}
 }
+
+
+/* acp-forums-content-density-v2 */
+.ac-forums-shell,.ac-content-shell{display:grid;gap:12px}
+.ac-forum-overview,.ac-content-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ac-forum-stat,.ac-content-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 9px;align-items:start;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 11px}
+.ac-forum-stat>span,.ac-content-metric>span{color:var(--muted);font-size:.76rem;font-weight:700}
+.ac-forum-stat>strong,.ac-content-metric>strong{grid-row:1/span 2;grid-column:2;font-size:1.4rem;line-height:1}
+.ac-forum-stat>small,.ac-content-metric>small{color:var(--muted);font-size:.7rem;line-height:1.35}
+.ac-forum-filter{margin-bottom:9px}
+.ac-forum-table{min-width:860px}
+.ac-forum-table td{vertical-align:middle}
+.ac-forum-table td:first-child strong{display:block}
+.ac-node-subline{display:block;margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.3;overflow-wrap:anywhere}
+.ac-forum-selected{display:grid;gap:11px}
+.ac-forum-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.ac-forum-fact{display:grid;gap:3px;min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:9px 10px}
+.ac-forum-fact span{color:var(--muted);font-size:.7rem}.ac-forum-fact strong{min-width:0;overflow-wrap:anywhere;font-size:.82rem}
+.ac-forum-editor-form{display:grid;gap:10px}
+.ac-forum-editor-group{border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
+.ac-forum-editor-group>summary{cursor:pointer;padding:10px 12px;font-size:.8rem;font-weight:800}
+.ac-forum-editor-group[open]>summary{border-bottom:1px solid var(--line)}
+.ac-forum-editor-group-body{display:grid;gap:10px;padding:11px 12px}
+.ac-content-workspace{display:grid;gap:10px}
+.ac-content-operations{display:grid;border:1px solid var(--line);border-radius:10px;background:var(--panel2);overflow:hidden}
+.ac-content-operation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line)}
+.ac-content-operation:last-child{border-bottom:0}.ac-content-operation[data-available="0"]{opacity:.74}
+.ac-content-operation h2{margin:0 0 3px;font-size:.9rem}.ac-content-operation p{margin:0;color:var(--muted);font-size:.76rem;line-height:1.4}
+.ac-content-unavailable{max-width:220px;color:var(--muted);font-size:.72rem;text-align:right}
+@media(max-width:700px){
+  .ac-forum-overview,.ac-content-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ac-forum-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ac-forum-table{display:block;min-width:0;width:100%}
+  .ac-forum-table thead{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0
+  }
+  .ac-forum-table tbody{display:grid;gap:8px;width:100%}
+  .ac-forum-table tr{
+    display:grid;grid-template-columns:1fr;min-width:0;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel2);padding:4px
+  }
+  .ac-forum-table td{
+    display:grid;grid-template-columns:minmax(90px,.36fr) minmax(0,1fr);gap:8px;
+    align-items:start;min-width:0;width:100%;padding:7px 8px;border:0;border-bottom:1px solid var(--line)
+  }
+  .ac-forum-table td:last-child{border-bottom:0}
+  .ac-forum-table td::before{color:var(--muted);font-size:.7rem;font-weight:700;line-height:1.35}
+  .ac-forum-table td:nth-child(1)::before{content:"Node"}
+  .ac-forum-table td:nth-child(2)::before{content:"Parent"}
+  .ac-forum-table td:nth-child(3)::before{content:"Tür"}
+  .ac-forum-table td:nth-child(4)::before{content:"Visibility"}
+  .ac-forum-table td:nth-child(5)::before{content:"Konu"}
+  .ac-forum-table td:nth-child(6)::before{content:"Mesaj"}
+  .ac-content-operation{grid-template-columns:1fr}
+  .ac-content-operation .ac-btn{width:100%}
+  .ac-content-unavailable{max-width:none;text-align:left}
+}
+@media(max-width:520px){
+  .ac-forum-overview,.ac-content-overview,.ac-forum-facts{grid-template-columns:1fr}
+}
