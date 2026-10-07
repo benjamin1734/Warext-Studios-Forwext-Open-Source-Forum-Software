@@ -55,6 +55,17 @@ try {
         }));
     });
     if (overflow.length > 0) fail(`${label}: horizontal overflow ${JSON.stringify(overflow)}`);
+
+    const duplicateIds = await page.evaluate(() => {
+      const counts = new Map();
+      for (const element of document.querySelectorAll("[id]")) {
+        const id = element.getAttribute("id");
+        if (!id) continue;
+        counts.set(id, (counts.get(id) ?? 0) + 1);
+      }
+      return [...counts.entries()].filter(([, count]) => count > 1).slice(0, 8);
+    });
+    if (duplicateIds.length > 0) fail(`${label}: duplicate DOM ids ${JSON.stringify(duplicateIds)}`);
   };
 
   let response = await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
@@ -2094,6 +2105,80 @@ try {
       fail(`admin system operations ${label} mobile: responsive contract failed ${JSON.stringify(mobile)}`);
     }
     await assertHealthyDocument(`admin system operations ${label} mobile`);
+  }
+
+  const phase19Routes = [
+    ["home", "/"],
+    ["account-preferences", "/account/preferences"],
+    ["account-security", "/account/security"],
+    ["conversations", "/account/conversations"],
+    ["notifications", "/account/notifications"],
+    ["servers", "/servers"],
+    ["server-management", "/servers/manage"],
+    ["portfolio", "/portfolio?category=general&featured=1"],
+    ["faq", "/faq?lang=tr"],
+    ["bugs", "/bugs"],
+    ["groups", "/groups"],
+    ["members", "/members"],
+    ["moderation", "/moderation"],
+    ["moderation-approval", "/moderation/approval"],
+    ["moderation-audit", "/moderation/audit"],
+    ["moderation-oversight", "/moderation/oversight"],
+    ["admin", "/admin"],
+    ["admin-users", "/admin/users?q=phase12"],
+    ["admin-access", "/admin/access"],
+    ["admin-content", "/admin/content"],
+    ["admin-themes", "/admin/appearance/themes?theme=forwext-balanced"],
+    ["admin-layout", "/admin/appearance/layout"],
+    ["admin-navigation", "/admin/navigation?state=all&placement=all"],
+    ["admin-modules", "/admin/modules?state=all"],
+    ["admin-integrations", "/admin/integrations"],
+    ["admin-analytics", "/admin/analytics"],
+    ["admin-analytics-operations", "/admin/analytics/operations"],
+    ["admin-system-operations", "/admin/system/operations"],
+  ];
+  for (const viewport of [
+    { width: 390, height: 844, label: "390" },
+    { width: 768, height: 900, label: "768" },
+    { width: 1024, height: 900, label: "1024" },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    for (const [label, routePath] of phase19Routes) {
+      response = await page.goto(baseUrl + routePath, { waitUntil: "domcontentloaded" });
+      if (!response || response.status() !== 200) {
+        fail(`phase19 route corpus ${label}@${viewport.label}: HTTP ${response?.status() ?? "none"}`);
+      }
+      await assertHealthyDocument(`phase19 route corpus ${label}@${viewport.label}`);
+    }
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("phase19 focus audit: admin route did not return HTTP 200");
+  await page.locator("body").click({ position: { x: 1, y: 1 } });
+  await page.keyboard.press("Tab");
+  const focusAudit = await page.evaluate(() => {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || active === document.body) return { valid: false };
+    const rect = active.getBoundingClientRect();
+    const style = getComputedStyle(active);
+    return {
+      valid: rect.width > 0 && rect.height > 0,
+      left: Math.round(rect.left),
+      right: Math.round(rect.right),
+      top: Math.round(rect.top),
+      bottom: Math.round(rect.bottom),
+      outline: style.outlineStyle,
+    };
+  });
+  if (
+    !focusAudit.valid
+    || focusAudit.left < -1
+    || focusAudit.right > 391
+    || focusAudit.top < -1
+    || focusAudit.bottom > 845
+  ) {
+    fail(`phase19 focus audit: first keyboard target is not viewport-contained ${JSON.stringify(focusAudit)}`);
   }
 
   await page.setViewportSize({ width: 1152, height: 800 });
