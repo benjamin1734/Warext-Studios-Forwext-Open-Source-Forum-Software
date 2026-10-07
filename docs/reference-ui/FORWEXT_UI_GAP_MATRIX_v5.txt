@@ -94,10 +94,8 @@ Verified: dense real hierarchy/type/content statistics, selected-node facts, fir
 15 ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — VERIFIED
 Verified: dense theme directory/context/editor/history workspace stays on the real immutable ThemeSnapshot/ThemePayload revision model; template/language/phrase state, staging/published pointers, diff, advanced CSS/JS, publish/rollback and Layout Builder integration are first-party. Administrator appearance permissions are update/install safe, installer theme payloads round-trip through MySQL/MariaDB JSON safely, and PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, Chromium desktop/mobile live-route, responsive/accessibility and release package gates passed.
 
-16 ACP MODULES / NAVIGATION / INTEGRATIONS — IN PROGRESS
-Current: first-party module lifecycle/scoped settings, public navigation mutation and system integration/secret services remain authoritative. The Phase 16 platform slice now gives Navigation, Modules and Integrations one compact ACP platform shell with real summary metrics; Navigation adds bounded search/state/placement filters without duplicating runtime state.
-Qualification: dedicated unit contracts and installed-runtime Chromium desktop/390px coverage are wired for all three routes; PR gates must pass before Phase 16 is VERIFIED.
-Gap: final Phase 16 qualification/merge remains open.
+16 ACP MODULES / NAVIGATION / INTEGRATIONS — VERIFIED
+Verified: first-party module lifecycle/scoped settings, public navigation mutation and system integration/secret services remain authoritative. Navigation, Modules and Integrations share one compact ACP platform shell with real summary metrics; Navigation uses bounded search/state/placement filters without duplicating runtime state. Desktop and 390px installed-runtime Chromium route coverage, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates passed on the Phase 16 PR.
 
 17-18 ACP — IN PROGRESS
 Current: analytics, logs and system operations exist.
