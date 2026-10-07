@@ -37,6 +37,8 @@ final class Phase17ObservabilityWorkspaceQualificationTest extends TestCase
         self::assertStringContainsString('AnalyticsAdminNavHtml::header(', $reports);
         self::assertStringContainsString('analytics-tabs', $css);
         self::assertStringContainsString('analytics-range', $css);
+        self::assertStringContainsString('table-layout:fixed', $css);
+        self::assertStringContainsString('overflow-wrap:anywhere', $css);
     }
 
     public function testContentEngagementQueriesUseNativePdoSafeParameters(): void
