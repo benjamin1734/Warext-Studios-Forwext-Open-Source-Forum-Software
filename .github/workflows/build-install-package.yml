@@ -3,6 +3,8 @@ name: Build installation package
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -62,14 +64,17 @@ jobs:
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
             && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
             SHOULD_PUBLISH="true"
-          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
             SHOULD_PUBLISH="true"
           # A failed publication may be retried explicitly with a release-retry(...) commit
           # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
           fi
 
           PREVIOUS_TAG=""
+          PREDECESSOR_MODE="passive"
           if [[ "$SHOULD_PUBLISH" == "true" ]]; then
+            PREDECESSOR_MODE="strict"
             if git show-ref --tags --verify --quiet "refs/tags/${TAG}"; then
               echo "Release tag ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
               exit 1
@@ -78,8 +83,12 @@ jobs:
               echo "GitHub Release ${TAG} already exists. Published releases are immutable; bump VERSION." >&2
               exit 1
             fi
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            PREDECESSOR_MODE="candidate"
+          fi
 
-            PREVIOUS_TAG="$(python3 - "$VERSION" <<'PY'
+          if [[ "$PREDECESSOR_MODE" != "passive" ]]; then
+            PREVIOUS_TAG="$(python3 - "$VERSION" "$PREDECESSOR_MODE" <<'PY'
           import re
           import subprocess
           import sys
@@ -102,6 +111,7 @@ jobs:
               return None
 
           current = parse(sys.argv[1])
+          mode = sys.argv[2]
           if current is None:
               raise SystemExit("Current VERSION could not be parsed.")
 
@@ -117,16 +127,23 @@ jobs:
 
           if valid:
               latest_version, latest_tag = max(valid)
-              if latest_version >= current:
-                  raise SystemExit(
-                      f"VERSION must advance beyond latest release {latest_tag}; "
-                      "published versions are immutable."
-                  )
-              print(latest_tag)
+              if mode == "strict":
+                  if latest_version >= current:
+                      raise SystemExit(
+                          f"VERSION must advance beyond latest release {latest_tag}; "
+                          "published versions are immutable."
+                      )
+                  print(latest_tag)
+              elif mode == "candidate":
+                  if latest_version > current:
+                      raise SystemExit(
+                          f"Pull-request VERSION is older than latest release {latest_tag}."
+                      )
+                  if latest_version < current:
+                      print(latest_tag)
           PY
           )"
           fi
-
           PREVIOUS_VERSION="${PREVIOUS_TAG#v}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
@@ -337,7 +354,7 @@ jobs:
           )
 
       - name: Build differential update package
-        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
+        if: steps.release_meta.outputs.previous_tag != '' && (steps.release_meta.outputs.should_publish == 'true' || github.event_name == 'pull_request')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -488,6 +505,23 @@ jobs:
             cd dist
             sha256sum "forwext-v${VERSION}-update.zip" > "forwext-v${VERSION}-update.zip.sha256"
           )
+
+      - name: Require differential update for version-bump pull requests
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          VERSION: ${{ steps.release_meta.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.release_meta.outputs.previous_tag }}
+        run: |
+          set -euo pipefail
+          if git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -Fxq 'VERSION'; then
+            if [[ -z "$PREVIOUS_TAG" ]]; then
+              echo "A version-bump pull request must resolve an immutable predecessor release." >&2
+              exit 1
+            fi
+            test -f "dist/forwext-v${VERSION}-update.zip"
+            test -f "dist/forwext-v${VERSION}-update.zip.sha256"
+          fi
 
       - name: Verify full and update package integrity
         shell: bash
