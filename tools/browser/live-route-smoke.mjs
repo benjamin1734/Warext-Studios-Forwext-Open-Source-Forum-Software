@@ -1846,6 +1846,69 @@ try {
   }
   await assertHealthyDocument("admin content mobile");
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  response = await page.goto(baseUrl + "/admin/appearance/themes?theme=forwext-balanced", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) {
+    const themeFailureBody = response ? (await response.text()).slice(0, 800) : "<no response>";
+    fail(`admin theme: route returned HTTP ${response?.status() ?? "none"}; body=${themeFailureBody}`);
+  }
+  await page.getByRole("heading", { name: "Temalar", exact: true }).waitFor();
+  const themeAdminState = await page.evaluate(() => ({
+    overview: document.querySelectorAll(".theme-stat").length,
+    directory: document.querySelectorAll(".theme-directory .theme-list-item").length,
+    facts: document.querySelectorAll(".theme-fact").length,
+    groups: document.querySelectorAll(".theme-editor-group").length,
+    revisions: document.querySelectorAll(".theme-revision").length,
+    templates: document.querySelector('textarea[name="templates_json"]')?.value.length ?? 0,
+    phrases: document.querySelector('textarea[name="phrases_json"]')?.value.length ?? 0,
+  }));
+  if (
+    themeAdminState.overview !== 4
+    || themeAdminState.directory < 2
+    || themeAdminState.facts !== 6
+    || themeAdminState.groups !== 3
+    || themeAdminState.revisions < 1
+    || themeAdminState.templates < 2
+    || themeAdminState.phrases < 2
+  ) {
+    fail(`admin theme: dense workspace contract failed ${JSON.stringify(themeAdminState)}`);
+  }
+  await assertHealthyDocument("admin theme desktop");
+
+  response = await page.goto(baseUrl + "/admin/appearance/layout", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin layout: route did not return HTTP 200");
+  await page.getByRole("heading", { name: "Layout Builder", exact: true }).waitFor();
+  if ((await page.locator("[data-layout-builder]").count()) !== 1) {
+    fail("admin layout: builder root is missing");
+  }
+  await assertHealthyDocument("admin layout desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  response = await page.goto(baseUrl + "/admin/appearance/themes?theme=forwext-balanced", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin theme mobile: route did not return HTTP 200");
+  const themeMobileState = await page.evaluate(() => {
+    const overview = document.querySelector(".theme-overview");
+    const directory = document.querySelector(".theme-directory");
+    const workspace = document.querySelector(".theme-workspace-grid");
+    const admin = document.querySelector(".theme-admin");
+    return {
+      overviewColumns: overview instanceof HTMLElement ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      directoryColumns: directory instanceof HTMLElement ? getComputedStyle(directory).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      workspaceColumns: workspace instanceof HTMLElement ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      adminWidth: admin instanceof HTMLElement ? Math.round(admin.getBoundingClientRect().width) : 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  if (
+    themeMobileState.overviewColumns !== 1
+    || themeMobileState.directoryColumns !== 1
+    || themeMobileState.workspaceColumns !== 1
+    || themeMobileState.adminWidth > themeMobileState.viewportWidth
+  ) {
+    fail(`admin theme mobile: responsive contract failed ${JSON.stringify(themeMobileState)}`);
+  }
+  await assertHealthyDocument("admin theme mobile");
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
