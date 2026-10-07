@@ -109,9 +109,9 @@ final readonly class ThemePayload
         $js = $data['custom_js'] ?? '';
         if (
             !is_array($templates)
-            || array_is_list($templates)
+            || ($templates !== [] && array_is_list($templates))
             || !is_array($phrases)
-            || array_is_list($phrases)
+            || ($phrases !== [] && array_is_list($phrases))
             || !is_string($css)
             || !is_string($js)
         ) {
