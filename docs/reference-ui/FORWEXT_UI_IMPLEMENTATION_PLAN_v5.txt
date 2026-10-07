@@ -114,13 +114,17 @@ PHASE 13 — ACP ROLES / GROUPS / PERMISSIONS — VERIFIED
 - VERIFIED: permission analyzer retains selected user/permission/node context and renders the real production PermissionEngine layer trace.
 - QUALIFICATION: deterministic group/role assignments, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1352`.
 
-PHASE 14 — ACP FORUMS / NODES / CONTENT — IN PROGRESS
-- IMPLEMENTED: dense node overview with real type counts, parent hierarchy labels, thread/post statistics, filter context and selected-node facts.
-- IMPLEMENTED: existing ForumNodeRepository/ForumNodeHierarchy remains mutation authority; node create/update form retains CSRF/audit ownership.
-- IMPLEMENTED: content ACP now exposes real totals plus permission-aware entry points into Forum/Node management, Content Manager, Approval Queue and Thread Freshness without duplicating mutations.
-- IMPLEMENTED: installed-runtime desktop/mobile live-route contracts cover starter forum selection, filter preservation, content operation ownership and 390px table/card reflow.
-- QUALIFICATION PENDING: Phase 14 PR PHP/DB/browser gates.
-PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES
+PHASE 14 — ACP FORUMS / NODES / CONTENT — VERIFIED
+- VERIFIED: dense node overview with real type counts, parent hierarchy labels, thread/post statistics, filter context and selected-node facts.
+- VERIFIED: ForumNodeRepository/ForumNodeHierarchy remains mutation authority; node create/update retains CSRF/audit ownership.
+- VERIFIED: content ACP exposes real totals plus permission-aware entry points into Forum/Node management, Content Manager, Approval Queue and Thread Freshness without duplicating mutations.
+- QUALIFICATION: starter forum selection, filter preservation, desktop/mobile installed-runtime Chromium, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, security, performance and package build all passed. Main package artifact: `forwext-packages-1.0.18-1353`.
+
+PHASE 15 — ACP APPEARANCE / THEMES / TEMPLATES / LANGUAGES — IN PROGRESS
+- IMPLEMENTED: dense theme directory and selected-theme context with parent, staging/published pointers, revision count, template count, locale/language count and phrase count from the real ThemeSnapshot/ThemePayload.
+- IMPLEMENTED: template JSON, locale phrase dictionaries, advanced CSS/JS, publish/rollback and revision diff remain on the first-party immutable revision model; no duplicate template/language store was introduced.
+- IMPLEMENTED: theme workspace links Appearance Guide and Layout Builder and adds installed-runtime desktop/mobile live-route coverage for the default `forwext-balanced` theme plus the existing Layout Builder route.
+- QUALIFICATION PENDING: Phase 15 PR PHP/DB/browser gates.
 PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS
 PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY
 PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS
