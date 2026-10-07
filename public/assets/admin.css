@@ -1074,7 +1074,7 @@
 .theme-code-grid textarea{min-height:240px}
 .theme-revision{padding:8px 0}.theme-revision-copy{min-width:0}.theme-revision-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.theme-revision-head code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.theme-revision-head span{flex:0 0 auto;color:var(--muted);font-size:.65rem;font-weight:700}
 .theme-diff-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;margin-top:10px}.theme-diff-scroll{overflow:auto}.theme-diff table{min-width:760px}
-@media(max-width:920px){
+@media(max-width:1100px){
   .theme-admin--dense{grid-template-columns:1fr}
   .theme-sidebar{position:static;max-height:none}
   .theme-directory{grid-template-columns:repeat(2,minmax(0,1fr))}
