@@ -133,7 +133,14 @@ PHASE 16 — ACP MODULES / NAVIGATION / INTEGRATIONS — VERIFIED
 - VERIFIED: integration overview metrics derive from authoritative settings, encrypted-secret configured state, environment overrides and runtime capability entries; secret values remain write-only.
 - QUALIFICATION: desktop + 390px installed-runtime Chromium coverage for /admin/navigation, /admin/modules and /admin/integrations, PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11 and release build gates passed.
 
-PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY
+PHASE 17 — ACP ANALYTICS / LOGS / USER HISTORY — IN PROGRESS
+- IMPLEMENTED: Forum overview, Content, Operations, Commerce and Report Builder share one compact ACP Observability navigation shell; analytics services and report persistence remain authoritative.
+- IMPLEMENTED: 7/30/90 day range controls remain bounded by the existing handlers and are rendered consistently across time-window dashboards.
+- IMPLEMENTED: the observability shell links directly to the existing /admin/users selected-user history workspace instead of inventing duplicate user-history storage.
+- IMPLEMENTED: Operations analytics continues to expose moderation/support/bug workload and aggregate audit-action volume without reading sensitive free-text/audit snapshots.
+- QUALIFICATION WIRED: all five analytics routes have installed-runtime desktop + 390px Chromium contracts plus a dedicated Phase 17 unit contract.
+- QUALIFICATION PENDING: Phase 17 PR PHP/DB/browser/release gates.
+
 PHASE 18 — ACP CRON / JOBS / SYSTEM OPERATIONS
 PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA
 PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE
