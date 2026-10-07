@@ -951,7 +951,7 @@
 .ac-access-role-section{display:grid;gap:12px}
 .ac-permission-analyzer{display:grid;gap:12px}.ac-permission-analyzer .ac-form{margin-bottom:0}
 .ac-permission-result{display:grid;gap:4px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:11px 12px}.ac-permission-result p{margin:0;color:var(--muted);font-size:.82rem}.ac-permission-result[data-result="allow"]>strong{font-weight:900}.ac-permission-result[data-result="deny"]{border-style:dashed}
-@media(max-width:700px){
+@media(max-width:900px){
   .ac-access-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ac-access-create-grid,.ac-access-directory-grid,.ac-access-role-grid,.ac-access-facts{grid-template-columns:1fr}
   .ac-access-table{display:block;min-width:0;width:100%}
