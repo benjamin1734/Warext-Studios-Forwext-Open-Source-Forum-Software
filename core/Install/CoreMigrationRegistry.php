@@ -202,7 +202,6 @@ final class CoreMigrationRegistry
             new CreateAnalyticsReportBuilder(),
             new CreateLayoutBuilderSystem(),
             new CreateThemeTemplateLanguageRevisionSystem(),
-            new GrantAppearanceAdministrationPermissions(),
             new CreateAdminInformationArchitecture(),
             new CreateFirstPartyModuleManager(),
             new CreateSystemIntegrationAcp(),
@@ -222,6 +221,7 @@ final class CoreMigrationRegistry
             new CreateMinecraftServerUpdates(),
             new CreateMinecraftServerTeamAndVoteIntegration(),
             new CreateCommunityGroups(),
+            new GrantAppearanceAdministrationPermissions(),
         ];
     }
 }
