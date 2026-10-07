@@ -2046,6 +2046,56 @@ try {
     await assertHealthyDocument(`admin analytics ${label} mobile`);
   }
 
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const systemOperationRoutes = [
+    ["all", "/admin/system/operations", "Sistem Operasyon Merkezi"],
+    ["health", "/admin/system/operations?section=health", "Health ve integrity"],
+    ["maintenance", "/admin/system/operations?section=maintenance", "Maintenance"],
+    ["updates", "/admin/system/operations?section=updates", "Forwext Updater"],
+    ["jobs", "/admin/system/operations?section=jobs", "Queue, failed jobs ve cron"],
+    ["backups", "/admin/system/operations?section=backups", "Backups"],
+    ["logs", "/admin/system/operations?section=logs&logs=50", "Structured logs"],
+    ["repairs", "/admin/system/operations?section=repairs", "Maintenance ve repair tools"],
+  ];
+  for (const [label, operationPath, heading] of systemOperationRoutes) {
+    response = await page.goto(baseUrl + operationPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`admin system operations ${label}: route did not return HTTP 200`);
+    await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+    if (label === "all") {
+      const state = await page.evaluate(() => ({
+        tabs: document.querySelectorAll(".ops-section-tabs a").length,
+        activeTabs: document.querySelectorAll('.ops-section-tabs a[aria-current="page"]').length,
+        stats: document.querySelectorAll(".ops-overview .ops-overview-stat").length,
+        panels: document.querySelectorAll(".ops-panel").length,
+      }));
+      if (state.tabs !== 8 || state.activeTabs !== 1 || state.stats !== 4 || state.panels < 5) {
+        fail(`admin system operations: dense workspace contract failed ${JSON.stringify(state)}`);
+      }
+    }
+    await assertHealthyDocument(`admin system operations ${label} desktop`);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [label, operationPath] of systemOperationRoutes) {
+    response = await page.goto(baseUrl + operationPath, { waitUntil: "domcontentloaded" });
+    if (!response || response.status() !== 200) fail(`admin system operations ${label} mobile: route did not return HTTP 200`);
+    const mobile = await page.evaluate(() => {
+      const overview = document.querySelector(".ops-overview");
+      const workspace = document.querySelector(".ops--dense");
+      return {
+        overviewColumns: overview instanceof HTMLElement
+          ? getComputedStyle(overview).gridTemplateColumns.split(" ").filter(Boolean).length
+          : 0,
+        workspaceWidth: workspace instanceof HTMLElement ? Math.round(workspace.getBoundingClientRect().width) : 0,
+        viewportWidth: window.innerWidth,
+      };
+    });
+    if (mobile.overviewColumns !== 1 || mobile.workspaceWidth > mobile.viewportWidth) {
+      fail(`admin system operations ${label} mobile: responsive contract failed ${JSON.stringify(mobile)}`);
+    }
+    await assertHealthyDocument(`admin system operations ${label} mobile`);
+  }
+
   await page.setViewportSize({ width: 1152, height: 800 });
   await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   await assertHealthyDocument("authenticated home 125% reflow equivalent");
