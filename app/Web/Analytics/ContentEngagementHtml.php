@@ -19,18 +19,14 @@ final class ContentEngagementHtml
         $commerce=self::e($basePath->prepend('/admin/analytics/commerce'));
         $reports=self::e($basePath->prepend('/admin/analytics/reports'));
 
-        $body='<section class="card"><h1 class="acp-title-reset">İçerik ve Engagement Analizleri</h1>'
-            .'<p class="muted">Forum/category/thread performansı ve privacy-aware arama etkileşimleri. '
-            .'Tüm zaman aralıkları UTC tabanlıdır.</p>'
-            .'<div class="market-actions"><a href="'.$overview.'">Forum genel dashboardu</a>';
-        $body.='<a href="'.$operations.'">Moderasyon & operasyon</a>';
-        $body.='<a href="'.$commerce.'">Marketplace & gelir</a>';
-        $body.='<a href="'.$reports.'">Rapor builder</a>';
-        foreach([7,30,90] as $days){
-            $class = $snapshot->windowDays === $days ? ' class="acp-filter-active"' : '';
-            $body.='<a'.$class.' href="'.$base.'?days='.$days.'">'.$days.' gün</a>';
-        }
-        $body.='</div></section>';
+        $body = AnalyticsAdminNavHtml::header(
+            $basePath,
+            'content',
+            'İçerik ve Engagement Analizleri',
+            'Forum/category/thread performansı ve privacy-aware arama etkileşimleri. Tüm zaman aralıkları UTC tabanlıdır.',
+            $snapshot->windowDays,
+            '/admin/analytics/content',
+        );
 
         $body.='<div class="stats-grid acp-stack">'
             .self::stat('Reaction',self::n($snapshot->reactionCount),'Seçili dönemde')
