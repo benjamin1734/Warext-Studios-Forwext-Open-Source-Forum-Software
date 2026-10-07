@@ -152,6 +152,8 @@ PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA — IN PROGRESS
 - IMPLEMENTED: the shared live document health contract now rejects duplicate DOM IDs in addition to Internal Server Error and horizontal overflow.
 - IMPLEMENTED: a real keyboard Tab focus audit verifies that the first ACP focus target is visible and contained by the mobile viewport.
 - IMPLEMENTED: Platform, Analytics/Observability and System Operations tabs are included in shared :focus-visible and pointer:coarse >=44px contracts.
+- IMPLEMENTED: mobile Platform tabs and Theme diff tables no longer rely on scroll-only overflow; public surface tabs, staff tables, Portfolio filters and FAQ tabs now wrap or reflow at mobile widths.
+- IMPLEMENTED: the Phase 19 unit contract locks those non-overflow layout fallbacks so later CSS changes cannot silently restore horizontal scroll.
 - QUALIFICATION WIRED: dedicated Phase 19 unit contract plus the expanded installed-runtime Chromium route corpus.
 - QUALIFICATION PENDING: fix every defect exposed by the expanded corpus, then pass PHP/DB/browser/release gates.
 PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE
