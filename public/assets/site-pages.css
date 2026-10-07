@@ -1600,7 +1600,12 @@ a.forum-thread-author:hover{color:var(--text)}
 .search-hit-type{min-height:19px;padding:1px 6px;border-radius:4px;font-size:9px;letter-spacing:.05em}
 .surface-pagination{display:flex;justify-content:flex-end;gap:7px;padding-top:12px}
 .surface-pagination .fx-btn{min-height:34px;padding:7px 10px;font-size:11px}
-@media(max-width:700px){.surface-head{display:grid}.search-result-head{align-items:start}}
+@media(max-width:700px){
+  .surface-head{display:grid}
+  .surface-tabs{display:flex;flex-wrap:wrap;overflow-x:visible}
+  .surface-tabs a{min-width:0;white-space:normal}
+  .search-result-head{align-items:start}
+}
 
 .member-directory-filter .member-directory-form{margin-top:0;grid-template-columns:minmax(0,1fr) 220px auto;align-items:end}
 .member-directory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -2257,10 +2262,15 @@ a.forum-thread-author:hover{color:var(--text)}
 .staff-filter-panel{padding:0;overflow:hidden}
 .staff-filter-panel>header .fx-btn{min-height:30px;padding:5px 8px;font-size:9.5px}
 .staff-filter-form{margin:0;padding:12px 13px}
-@media(max-width:700px){
+@media(max-width:820px){
   .staff-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .staff-queue-row{align-items:flex-start}
   .staff-queue-main strong{white-space:normal}
+  .staff-table-wrap{overflow-x:visible}
+  .staff-table-wrap table{width:100%;table-layout:fixed}
+  .staff-table-wrap th,.staff-table-wrap td{
+    min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word
+  }
   .staff-audit-list li{grid-template-columns:1fr;gap:3px}
 }
 
@@ -3523,6 +3533,8 @@ html,body{max-width:100%;overflow-x:clip}
   .portfolio-featured-toggle{justify-self:stretch;justify-content:center}
 }
 @media(max-width:700px){
+  .portfolio-filter-tabs{flex-wrap:wrap;overflow-x:visible}
+  .portfolio-filter-tab{min-width:0;white-space:normal}
   .portfolio-card-body{grid-template-rows:auto}
   .portfolio-card-tags{display:none}
   .portfolio-card-footer{display:grid;gap:2px}
@@ -3574,6 +3586,8 @@ html,body{max-width:100%;overflow-x:clip}
   .faq-article-grid{grid-template-columns:1fr}
 }
 @media(max-width:700px){
+  .faq-tabs{flex-wrap:wrap;overflow-x:visible}
+  .faq-tab{min-width:0;white-space:normal}
   .faq-category-head{display:grid}
   .faq-category-head>span{justify-self:start}
   .faq-row-tags{display:none}
