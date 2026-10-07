@@ -39,6 +39,30 @@ final class Phase17ObservabilityWorkspaceQualificationTest extends TestCase
         self::assertStringContainsString('analytics-range', $css);
     }
 
+    public function testContentEngagementQueriesUseNativePdoSafeParameters(): void
+    {
+        $root = dirname(__DIR__, 4);
+        $repository = (string) file_get_contents(
+            $root . '/core/Analytics/Engagement/DatabaseContentEngagementRepository.php',
+        );
+
+        foreach ([
+            ':thread_start', ':thread_end',
+            ':post_start', ':post_end',
+            ':reaction_start', ':reaction_end',
+            ':view_start', ':view_end',
+            ':watch_start', ':watch_end',
+            ':bookmark_start', ':bookmark_end',
+            ':reply_end',
+        ] as $placeholder) {
+            self::assertStringContainsString($placeholder, $repository);
+        }
+
+        self::assertStringContainsString("'thread_start'=>\$params['start']", $repository);
+        self::assertStringContainsString("'bookmark_end'=>\$params['end']", $repository);
+        self::assertStringContainsString("'reply_end'=>\$params['end']", $repository);
+    }
+
     public function testLiveBrowserCoversObservabilityRoutesAndMobileReflow(): void
     {
         $root = dirname(__DIR__, 4);
