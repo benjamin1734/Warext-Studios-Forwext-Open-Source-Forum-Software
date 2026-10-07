@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Forwext\Tests\Unit\App\Web;
 
+use Forwext\Core\Ui\Theme\ThemePayload;
 use PHPUnit\Framework\TestCase;
 
 final class Phase15ThemeWorkspaceQualificationTest extends TestCase
@@ -44,6 +45,18 @@ final class Phase15ThemeWorkspaceQualificationTest extends TestCase
         self::assertStringContainsString("'appearance.advanced'", $migration);
         self::assertStringContainsString("\$templateKey === 'administrator' ? 'allow' : 'deny'", $migration);
         self::assertStringContainsString('new GrantAppearanceAdministrationPermissions()', $registry);
+    }
+
+    public function testEmptyThemeMapsSurviveJsonRoundTrip(): void
+    {
+        $payload = new ThemePayload([], []);
+        $encoded = json_encode($payload->toArray(), JSON_THROW_ON_ERROR);
+        $decoded = json_decode($encoded, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertIsArray($decoded);
+        $restored = ThemePayload::fromArray($decoded);
+        self::assertSame([], $restored->templates);
+        self::assertSame([], $restored->phrases);
     }
 
     public function testLiveBrowserCoversThemeAndLayoutAppearanceRoutes(): void
