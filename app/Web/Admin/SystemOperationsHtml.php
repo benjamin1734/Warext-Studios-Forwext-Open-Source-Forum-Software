@@ -40,6 +40,20 @@ final class SystemOperationsHtml
             . self::option(50, $logLimit) . self::option(100, $logLimit) . self::option(250, $logLimit)
             . '</select></label><button class="ops-button" type="submit">Filtrele</button>'
             . '<a class="ops-button" href="' . $action . '">Filtreyi sıfırla</a></form>';
+
+        $sectionTabs = self::sectionTabs($snapshot, $action, $section, $logLimit);
+        $queuePending = 0;
+        $queueReserved = 0;
+        foreach ($snapshot->queues as $queue) {
+            $queuePending += $queue['pending'];
+            $queueReserved += $queue['reserved'];
+        }
+        $overview = '<section class="ops-overview" aria-label="Sistem operasyon özeti">'
+            . self::overviewStat('Scheduled tasks', count($snapshot->scheduledTasks), 'Kayıtlı cron task')
+            . self::overviewStat('Queue', $queuePending, $queueReserved . ' reserved')
+            . self::overviewStat('Failed jobs', count($snapshot->failedJobs), 'Görünen failed job')
+            . self::overviewStat('Backups', count($snapshot->backups), count($snapshot->logs) . ' log kaydı yüklü')
+            . '</section>';
         $sections = '';
         if ($section === 'all' || $section === 'health') {
             $sections .= self::health($snapshot);
@@ -63,7 +77,7 @@ final class SystemOperationsHtml
             $sections .= self::repairs($snapshot, $action, $csrf);
         }
 
-        return '<section class="ops">'
+        return '<section class="ops ops--dense">'
             . $breadcrumbs
             . AdminUxQualityHtml::guidance(
                 'Health, jobs, backup, log ve repair alanını bölüm filtresiyle daralt; yalnız yetkili olduğun bölümler render edilir.',
@@ -71,8 +85,11 @@ final class SystemOperationsHtml
                 'Health/integrity, job metadata, backup verify ve redacted log görünümü işlem öncesi doğrulama sağlar.',
                 'Destructive işlemler typed confirmation ister; backup silme ve cache temizleme audit edilir, maintenance environment override varken ACP yazamaz.',
             )
-            . '<header class="ops-hero"><h1>Sistem Operasyon Merkezi</h1><p class="ops-muted">Health, capabilities, loglar, queue/cron, integrity, backup, maintenance ve güvenli repair araçları. Her bölüm backend permission ile ayrı korunur.</p></header>'
+            . '<header class="ops-hero"><div><span class="ops-kicker">ACP SYSTEM OPERATIONS</span><h1>Sistem Operasyon Merkezi</h1><p class="ops-muted">Health, capabilities, loglar, queue/cron, integrity, backup, maintenance ve güvenli repair araçları. Her bölüm backend permission ile ayrı korunur.</p></div>'
+            . '<span class="ops-badge">' . self::escape($section === 'all' ? 'Tüm bölümler' : $section) . '</span></header>'
             . $noticeHtml
+            . $overview
+            . $sectionTabs
             . $filter
             . $sections
             . '</section>';
@@ -298,6 +315,48 @@ final class SystemOperationsHtml
             . '<form class="ops-form" method="post" action="' . $action . '">' . self::csrf($csrf)
             . '<input type="hidden" name="action" value="clear_cache"><label>Onay için <code>CLEAR CACHE</code> yaz <input class="ops-input" name="confirm" autocomplete="off"></label>'
             . '<button class="ops-button ops-danger" type="submit">Cache temizle</button></form></article></div></section>';
+    }
+
+    private static function sectionTabs(
+        SystemOperationsSnapshot $snapshot,
+        string $action,
+        string $section,
+        int $logLimit,
+    ): string {
+        $items = [
+            'all' => ['Genel', true],
+            'health' => ['Health', self::allowed($snapshot, SystemOperationsService::HEALTH_PERMISSION)],
+            'maintenance' => ['Maintenance', self::allowed($snapshot, SystemOperationsService::MAINTENANCE_PERMISSION)],
+            'updates' => [
+                'Updater',
+                self::allowed($snapshot, SystemOperationsService::BACKUP_PERMISSION)
+                    && self::allowed($snapshot, SystemOperationsService::MAINTENANCE_PERMISSION)
+                    && self::allowed($snapshot, SystemOperationsService::REPAIR_PERMISSION),
+            ],
+            'jobs' => ['Jobs / cron', self::allowed($snapshot, SystemOperationsService::JOB_PERMISSION)],
+            'backups' => ['Backups', self::allowed($snapshot, SystemOperationsService::BACKUP_PERMISSION)],
+            'logs' => ['Logs', self::allowed($snapshot, SystemOperationsService::LOG_PERMISSION)],
+            'repairs' => ['Repairs', self::allowed($snapshot, SystemOperationsService::REPAIR_PERMISSION)],
+        ];
+
+        $html = '<nav class="ops-section-tabs" aria-label="Sistem operasyon bölümleri">';
+        foreach ($items as $key => [$label, $visible]) {
+            if (!$visible) {
+                continue;
+            }
+            $url = $action . '?section=' . rawurlencode($key) . '&logs=' . $logLimit;
+            $html .= '<a href="' . self::escape($url) . '"'
+                . ($section === $key ? ' aria-current="page"' : '') . '>'
+                . self::escape($label) . '</a>';
+        }
+
+        return $html . '</nav>';
+    }
+
+    private static function overviewStat(string $label, int $value, string $detail): string
+    {
+        return '<article class="ops-overview-stat"><span>' . self::escape($label) . '</span><strong>'
+            . $value . '</strong><small>' . self::escape($detail) . '</small></article>';
     }
 
     private static function allowed(SystemOperationsSnapshot $snapshot, string $permission): bool
