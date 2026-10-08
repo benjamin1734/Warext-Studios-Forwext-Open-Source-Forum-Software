@@ -1558,6 +1558,33 @@ try {
     || dashboardRailDesktop.railLinks !== adminDensityState.sectionIndex
     || dashboardRailDesktop.width > dashboardRailDesktop.viewport
   ) fail(`admin: reference-review navigation rail contract failed ${JSON.stringify(dashboardRailDesktop)}`);
+  const dashboardLaunchpad = await page.evaluate(() => {
+    const workspace = document.querySelector(".acp-dashboard-workspace");
+    const launchpad = document.querySelector(".acp-launchpad");
+    const tiles = [...document.querySelectorAll(".acp-launchpad-tile")];
+    const linked = tiles.every((tile) => {
+      const fragment = tile.getAttribute("href") ?? "";
+      const target = fragment.startsWith("#") ? document.getElementById(fragment.slice(1)) : null;
+      return target instanceof HTMLElement && target.classList.contains("acp-directory-section");
+    });
+    return {
+      launchpad: launchpad instanceof HTMLElement,
+      tiles: tiles.length,
+      linked,
+      gridColumns: launchpad instanceof HTMLElement
+        ? getComputedStyle(launchpad.querySelector(".acp-launchpad-grid")).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      workspaceColumns: workspace instanceof HTMLElement
+        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+    };
+  });
+  if (
+    !dashboardLaunchpad.launchpad || !dashboardLaunchpad.linked
+    || dashboardLaunchpad.tiles !== adminDensityState.sectionIndex
+    || dashboardLaunchpad.gridColumns !== 4
+    || dashboardLaunchpad.workspaceColumns !== 2
+  ) {
+    fail(`admin: reference rebuild launchpad contract failed ${JSON.stringify(dashboardLaunchpad)}`);
+  }
   await assertHealthyDocument("admin GET");
 
   response = await page.goto(baseUrl + "/admin?q=user", { waitUntil: "domcontentloaded" });
@@ -1637,6 +1664,14 @@ try {
   });
   if (dashboardRailMobile.columns !== 1 || dashboardRailMobile.linkHeight < 44) {
     fail(`admin mobile: reference-review navigation rail reflow contract failed ${JSON.stringify(dashboardRailMobile)}`);
+  }
+  const dashboardLaunchpadMobile = await page.evaluate(() => {
+    const grid = document.querySelector(".acp-launchpad-grid");
+    return grid instanceof HTMLElement
+      ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0;
+  });
+  if (dashboardLaunchpadMobile !== 1) {
+    fail(`admin mobile: management launchpad did not reflow to one column: ${dashboardLaunchpadMobile}`);
   }
   await assertHealthyDocument("admin mobile");
 
