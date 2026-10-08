@@ -443,7 +443,7 @@ Rule: screenshot continuations and UI states belong to one logical page group wh
 
 [LEGAL] Contact us
   Reference: REF-0062
-  Forwext route: /contact
+  Forwext route: /help/contact
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
@@ -455,13 +455,13 @@ Rule: screenshot continuations and UI states belong to one logical page group wh
 
 [LEGAL] Privacy policy
   Reference: REF-0064, REF-0552
-  Forwext route: /privacy
+  Forwext route: /help/privacy
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
 [LEGAL] Terms and rules
   Reference: REF-0063, REF-0551
-  Forwext route: /terms
+  Forwext route: /help/terms
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
@@ -489,8 +489,26 @@ Rule: screenshot continuations and UI states belong to one logical page group wh
   Priority phase: 13
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
+[ACP_PLATFORM_WEBHOOK] Webhook management and delivery events
+  Reference: REF-0193..REF-0196
+  Forwext route: /admin/integrations
+  Priority phase: 16
+  Verification contract: webhook directory/create/edit/delete and scoped events require their own live UI/action captures; these are not forum/node screens.
+
+[ACP_PLATFORM_CAPTCHA] Challenge question editor
+  Reference: REF-0197
+  Forwext route: /admin/integrations
+  Priority phase: 16
+  Verification contract: first-party functional equivalent and dedicated authenticated form state must be proven before parity.
+
+[ACP_PLATFORM_MODULE] Add-on installation and confirmation
+  Reference: REF-0198..REF-0199
+  Forwext route: /admin/modules
+  Priority phase: 16
+  Verification contract: installed module lifecycle state must be captured without bypassing permissions.
+
 [ACP_CONTENT] ACP forums, nodes, content and editor management
-  Reference: REF-0193..REF-0240
+  Reference: REF-0200..REF-0240
   Forwext route: /admin/community
   Priority phase: 14
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.

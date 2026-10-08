@@ -143,12 +143,18 @@ final class AdminDashboardHtml
             . '" placeholder="Kullanıcı, tema, ödeme, destek, analytics…">'
             . '<button type="submit">Ara</button></form></header>'
             . $overview
+            . '<div class="acp-dashboard-workspace">'
+            . '<aside class="acp-dashboard-rail" aria-label="Administration bölümleri">'
+            . '<h2 class="acp-dashboard-rail-title">Yönetim alanları</h2>'
             . $sectionNav
+            . '</aside>'
+            . '<div class="acp-dashboard-workspace-main">'
             . $searchResults
             . $queues
             . $favorites
             . $recent
             . $sections
+            . '</div></div>'
             . '</section>';
     }
 

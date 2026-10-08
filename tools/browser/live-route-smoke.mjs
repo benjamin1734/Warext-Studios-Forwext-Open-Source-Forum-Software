@@ -828,6 +828,13 @@ try {
   response = await page.goto(baseUrl + "/moderation/oversight/cases/" + oversightCaseId, { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("moderation oversight case: route did not return HTTP 200");
   await page.getByRole("heading", { name: "Phase 9 tarayıcı denetim vakası", exact: true }).waitFor();
+  await mkdir(path.join(artifactDir, "visual-review"), { recursive: true });
+  await page.screenshot({
+    path: path.join(artifactDir, "visual-review", "037-moderation-oversight-case-desktop.jpg"),
+    fullPage: true,
+    type: "jpeg",
+    quality: 84,
+  });
   const oversightCaseState = await page.evaluate(() => ({
     grids: document.querySelectorAll(".oversight-case-grid").length,
     cards: document.querySelectorAll(".oversight-case-card").length,
@@ -1203,6 +1210,12 @@ try {
 
   response = await page.goto(baseUrl + "/moderation/oversight/cases/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("moderation oversight case mobile: route did not return HTTP 200");
+  await page.screenshot({
+    path: path.join(artifactDir, "visual-review", "037-moderation-oversight-case-mobile.jpg"),
+    fullPage: true,
+    type: "jpeg",
+    quality: 84,
+  });
   const oversightCaseMobileState = await page.evaluate(() => {
     const grid = document.querySelector(".oversight-case-grid");
     const nav = document.querySelector(".moderation-nav");
@@ -1529,6 +1542,22 @@ try {
   if (adminDensityState.overview !== 4 || adminDensityState.sectionIndex < 1 || adminDensityState.directoryRows < 1) {
     fail(`admin: dense dashboard contract failed ${JSON.stringify(adminDensityState)}`);
   }
+  const dashboardRailDesktop = await page.evaluate(() => {
+    const workspace = document.querySelector(".acp-dashboard-workspace");
+    const rail = document.querySelector(".acp-dashboard-rail");
+    return {
+      columns: workspace instanceof HTMLElement
+        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      railLinks: rail?.querySelectorAll(".acp-section-index a").length ?? 0,
+      width: workspace instanceof HTMLElement ? Math.round(workspace.getBoundingClientRect().width) : 0,
+      viewport: window.innerWidth,
+    };
+  });
+  if (
+    dashboardRailDesktop.columns !== 2
+    || dashboardRailDesktop.railLinks !== adminDensityState.sectionIndex
+    || dashboardRailDesktop.width > dashboardRailDesktop.viewport
+  ) fail(`admin: reference-review navigation rail contract failed ${JSON.stringify(dashboardRailDesktop)}`);
   await assertHealthyDocument("admin GET");
 
   response = await page.goto(baseUrl + "/admin?q=user", { waitUntil: "domcontentloaded" });
@@ -1595,6 +1624,19 @@ try {
     || adminMobileState.dashboardWidth > adminMobileState.viewportWidth
   ) {
     fail(`admin mobile: dense dashboard responsive contract failed ${JSON.stringify(adminMobileState)}`);
+  }
+  const dashboardRailMobile = await page.evaluate(() => {
+    const workspace = document.querySelector(".acp-dashboard-workspace");
+    const rail = document.querySelector(".acp-dashboard-rail");
+    const first = rail?.querySelector(".acp-section-index a");
+    return {
+      columns: workspace instanceof HTMLElement
+        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      linkHeight: first instanceof HTMLElement ? Math.round(first.getBoundingClientRect().height) : 0,
+    };
+  });
+  if (dashboardRailMobile.columns !== 1 || dashboardRailMobile.linkHeight < 44) {
+    fail(`admin mobile: reference-review navigation rail reflow contract failed ${JSON.stringify(dashboardRailMobile)}`);
   }
   await assertHealthyDocument("admin mobile");
 
