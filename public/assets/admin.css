@@ -1501,3 +1501,50 @@
   .acp-dashboard--dense .acp-directory-section .acp-directory-row{min-height:96px}
   .acp-dashboard--dense .acp-directory-section .acp-directory-actions .acp-button{min-height:44px}
 }
+
+
+/* first-party administration chrome-v3: scoped at render time, never inferred
+ * from URL strings or used as an authorization decision. */
+body[data-forwext-surface="admin"] .top-main{
+  border-bottom-color:color-mix(in srgb,var(--accent) 22%,#315571);
+}
+body[data-forwext-surface="admin"] .brand-copy{
+  gap:10px;
+}
+body[data-forwext-surface="admin"] .brand-copy strong::after{
+  content:"YÖNETİM";
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  margin-left:10px;
+  padding:3px 7px;
+  border:1px solid color-mix(in srgb,var(--accent) 24%,#345775);
+  border-radius:4px;
+  background:color-mix(in srgb,var(--panel2) 40%,#173e56);
+  color:color-mix(in srgb,var(--text) 80%,#93d1ef);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.09em;
+  vertical-align:middle;
+}
+body[data-forwext-surface="admin"] .wrap{
+  width:min(1300px,calc(100% - (var(--fx-shell-gutter) * 2)));
+}
+body[data-forwext-surface="admin"] .acp-breadcrumbs{
+  margin-bottom:7px;
+  font-size:11px;
+}
+body[data-forwext-surface="admin"] :where(
+  .mod-shell,.int-panel,.ops-panel,.ac-card,.acp-panel,.acp-hero,
+  .theme-manager,.module-manager
+){
+  border-color:color-mix(in srgb,var(--accent) 13%,var(--line));
+}
+@media(max-width:920px){
+  body[data-forwext-surface="admin"] .brand-copy strong::after{
+    font-size:8px;
+    min-height:19px;
+    padding:2px 5px;
+    letter-spacing:.04em;
+  }
+}
