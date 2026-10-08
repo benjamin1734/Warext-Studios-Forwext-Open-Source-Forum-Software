@@ -18,6 +18,7 @@ NEXT_STEP = Maintenance and requested new features; manually adjudicated full-re
 
 - Real installed-runtime visual evidence now includes 154 screenshots for 62 route/state combinations over 1440/390 and high-priority 768/1024 viewport sizes. CI fails on missing/failed routes; moderation case screenshots are captured during their authorized lifecycle.
 - Cross-reference review of the 562-image source set found several incorrectly classified webhook/CAPTCHA/add-on screenshots (REF-0193–REF-0199) and a major ACP layout gap. The dashboard now displays the permission-derived section list in a compact responsive navigation rail.
+- The visible design batch adds an actual two-tier branded navigation shell, a more legible forum category/node/sidebar hierarchy, public discovery navigation, and a real permission-scoped ACP management launchpad with compact dashboard tiles and navigation rail. All administration routes receive a distinct management chrome marker without bypassing authorization.
 - **Important:** The complete 562-state, per-image visual/signoff exercise remains **open**. Reference screenshots include form/modal/selected-state details not reproduced by the route-only capture corpus. See `docs/reference-ui/FORWEXT_FULL_VISUAL_ACCEPTANCE_AUDIT_v1.md`. This version is an incremental qualified code release, not an assertion of pixel-level/manual final acceptance.
 
 ## v5 reference UI and v1.0.19 release qualification — 2026-10-08
