@@ -87,6 +87,31 @@ final class ReleasePackagingPolicyTest extends TestCase
         self::assertStringContainsString('check_installer "/public/install.php"', $workflow);
     }
 
+    public function testMergedVersionBumpsPublishOnlyAfterIndependentCiAndUpgradeRehearsal(): void
+    {
+        $workflow = $this->read('.github/workflows/build-install-package.yml');
+        $matrix = $this->read('.github/workflows/qualification-matrix.yml');
+
+        self::assertStringContainsString('actions: read', $workflow);
+        self::assertStringContainsString('git diff --name-only "$GITHUB_SHA^1" "$GITHUB_SHA"', $workflow);
+        self::assertStringContainsString('Rehearse differential update and preserve live-site state', $workflow);
+        self::assertStringContainsString('tools/quality/verify-update-rehearsal.py', $workflow);
+        self::assertStringContainsString('Require independent qualification gates before publishing', $workflow);
+        foreach ([
+            'Security qualification',
+            'Database migration smoke',
+            'Performance and observability qualification',
+            'Qualification test matrix',
+        ] as $gate) {
+            self::assertStringContainsString('"' . $gate . '"', $workflow);
+        }
+        self::assertStringContainsString("python3 -m unittest discover -s tools/quality -p 'test_*.py'", $matrix);
+        self::assertLessThan(
+            strpos($workflow, 'Publish immutable GitHub Release'),
+            strpos($workflow, 'Require independent qualification gates before publishing'),
+        );
+    }
+
     public function testRootFrontControllerDelegatesToPublicRuntime(): void
     {
         $entrypoint = $this->read('index.php');
