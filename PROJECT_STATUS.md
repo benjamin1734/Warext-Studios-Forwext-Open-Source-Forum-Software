@@ -5,14 +5,23 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.16
+CURRENT_VERSION = 1.0.19
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = reference-driven UI rebuild / R1 shell complete
+CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = R2 rebuild forum index, forum view and thread surfaces from the supplied XenForo reference set while preserving Forwext permissions, routes and domain behavior
+NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
 ```
+
+## v5 reference UI and v1.0.19 release qualification — 2026-10-08
+
+- All 20 v5 implementation/automated acceptance phases are VERIFIED; previous phase details remain in `docs/reference-ui/FORWEXT_UI_GAP_MATRIX_v5.txt` and `docs/reference-ui/FORWEXT_UI_IMPLEMENTATION_PLAN_v5.txt`.
+- Final release commit: `f2c68f9e9961b054c5c31bc78ca67997a1cf5b6a`; publication: `v1.0.19` with `forwext-v1.0.19-full.zip`, `forwext-v1.0.19-update.zip` and both SHA-256 sidecars.
+- The final main SHA passed release/package, PHP 8.4/8.5 and Chromium live-route qualification, MySQL 8.4/MariaDB 10.11 migration smoke, security and dependency advisories, and performance/observability Actions workflows.
+- The release pipeline now tests merged-version detection, demands successful independent checks for the exact commit, and rehearses differential updates with protected installation-specific files before publishing.
+- A new high-severity Next.js 16.3.x security advisory blocked the original attempt; upgrade to fixed Next.js 16.4.0 and successful npm audit preceded final publication.
+- Important limit: automated responsive/accessibility/screenshot checks are not a claim of pixel-for-pixel manual sign-off on each external reference image.
 
 ## Reference-driven UI rebuild — R1 shell complete — 2026-10-04
 
