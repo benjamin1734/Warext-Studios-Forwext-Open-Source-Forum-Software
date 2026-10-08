@@ -1529,6 +1529,22 @@ try {
   if (adminDensityState.overview !== 4 || adminDensityState.sectionIndex < 1 || adminDensityState.directoryRows < 1) {
     fail(`admin: dense dashboard contract failed ${JSON.stringify(adminDensityState)}`);
   }
+  const dashboardRailDesktop = await page.evaluate(() => {
+    const workspace = document.querySelector(".acp-dashboard-workspace");
+    const rail = document.querySelector(".acp-dashboard-rail");
+    return {
+      columns: workspace instanceof HTMLElement
+        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      railLinks: rail?.querySelectorAll(".acp-section-index a").length ?? 0,
+      width: workspace instanceof HTMLElement ? Math.round(workspace.getBoundingClientRect().width) : 0,
+      viewport: window.innerWidth,
+    };
+  });
+  if (
+    dashboardRailDesktop.columns !== 2
+    || dashboardRailDesktop.railLinks !== adminDensityState.sectionIndex
+    || dashboardRailDesktop.width > dashboardRailDesktop.viewport
+  ) fail(`admin: reference-review navigation rail contract failed ${JSON.stringify(dashboardRailDesktop)}`);
   await assertHealthyDocument("admin GET");
 
   response = await page.goto(baseUrl + "/admin?q=user", { waitUntil: "domcontentloaded" });
@@ -1595,6 +1611,19 @@ try {
     || adminMobileState.dashboardWidth > adminMobileState.viewportWidth
   ) {
     fail(`admin mobile: dense dashboard responsive contract failed ${JSON.stringify(adminMobileState)}`);
+  }
+  const dashboardRailMobile = await page.evaluate(() => {
+    const workspace = document.querySelector(".acp-dashboard-workspace");
+    const rail = document.querySelector(".acp-dashboard-rail");
+    const first = rail?.querySelector(".acp-section-index a");
+    return {
+      columns: workspace instanceof HTMLElement
+        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      linkHeight: first instanceof HTMLElement ? Math.round(first.getBoundingClientRect().height) : 0,
+    };
+  });
+  if (dashboardRailMobile.columns !== 1 || dashboardRailMobile.linkHeight < 44) {
+    fail(`admin mobile: reference-review navigation rail reflow contract failed ${JSON.stringify(dashboardRailMobile)}`);
   }
   await assertHealthyDocument("admin mobile");
 
