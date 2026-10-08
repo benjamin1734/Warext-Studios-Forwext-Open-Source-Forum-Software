@@ -46,15 +46,15 @@ const cases = [
   ["moderation-approval", "/moderation/approval"],
   ["moderation-audit", "/moderation/audit"],
   ["moderation-oversight", "/moderation/oversight"],
-  ["moderation-oversight-case", "/moderation/oversight/cases/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"],
+  ["moderation-oversight-case", "/moderation/oversight/cases/{real-case-id}"],
   ["help", "/help"],
   ["help-codes", "/help/bb-codes"],
   ["help-smilies", "/help/smilies"],
   ["help-trophies", "/help/trophies"],
   ["help-rss", "/help/rss"],
-  ["contact", "/contact"],
-  ["terms", "/terms"],
-  ["privacy", "/privacy"],
+  ["contact", "/help/contact"],
+  ["terms", "/help/terms"],
+  ["privacy", "/help/privacy"],
   ["admin-home", "/admin"],
   ["admin-home-search", "/admin?q=user"],
   ["admin-users", "/admin/users?q=phase12"],
@@ -120,7 +120,19 @@ try {
       };
 
       try {
-        const response = await page.goto(baseUrl + route, {
+        let targetRoute = route;
+        if (name === "moderation-oversight-case") {
+          const oversight = await page.goto(baseUrl + "/moderation/oversight", {
+            waitUntil: "domcontentloaded",
+            timeout: 15000,
+          });
+          if (!oversight || oversight.status() !== 200) throw new Error("Oversight directory unavailable.");
+          const caseHref = await page.locator('.moderation-note a[href*="/moderation/oversight/cases/"]').first().getAttribute("href");
+          if (!caseHref) throw new Error("No real, accessible oversight case is linked by the installed fixture.");
+          targetRoute = new URL(caseHref, baseUrl).pathname;
+          record.route = targetRoute;
+        }
+        const response = await page.goto(baseUrl + targetRoute, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         });
