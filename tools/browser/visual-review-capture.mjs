@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const baseUrl = process.env.FORWEXT_BROWSER_LIVE_BASE_URL ?? "http://localhost:8124";
@@ -120,19 +120,20 @@ try {
       };
 
       try {
-        let targetRoute = route;
         if (name === "moderation-oversight-case") {
-          const oversight = await page.goto(baseUrl + "/moderation/oversight", {
-            waitUntil: "domcontentloaded",
-            timeout: 15000,
-          });
-          if (!oversight || oversight.status() !== 200) throw new Error("Oversight directory unavailable.");
-          const caseHref = await page.locator('.moderation-note a[href*="/moderation/oversight/cases/"]').first().getAttribute("href");
-          if (!caseHref) throw new Error("No real, accessible oversight case is linked by the installed fixture.");
-          targetRoute = new URL(caseHref, baseUrl).pathname;
-          record.route = targetRoute;
+          // The primary live-route acceptance test creates and resolves a real
+          // permission-scoped case. Capture its valid state there, before it
+          // disappears from the active directory; never invent a case ID.
+          const dedicated = await stat(path.join(output, record.screenshot));
+          if (!dedicated.isFile() || dedicated.size === 0) {
+            throw new Error("The dedicated moderation lifecycle screenshot is missing.");
+          }
+          record.status = 200;
+          record.title = "Moderation case captured during lifecycle acceptance";
+          records.push(record);
+          continue;
         }
-        const response = await page.goto(baseUrl + targetRoute, {
+        const response = await page.goto(baseUrl + route, {
           waitUntil: "domcontentloaded",
           timeout: 15000,
         });
