@@ -188,6 +188,11 @@ jobs:
         env:
           FORWEXT_BROWSER_LIVE_BASE_URL: http://localhost:8124
 
+      - name: Capture installed routes for full visual reference review
+        run: node tools/browser/visual-review-capture.mjs || { cat /tmp/forwext-live-browser.log; exit 1; }
+        env:
+          FORWEXT_BROWSER_LIVE_BASE_URL: http://localhost:8124
+
       - name: Upload live-route browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
