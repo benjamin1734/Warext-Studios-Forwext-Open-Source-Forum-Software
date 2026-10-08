@@ -389,6 +389,13 @@ final class ProfileHtml
             . '</nav></div>'
             . $footerAfter . '</div></footer>';
 
+        // ACP routes already include the first-party administration stylesheet.
+        // A surface marker scopes navigation chrome without changing shared
+        // authentication or publishing admin-only links to the public shell.
+        $surfaceAttribute = str_contains($headAssets, '/assets/admin.css')
+            ? ' data-forwext-surface="admin"'
+            : '';
+
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="forwext-presence-endpoint" content="' . $presenceEndpoint . '">'
@@ -397,7 +404,7 @@ final class ProfileHtml
             . '<link rel="stylesheet" href="' . $siteBaseStylesheet . '">'
             . '<link rel="stylesheet" href="' . $siteComponentsStylesheet . '">'
             . '<link rel="stylesheet" href="' . $sitePagesStylesheet . '">' . $headAssets
-            . '</head><body data-forwext-background-scope="site">'
+            . '</head><body data-forwext-background-scope="site"' . $surfaceAttribute . '>'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
             . '<div class="top-main"><div class="topin">'
