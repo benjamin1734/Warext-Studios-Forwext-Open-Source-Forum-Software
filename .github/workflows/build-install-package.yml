@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('forwext-build-manual-{0}', github.run_id) || (startsWith(github.event.head_commit.message, 'release(') || startsWith(github.event.head_commit.message, 'release-retry(')) && format('forwext-build-release-{0}', github.sha) || format('forwext-build-{0}', github.ref) }}
@@ -62,7 +63,8 @@ jobs:
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
             && git log -1 --pretty=%s "$GITHUB_SHA" | grep -Eq '^release-retry\('; then
             SHOULD_PUBLISH="true"
-          elif git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] \
+            && git diff --name-only "$GITHUB_SHA^1" "$GITHUB_SHA" | grep -Fxq 'VERSION'; then
             SHOULD_PUBLISH="true"
           # A failed publication may be retried explicitly with a release-retry(...) commit
           # or workflow_dispatch. A normal later commit with the same VERSION must never publish that version.
@@ -673,6 +675,19 @@ jobs:
           )
           PY
 
+      - name: Rehearse differential update and preserve live-site state
+        if: steps.release_meta.outputs.should_publish == 'true' && steps.release_meta.outputs.previous_tag != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          OLD_ROOT="$(find dist/update-work/old -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          NEW_ROOT="$(find dist/update-work/new -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          test -n "$OLD_ROOT" && test -n "$NEW_ROOT"
+          python3 tools/quality/verify-update-rehearsal.py \
+            --old-root "$OLD_ROOT" \
+            --new-root "$NEW_ROOT" \
+            --payload-root dist/update-work/payload
+
       - name: Smoke packaged web installer
         shell: bash
         run: |
@@ -750,6 +765,55 @@ jobs:
             dist/forwext-v*-update.zip.sha256
           if-no-files-found: error
           retention-days: 30
+
+      - name: Require independent qualification gates before publishing
+        if: steps.release_meta.outputs.should_publish == 'true'
+        shell: bash
+        timeout-minutes: 40
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          GATES=(
+            "Security qualification"
+            "Database migration smoke"
+            "Performance and observability qualification"
+            "Qualification test matrix"
+          )
+          for attempt in {1..120}; do
+            RUNS="$(gh api "repos/${RELEASE_REPO}/actions/runs?head_sha=${RELEASE_SHA}&per_page=100")"
+            PENDING=()
+            FAILED=()
+            for gate in "${GATES[@]}"; do
+              conclusion="$(jq -r --arg name "$gate" --arg sha "$RELEASE_SHA" '
+                [.workflow_runs[]
+                 | select(.name == $name and .head_sha == $sha and .event == "push")]
+                | sort_by(.run_number, .run_attempt) | last | .conclusion // "pending"
+              ' <<< "$RUNS")"
+              case "$conclusion" in
+                success) echo "Qualified: $gate" ;;
+                failure|cancelled|timed_out|action_required|startup_failure|skipped)
+                  FAILED+=("$gate=$conclusion") ;;
+                *) PENDING+=("$gate=$conclusion") ;;
+              esac
+            done
+            if (("${#FAILED[@]}" > 0)); then
+              printf 'Release refused: independent qualification failed: %s\n' "${FAILED[*]}" >&2
+              exit 1
+            fi
+            if (("${#PENDING[@]}" == 0)); then
+              echo "All independent qualification workflows passed on ${RELEASE_SHA}."
+              break
+            fi
+            if ((attempt == 120)); then
+              printf 'Release refused: qualification timed out: %s\n' "${PENDING[*]}" >&2
+              exit 1
+            fi
+            printf 'Waiting for commit-specific CI qualification (%d/120): %s\n' "$attempt" "${PENDING[*]}"
+            sleep 15
+          done
 
       - name: Publish immutable GitHub Release
         if: steps.release_meta.outputs.should_publish == 'true'

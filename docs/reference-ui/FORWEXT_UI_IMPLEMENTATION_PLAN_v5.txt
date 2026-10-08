@@ -158,7 +158,13 @@ PHASE 19 — RESPONSIVE / ACCESSIBILITY / FULL VISUAL QA — VERIFIED
 - VERIFIED FIX: /admin/appearance/themes collapses to the single-column theme workspace below 1100px, removing the 1024px revision-history overflow.
 - VERIFIED: dedicated Phase 19 unit contracts lock the mobile/tablet/compact-desktop responsive fallbacks.
 - QUALIFICATION: PHP 8.4/8.5, MySQL 8.4, MariaDB 10.11, release build, fixture Chromium and installed-runtime Chromium route corpus are green.
-PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE
+PHASE 20 — FINAL CI / RELEASE QUALIFICATION / PACKAGE — IN PROGRESS
+- [DONE] Repair release trigger for first-parent changes to VERSION in merged pull requests.
+- [DONE] Prevent tag/asset publication until security, MySQL/MariaDB migration smoke, performance/observability and PHP/browser qualification matrix pass on the release commit.
+- [DONE] Add byte-for-byte predecessor-update-to-new-full ZIP upgrade rehearsal, including existing configuration, secrets, uploads and backup preservation.
+- [DONE] Add synthetic regression scenarios and release-policy contracts to qualification CI.
+- [PENDING] Verify all post-merge CI gates on the final main SHA and confirm immutable v1.0.19 full/update assets exist in GitHub Releases.
+- [NOT CLAIMED] A complete pixel-level manual comparison against all external reference screenshots; live-route responsiveness/accessibility/browser acceptance is independently automated.
 
 EVERY IMPLEMENTATION BATCH
 REFERENCE GROUP -> LOGICAL PAGE -> FORWEXT ROUTE -> BACKEND -> CURRENT UI -> DESIGN GAP -> FUNCTION GAP -> PERMISSION GAP -> IMPLEMENT -> TEST -> CI -> VERIFIED
