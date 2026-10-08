@@ -71,7 +71,13 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $body .= '</div><aside class="forum-home-side" aria-label="Forum özeti">'
             . $this->renderRecent($recent)
-            . ($actor === null ? '' : '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
+            . ($actor === null
+                ? '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
+                    . '<a href="' . self::e($this->basePath->prepend('/activity')) . '">Son hareketler <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/search')) . '">Forumlarda ara <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/members')) . '">Üyeleri keşfet <span>→</span></a>'
+                    . '</section>'
+                : '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
                 . '<a href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular <span>→</span></a>'
                 . '<a href="' . self::e($this->basePath->prepend('/activity/threads/unread')) . '">Okunmamış <span>→</span></a>'
                 . '<a href="' . self::e($this->basePath->prepend('/activity/threads/trending')) . '">Gündem <span>→</span></a>'
