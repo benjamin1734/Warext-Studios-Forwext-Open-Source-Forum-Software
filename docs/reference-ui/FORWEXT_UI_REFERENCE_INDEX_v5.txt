@@ -70,9 +70,9 @@ REF-0058 | JPG | 2033x1103 | MEMBERS | Member profile | /members/{username} | pr
 REF-0059 | JPG | 2033x1103 | THREAD | Thread view / reply states | /threads/{id} | view/reply | REVIEWED
 REF-0060 | JPG | 2033x1103 | APPEARANCE | Style chooser / variation | /account | chooser | REVIEWED
 REF-0061 | JPG | 2033x1103 | APPEARANCE | Style chooser / variation | /account | chooser | REVIEWED
-REF-0062 | JPG | 2033x1103 | LEGAL | Contact us | /contact | form | REVIEWED
-REF-0063 | JPG | 2033x1103 | LEGAL | Terms and rules | /terms | document | REVIEWED
-REF-0064 | JPG | 2033x1103 | LEGAL | Privacy policy | /privacy | document | REVIEWED
+REF-0062 | JPG | 2033x1103 | LEGAL | Contact us | /help/contact | form | REVIEWED
+REF-0063 | JPG | 2033x1103 | LEGAL | Terms and rules | /help/terms | document | REVIEWED
+REF-0064 | JPG | 2033x1103 | LEGAL | Privacy policy | /help/privacy | document | REVIEWED
 REF-0065 | JPG | 2033x1103 | HELP | Help | /help | index | REVIEWED
 REF-0066 | JPG | 2033x1103 | PUBLIC_FORUM | Forum index | / | base/populated | REVIEWED
 REF-0067 | JPG | 2048x1111 | SYSTEM_PUBLIC | RSS output | /forums/index.rss | rss | REVIEWED
@@ -559,8 +559,8 @@ REF-0547 | PNG | 2033x1047 | DISCOVERY | Forum / thread listing states | /forums
 REF-0548 | PNG | 2033x1047 | THREAD | Thread view / reply states | /threads/{id} | view/reply | REVIEWED
 REF-0549 | PNG | 2033x1047 | SEARCH | Global search | /search | form | REVIEWED
 REF-0550 | PNG | 2033x1047 | HELP | Help | /help | index | REVIEWED
-REF-0551 | PNG | 2033x1047 | LEGAL | Terms and rules | /terms | document | REVIEWED
-REF-0552 | PNG | 2033x1047 | LEGAL | Privacy policy | /privacy | document | REVIEWED
+REF-0551 | PNG | 2033x1047 | LEGAL | Terms and rules | /help/terms | document | REVIEWED
+REF-0552 | PNG | 2033x1047 | LEGAL | Privacy policy | /help/privacy | document | REVIEWED
 REF-0553 | PNG | 2033x1047 | DISCOVERY | Featured content | /activity | featured | REVIEWED
 REF-0554 | PNG | 2033x1047 | APPEARANCE | Style chooser / variation | /account | chooser | REVIEWED
 REF-0555 | PNG | 2033x1047 | MC_SERVER | Server directory / detail states | /servers | directory/detail | REVIEWED
