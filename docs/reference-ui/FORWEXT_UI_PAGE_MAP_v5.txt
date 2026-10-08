@@ -443,7 +443,7 @@ Rule: screenshot continuations and UI states belong to one logical page group wh
 
 [LEGAL] Contact us
   Reference: REF-0062
-  Forwext route: /contact
+  Forwext route: /help/contact
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
@@ -455,13 +455,13 @@ Rule: screenshot continuations and UI states belong to one logical page group wh
 
 [LEGAL] Privacy policy
   Reference: REF-0064, REF-0552
-  Forwext route: /privacy
+  Forwext route: /help/privacy
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
 [LEGAL] Terms and rules
   Reference: REF-0063, REF-0551
-  Forwext route: /terms
+  Forwext route: /help/terms
   Priority phase: 10
   Verification contract: route + rendered UI + real action/persistence where applicable + server-side permission + responsive/a11y test.
 
