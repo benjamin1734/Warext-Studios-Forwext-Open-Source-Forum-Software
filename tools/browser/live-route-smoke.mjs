@@ -71,6 +71,9 @@ try {
   let response = await page.goto(baseUrl + "/", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("home: real route did not return HTTP 200");
   await page.getByRole("heading", { name: "Forumlar", exact: true }).waitFor();
+  if ((await page.locator('body[data-forwext-surface="admin"]').count()) !== 0) {
+    fail("public forum: management chrome leaked into public rendering");
+  }
   const forumHomeLayout = await page.evaluate(() => {
     const layout = document.querySelector(".forum-home-layout");
     const stats = document.querySelector(".forum-mini-stats");
@@ -1533,6 +1536,9 @@ try {
   response = await page.goto(baseUrl + "/admin", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail(`admin: real route returned HTTP ${response?.status() ?? "no response"}`);
   await page.getByRole("heading", { name: "Administration", exact: true }).waitFor();
+  if ((await page.locator('body[data-forwext-surface="admin"]').count()) !== 1) {
+    fail("admin: explicit management chrome marker missing");
+  }
   const adminDensityState = await page.evaluate(() => ({
     overview: document.querySelectorAll(".acp-overview-stat").length,
     sectionIndex: document.querySelectorAll(".acp-section-index a").length,
