@@ -44,6 +44,24 @@ final class AdminDashboardHtml
             . self::overviewStat('Son kullanılan', count($snapshot->recent), 'Gerçek POST açılışlarından oluşur')
             . '</section>';
 
+        // All entry points derive from the permission-filtered dashboard snapshot.
+        // These are section anchors: mutations and recent-navigation tracking stay
+        // in the existing CSRF-protected directory buttons below.
+        $launchpad = '<section class="acp-launchpad" aria-label="Yönetim kategorileri">'
+            . '<div class="acp-launchpad-heading"><div><span class="acp-eyebrow">HIZLI GEZİNME</span>'
+            . '<h2>Yönetim merkezleri</h2></div><p class="acp-muted">Yetkin olan bölümlere doğrudan ulaş.</p></div>'
+            . '<div class="acp-launchpad-grid">';
+        $launchIndex = 0;
+        foreach ($snapshot->sections as $sectionKey => $items) {
+            $launchIndex++;
+            $launchpad .= '<a class="acp-launchpad-tile" href="#acp-section-' . self::escape($sectionKey) . '">'
+                . '<span class="acp-launchpad-icon" aria-hidden="true">' . sprintf('%02d', $launchIndex) . '</span>'
+                . '<span class="acp-launchpad-title">' . self::escape($snapshot->sectionLabel($sectionKey))
+                . '<small>' . count($items) . ' yönetim alanı</small></span>'
+                . '<span class="acp-launchpad-arrow" aria-hidden="true">↗</span></a>';
+        }
+        $launchpad .= '</div></section>';
+
         $sectionNav = '<nav class="acp-section-index" aria-label="Administration bölümleri">';
         foreach ($snapshot->sections as $sectionKey => $items) {
             $sectionNav .= '<a href="#acp-section-' . self::escape($sectionKey) . '"><span>'
@@ -143,6 +161,7 @@ final class AdminDashboardHtml
             . '" placeholder="Kullanıcı, tema, ödeme, destek, analytics…">'
             . '<button type="submit">Ara</button></form></header>'
             . $overview
+            . $launchpad
             . '<div class="acp-dashboard-workspace">'
             . '<aside class="acp-dashboard-rail" aria-label="Administration bölümleri">'
             . '<h2 class="acp-dashboard-rail-title">Yönetim alanları</h2>'
