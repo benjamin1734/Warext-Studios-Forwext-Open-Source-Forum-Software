@@ -57,6 +57,14 @@ The release workflow publishes a GitHub Release only when the `VERSION` file cha
 
 Before publication the workflow verifies that neither the Git tag nor the GitHub Release already exists and that the new version advances beyond the latest recognized Forwext development or production tag. Published assets are never overwritten.
 
+## Release verification and upgrade rehearsal
+
+A merge commit changes the published application only when its first-parent diff includes `VERSION`; a normal merge that does not change the version does not publish a release. An explicit manual dispatch remains available for an unpublished version.
+
+Before creating a tag or uploading immutable assets, the package workflow requires completed **successful** independent push runs at the exact release commit for the security, database migration, performance/observability and qualification-matrix workflows. Missing, failed, canceled or timed-out qualification blocks publication. Passing only the package build is insufficient.
+
+When a predecessor release exists, the package workflow builds the differential ZIP, then rehearses the add/replace/delete operations against a copy of the previous published full package. The resulting application files must have exactly the same SHA-256 inventory as the new full package. The rehearsal seeds existing installation configuration, secrets, uploads, logs and backups and asserts they remain byte-for-byte unchanged. CI additionally exercises successful, corrupted-payload, incomplete-update and protected-file regression scenarios.
+
 ## Transition at 0.0.7
 
 The historical `v0.0.7-dev` transition baseline and already published side-update assets remain immutable. Compatibility with their older installation-package name exists only for reading the predecessor during differential generation; it does not change the current package contract.
