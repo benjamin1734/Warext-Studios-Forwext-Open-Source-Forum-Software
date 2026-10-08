@@ -1297,3 +1297,207 @@
   .acp-dashboard-rail .acp-section-index{grid-template-columns:minmax(0,1fr)}
   .acp-dashboard-rail .acp-section-index a{min-height:44px}
 }
+
+
+/* administration-visual-workspace-v3
+ * Permission-filtered launchpad and compact navigation. Server-side actions
+ * retain their CSRF and audit contracts: no new client-side mutations. */
+.acp-dashboard--dense{
+  gap:14px;
+}
+.acp-dashboard--dense .acp-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(265px,400px);
+  align-items:center;
+  gap:16px;
+  background:
+    linear-gradient(120deg,color-mix(in srgb,var(--panel) 75%,#15374e),var(--panel));
+  border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));
+  border-left:3px solid color-mix(in srgb,var(--accent) 62%,#5ca9cf);
+  border-radius:7px;
+  padding:20px;
+}
+.acp-dashboard--dense .acp-hero h1{
+  font-size:clamp(22px,2.2vw,29px);
+  letter-spacing:-.035em;
+  line-height:1.1;
+}
+.acp-dashboard--dense .acp-hero .acp-muted{font-size:12px;line-height:1.5}
+.acp-dashboard--dense .acp-search{max-width:none;width:100%}
+.acp-dashboard--dense .acp-search input{
+  min-width:0;
+  background:var(--panel);
+  min-height:43px;
+}
+.acp-dashboard--dense .acp-search button{
+  min-height:43px;
+  padding-inline:20px;
+  color:var(--text);
+  font-weight:750;
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--line));
+  background:color-mix(in srgb,var(--accent) 20%,var(--panel2));
+}
+.acp-dashboard--dense .acp-overview{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.acp-dashboard--dense .acp-overview-stat{
+  border-radius:6px;
+  min-height:80px;
+  padding:14px;
+  background:color-mix(in srgb,var(--panel) 88%,#142f44);
+  border:1px solid color-mix(in srgb,var(--accent) 13%,var(--line));
+}
+.acp-dashboard--dense .acp-overview-stat>strong{
+  font-size:1.65rem;
+  color:color-mix(in srgb,var(--text) 80%,var(--accent));
+}
+.acp-launchpad{
+  display:grid;gap:12px;
+  padding:16px;
+  border-radius:7px;
+  border:1px solid color-mix(in srgb,var(--accent) 15%,var(--line));
+  background:var(--panel);
+}
+.acp-launchpad-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.acp-launchpad-heading h2{margin:2px 0 0;font-size:16px;letter-spacing:-.01em}
+.acp-launchpad-heading p{margin:0;font-size:11.5px}
+.acp-launchpad-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+.acp-launchpad-tile{
+  min-width:0;
+  min-height:88px;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  text-decoration:none;
+  color:var(--text);
+  background:color-mix(in srgb,var(--panel2) 83%,#173e58);
+  border:1px solid color-mix(in srgb,var(--accent) 13%,var(--line));
+  border-radius:6px;
+  transition:background 140ms ease,border-color 140ms ease;
+}
+.acp-launchpad-tile:is(:hover,:focus-visible){
+  background:color-mix(in srgb,var(--panel2) 68%,#1d5168);
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line));
+}
+.acp-launchpad-icon{
+  width:36px;height:36px;
+  display:grid;place-items:center;
+  border-radius:7px;
+  color:color-mix(in srgb,var(--text) 75%,#76c9ed);
+  background:color-mix(in srgb,var(--accent) 14%,#122536);
+  border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));
+  font-size:12px;
+  font-weight:840;
+  letter-spacing:.04em;
+}
+.acp-launchpad-title{min-width:0;font-size:12.5px;line-height:1.35;font-weight:750}
+.acp-launchpad-title small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:500;
+}
+.acp-launchpad-arrow{
+  align-self:start;
+  font-size:14px;
+  color:color-mix(in srgb,var(--accent) 70%,var(--muted));
+}
+.acp-dashboard--dense .acp-dashboard-workspace{grid-template-columns:minmax(188px,220px) minmax(0,1fr);gap:12px}
+.acp-dashboard--dense .acp-dashboard-rail{
+  top:112px;
+  padding:12px 9px;
+  border-radius:6px;
+  background:color-mix(in srgb,var(--panel) 70%,#153249);
+  border-left-color:color-mix(in srgb,var(--accent) 55%,#66a4bf);
+}
+.acp-dashboard--dense .acp-dashboard-rail .acp-section-index a{
+  min-height:43px;
+  border-radius:5px;
+  font-size:11.5px;
+  color:var(--text);
+}
+.acp-dashboard--dense .acp-dashboard-rail .acp-section-index strong{
+  min-width:25px;
+  border-radius:5px;
+}
+.acp-dashboard--dense .acp-dashboard-workspace-main{gap:12px}
+.acp-dashboard--dense .acp-panel{
+  padding:15px;
+  border-radius:7px;
+  border-color:color-mix(in srgb,var(--accent) 12%,var(--line));
+}
+.acp-dashboard--dense .acp-heading h2{font-size:15px}
+.acp-dashboard--dense .acp-heading p{font-size:11px}
+.acp-dashboard--dense .acp-directory-section .acp-directory{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  padding:0;
+  border:none;
+  background:transparent;
+  overflow:visible;
+}
+.acp-dashboard--dense .acp-directory-section .acp-directory-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-content:space-between;
+  min-height:112px;
+  padding:11px;
+  gap:10px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:color-mix(in srgb,var(--panel) 89%,#15344b);
+}
+.acp-dashboard--dense .acp-directory-section .acp-directory-row:hover{
+  background:color-mix(in srgb,var(--panel) 82%,#214961);
+  border-color:color-mix(in srgb,var(--accent) 35%,var(--line));
+}
+.acp-dashboard--dense .acp-directory-section .acp-directory-main h3{font-size:12.5px}
+.acp-dashboard--dense .acp-directory-section .acp-directory-main p{
+  font-size:10.5px;
+  line-height:1.42;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.acp-dashboard--dense .acp-directory-section .acp-directory-actions{
+  display:flex;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:5px;
+}
+.acp-dashboard--dense .acp-directory-section .acp-button{padding:7px 9px;font-size:11px}
+.acp-dashboard--dense .acp-directory-section .acp-directory-kicker code{
+  font-size:9px;
+}
+@media(max-width:1100px){
+  .acp-dashboard--dense .acp-dashboard-workspace{grid-template-columns:minmax(0,1fr)}
+  .acp-dashboard--dense .acp-dashboard-rail{position:static;max-height:none}
+  .acp-launchpad-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .acp-dashboard--dense .acp-hero{grid-template-columns:minmax(0,1fr)}
+  .acp-dashboard--dense .acp-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .acp-launchpad-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .acp-dashboard--dense .acp-directory-section .acp-directory{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:520px){
+  .acp-launchpad-grid{grid-template-columns:minmax(0,1fr)}
+  .acp-launchpad-tile{min-height:66px}
+  .acp-dashboard--dense .acp-directory-section .acp-directory-row{min-height:96px}
+  .acp-dashboard--dense .acp-directory-section .acp-directory-actions .acp-button{min-height:44px}
+}
