@@ -219,6 +219,9 @@ jobs:
       - name: Verify full/update release policy
         run: vendor/bin/phpunit --configuration=phpunit.xml.dist tests/Architecture/ReleasePackagingPolicyTest.php
 
+      - name: Verify differential upgrade rehearsal regressions
+        run: python3 -m unittest discover -s tools/quality -p 'test_*.py' -v
+
       - name: Verify official SDK, React and Next.js release surfaces exist
         shell: bash
         run: |
