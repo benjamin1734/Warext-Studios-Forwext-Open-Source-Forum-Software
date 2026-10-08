@@ -201,13 +201,13 @@ REF-0189 | PNG | 2033x1103 | ACP_ACCESS | ACP users, groups, roles and permissio
 REF-0190 | PNG | 2033x1103 | ACP_ACCESS | ACP users, groups, roles and permissions | /admin/community | admin-state | REVIEWED
 REF-0191 | PNG | 2033x1103 | ACP_ACCESS | ACP users, groups, roles and permissions | /admin/community | admin-state | REVIEWED
 REF-0192 | PNG | 2033x1103 | ACP_ACCESS | ACP users, groups, roles and permissions | /admin/community | admin-state | REVIEWED
-REF-0193 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0194 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0195 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0196 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0197 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0198 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
-REF-0199 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
+REF-0193 | PNG | 2033x1103 | ACP_PLATFORM_WEBHOOK | Webhook management | /admin/integrations | admin-state | REVIEWED
+REF-0194 | PNG | 2033x1103 | ACP_PLATFORM_WEBHOOK | Webhook management | /admin/integrations | admin-state | REVIEWED
+REF-0195 | PNG | 2033x1103 | ACP_PLATFORM_WEBHOOK | Webhook management | /admin/integrations | admin-state | REVIEWED
+REF-0196 | PNG | 2033x1103 | ACP_PLATFORM_WEBHOOK | Webhook management | /admin/integrations | admin-state | REVIEWED
+REF-0197 | PNG | 2033x1103 | ACP_PLATFORM_CAPTCHA | CAPTCHA question editor | /admin/integrations | admin-state | REVIEWED
+REF-0198 | PNG | 2033x1103 | ACP_PLATFORM_MODULE | Add-on installation | /admin/modules | admin-state | REVIEWED
+REF-0199 | PNG | 2033x1103 | ACP_PLATFORM_MODULE | Add-on installation | /admin/modules | admin-state | REVIEWED
 REF-0200 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
 REF-0201 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
 REF-0202 | PNG | 2033x1103 | ACP_CONTENT | ACP forums, nodes, content and editor management | /admin/community | admin-state | REVIEWED
