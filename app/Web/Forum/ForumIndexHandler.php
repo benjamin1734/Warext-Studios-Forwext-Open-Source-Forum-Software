@@ -71,6 +71,8 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $body .= '</div><aside class="forum-home-side" aria-label="Forum özeti">'
             . $this->renderRecent($recent)
+            . '<section class="card forum-side-card forum-side-card--online"><h2>Çevrimiçi üyeler</h2>'
+            . '<p><a href="' . self::e($this->basePath->prepend('/members/online')) . '">Güncel çevrimiçi üye listesini görüntüle →</a></p></section>'
             . ($actor === null
                 ? '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
                     . '<a href="' . self::e($this->basePath->prepend('/activity')) . '">Son hareketler <span>→</span></a>'
