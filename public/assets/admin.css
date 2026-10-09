@@ -1738,3 +1738,17 @@ body[data-forwext-surface="admin"] .acp-directory-kicker code{color:#7b9aae}
 @media(prefers-reduced-motion:reduce){
   .acp-app-sidebar :where(a,summary),body[data-forwext-surface="admin"] .acp-launchpad-tile{transition:none}
 }
+
+/* ACP workspace owns wide management tables. Narrowed two-column role
+ * directories must reflow instead of leaking tables outside the viewport. */
+body[data-forwext-surface="admin"] .ac-access-directory-grid,
+body[data-forwext-surface="admin"] .ac-access-role-grid{
+  grid-template-columns:minmax(0,1fr);
+}
+body[data-forwext-surface="admin"] .ac-access-directory-grid > *,
+body[data-forwext-surface="admin"] .ac-access-role-grid > *{
+  min-width:0;
+}
+body[data-forwext-surface="admin"] .ac-access-directory-grid .ac-table-wrap{
+  max-width:100%;overflow-x:auto;
+}
