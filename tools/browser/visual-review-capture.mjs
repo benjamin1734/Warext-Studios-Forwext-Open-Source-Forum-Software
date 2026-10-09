@@ -161,6 +161,26 @@ try {
             });
           });
           console.log("ACP VISUAL GEOMETRY:", JSON.stringify(diagnostics));
+          const visibilityDebug = await page.evaluate(() => {
+            const selectors = [".acp-ux-guide", ".acp-hero", ".acp-hero h1",
+              ".acp-overview", ".acp-overview-stat", ".acp-insights-heading",
+              ".acp-launchpad", ".acp-launchpad-tile", ".acp-environment", ".acp-environment-status"];
+            return selectors.map(selector => {
+              const node = document.querySelector(selector);
+              if (!(node instanceof HTMLElement)) return {selector, missing:true};
+              const r = node.getBoundingClientRect(); const style=getComputedStyle(node);
+              const px=Math.max(0,Math.min(innerWidth-1,r.left+Math.min(14,r.width/2)));
+              const py=Math.max(0,Math.min(innerHeight-1,r.top+Math.min(14,r.height/2)));
+              const blockers=document.elementsFromPoint(px,py).slice(0,6)
+                .map(el=>({tag:el.tagName,className:typeof el.className==="string"?el.className.slice(0,80):"",id:el.id}));
+              return {selector,x:px,y:py,display:style.display,color:style.color,
+                background:style.backgroundColor,opacity:style.opacity,visibility:style.visibility,
+                rect:{top:r.top,bottom:r.bottom,width:r.width,height:r.height},blockers,
+                text:node.innerText.slice(0,65)};
+            });
+          });
+          console.log("ACP VISIBILITY DIAGNOSTICS:",JSON.stringify(visibilityDebug));
+
           await page.evaluate(() => window.scrollTo({top:0,left:0,behavior:"instant"}));
           await page.screenshot({path: path.join(output, "admin-home-viewport-debug.jpg"),
             fullPage: false,type:"jpeg",quality:90});
