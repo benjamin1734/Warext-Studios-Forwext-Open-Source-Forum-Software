@@ -1752,3 +1752,20 @@ body[data-forwext-surface="admin"] .ac-access-role-grid > *{
 body[data-forwext-surface="admin"] .ac-access-directory-grid .ac-table-wrap{
   max-width:100%;overflow-x:auto;
 }
+
+/* Theme management's older two-column workspace assumed a full-width page.
+ * Within the new global rail its revision metadata must wrap in its card. */
+body[data-forwext-surface="admin"] .theme-admin--dense,
+body[data-forwext-surface="admin"] .theme-workspace-grid{
+  grid-template-columns:minmax(0,1fr);
+}
+body[data-forwext-surface="admin"] .theme-sidebar{position:static;max-height:none}
+body[data-forwext-surface="admin"] :where(.theme-admin,.theme-workspace-grid,.theme-history,.theme-revision,.theme-revision-copy,.theme-revision-head){
+  min-width:0;
+}
+body[data-forwext-surface="admin"] .theme-revision-head{
+  max-width:100%;flex-wrap:wrap;align-items:flex-start;
+}
+body[data-forwext-surface="admin"] .theme-revision-head :where(span,small,code){
+  max-width:100%;overflow-wrap:anywhere;white-space:normal;
+}
