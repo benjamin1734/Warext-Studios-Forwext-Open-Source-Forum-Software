@@ -444,6 +444,11 @@ final class ProfileHtml
             . '</head><body data-forwext-background-scope="site"' . $surfaceAttribute . '>'
             . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
+            . '<div class="community-utility"><div class="community-utility-inner">'
+            . '<a href="' . $home . '">Forwext</a>'
+            . '<nav aria-label="Üst bağlantılar"><a href="' . $navHref('/forums') . '">Forumlar</a>'
+            . '<a href="' . $navHref('/activity') . '">Son hareketlilik</a>'
+            . '<a href="' . $navHref('/help') . '">Yardım</a></nav></div></div>'
             . '<div class="top-main"><div class="topin">'
             . '<a class="brand" href="' . $home . '" aria-label="Forwext ana sayfa">'
             . '<span class="brand-copy"><strong>Forwext</strong></span></a>'
