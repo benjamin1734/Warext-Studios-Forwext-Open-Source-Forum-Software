@@ -146,6 +146,25 @@ try {
         if ((await page.locator("body").innerText()).includes("Internal Server Error")) {
           record.error = "Rendered Internal Server Error";
         }
+        if (name === "admin-home" && viewport.label === "desktop") {
+          const diagnostics = await page.evaluate(() => {
+            const targets = [".acp-dashboard", ".acp-ux-guide", ".acp-hero", ".acp-overview",
+              ".acp-insights", ".acp-launchpad", ".acp-environment", ".acp-dashboard-workspace"];
+            return targets.map(selector => {
+              const el = document.querySelector(selector);
+              if (!(el instanceof HTMLElement)) return { selector, missing: true };
+              const rect = el.getBoundingClientRect();
+              const cs = getComputedStyle(el);
+              return { selector, top: Math.round(rect.top), height: Math.round(rect.height),
+                left: Math.round(rect.left), width: Math.round(rect.width), display: cs.display,
+                visibility: cs.visibility, opacity: cs.opacity, position: cs.position };
+            });
+          });
+          console.log("ACP VISUAL GEOMETRY:", JSON.stringify(diagnostics));
+          await page.evaluate(() => window.scrollTo({top:0,left:0,behavior:"instant"}));
+          await page.screenshot({path: path.join(output, "admin-home-viewport-debug.jpg"),
+            fullPage: false,type:"jpeg",quality:90});
+        }
         await page.screenshot({
           path: path.join(output, record.screenshot),
           fullPage: true,
