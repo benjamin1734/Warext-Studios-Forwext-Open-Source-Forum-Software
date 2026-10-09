@@ -1548,22 +1548,27 @@ try {
   if (adminDensityState.overview !== 4 || adminDensityState.sectionIndex < 1 || adminDensityState.directoryRows < 1) {
     fail(`admin: dense dashboard contract failed ${JSON.stringify(adminDensityState)}`);
   }
-  const dashboardRailDesktop = await page.evaluate(() => {
-    const workspace = document.querySelector(".acp-dashboard-workspace");
-    const rail = document.querySelector(".acp-dashboard-rail");
+  const adminAppChrome = await page.evaluate(() => {
+    const layout = document.querySelector(".acp-app-layout");
+    const sidebar = document.querySelector(".acp-app-sidebar");
+    const stats = document.querySelectorAll(".acp-insight-panel");
+    const searchLinks = sidebar?.querySelectorAll('a[href*="/admin?q="]') ?? [];
     return {
-      columns: workspace instanceof HTMLElement
-        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
-      railLinks: rail?.querySelectorAll(".acp-section-index a").length ?? 0,
-      width: workspace instanceof HTMLElement ? Math.round(workspace.getBoundingClientRect().width) : 0,
+      columns: layout instanceof HTMLElement
+        ? getComputedStyle(layout).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      sidebarVisible: sidebar instanceof HTMLElement && getComputedStyle(sidebar).display !== "none",
+      searchLinks: searchLinks.length,
+      charts: stats.length,
+      environment: document.querySelectorAll(".acp-environment-status").length,
+      width: layout instanceof HTMLElement ? Math.round(layout.getBoundingClientRect().width) : 0,
       viewport: window.innerWidth,
     };
   });
   if (
-    dashboardRailDesktop.columns !== 2
-    || dashboardRailDesktop.railLinks !== adminDensityState.sectionIndex
-    || dashboardRailDesktop.width > dashboardRailDesktop.viewport
-  ) fail(`admin: reference-review navigation rail contract failed ${JSON.stringify(dashboardRailDesktop)}`);
+    adminAppChrome.columns !== 2 || !adminAppChrome.sidebarVisible
+    || adminAppChrome.searchLinks < 8 || adminAppChrome.charts !== 2
+    || adminAppChrome.environment !== 1 || adminAppChrome.width > adminAppChrome.viewport
+  ) fail(`admin: separate management application contract failed ${JSON.stringify(adminAppChrome)}`);
   const dashboardLaunchpad = await page.evaluate(() => {
     const workspace = document.querySelector(".acp-dashboard-workspace");
     const launchpad = document.querySelector(".acp-launchpad");
@@ -1586,8 +1591,8 @@ try {
   if (
     !dashboardLaunchpad.launchpad || !dashboardLaunchpad.linked
     || dashboardLaunchpad.tiles !== adminDensityState.sectionIndex
-    || dashboardLaunchpad.gridColumns !== 4
-    || dashboardLaunchpad.workspaceColumns !== 2
+    || dashboardLaunchpad.gridColumns !== 6
+    || dashboardLaunchpad.workspaceColumns !== 1
   ) {
     fail(`admin: reference rebuild launchpad contract failed ${JSON.stringify(dashboardLaunchpad)}`);
   }
@@ -1658,26 +1663,26 @@ try {
   ) {
     fail(`admin mobile: dense dashboard responsive contract failed ${JSON.stringify(adminMobileState)}`);
   }
-  const dashboardRailMobile = await page.evaluate(() => {
-    const workspace = document.querySelector(".acp-dashboard-workspace");
-    const rail = document.querySelector(".acp-dashboard-rail");
-    const first = rail?.querySelector(".acp-section-index a");
+  const adminAppMobile = await page.evaluate(() => {
+    const layout = document.querySelector(".acp-app-layout");
+    const sidebar = document.querySelector(".acp-app-sidebar");
     return {
-      columns: workspace instanceof HTMLElement
-        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
-      linkHeight: first instanceof HTMLElement ? Math.round(first.getBoundingClientRect().height) : 0,
+      columns: layout instanceof HTMLElement
+        ? getComputedStyle(layout).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      sidebarPresent: sidebar instanceof HTMLElement,
+      sidebarHeight: sidebar instanceof HTMLElement ? Math.round(sidebar.getBoundingClientRect().height) : 0,
     };
   });
-  if (dashboardRailMobile.columns !== 1 || dashboardRailMobile.linkHeight < 44) {
-    fail(`admin mobile: reference-review navigation rail reflow contract failed ${JSON.stringify(dashboardRailMobile)}`);
+  if (adminAppMobile.columns !== 1 || !adminAppMobile.sidebarPresent || adminAppMobile.sidebarHeight > 300) {
+    fail(`admin mobile: application sidebar did not reflow ${JSON.stringify(adminAppMobile)}`);
   }
   const dashboardLaunchpadMobile = await page.evaluate(() => {
     const grid = document.querySelector(".acp-launchpad-grid");
     return grid instanceof HTMLElement
       ? getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length : 0;
   });
-  if (dashboardLaunchpadMobile !== 1) {
-    fail(`admin mobile: management launchpad did not reflow to one column: ${dashboardLaunchpadMobile}`);
+  if (dashboardLaunchpadMobile !== 2) {
+    fail(`admin mobile: management launchpad did not reflow to two columns: ${dashboardLaunchpadMobile}`);
   }
   await assertHealthyDocument("admin mobile");
 
