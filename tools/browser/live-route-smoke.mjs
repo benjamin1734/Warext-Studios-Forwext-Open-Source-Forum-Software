@@ -1584,15 +1584,14 @@ try {
       linked,
       gridColumns: launchpad instanceof HTMLElement
         ? getComputedStyle(launchpad.querySelector(".acp-launchpad-grid")).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
-      workspaceColumns: workspace instanceof HTMLElement
-        ? getComputedStyle(workspace).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      workspaceDisplay: workspace instanceof HTMLElement ? getComputedStyle(workspace).display : "",
     };
   });
   if (
     !dashboardLaunchpad.launchpad || !dashboardLaunchpad.linked
     || dashboardLaunchpad.tiles !== adminDensityState.sectionIndex
     || dashboardLaunchpad.gridColumns !== 6
-    || dashboardLaunchpad.workspaceColumns !== 1
+    || dashboardLaunchpad.workspaceDisplay !== "block"
   ) {
     fail(`admin: reference rebuild launchpad contract failed ${JSON.stringify(dashboardLaunchpad)}`);
   }
