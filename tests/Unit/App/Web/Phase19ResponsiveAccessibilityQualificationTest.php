@@ -45,7 +45,7 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
         foreach ([
             'grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible',
             'grid-template-columns:repeat(4,minmax(0,1fr));',
-            '.ac-user-history .ac-table{min-width:720px}' . PHP_EOL . '@media(max-width:960px){',
+            '.ac-user-history .ac-table{min-width:720px}' . PHP_EOL . '@media(max-width:1200px){',
             '@media(max-width:1100px){' . PHP_EOL . '  .ac-access-directory-grid{grid-template-columns:1fr}',
             '@media(max-width:900px){' . PHP_EOL . '  .ac-access-overview{grid-template-columns:repeat(2,minmax(0,1fr))}',
             '.ac-access-table{display:block;min-width:0;width:100%}',
@@ -88,6 +88,8 @@ final class Phase19ResponsiveAccessibilityQualificationTest extends TestCase
         }
 
         self::assertStringContainsString('@media(pointer:coarse)', $css);
+        self::assertStringContainsString('.acp-app-layout', $css);
+        self::assertStringContainsString('.acp-app-sidebar', $css);
         self::assertStringContainsString(':focus-visible', $css);
         self::assertStringContainsString('min-height:44px', $css);
     }
