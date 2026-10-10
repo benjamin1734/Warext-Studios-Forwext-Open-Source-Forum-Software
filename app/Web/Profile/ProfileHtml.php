@@ -432,6 +432,14 @@ final class ProfileHtml
         $surfaceAttribute = str_contains($headAssets, '/assets/admin.css')
             ? ' data-forwext-surface="admin"'
             : '';
+        $adminChrome = $surfaceAttribute !== ''
+            ? '<header class="acp-app-topbar" aria-label="Yönetim üst menüsü">'
+                . '<a href="' . $home . '" aria-label="Forum ana sayfasına dön">⌂</a>'
+                . '<a class="acp-app-topbar-name" href="' . $navHref('/admin') . '">Forwext</a>'
+                . '<span>Administration</span>'
+                . '<a class="acp-app-topbar-exit" href="' . $home . '">Foruma dön ↗</a>'
+                . '</header>'
+            : '';
 
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -442,7 +450,7 @@ final class ProfileHtml
             . '<link rel="stylesheet" href="' . $siteComponentsStylesheet . '">'
             . '<link rel="stylesheet" href="' . $sitePagesStylesheet . '">' . $headAssets
             . '</head><body data-forwext-background-scope="site"' . $surfaceAttribute . '>'
-            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
+            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $adminChrome . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
             . '<div class="community-utility"><div class="community-utility-inner">'
             . '<a href="' . $home . '">Forwext</a>'
