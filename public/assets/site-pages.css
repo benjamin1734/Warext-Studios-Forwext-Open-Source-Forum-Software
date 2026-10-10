@@ -4199,7 +4199,7 @@ body:has(.forum-home-layout) .forum-mini-stats span{
   text-transform:none;
 }
 body:has(.forum-home-layout) .forum-mini-stats span:after{content:":"}
-@media(max-width:900px){
+@media(max-width:920px){
   body:has(.forum-home-layout) .forum-home-layout{grid-template-columns:minmax(0,1fr) 205px}
   body:has(.forum-home-layout) .forum-node{grid-template-columns:32px minmax(0,1fr) 85px}
   body:has(.forum-home-layout) .forum-node-last{
@@ -4214,7 +4214,7 @@ body:has(.forum-home-layout) .forum-mini-stats span:after{content:":"}
   body:has(.forum-home-layout) .forum-node{grid-template-columns:32px minmax(0,1fr) 76px}
   body:has(.forum-home-layout) .forum-hero{flex-wrap:wrap}
 }
-@media(max-width:480px){
+@media(max-width:520px){
   body:has(.forum-home-layout) .forum-home-side{grid-template-columns:minmax(0,1fr)}
   body:has(.forum-home-layout) .forum-node{grid-template-columns:32px minmax(0,1fr)}
   body:has(.forum-home-layout) .forum-node-counts{grid-column:2;display:flex;justify-content:flex-start;gap:14px}
