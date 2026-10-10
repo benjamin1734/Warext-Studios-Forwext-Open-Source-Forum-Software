@@ -376,6 +376,43 @@ final class ProfileHtml
                 . $sidebar . '</aside></div>';
         }
 
+        // Administration is a separate application surface, not a forum panel
+        // with administrative cards. Links here only search the existing,
+        // permission-filtered directory; authorization stays in each handler.
+        if (str_contains($headAssets, '/assets/admin.css')) {
+            $adminUrl = $navHref('/admin');
+            $adminLookup = static fn (string $query): string => $navHref('/admin?q=' . rawurlencode($query));
+            $adminSidebar = '<aside class="acp-app-sidebar" aria-label="Yönetim paneli gezintisi">'
+                . '<div class="acp-app-sidebar-heading"><span class="acp-app-home-icon" aria-hidden="true">⌂</span>'
+                . '<strong>Forwext</strong><small>Yönetim paneli</small></div>'
+                . '<a class="acp-app-dashboard-link" href="' . $adminUrl . '">▦ <span>Kontrol paneli</span></a>'
+                . '<details class="acp-app-nav-group" open><summary>⚙ <span>Kurulum</span></summary><nav aria-label="Kurulum araçları">'
+                . '<a href="' . $adminLookup('ayar') . '">Genel seçenekler</a>'
+                . '<a href="' . $adminLookup('gizlilik') . '">Gizlilik ve güvenlik</a>'
+                . '<a href="' . $adminLookup('navigasyon') . '">Navigasyon</a>'
+                . '<a href="' . $adminLookup('yetki') . '">İzinler ve roller</a>'
+                . '<a href="' . $adminLookup('entegrasyon') . '">Entegrasyonlar</a></nav></details>'
+                . '<details class="acp-app-nav-group"><summary>▧ <span>Eklentiler</span></summary><nav aria-label="Eklenti araçları">'
+                . '<a href="' . $adminLookup('eklenti') . '">Eklenti yöneticisi</a>'
+                . '<a href="' . $adminLookup('modül') . '">Modüller</a></nav></details>'
+                . '<details class="acp-app-nav-group"><summary>▤ <span>İçerik</span></summary><nav aria-label="İçerik araçları">'
+                . '<a href="' . $adminLookup('konu') . '">Konular ve içerikler</a>'
+                . '<a href="' . $adminLookup('forum') . '">Forumlar ve kategoriler</a>'
+                . '<a href="' . $adminLookup('medya') . '">Medya</a></nav></details>'
+                . '<details class="acp-app-nav-group"><summary>♙ <span>Kullanıcılar</span></summary><nav aria-label="Üye araçları">'
+                . '<a href="' . $adminLookup('kullanıcı') . '">Kullanıcılar</a>'
+                . '<a href="' . $adminLookup('grup') . '">Gruplar</a>'
+                . '<a href="' . $adminLookup('moderasyon') . '">Moderasyon</a></nav></details>'
+                . '<details class="acp-app-nav-group"><summary>◈ <span>Görünüm</span></summary><nav aria-label="Görünüm araçları">'
+                . '<a href="' . $adminLookup('tema') . '">Temalar</a>'
+                . '<a href="' . $adminLookup('görünüm') . '">Görünüm ayarları</a></nav></details>'
+                . '<details class="acp-app-nav-group"><summary>▥ <span>Analiz ve sistem</span></summary><nav aria-label="Sistem araçları">'
+                . '<a href="' . $adminLookup('rapor') . '">Raporlar</a>'
+                . '<a href="' . $adminLookup('log') . '">İşlem günlükleri</a></nav></details>'
+                . '<a class="acp-app-return" href="' . $home . '">← Foruma dön</a></aside>';
+            $mainHtml = '<div class="acp-app-layout">' . $adminSidebar . $mainHtml . '</div>';
+        }
+
         $footerHtml = '<footer class="site-footer"><div class="footerin">'
             . $footerBefore
             . '<div class="core-brand-footer"><strong>Forwext</strong><span>Açık kaynak, modern topluluk forum altyapısı.</span>'
@@ -395,6 +432,14 @@ final class ProfileHtml
         $surfaceAttribute = str_contains($headAssets, '/assets/admin.css')
             ? ' data-forwext-surface="admin"'
             : '';
+        $adminChrome = $surfaceAttribute !== ''
+            ? '<header class="acp-app-topbar" aria-label="Yönetim üst menüsü">'
+                . '<a href="' . $home . '" aria-label="Forum ana sayfasına dön">⌂</a>'
+                . '<a class="acp-app-topbar-name" href="' . $navHref('/admin') . '">Forwext</a>'
+                . '<span>Administration</span>'
+                . '<a class="acp-app-topbar-exit" href="' . $home . '">Foruma dön ↗</a>'
+                . '</header>'
+            : '';
 
         return '<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -405,8 +450,13 @@ final class ProfileHtml
             . '<link rel="stylesheet" href="' . $siteComponentsStylesheet . '">'
             . '<link rel="stylesheet" href="' . $sitePagesStylesheet . '">' . $headAssets
             . '</head><body data-forwext-background-scope="site"' . $surfaceAttribute . '>'
-            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $pageBeforeHtml
+            . '<a class="skip-link" href="#main-content">İçeriğe geç</a>' . $adminChrome . $pageBeforeHtml
             . '<header class="top" data-forwext-background-scope="header">' . $headerBefore
+            . '<div class="community-utility"><div class="community-utility-inner">'
+            . '<a href="' . $home . '">Forwext</a>'
+            . '<nav aria-label="Üst bağlantılar"><a href="' . $navHref('/forums') . '">Forumlar</a>'
+            . '<a href="' . $navHref('/activity') . '">Son hareketlilik</a>'
+            . '<a href="' . $navHref('/help') . '">Yardım</a></nav></div></div>'
             . '<div class="top-main"><div class="topin">'
             . '<a class="brand" href="' . $home . '" aria-label="Forwext ana sayfa">'
             . '<span class="brand-copy"><strong>Forwext</strong></span></a>'

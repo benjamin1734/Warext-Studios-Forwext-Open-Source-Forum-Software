@@ -240,14 +240,30 @@ try {
         fail(`${testCase.name}: desktop navigation is incorrectly inert/hidden`);
       }
 
-      const menuSummary = page.locator(".nav-primary-menu > summary");
-      await menuSummary.focus();
-      await page.keyboard.press("Enter");
-      const opened = await page.$eval(".nav-primary-menu", (element) => element.hasAttribute("open"));
-      if (!opened) fail(`${testCase.name}: details navigation did not open from keyboard`);
-      await page.keyboard.press("Escape");
-      const closed = await page.$eval(".nav-primary-menu", (element) => !element.hasAttribute("open"));
-      if (!closed) fail(`${testCase.name}: Escape did not close navigation details`);
+      if (testCase.admin) {
+        const appSidebar = page.locator(".acp-app-sidebar");
+        if (!(await appSidebar.isVisible())) fail(`${testCase.name}: dedicated ACP sidebar is not visible`);
+        if (await page.locator(".nav-primary").isVisible()) {
+          fail(`${testCase.name}: public navigation leaked into the administration shell`);
+        }
+        const setupSummary = appSidebar.locator(".acp-app-nav-group > summary").first();
+        await setupSummary.focus();
+        await page.keyboard.press("Enter");
+        const collapsed = await appSidebar.locator(".acp-app-nav-group").first().evaluate((element) => !element.open);
+        if (!collapsed) fail(`${testCase.name}: ACP sidebar group is not keyboard collapsible`);
+        await page.keyboard.press("Enter");
+        const reopened = await appSidebar.locator(".acp-app-nav-group").first().evaluate((element) => element.open);
+        if (!reopened) fail(`${testCase.name}: ACP sidebar group cannot be reopened with keyboard`);
+      } else {
+        const menuSummary = page.locator(".nav-primary-menu > summary");
+        await menuSummary.focus();
+        await page.keyboard.press("Enter");
+        const opened = await page.$eval(".nav-primary-menu", (element) => element.hasAttribute("open"));
+        if (!opened) fail(`${testCase.name}: details navigation did not open from keyboard`);
+        await page.keyboard.press("Escape");
+        const closed = await page.$eval(".nav-primary-menu", (element) => !element.hasAttribute("open"));
+        if (!closed) fail(`${testCase.name}: Escape did not close navigation details`);
+      }
     }
 
     const postSummary = page.locator("[data-browser-post-menu] > summary");
