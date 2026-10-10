@@ -93,8 +93,8 @@ try {
   if (forumHomeLayout.layoutDisplay !== "grid" || forumHomeLayout.layoutColumns !== 2) {
     fail(`home: forum/sidebar layout is not a two-column desktop grid ${JSON.stringify(forumHomeLayout)}`);
   }
-  if (forumHomeLayout.statsDisplay !== "grid" || forumHomeLayout.statsColumns !== 3) {
-    fail(`home: community statistics are not a three-column grid ${JSON.stringify(forumHomeLayout)}`);
+  if (forumHomeLayout.statsDisplay !== "grid" || forumHomeLayout.statsColumns !== 1) {
+    fail(`home: community statistics are not reference-style stacked counters ${JSON.stringify(forumHomeLayout)}`);
   }
   if (forumHomeLayout.emptyRecentHeight !== null && forumHomeLayout.emptyRecentHeight > 110) {
     fail(`home: empty recent-activity panel is unnecessarily tall (${forumHomeLayout.emptyRecentHeight}px)`);
@@ -1564,6 +1564,12 @@ try {
       viewport: window.innerWidth,
     };
   });
+  if ((await page.locator(".acp-app-topbar").count()) !== 1) {
+    fail("admin: isolated app topbar is missing");
+  }
+  if (await page.locator("body[data-forwext-surface='admin'] .top").isVisible()) {
+    fail("admin: public forum navigation should not occupy the admin workspace");
+  }
   if (
     adminAppChrome.columns !== 2 || !adminAppChrome.sidebarVisible
     || adminAppChrome.searchLinks < 8 || adminAppChrome.charts !== 2
