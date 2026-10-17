@@ -150,6 +150,34 @@ try {
         if (route.startsWith("/admin")) {
           await page.locator('[data-acp-navigation-list][data-acp-navigation-loaded="1"]').waitFor({ timeout: 5000 });
         }
+        if (route.startsWith("/admin")) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          const visibility = await page.evaluate(() => {
+            const main = document.querySelector("#main-content");
+            const content = main?.firstElementChild;
+            const h1 = main?.querySelector("h1");
+            const rect = (element) => {
+              if (!element) return null;
+              const r = element.getBoundingClientRect();
+              const style = getComputedStyle(element);
+              return {top:Math.round(r.top),left:Math.round(r.left),
+                width:Math.round(r.width),height:Math.round(r.height),
+                display:style.display,opacity:style.opacity,visibility:style.visibility};
+            };
+            return {scrollY:window.scrollY,viewportHeight:window.innerHeight,
+              main:rect(main),content:rect(content),heading:rect(h1),
+              headingText:h1?.textContent?.trim().slice(0,100) ?? null};
+          });
+          record.contentVisibility = visibility;
+          console.log("ACP VISUAL ROUTE", name, viewport.label, JSON.stringify(visibility));
+          if (!visibility.content || visibility.content.height === 0
+              || visibility.content.display === "none" || visibility.content.visibility !== "visible") {
+            throw new Error("ACP route has no visible main content: " + JSON.stringify(visibility));
+          }
+          if (visibility.content.top >= visibility.viewportHeight) {
+            throw new Error("ACP content starts below viewport: " + JSON.stringify(visibility));
+          }
+        }
         if (name === "admin-home" && viewport.label === "desktop") {
           const diagnostics = await page.evaluate(() => {
             const targets = [".acp-dashboard", ".acp-ux-guide", ".acp-hero", ".acp-overview",
