@@ -32,7 +32,14 @@ final class AdminAssetsHtml
             'UTF-8',
         );
 
+        $formSafetyScript = htmlspecialchars(
+            $basePath->prepend('/assets/admin-form-safety.js'),
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8',
+        );
+
         return '<link rel="stylesheet" href="' . $href . '">'
-            . '<script src="' . $script . '" defer></script>';
+            . '<script src="' . $script . '" defer></script>'
+            . '<script src="' . $formSafetyScript . '" defer></script>';
     }
 }
