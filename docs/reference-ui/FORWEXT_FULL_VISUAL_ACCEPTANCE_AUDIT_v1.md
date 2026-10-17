@@ -20,6 +20,10 @@ Forum index category bars now provide compact native expand/collapse behavior wi
 
 The real ACP shared asset now includes a compact unsaved-changes state in POST edit forms, with native reset and navigation protection. Keyboard/pointer inputs and real installed forum-node editor regression exercise this state. This does **not** prove individual group/role/node modal equivalence, cannot substitute a reference image comparison, and does not change the 562-image manual acceptance gate.
 
+## v1.0.27 thread view permalink and copy-link evidence
+
+Thread message headers now expose page-aware, resolvable permalinks and first-party copy actions. Unlike prior fragment-only links, sharing a post from a later page preserves the page query, with no hidden reply/reaction dependency. Keyboard interaction, clipboard-denial feedback, current focus restoration and targeted-post emphasis are maintained in the compact forum page layout. The real installed-thread screenshot collector exercises a genuine posted message and compares the copied URL to the rendered destination when seed data permits. Multi-page data and every interactive/modal reference screenshot still require dedicated live state and human visual inspection: overall 562-state parity is **not verified**.
+
 ## v1.0.26 forum home/navigation observations
 
 The first public forum reference (REF-0001) places current discussions, staff, online users, statistics and sharing in a compact sidebar beside the forum category directory. The implementation now uses the existing visibility-scoped presence service, published/permission-filtered forum reader, authorized composer destinations, and a no-third-party share control. Additional live browser captures follow actual visible forum/thread links and explicitly record absence when a thread cannot be captured. This closes specific *functional/reference-structure gaps*, but does not assert pixel identity. Identity of thread/profile interaction states and the complete 562-image manual visual matrix remain open.
