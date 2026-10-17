@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.24
+CURRENT_VERSION = 1.0.25
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
@@ -13,6 +13,14 @@ LAST_COMMIT = see current GitHub main
 BLOCKERS = none
 NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
 ```
+
+## v1.0.25 ACP directory scalability and visual evidence gate — 2026-10-17
+
+- ACP user search no longer silently truncates after 100 accounts: the authoritative database service counts filtered records and returns stable, bounded 50-account pages with deterministic timestamp/ID ordering.
+- The user directory exposes an accessible numeric pager with previous/next, first/last, current-page semantics, and preserved search context; selected user details remain permission-scoped, and validated page queries reject malformed inputs.
+- Real installed MySQL browser acceptance seeds 121 independent fixture accounts, checks pages two and three and query persistence, and rejects out-of-range page input.
+- The installed screenshot collector resets route scroll and records ACP main-content geometry. Its gate fails an ACP reference capture when the main content is hidden, collapsed or starts entirely below the viewport; HTTP 200 alone cannot qualify visual health.
+- Manual exact-pixel comparison with the 562-image reference set is still outstanding. Any CI failure in this new visual gate must be resolved before the release is certified.
 
 ## v1.0.24 ACP unsaved edit safety — 2026-10-17
 

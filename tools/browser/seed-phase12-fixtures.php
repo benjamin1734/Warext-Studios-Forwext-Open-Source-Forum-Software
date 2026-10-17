@@ -63,6 +63,34 @@ if ($historyExists === 0) {
     ));
 }
 
+// Exercise a real multi-page ACP directory without altering existing identity fixtures.
+for ($index = 1; $index <= 121; $index++) {
+    $id = substr(hash('sha256', 'forwext-phase25-pagination-' . $index), 0, 32);
+    $username = sprintf('phase25-member-%03d', $index);
+    $email = $username . '@forwext.test';
+    $database->execute(new CompiledQuery(
+        'INSERT INTO forwext_users '
+        . '(user_id,username,username_key,email,email_key,status,locale,timezone,version,created_at_utc,updated_at_utc) '
+        . 'VALUES (:id,:username,:username_key,:email,:email_key,'
+        . "'active','tr-TR','Europe/Istanbul',1,'2026-10-01 09:00:00.000000','2026-10-05 12:00:00.000000') "
+        . 'ON DUPLICATE KEY UPDATE username=VALUES(username),username_key=VALUES(username_key),'
+        . 'email=VALUES(email),email_key=VALUES(email_key)',
+        [
+            'id'=>$id,
+            'username'=>$username,
+            'username_key'=>$username,
+            'email'=>$email,
+            'email_key'=>$email,
+        ],
+    ));
+}
+$paginationCount = (int) $database->fetchValue(new CompiledQuery(
+    "SELECT COUNT(*) FROM forwext_users WHERE username LIKE 'phase25-member-%'",
+));
+if ($paginationCount !== 121) {
+    throw new RuntimeException('Phase 25 ACP directory pagination fixtures are incomplete.');
+}
+
 $userCount = (int) $database->fetchValue(new CompiledQuery(
     "SELECT COUNT(*) FROM forwext_users WHERE user_id=:id AND username_key='phase12-member' AND status='active'",
     ['id'=>$userId],

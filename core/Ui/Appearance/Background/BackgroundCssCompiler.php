@@ -70,9 +70,15 @@ final class BackgroundCssCompiler
     private function foregroundRule(BackgroundDefinition $definition, string $selector): string
     {
         if ($definition->scope === BackgroundScope::Site) {
+            // The generated site background is a z-index:0 body pseudo-element.
+            // Every direct-child content shell must sit above that layer. ACP
+            // renders its main element inside .acp-app-layout rather than as
+            // a direct child of body, so missing this shell hid the admin
+            // workspace while its independently stacked sidebar stayed visible.
             return $selector . '>header,' . $selector . '>main,'
-                . $selector . '>.layout-shell,' . $selector . '>footer,'
-                . $selector . '>.ui-page-slot{position:relative;z-index:1}';
+                . $selector . '>.layout-shell,' . $selector . '>.acp-app-layout,'
+                . $selector . '>footer,' . $selector
+                . '>.ui-page-slot{position:relative;z-index:1}';
         }
 
         return $selector . '>*{position:relative;z-index:1}';

@@ -98,6 +98,7 @@ final readonly class AdminCommunityHandler implements RequestHandlerInterface
                     $actor,
                     $uxQuery,
                     self::optionalHexId($query['user'] ?? null),
+                    self::queryPage($query),
                 ),
                 'access'=>$this->community->accessSnapshot($actor, null, null, null, '', null),
             ],
@@ -298,6 +299,21 @@ final readonly class AdminCommunityHandler implements RequestHandlerInterface
     }
 
     /** @param array<string,mixed> $query */
+    /** @param array<string,mixed> $query */
+    private static function queryPage(array $query): int
+    {
+        $raw = $query['page'] ?? '1';
+        if (!is_string($raw) || preg_match('/^[1-9][0-9]{0,5}$/D', $raw) !== 1) {
+            throw new InvalidArgumentException('ACP user page is invalid.');
+        }
+        $page = (int) $raw;
+        if ($page > 100000) {
+            throw new InvalidArgumentException('ACP user page is out of range.');
+        }
+
+        return $page;
+    }
+
     private static function queryString(array $query, string $key, int $max): string
     {
         $value = $query[$key] ?? '';

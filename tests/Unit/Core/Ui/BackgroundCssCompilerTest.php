@@ -45,6 +45,33 @@ final class BackgroundCssCompilerTest extends TestCase
         self::assertStringContainsString('animation:none!important', $css);
     }
 
+    public function testSiteBackgroundStacksNestedAdministrationWorkspaceAbovePseudoLayer(): void
+    {
+        $tokens = DesignTokenCatalog::coreDefaults();
+        $css = (new BackgroundCssCompiler())->compile(
+            BackgroundRegistry::coreDefaults($tokens),
+            $tokens,
+            new BasePath(''),
+        );
+
+        self::assertStringContainsString(
+            'body[data-forwext-background-scope="site"]::before',
+            $css,
+        );
+        self::assertStringContainsString(
+            'body[data-forwext-background-scope="site"]>.acp-app-layout,',
+            $css,
+        );
+        self::assertStringContainsString(
+            'body[data-forwext-background-scope="site"]>footer,',
+            $css,
+        );
+        self::assertStringContainsString(
+            '>.ui-page-slot{position:relative;z-index:1}',
+            $css,
+        );
+    }
+
     public function testCompilerSupportsSafeImageAndEntityScopesWithBasePath(): void
     {
         $tokens = DesignTokenCatalog::coreDefaults();

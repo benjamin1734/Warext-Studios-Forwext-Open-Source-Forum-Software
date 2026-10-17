@@ -1749,6 +1749,35 @@ try {
   ) {
     fail(`admin users: selected user contract failed ${JSON.stringify(userDetailState)}`);
   }
+  response = await page.goto(baseUrl + "/admin/users?q=phase25&page=2", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin users pagination: page 2 not reachable");
+  const secondPage = await page.evaluate(() => ({
+    rows: document.querySelectorAll(".ac-user-table tbody tr").length,
+    current: document.querySelector('.ac-user-page[aria-current="page"]')?.textContent?.trim(),
+    preserved: [...document.querySelectorAll(".ac-user-pagination a")].every((link) =>
+      link.getAttribute("href")?.includes("q=phase25")
+    ),
+    summary: document.querySelector(".ac-user-result-summary")?.textContent?.trim(),
+  }));
+  if (secondPage.rows !== 50 || secondPage.current !== "2" || !secondPage.preserved
+    || !secondPage.summary?.includes("121")) {
+    fail(`admin users pagination: second-page contract failed ${JSON.stringify(secondPage)}`);
+  }
+
+  response = await page.goto(baseUrl + "/admin/users?q=phase25&page=3", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin users pagination: last page not reachable");
+  const thirdPage = await page.evaluate(() => ({
+    rows: document.querySelectorAll(".ac-user-table tbody tr").length,
+    current: document.querySelector('.ac-user-page[aria-current="page"]')?.textContent?.trim(),
+    context: document.querySelector(".ac-user-pagination-context")?.textContent?.trim(),
+  }));
+  if (thirdPage.rows !== 21 || thirdPage.current !== "3" || !thirdPage.context?.includes("3 / 3")) {
+    fail(`admin users pagination: last-page contract failed ${JSON.stringify(thirdPage)}`);
+  }
+  response = await page.request.get(baseUrl + "/admin/users?q=phase25&page=100001");
+  if (!response || response.status() !== 400) fail("admin users pagination: invalid page not rejected");
+  response = await page.goto(baseUrl + "/admin/users?user=12121212121212121212121212121212&q=phase12", { waitUntil: "domcontentloaded" });
+  if (!response || response.status() !== 200) fail("admin users: selected user did not recover after invalid page");
   await assertHealthyDocument("admin users desktop");
 
   await page.setViewportSize({ width: 390, height: 844 });
