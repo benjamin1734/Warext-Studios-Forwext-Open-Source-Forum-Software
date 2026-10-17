@@ -170,6 +170,41 @@ try {
           });
           record.contentVisibility = visibility;
           console.log("ACP VISUAL ROUTE", name, viewport.label, JSON.stringify(visibility));
+
+          if (visibility.heading && visibility.heading.width > 0 && visibility.heading.height > 0) {
+            const paint = await page.screenshot({ fullPage:false, type:"png", animations:"disabled" });
+            const pixels = await page.evaluate(async (dataUrl) => {
+              const heading = document.querySelector("#main-content h1");
+              if (!heading) return { bright:0,total:0,topmost:[] };
+              const r=heading.getBoundingClientRect();
+              const x=Math.max(0,Math.floor(r.x)),y=Math.max(0,Math.floor(r.y));
+              const image=new Image();
+              image.src=dataUrl;
+              await image.decode();
+              const canvas=document.createElement("canvas");
+              canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+              const ctx=canvas.getContext("2d",{willReadFrequently:true});
+              if (!ctx) throw new Error("Canvas context unavailable");
+              ctx.drawImage(image,0,0);
+              let bright=0,total=0;
+              for (let yy=y;yy<Math.min(canvas.height,y+r.height);yy+=2) {
+                for (let xx=x;xx<Math.min(canvas.width,x+r.width);xx+=2) {
+                  const rgba=ctx.getImageData(xx,yy,1,1).data;
+                  total++;
+                  if (Math.max(rgba[0],rgba[1],rgba[2])>110) bright++;
+                }
+              }
+              return {bright,total,topmost:document.elementsFromPoint(
+                Math.min(innerWidth-1,x+8),Math.min(innerHeight-1,y+8)
+              ).slice(0,5).map(el=>el.tagName+"."+String(el.className).slice(0,45))};
+            }, "data:image/png;base64," + paint.toString("base64"));
+            record.paint = pixels;
+            console.log("ACP PAINT PROOF", name, viewport.label, JSON.stringify(pixels));
+            if (pixels.bright < 5) {
+              throw new Error("ACP heading is present in DOM but not painted: " + JSON.stringify(pixels));
+            }
+          }
+
           if (!visibility.content || visibility.content.height === 0
               || visibility.content.display === "none" || visibility.content.visibility !== "visible") {
             throw new Error("ACP route has no visible main content: " + JSON.stringify(visibility));
