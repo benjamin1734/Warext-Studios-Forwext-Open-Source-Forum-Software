@@ -4220,3 +4220,38 @@ body:has(.forum-home-layout) .forum-mini-stats span:after{content:":"}
   body:has(.forum-home-layout) .forum-node-counts{grid-column:2;display:flex;justify-content:flex-start;gap:14px}
   body:has(.forum-home-layout) .forum-node-last{grid-column:2}
 }
+
+
+/* Compact reference-style community counters: label/value pairs stacked inside
+ * the sidebar rather than three undersized statistic tiles. */
+body:has(.forum-home-layout) .forum-home-side .forum-mini-stats{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  padding:4px 9px 9px;
+}
+body:has(.forum-home-layout) .forum-home-side .forum-mini-stats>div{
+  display:flex;
+  flex-direction:row-reverse;
+  align-items:center;
+  justify-content:space-between;
+  min-width:0;
+  min-height:26px;
+  padding:4px 1px;
+  border:0;
+  border-bottom:1px solid #2b2b2b;
+  background:transparent;
+  text-align:left;
+}
+body:has(.forum-home-layout) .forum-home-side .forum-mini-stats>div:last-child{border-bottom:0}
+body:has(.forum-home-layout) .forum-home-side .forum-mini-stats strong{
+  font-size:12px;
+  font-weight:700;
+  color:#9bc4de;
+}
+body:has(.forum-home-layout) .forum-home-side .forum-mini-stats span{
+  font-size:10px;
+  color:#aebac1;
+  letter-spacing:0;
+  text-transform:none;
+}
