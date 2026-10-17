@@ -206,6 +206,21 @@ $adminContent = <<<'HTML'
     </div>
   </section>
 
+  <section class="ac-panel" data-browser-acp-editor>
+    <h2>Kaydedilmemiş düzenlemeler</h2>
+    <form class="ac-form" method="post" action="#fixture-admin">
+      <input type="hidden" name="_csrf" value="fixture-csrf">
+      <label>Görünen ad<input name="name" value="Örnek yapılandırma"></label>
+      <label>Durum<select name="visibility"><option value="listed">Görünür</option><option value="disabled">Kapalı</option></select></label>
+      <label><input type="checkbox" name="allow_replies" checked> Yanıtları etkinleştir</label>
+      <button class="ac-btn" type="submit">Kaydet</button>
+    </form>
+    <form class="ac-form" method="get" action="#fixture-admin">
+      <label>Yalnız arama<input name="q" value="örnek"></label>
+      <button class="ac-btn" type="button">Ara</button>
+    </form>
+  </section>
+
   <section class="mod-panel" data-browser-acp-module>
     <h2>First-party Module Manager</h2>
     <form class="mod-filter" action="#" method="get">
@@ -304,6 +319,7 @@ foreach ($fixtures as $name => $html) {
         static function (array $match): string {
             return str_ends_with($match[1], '/assets/mobile-nav.js')
                 || str_ends_with($match[1], '/assets/admin-navigation.js')
+                || str_ends_with($match[1], '/assets/admin-form-safety.js')
                 || str_ends_with($match[1], '/assets/forum-categories.js')
                 ? $match[0]
                 : '';
