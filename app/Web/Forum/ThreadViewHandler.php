@@ -118,6 +118,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             }
         }
 
+        $canonicalThreadUrl = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()));
         $body = '<section class="thread-view-head forum-page-head"><div class="thread-view-title"><div class="thread-badges">'
             . ($thread->isSticky() ? '<span class="thread-badge">Sabit</span>' : '')
             . ($thread->isFeatured() ? '<span class="thread-badge thread-badge--accent">Öne çıkan</span>' : '')
@@ -131,7 +132,10 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             $body .= '<a class="fx-btn fx-btn--primary" href="#quick-reply">Yanıtla</a>';
         }
         $body .= '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value())))
-            . '">Foruma dön</a></div>';
+            . '">Foruma dön</a>'
+            . '<button type="button" class="fx-btn thread-copy-button" data-thread-copy-url="'
+            . self::e($canonicalThreadUrl) . '">Konuyu paylaş</button>'
+            . '<span class="thread-copy-status sr-only" role="status" aria-live="polite"></span></div>';
         if ($actor !== null && is_string($csrfToken) && $csrfToken !== '') {
             $body .= '<div class="thread-view-action-follow">' . DiscussionWatchHtml::form(
                 $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/watch'),
@@ -165,6 +169,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             foreach ($posts['rows'] as $post) {
                 $body .= $this->renderPost(
                     $post,
+                    $posts['page'],
                     $thread,
                     $actor,
                     $canReply,
@@ -188,7 +193,8 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             breadcrumbs: $this->breadcrumbs($hierarchy, $forum, $thread),
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
-            headAssets: $canReply ? RichEditorView::assets($this->basePath) : '',
+            headAssets: ($canReply ? RichEditorView::assets($this->basePath) : '')
+                . '<script src="' . self::e($this->basePath->prepend('/assets/thread-post-share.js')) . '" defer></script>',
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
     }
 
@@ -275,6 +281,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
     /** @param array{post_id:string,position:int,body_source:string,created_at:string,updated_at:string,author_user_id:?string,author_username:?string} $post */
     private function renderPost(
         array $post,
+        int $page,
         Thread $thread,
         ?EntityId $actor,
         bool $canReply,
@@ -285,6 +292,10 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             ? null
             : $this->basePath->prepend('/members/' . rawurlencode($post['author_username']));
         $initial = self::initial($username);
+        // A fragment-only permalink loses its page when copied from a paginated thread.
+        // Include the real page so a shared post link always resolves to that post.
+        $permalink = $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()))
+            . ($page > 1 ? '?page=' . $page : '') . '#post-' . rawurlencode($post['post_id']);
 
         try {
             $content = $this->preview->preview($post['body_source'])->html;
@@ -327,9 +338,12 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '<div class="thread-post-author-copy">' . $author . $authorBadges . $authorLinks . '</div></aside>'
             . '<div class="thread-post-body"><header class="thread-post-meta">'
             . '<time datetime="' . self::e($post['created_at']) . '">' . self::e(self::date($post['created_at'])) . '</time>'
-            . '<a class="thread-post-permalink" href="#post-' . self::e($post['post_id']) . '" aria-label="Mesaj '
+            . '<a class="thread-post-permalink" href="' . self::e($permalink) . '" aria-label="Mesaj '
             . number_format($post['position'], 0, ',', '.') . ' bağlantısı">#'
-            . number_format($post['position'], 0, ',', '.') . '</a></header>'
+            . number_format($post['position'], 0, ',', '.') . '</a>'
+            . '<button type="button" class="thread-post-copy" data-thread-copy-url="' . self::e($permalink)
+            . '" aria-label="Mesaj ' . number_format($post['position'], 0, ',', '.') . ' bağlantısını kopyala">'
+            . 'Kopyala</button><span class="thread-copy-status sr-only" role="status" aria-live="polite"></span></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
             . $this->renderAttachments($attachments)
             . '<footer class="thread-post-footer"><div class="thread-post-footer-meta">' . $edited . '</div>'
