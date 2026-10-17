@@ -89,6 +89,7 @@ const viewports = [
 
 const browser = await chromium.launch({ headless: true });
 const records = [];
+const stateRecords = [];
 let failures = 0;
 
 try {
@@ -195,6 +196,41 @@ try {
           quality: 84,
           animations: "disabled",
         });
+        if (name === "forum-index") {
+          const disclosure = page.locator("details.forum-category[data-forum-category-key]").first();
+          if (await disclosure.count() === 0) {
+            stateRecords.push({
+              name: "forum-index-category-collapsed",
+              viewport: viewport.label,
+              captured: false,
+              reason: "No published and visible category in this installed fixture",
+              referenceIds: ["REF-0001", "REF-0066", "REF-0129", "REF-0535"],
+            });
+          } else {
+            await disclosure.locator(":scope > summary").click();
+            const hiddenRows = await disclosure.evaluate((element) =>
+              !element.open && getComputedStyle(element.querySelector(".forum-node-list")).display === "none"
+            );
+            if (!hiddenRows) throw new Error("Category disclosure did not hide its rows");
+            const file = `forum-index-category-collapsed-${viewport.label}.jpg`;
+            await page.screenshot({
+              path: path.join(output, file),
+              fullPage: true,
+              type: "jpeg",
+              quality: 84,
+              animations: "disabled",
+            });
+            stateRecords.push({
+              name: "forum-index-category-collapsed",
+              viewport: viewport.label,
+              captured: true,
+              screenshot: file,
+              referenceIds: ["REF-0001", "REF-0066", "REF-0129", "REF-0535"],
+              manuallySignedOff: false,
+            });
+            await disclosure.locator(":scope > summary").click();
+          }
+        }
       } catch (error) {
         record.error = String(error).slice(0, 800);
       }
@@ -211,6 +247,7 @@ try {
     captures: records.length,
     failures,
     capturesAreNotVisualSignoff: true,
+    stateRecords,
     records,
   }, null, 2) + "\n");
   await context.close();
