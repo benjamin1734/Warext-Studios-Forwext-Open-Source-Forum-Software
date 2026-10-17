@@ -100,6 +100,31 @@ try {
     fail(`home: empty recent-activity panel is unnecessarily tall (${forumHomeLayout.emptyRecentHeight}px)`);
   }
   await assertHealthyDocument("home");
+  const guestForumSummary = await page.evaluate(() => ({
+    staffLinks: document.querySelectorAll('.forum-side-card--staff a[href*="/members/staff"]').length,
+    onlineLinks: document.querySelectorAll('.forum-side-card--online a[href*="/members/online"]').length,
+    shareButtons: document.querySelectorAll('[data-forum-share-copy]').length,
+    unauthorizedCreateLinks: document.querySelectorAll('.forum-create-menu, .forum-hero-actions a[href*="/new-thread"]').length,
+    sidebars: document.querySelectorAll(".forum-home-side .forum-side-card").length,
+  }));
+  if (guestForumSummary.staffLinks !== 1 || guestForumSummary.onlineLinks !== 1
+    || guestForumSummary.shareButtons !== 1 || guestForumSummary.unauthorizedCreateLinks !== 0
+    || guestForumSummary.sidebars < 5) {
+    fail(`home: reference sidebar or guest permissions mismatch ${JSON.stringify(guestForumSummary)}`);
+  }
+  await page.evaluate(() => {
+    window.forwextCopiedLink = "";
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {writeText: async (text) => { window.forwextCopiedLink = text; }},
+    });
+  });
+  await page.locator("[data-forum-share-copy]").click();
+  await page.getByRole("status").filter({hasText:"Sayfa bağlantısı kopyalandı."}).waitFor();
+  const copiedLink = await page.evaluate(() => window.forwextCopiedLink);
+  if (copiedLink !== baseUrl + "/") {
+    fail(`home: copy-link action copied incorrect URL ${copiedLink}`);
+  }
 
   response = await page.goto(baseUrl + "/login", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("login: real route did not return HTTP 200");
@@ -114,6 +139,21 @@ try {
   }
   await page.locator(".nav-account-menu").waitFor({ state: "visible" });
   await assertHealthyDocument("authenticated home");
+  const chooser = page.locator("details.forum-create-menu");
+  if (await chooser.count()) {
+    await chooser.locator("summary").click();
+    const choices = chooser.locator('.forum-create-options a[href$="/new-thread"]');
+    if (await choices.count() < 2) fail("home: multi-forum chooser does not expose authorized forums");
+    if (!(await chooser.getAttribute("open"))) {
+      // The HTML boolean attribute has an empty string when present.
+      if (!(await chooser.evaluate(node => node.open))) fail("home: native create menu is not open");
+    }
+    await chooser.locator("summary").click();
+  }
+  const directCreate = page.locator('.forum-hero-actions > a[href$="/new-thread"]');
+  if ((await chooser.count()) === 0 && (await directCreate.count()) > 1) {
+    fail("home: direct forum composer shortcut is ambiguous");
+  }
 
   const srOnlyVisible = await page.evaluate(() =>
     [...document.querySelectorAll(".nav-icon-link .sr-only")].some((element) => {
