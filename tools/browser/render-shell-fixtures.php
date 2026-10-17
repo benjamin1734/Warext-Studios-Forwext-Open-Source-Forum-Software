@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Forwext\App\Web\Admin\AdminAssetsHtml;
 use Forwext\App\Web\Profile\ProfileHtml;
 use Forwext\Core\Ui\Breadcrumb\BreadcrumbTrail;
 use Forwext\Core\Routing\BasePath;
@@ -269,8 +270,7 @@ $fixtures = [
     'member' => ProfileHtml::page('Tarayıcı Testi · Üye', $forumContent, $basePath, authenticated: true),
 ];
 
-$adminHeadAssets = '<link rel="stylesheet" href="'
-    . ProfileHtml::escape($basePath->prepend('/assets/admin.css')) . '">';
+$adminHeadAssets = AdminAssetsHtml::headAssets($basePath);
 $fixtures['admin'] = ProfileHtml::page(
     'Tarayıcı Testi · Administration',
     $adminContent,
@@ -300,7 +300,10 @@ foreach ($fixtures as $name => $html) {
     $html = preg_replace_callback(
         '/<script src="([^"]+)" defer><\/script>/',
         static function (array $match): string {
-            return str_ends_with($match[1], '/assets/mobile-nav.js') ? $match[0] : '';
+            return str_ends_with($match[1], '/assets/mobile-nav.js')
+                || str_ends_with($match[1], '/assets/admin-navigation.js')
+                ? $match[0]
+                : '';
         },
         $html,
     );
