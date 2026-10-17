@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.23
+CURRENT_VERSION = 1.0.24
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
@@ -13,6 +13,14 @@ LAST_COMMIT = see current GitHub main
 BLOCKERS = none
 NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
 ```
+
+## v1.0.24 ACP unsaved edit safety — 2026-10-17
+
+- The centralized ACP asset helper now enhances real POST editing forms with unobtrusive, responsive unsaved-state indicators, per-form reset controls and browser-native leave warnings; GET filters/search and public pages are excluded.
+- Form state fingerprints include text fields, single/multi-select, checkbox and radio values without inspecting secrets outside editable fields. Disabled/readonly/hidden controls are omitted. The original server-side validation, permissions, CSRF and save actions remain authoritative.
+- The editor's own successful submit is not obstructed by its unsaved warning; independent dirty editors still keep navigation guarding. The recovery action resets the full native form state, not just visible text labels.
+- Fixture browser tests cover untouched, changed text/select/checkbox, reset, beforeunload and GET isolation. Installed MySQL-backed live routes now exercise a real forum-node form and verify cancelling edits causes no persisted mutation.
+- This is an ACP workflow/visual-state refinement, not a signed-off pixel-level match to all 562 reference screenshots.
 
 ## v1.0.23 forum index disclosure and state evidence — 2026-10-17
 
