@@ -205,6 +205,40 @@ try {
             }, "data:image/png;base64," + paint.toString("base64"));
             record.paint = pixels;
             console.log("ACP PAINT PROOF", name, viewport.label, JSON.stringify(pixels));
+            if (pixels.bright < 5 && name === "admin-home" && viewport.label === "desktop") {
+              const ancestors = await page.evaluate(() => {
+                let node = document.querySelector("#main-content h1");
+                const result=[];
+                while (node) {
+                  const cs=getComputedStyle(node);
+                  result.push({tag:node.tagName,classes:node.className,
+                    color:cs.color,background:cs.backgroundColor,display:cs.display,
+                    opacity:cs.opacity,visibility:cs.visibility,filter:cs.filter,
+                    transform:cs.transform,maskImage:cs.maskImage,
+                    clipPath:cs.clipPath,contentVisibility:cs.contentVisibility,
+                    mixBlendMode:cs.mixBlendMode,fontSize:cs.fontSize,
+                    contain:cs.contain});
+                  node=node.parentElement;
+                }
+                return result;
+              });
+              console.log("ACP PAINT ANCESTOR DEBUG",JSON.stringify(ancestors));
+              const forced = await page.addStyleTag({ content:
+                'body[data-forwext-surface="admin"] #main-content {background:rgb(250,20,20)!important;color:white!important}' +
+                'body[data-forwext-surface="admin"] #main-content h1 {background:rgb(250,250,250)!important;color:black!important}'
+              });
+              const image = await page.screenshot({fullPage:false,type:"png",animations:"disabled"});
+              const sample=await page.evaluate(async (url) => {
+                const el=document.querySelector("#main-content h1"),r=el.getBoundingClientRect();
+                const img=new Image();img.src=url;await img.decode();
+                const can=document.createElement("canvas");can.width=img.width;can.height=img.height;
+                const ctx=can.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
+                return [ctx.getImageData(Math.floor(r.x+8),Math.floor(r.y+8),1,1).data.toString(),
+                  ctx.getImageData(Math.floor(r.x+8),Math.floor(r.y+r.height+15),1,1).data.toString()];
+              },"data:image/png;base64,"+image.toString("base64"));
+              console.log("ACP FORCE PAINT TEST",JSON.stringify(sample));
+              await forced.evaluate(el=>el.remove());
+            }
             if (pixels.bright < 5) {
               throw new Error("ACP heading is present in DOM but not painted: " + JSON.stringify(pixels));
             }
