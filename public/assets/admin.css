@@ -2200,7 +2200,7 @@ body[data-forwext-surface="admin"] .acp-dashboard--dense .acp-directory-main p{c
   }
   .acp-app-sidebar-heading{padding:8px 12px}
   body[data-forwext-surface="admin"] .acp-app-sidebar{
-    max-height:min(58dvh,420px);
+    max-height:min(36dvh,280px);
     overflow-y:auto;
   }
   body[data-forwext-surface="admin"] .acp-app-nav-group,
