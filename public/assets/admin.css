@@ -2226,3 +2226,48 @@ body[data-forwext-surface="admin"] .acp-dashboard--dense .acp-directory-main p{c
 @media(prefers-reduced-motion:reduce){
   .acp-app-nav-group>summary:after{transition:none}
 }
+
+
+/* Admin navigation editor: its legacy seven fixed columns exceeded the
+ * available width once the global ACP rail is present. Reflow the actual
+ * form grids instead of clipping or masking overflowing action controls. */
+body[data-forwext-surface="admin"] .nav-admin-row-form,
+body[data-forwext-surface="admin"] .nav-admin-create{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+body[data-forwext-surface="admin"] .nav-admin-row-form>.nav-admin-path{
+  grid-column:span 2;
+}
+body[data-forwext-surface="admin"] .nav-admin-row-actions{
+  grid-column:1/-1;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  min-width:0;
+}
+body[data-forwext-surface="admin"] .nav-admin-row-actions button{
+  max-width:100%;
+  white-space:normal;
+}
+@media(max-width:900px){
+  body[data-forwext-surface="admin"] .nav-admin-row{
+    grid-template-columns:minmax(0,1fr);
+  }
+  body[data-forwext-surface="admin"] .nav-admin-row-meta{
+    border-right:0;
+    border-bottom:1px solid var(--line);
+  }
+}
+@media(max-width:760px){
+  body[data-forwext-surface="admin"] .nav-admin-row-form,
+  body[data-forwext-surface="admin"] .nav-admin-create{
+    grid-template-columns:minmax(0,1fr);
+  }
+  body[data-forwext-surface="admin"] .nav-admin-row-form>.nav-admin-path{
+    grid-column:auto;
+  }
+  body[data-forwext-surface="admin"] .nav-admin-row-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-column:auto;
+  }
+}
