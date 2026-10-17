@@ -169,7 +169,25 @@ try {
     if (!skipLinkVisible) fail(`${testCase.name}: focused skip link is not visible`);
 
     const mobile = testCase.width < 921;
-    if (mobile) {
+    if (testCase.admin) {
+      // ACP has its own responsive, always-discoverable navigation rail.
+      // The public mobile menu is intentionally not rendered on ACP pages.
+      const appSidebar = page.locator(".acp-app-sidebar");
+      if (!(await appSidebar.isVisible())) fail(`${testCase.name}: dedicated ACP sidebar is not visible`);
+      if (await page.locator(".nav-primary").isVisible()) {
+        fail(`${testCase.name}: public navigation leaked into the administration shell`);
+      }
+      const appToolbar = page.locator(".acp-app-topbar");
+      if (!(await appToolbar.isVisible())) fail(`${testCase.name}: ACP topbar is not visible`);
+      const setupSummary = appSidebar.locator(".acp-app-nav-group > summary").first();
+      await setupSummary.focus();
+      await page.keyboard.press("Enter");
+      const collapsed = await appSidebar.locator(".acp-app-nav-group").first().evaluate((element) => !element.open);
+      if (!collapsed) fail(`${testCase.name}: ACP sidebar group is not keyboard collapsible`);
+      await page.keyboard.press("Enter");
+      const reopened = await appSidebar.locator(".acp-app-nav-group").first().evaluate((element) => element.open);
+      if (!reopened) fail(`${testCase.name}: ACP sidebar group cannot be reopened with keyboard`);
+    } else if (mobile) {
       const toggle = page.locator("[data-forwext-nav-toggle]");
       if (!(await toggle.isVisible())) fail(`${testCase.name}: mobile nav toggle is not visible`);
 
@@ -240,14 +258,16 @@ try {
         fail(`${testCase.name}: desktop navigation is incorrectly inert/hidden`);
       }
 
-      const menuSummary = page.locator(".nav-primary-menu > summary");
-      await menuSummary.focus();
-      await page.keyboard.press("Enter");
-      const opened = await page.$eval(".nav-primary-menu", (element) => element.hasAttribute("open"));
-      if (!opened) fail(`${testCase.name}: details navigation did not open from keyboard`);
-      await page.keyboard.press("Escape");
-      const closed = await page.$eval(".nav-primary-menu", (element) => !element.hasAttribute("open"));
-      if (!closed) fail(`${testCase.name}: Escape did not close navigation details`);
+      {
+        const menuSummary = page.locator(".nav-primary-menu > summary");
+        await menuSummary.focus();
+        await page.keyboard.press("Enter");
+        const opened = await page.$eval(".nav-primary-menu", (element) => element.hasAttribute("open"));
+        if (!opened) fail(`${testCase.name}: details navigation did not open from keyboard`);
+        await page.keyboard.press("Escape");
+        const closed = await page.$eval(".nav-primary-menu", (element) => !element.hasAttribute("open"));
+        if (!closed) fail(`${testCase.name}: Escape did not close navigation details`);
+      }
     }
 
     const postSummary = page.locator("[data-browser-post-menu] > summary");

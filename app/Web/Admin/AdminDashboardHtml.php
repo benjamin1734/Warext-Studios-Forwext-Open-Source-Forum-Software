@@ -44,6 +44,48 @@ final class AdminDashboardHtml
             . self::overviewStat('Son kullanılan', count($snapshot->recent), 'Gerçek POST açılışlarından oluşur')
             . '</section>';
 
+        // Draw only measured values from the permission-filtered snapshot.
+        // There is intentionally no demo, simulated or fabricated trend data.
+        $sectionMaximum = max(1, ...array_map('count', array_values($snapshot->sections)));
+        $sectionChart = '';
+        foreach ($snapshot->sections as $sectionKey => $items) {
+            $height = max(4, (int) round(100 * count($items) / $sectionMaximum));
+            $sectionChart .= '<div class="acp-insight-column"><span class="acp-insight-value">'
+                . count($items) . '</span><span class="acp-insight-bar" style="height:' . $height
+                . '%"></span><small title="' . self::escape($snapshot->sectionLabel($sectionKey)) . '">'
+                . self::escape($snapshot->sectionLabel($sectionKey)) . '</small></div>';
+        }
+        $queueMaximum = 1;
+        foreach ($snapshot->actionQueues as $queue) {
+            $queueMaximum = max($queueMaximum, $queue->count);
+        }
+        $queueChart = '';
+        foreach ($snapshot->actionQueues as $queue) {
+            $height = $queue->count === 0 ? 4 : max(4, (int) round(100 * $queue->count / $queueMaximum));
+            $queueChart .= '<div class="acp-insight-column"><span class="acp-insight-value">'
+                . $queue->count . '</span><span class="acp-insight-bar" style="height:' . $height
+                . '%"></span><small title="' . self::escape($queue->label) . '">'
+                . self::escape($queue->label) . '</small></div>';
+        }
+        $insights = '<section class="acp-insights" aria-label="Gerçek yönetim istatistikleri">'
+            . '<header class="acp-insights-heading"><h2>İstatistikler</h2>'
+            . '<span>Hesabına açık canlı yönetim verileri</span></header>'
+            . '<div class="acp-insights-panels"><div class="acp-insight-panel"><h3>Yönetim alanları</h3>'
+            . '<div class="acp-insight-chart" role="img" aria-label="Yetkili yönetim alanlarının kategori bazında sayıları">'
+            . ($sectionChart !== '' ? $sectionChart : '<p>Gösterilecek yönetim alanı bulunmuyor.</p>')
+            . '</div></div><div class="acp-insight-panel"><h3>İşlem kuyrukları</h3>'
+            . '<div class="acp-insight-chart acp-insight-chart--queues" role="img" aria-label="Yetkili işlem kuyruklarının güncel sayıları">'
+            . ($queueChart !== '' ? $queueChart : '<p>Bekleyen işlem kuyruğu bulunmuyor.</p>')
+            . '</div></div></div></section>';
+
+        $environment = '<section class="acp-environment" aria-label="Sunucu ortamı">'
+            . '<header><h2>Sunucu ortamı</h2><span>Çalışan uygulama</span></header>'
+            . '<div class="acp-environment-status"><strong>PHP ' . self::escape(PHP_VERSION) . '</strong>'
+            . '<span>' . (version_compare(PHP_VERSION, '8.4.0', '>=')
+                ? 'Forwext minimum PHP 8.4 sürümü karşılanıyor'
+                : 'Forwext için PHP 8.4 veya üzeri gerekli')
+            . '</span></div></section>';
+
         // All entry points derive from the permission-filtered dashboard snapshot.
         // These are section anchors: mutations and recent-navigation tracking stay
         // in the existing CSRF-protected directory buttons below.
@@ -52,10 +94,20 @@ final class AdminDashboardHtml
             . '<h2>Yönetim merkezleri</h2></div><p class="acp-muted">Yetkin olan bölümlere doğrudan ulaş.</p></div>'
             . '<div class="acp-launchpad-grid">';
         $launchIndex = 0;
+        // Distinct line icons mirror the visual hierarchy of the supplied
+        // dashboard reference; no icon font or third-party dependency.
+        $tilePaths = [
+            '<path d="M4 5h16v5H4zM4 14h7v6H4zM15 14h5v6h-5z"/>',
+            '<path d="M8 4 6 8l-4 1v6l4 1 2 4h8l2-4 4-1V9l-4-1-2-4zM9 10h6v4H9z"/>',
+            '<path d="M4 5h16v3H4zM4 11h16v3H4zM4 17h16v3H4z"/>',
+            '<path d="M4 5h16v14H4zM9 5v14M4 10h16"/>',
+            '<path d="M12 3 3 8v3h18V8l-9-5ZM6 13h3v7H6zM15 13h3v7h-3zM3 21h18"/>',
+            '<path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>',
+        ];
         foreach ($snapshot->sections as $sectionKey => $items) {
             $launchIndex++;
             $launchpad .= '<a class="acp-launchpad-tile" href="#acp-section-' . self::escape($sectionKey) . '">'
-                . '<span class="acp-launchpad-icon" aria-hidden="true">' . sprintf('%02d', $launchIndex) . '</span>'
+                . '<span class="acp-launchpad-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">' . $tilePaths[($launchIndex - 1) % count($tilePaths)] . '</svg></span>'
                 . '<span class="acp-launchpad-title">' . self::escape($snapshot->sectionLabel($sectionKey))
                 . '<small>' . count($items) . ' yönetim alanı</small></span>'
                 . '<span class="acp-launchpad-arrow" aria-hidden="true">↗</span></a>';
@@ -161,7 +213,9 @@ final class AdminDashboardHtml
             . '" placeholder="Kullanıcı, tema, ödeme, destek, analytics…">'
             . '<button type="submit">Ara</button></form></header>'
             . $overview
+            . $insights
             . $launchpad
+            . $environment
             . '<div class="acp-dashboard-workspace">'
             . '<aside class="acp-dashboard-rail" aria-label="Administration bölümleri">'
             . '<h2 class="acp-dashboard-rail-title">Yönetim alanları</h2>'
