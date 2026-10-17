@@ -207,6 +207,33 @@ final class AdminCommunityHtml
             ? $total . ' kullanıcıdan ' . $first . '–' . $last . ' arası'
             : '“' . self::e($query) . '” için ' . $total . ' sonuç · ' . $first . '–' . $last . ' arası';
 
+        $pageLink = static function (int $number, string $label, bool $current = false) use ($basePath, $query): string {
+            $href = '/admin/users?page=' . $number . ($query !== '' ? '&q=' . rawurlencode($query) : '');
+            return '<a class="ac-user-page" href="' . self::e($basePath->prepend($href)) . '"'
+                . ($current ? ' aria-current="page"' : '') . '>' . self::e($label) . '</a>';
+        };
+        $pagination = '';
+        if ($pageCount > 1) {
+            $links = $page > 1 ? $pageLink(1, 'İlk') . $pageLink($page - 1, 'Önceki') : '';
+            $lower = max(1, $page - 2);
+            $upper = min($pageCount, $page + 2);
+            if ($lower > 1) {
+                $links .= '<span class="ac-user-page-ellipsis" aria-hidden="true">…</span>';
+            }
+            for ($number = $lower; $number <= $upper; $number++) {
+                $links .= $pageLink($number, (string) $number, $number === $page);
+            }
+            if ($upper < $pageCount) {
+                $links .= '<span class="ac-user-page-ellipsis" aria-hidden="true">…</span>';
+            }
+            if ($page < $pageCount) {
+                $links .= $pageLink($page + 1, 'Sonraki') . $pageLink($pageCount, 'Son');
+            }
+            $pagination = '<nav class="ac-user-pagination" aria-label="Kullanıcı dizini sayfaları">'
+                . '<span class="ac-user-pagination-context">Sayfa ' . $page . ' / ' . $pageCount . '</span>'
+                . '<div class="ac-user-pages">' . $links . '</div></nav>';
+        }
+
         return '<div class="ac-users-shell"><section class="ac-panel ac-users-directory"><div class="ac-heading"><div><h1>Kullanıcı Yönetimi</h1>'
             . '<p class="ac-muted">Gerçek kullanıcı dizininde ara; hesap ayrıntısını aç ve güvenli access/status araçlarını kullan.</p></div>'
             . '<span class="ac-count">' . $total . '</span></div>'
@@ -217,7 +244,7 @@ final class AdminCommunityHtml
             . '</form><div class="ac-user-result-summary">' . $searchSummary . '</div>'
             . '<div class="ac-table-wrap"><table class="ac-table ac-user-table"><thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Durum</th><th>Yerel ayar</th><th>Hesap zamanı</th></tr></thead><tbody>'
             . ($table !== '' ? $table : '<tr><td colspan="5">Kullanıcı bulunamadı.</td></tr>')
-            . '</tbody></table></div></section>'
+            . '</tbody></table></div>' . $pagination . '</section>'
             . '<section class="ac-users-selected">' . $detail . '</section></div>';
     }
 
