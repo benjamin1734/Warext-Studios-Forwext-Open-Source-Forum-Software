@@ -16,7 +16,7 @@ final class AdminFormSafetyWebSurfaceTest extends TestCase
         $css = (string) file_get_contents($root . '/public/assets/admin.css');
 
         self::assertStringContainsString('/assets/admin-form-safety.js', $helper);
-        self::assertStringContainsString('data.forwextSurface', str_replace('dataset.forwextSurface', 'data.forwextSurface', $script));
+        self::assertStringContainsString('dataset.forwextSurface', $script);
         self::assertStringContainsString('form.ac-form[method="post"]', $script);
         self::assertStringContainsString('!control.disabled', $script);
         self::assertStringContainsString('control.readOnly', $script);
