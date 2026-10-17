@@ -14,10 +14,10 @@ final class ThreadPostShareSurfaceTest extends TestCase
         $handler = (string) file_get_contents($root . '/app/Web/Forum/ThreadViewHandler.php');
         $css = (string) file_get_contents($root . '/public/assets/site-pages.css');
 
-        self::assertStringContainsString("($page > 1 ? '?page=' . $page : '')", $handler);
-        self::assertStringContainsString("rawurlencode($post['post_id'])", $handler);
+        self::assertStringContainsString("(\$page > 1 ? '?page=' . \$page : '')", $handler);
+        self::assertStringContainsString("rawurlencode(\$post['post_id'])", $handler);
         self::assertStringContainsString("renderPost(\n", $handler);
-        self::assertStringContainsString("                    $posts['page'],", $handler);
+        self::assertStringContainsString("                    \$posts['page'],", $handler);
         self::assertStringContainsString('class="thread-post-permalink" href="', $handler);
         self::assertStringContainsString('data-thread-copy-url="', $handler);
         self::assertStringContainsString('aria-live="polite"', $handler);
