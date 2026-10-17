@@ -192,6 +192,38 @@ try {
     });
     if (!skipLinkVisible) fail(`${testCase.name}: focused skip link is not visible`);
 
+    if (testCase.fixture === "guest" || testCase.fixture === "member") {
+      const group = page.locator("details.forum-category[data-forum-category-key]").first();
+      if (await group.count() !== 1) fail(`${testCase.name}: forum category native disclosure missing`);
+      if (!(await group.evaluate((element) => element.open))) {
+        fail(`${testCase.name}: first visit must show the category by default`);
+      }
+      const toggle = group.locator(":scope > summary");
+      await toggle.focus();
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() =>
+        window.localStorage.getItem("forwext.forum.category.ci-fixture-general") === "closed"
+      );
+      const hidden = await group.evaluate((element) =>
+        !element.open && getComputedStyle(element.querySelector(".forum-node-list")).display === "none"
+      );
+      if (!hidden) fail(`${testCase.name}: closed category still paints forum rows`);
+
+      await page.reload({ waitUntil: "networkidle" });
+      const restored = page.locator("details.forum-category").first();
+      await page.waitForFunction(() => {
+        const element = document.querySelector("details.forum-category");
+        return element instanceof HTMLDetailsElement && !element.open;
+      });
+      await restored.locator(":scope > summary").click();
+      await page.waitForFunction(() =>
+        window.localStorage.getItem("forwext.forum.category.ci-fixture-general") === "open"
+      );
+      if (!(await restored.evaluate((element) => element.open))) {
+        fail(`${testCase.name}: reopened forum category was not restored`);
+      }
+    }
+
     const mobile = testCase.width < 921;
     if (testCase.admin) {
       // ACP has its own responsive, always-discoverable navigation rail.

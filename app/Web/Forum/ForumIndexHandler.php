@@ -65,7 +65,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
                 . '<p class="muted">Yönetim panelinden kategori ve forumlar oluşturulduğunda burada görünecek.</p></section>';
         } else {
             foreach ($groups as $group) {
-                $body .= $this->renderGroup($group['title'], $group['description'], $group['forums'], $hierarchy, $summaries);
+                $body .= $this->renderGroup($group['key'], $group['title'], $group['description'], $group['forums'], $hierarchy, $summaries);
             }
         }
 
@@ -105,6 +105,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             breadcrumbs: $home ? null : BreadcrumbTrail::page('Forumlar'),
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
+            headAssets: '<script src="' . self::e($this->basePath->prepend('/assets/forum-categories.js')) . '" defer></script>',
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
     }
 
@@ -123,7 +124,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
     /**
      * @param list<ForumNode> $forums
-     * @return list<array{title:string,description:string,forums:list<ForumNode>}>
+     * @return list<array{key:string,title:string,description:string,forums:list<ForumNode>}>
      */
     private function groups(ForumNodeHierarchy $hierarchy, array $forums): array
     {
@@ -143,6 +144,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
             if (!isset($groups[$key])) {
                 $groups[$key] = [
+                    'key' => $key,
                     'title' => $title,
                     'description' => $description,
                     'forums' => [],
@@ -162,19 +164,25 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
      * }> $summaries
      */
     private function renderGroup(
+        string $key,
         string $title,
         string $description,
         array $forums,
         ForumNodeHierarchy $hierarchy,
         array $summaries,
     ): string {
-        $html = '<section class="forum-category"><header class="forum-category-head"><div><h2>'
+        // Native <details> keeps category expansion usable with JavaScript
+        // disabled; the stable category key only persists this UI preference.
+        $html = '<details class="forum-category" data-forum-category-key="' . self::e($key)
+            . '" open><summary class="forum-category-head"><div><h2>'
             . self::e($title) . '</h2>';
         if ($description !== '') {
             $html .= '<p>' . self::e($description) . '</p>';
         }
-        $html .= '</div><span>' . number_format(count($forums), 0, ',', '.') . ' forum</span>'
-            . '</header><div class="forum-node-list">';
+        $html .= '</div><span class="forum-category-count">' . number_format(count($forums), 0, ',', '.') . ' forum</span>'
+            . '<svg class="forum-category-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+            . ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<path d="m5 9 7 7 7-7"/></svg></summary><div class="forum-node-list">';
 
         foreach ($forums as $forum) {
             $summary = $summaries[$forum->id()->value()] ?? [
@@ -208,7 +216,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
                 . '<div class="forum-node-last">' . $this->renderLatest($summary) . '</div></article>';
         }
 
-        return $html . '</div></section>';
+        return $html . '</div></details>';
     }
 
     /**

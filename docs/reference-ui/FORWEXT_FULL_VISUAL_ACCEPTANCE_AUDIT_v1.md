@@ -12,6 +12,10 @@ Review basis: 562 indexed UI reference screenshots in `FORWEXT_UI_REFERENCE_INDE
 
 The first full-size review found that REF-0193–REF-0196 show webhook administration, REF-0197 a CAPTCHA question editor, and REF-0198–REF-0199 an add-on installation flow; the initial source index mistakenly labeled them as ACP forums/content. Their mapping has been corrected. This invalidates any completion claim based solely on the earlier fixed-size screenshot grouping. Additional similar semantic misclassifications may remain until every detailed state is reverified.
 
+## v1.0.23 forum category UI-state work
+
+Forum index category bars now provide compact native expand/collapse behavior with keyboard focus, mobile pointer targets, persisted per-category state and reduced-motion support. The installed-browser evidence manifest separately records collapsed-state captures at each viewport **only if a published visible category exists**. Missing seed data is explicitly recorded as unavailable, never as an accepted screenshot. These improvements address an actual public forum interaction/state gap; they are **not** a per-reference pixel-equivalence signoff for REF-0001, REF-0066, REF-0129, REF-0535 or the rest of the 562-image corpus.
+
 ## Manual group-level observations
 
 | Source range / family | Actual Forwext evidence | Finding | Gate |
