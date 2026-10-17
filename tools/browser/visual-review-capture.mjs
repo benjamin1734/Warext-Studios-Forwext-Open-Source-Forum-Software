@@ -333,6 +333,47 @@ try {
             });
             await disclosure.locator(":scope > summary").click();
           }
+
+          // Capture genuine installed forum and thread views linked by the
+          // permission-filtered index, rather than manufacturing route IDs.
+          const forumLink = page.locator(".forum-node-main h3 a").first();
+          if (await forumLink.count()) {
+            const forumHref = await forumLink.getAttribute("href");
+            if (!forumHref) throw new Error("Visible forum is missing its destination");
+            const forumRoute = new URL(forumHref, baseUrl);
+            const forumPage = await page.goto(forumRoute.href, {waitUntil:"domcontentloaded"});
+            if (!forumPage || forumPage.status() !== 200) {
+              throw new Error("Index-linked forum returned HTTP " + (forumPage?.status() ?? "none"));
+            }
+            await page.locator(".forum-thread-panel").waitFor({state:"visible"});
+            const forumFile = "forum-view-live-" + viewport.label + ".jpg";
+            await page.screenshot({path:path.join(output,forumFile),fullPage:true,type:"jpeg",quality:84,animations:"disabled"});
+            stateRecords.push({name:"forum-view-live",viewport:viewport.label,captured:true,
+              route:forumRoute.pathname,screenshot:forumFile,manuallySignedOff:false});
+
+            const threadLink = page.locator(".forum-thread-main h3 a").first();
+            if (await threadLink.count()) {
+              const threadHref=await threadLink.getAttribute("href");
+              if (!threadHref) throw new Error("Index-linked thread is missing its destination");
+              const threadRoute=new URL(threadHref,baseUrl);
+              const threadPage=await page.goto(threadRoute.href,{waitUntil:"domcontentloaded"});
+              if (!threadPage || threadPage.status() !== 200) {
+                throw new Error("Forum-linked thread returned HTTP " + (threadPage?.status() ?? "none"));
+              }
+              await page.locator(".thread-post-list").waitFor({state:"visible"});
+              const threadFile="thread-view-live-"+viewport.label+".jpg";
+              await page.screenshot({path:path.join(output,threadFile),fullPage:true,type:"jpeg",quality:84,animations:"disabled"});
+              stateRecords.push({name:"thread-view-live",viewport:viewport.label,captured:true,
+                route:threadRoute.pathname,screenshot:threadFile,manuallySignedOff:false});
+            } else {
+              stateRecords.push({name:"thread-view-live",viewport:viewport.label,captured:false,
+                reason:"No visible thread in selected permitted forum; no route ID invented",
+                manuallySignedOff:false});
+            }
+          } else {
+            stateRecords.push({name:"forum-view-live",viewport:viewport.label,captured:false,
+              reason:"No published forum visible to this installed account",manuallySignedOff:false});
+          }
         }
       } catch (error) {
         record.error = String(error).slice(0, 800);
