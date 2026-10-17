@@ -16,6 +16,10 @@ The first full-size review found that REF-0193–REF-0196 show webhook administr
 
 Forum index category bars now provide compact native expand/collapse behavior with keyboard focus, mobile pointer targets, persisted per-category state and reduced-motion support. The installed-browser evidence manifest separately records collapsed-state captures at each viewport **only if a published visible category exists**. Missing seed data is explicitly recorded as unavailable, never as an accepted screenshot. These improvements address an actual public forum interaction/state gap; they are **not** a per-reference pixel-equivalence signoff for REF-0001, REF-0066, REF-0129, REF-0535 or the rest of the 562-image corpus.
 
+## v1.0.24 management editor safety state
+
+The real ACP shared asset now includes a compact unsaved-changes state in POST edit forms, with native reset and navigation protection. Keyboard/pointer inputs and real installed forum-node editor regression exercise this state. This does **not** prove individual group/role/node modal equivalence, cannot substitute a reference image comparison, and does not change the 562-image manual acceptance gate.
+
 ## Manual group-level observations
 
 | Source range / family | Actual Forwext evidence | Finding | Gate |
