@@ -103,52 +103,6 @@ try {
     );
     if (!scriptLoaded) fail(`${testCase.name}: mobile-nav.js did not load`);
 
-    if (testCase.admin) {
-      const edit = page.locator("[data-browser-acp-editor] form.ac-form[method='post']");
-      const search = page.locator("[data-browser-acp-editor] form.ac-form[method='get']");
-      if (await edit.count() !== 1 || await search.count() !== 1) {
-        fail(`${testCase.name}: ACP editor fixtures missing`);
-      }
-      if (await edit.locator(".ac-form-unsaved").count() !== 1
-        || await search.locator(".ac-form-unsaved").count() !== 0
-        || await edit.locator(".ac-form-unsaved").isVisible()) {
-        fail(`${testCase.name}: non-dirty or GET form incorrectly displays unsaved state`);
-      }
-
-      await edit.locator('input[name="name"]').fill("Değiştirilmiş başlık");
-      await page.waitForFunction(() => {
-        const form = document.querySelector("[data-browser-acp-editor] form[method='post']");
-        return form?.classList.contains("ac-form-is-dirty")
-          && !form.querySelector(".ac-form-unsaved")?.hidden;
-      });
-      const warned = await page.evaluate(() => {
-        const before = new Event("beforeunload", { cancelable: true });
-        window.dispatchEvent(before);
-        return before.defaultPrevented;
-      });
-      if (!warned) fail(`${testCase.name}: dirty ACP editor did not warn on navigation`);
-
-      await edit.locator(".ac-form-unsaved-reset").click();
-      const resetState = await edit.evaluate((form) => ({
-        value: form.querySelector('input[name="name"]')?.value,
-        noticeHidden: form.querySelector(".ac-form-unsaved")?.hidden,
-        dirty: form.classList.contains("ac-form-is-dirty"),
-      }));
-      if (resetState.value !== "Örnek yapılandırma" || !resetState.noticeHidden || resetState.dirty) {
-        fail(`${testCase.name}: ACP restore failed ${JSON.stringify(resetState)}`);
-      }
-      await edit.locator('select[name="visibility"]').selectOption("disabled");
-      if (!(await edit.locator(".ac-form-unsaved").isVisible())) {
-        fail(`${testCase.name}: select edits did not mark ACP form dirty`);
-      }
-      await edit.locator(".ac-form-unsaved-reset").click();
-      await edit.locator('input[name="allow_replies"]').uncheck();
-      if (!(await edit.locator(".ac-form-unsaved").isVisible())) {
-        fail(`${testCase.name}: checkbox edits did not mark ACP form dirty`);
-      }
-      await edit.locator(".ac-form-unsaved-reset").click();
-    }
-
     const overflow = await page.evaluate(() => {
       const limit = window.innerWidth + 1;
       return [...document.body.querySelectorAll("*")]
@@ -237,6 +191,53 @@ try {
       return Number.parseFloat(style.opacity) > 0.9 && element.getBoundingClientRect().top >= 0;
     });
     if (!skipLinkVisible) fail(`${testCase.name}: focused skip link is not visible`);
+
+    if (testCase.admin) {
+      const edit = page.locator("[data-browser-acp-editor] form.ac-form[method='post']");
+      const search = page.locator("[data-browser-acp-editor] form.ac-form[method='get']");
+      if (await edit.count() !== 1 || await search.count() !== 1) {
+        fail(`${testCase.name}: ACP editor fixtures missing`);
+      }
+      if (await edit.locator(".ac-form-unsaved").count() !== 1
+        || await search.locator(".ac-form-unsaved").count() !== 0
+        || await edit.locator(".ac-form-unsaved").isVisible()) {
+        fail(`${testCase.name}: non-dirty or GET form incorrectly displays unsaved state`);
+      }
+
+      await edit.locator('input[name="name"]').fill("Değiştirilmiş başlık");
+      await page.waitForFunction(() => {
+        const form = document.querySelector("[data-browser-acp-editor] form[method='post']");
+        return form?.classList.contains("ac-form-is-dirty")
+          && !form.querySelector(".ac-form-unsaved")?.hidden;
+      });
+      const warned = await page.evaluate(() => {
+        const before = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(before);
+        return before.defaultPrevented;
+      });
+      if (!warned) fail(`${testCase.name}: dirty ACP editor did not warn on navigation`);
+
+      await edit.locator(".ac-form-unsaved-reset").click();
+      const resetState = await edit.evaluate((form) => ({
+        value: form.querySelector('input[name="name"]')?.value,
+        noticeHidden: form.querySelector(".ac-form-unsaved")?.hidden,
+        dirty: form.classList.contains("ac-form-is-dirty"),
+      }));
+      if (resetState.value !== "Örnek yapılandırma" || !resetState.noticeHidden || resetState.dirty) {
+        fail(`${testCase.name}: ACP restore failed ${JSON.stringify(resetState)}`);
+      }
+      await edit.locator('select[name="visibility"]').selectOption("disabled");
+      if (!(await edit.locator(".ac-form-unsaved").isVisible())) {
+        fail(`${testCase.name}: select edits did not mark ACP form dirty`);
+      }
+      await edit.locator(".ac-form-unsaved-reset").click();
+      await edit.locator('input[name="allow_replies"]').uncheck();
+      if (!(await edit.locator(".ac-form-unsaved").isVisible())) {
+        fail(`${testCase.name}: checkbox edits did not mark ACP form dirty`);
+      }
+      await edit.locator(".ac-form-unsaved-reset").click();
+    }
+
 
     if (testCase.fixture === "guest" || testCase.fixture === "member") {
       const group = page.locator("details.forum-category[data-forum-category-key]").first();
