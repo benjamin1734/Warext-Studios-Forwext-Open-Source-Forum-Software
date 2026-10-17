@@ -4108,6 +4108,49 @@ body:has(.forum-home-layout) .forum-category-head>span{
   font-size:10px;
   font-weight:400;
 }
+
+/* Native category disclosure is the sole owner of expanded/collapsed forum
+ * groups. The header stays in the same compact reference layout. */
+body:has(.forum-home-layout) details.forum-category>.forum-category-head{
+  cursor:pointer;
+  list-style:none;
+  gap:10px;
+  user-select:none;
+}
+body:has(.forum-home-layout) details.forum-category>.forum-category-head::-webkit-details-marker{display:none}
+body:has(.forum-home-layout) details.forum-category>.forum-category-head::marker{content:""}
+body:has(.forum-home-layout) details.forum-category>.forum-category-head:hover{
+  background:linear-gradient(90deg,#0e2a3d,#163b50);
+}
+body:has(.forum-home-layout) details.forum-category>.forum-category-head:focus-visible{
+  outline:2px solid #86c8f0;
+  outline-offset:-3px;
+}
+body:has(.forum-home-layout) .forum-category-count{margin-left:auto;white-space:nowrap}
+body:has(.forum-home-layout) .forum-category-chevron{
+  display:block;
+  width:15px;
+  height:15px;
+  flex:0 0 15px;
+  color:#9ac5e2;
+  transform:rotate(0deg);
+  transition:transform 170ms ease;
+}
+body:has(.forum-home-layout) details.forum-category:not([open])>.forum-category-head{
+  border-bottom:0;
+}
+body:has(.forum-home-layout) details.forum-category:not([open]) .forum-category-chevron{
+  transform:rotate(-90deg);
+}
+body:has(.forum-home-layout) details.forum-category:not([open])>.forum-node-list{
+  display:none;
+}
+@media(pointer:coarse){
+  body:has(.forum-home-layout) details.forum-category>.forum-category-head{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+  body:has(.forum-home-layout) .forum-category-chevron{transition:none}
+}
 body:has(.forum-home-layout) .forum-node-list{background:var(--forum-ref-panel)}
 body:has(.forum-home-layout) .forum-node{
   grid-template-columns:35px minmax(0,1fr) 85px minmax(140px,205px);
