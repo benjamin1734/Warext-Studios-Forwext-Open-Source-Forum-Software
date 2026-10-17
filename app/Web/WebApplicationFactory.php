@@ -1071,6 +1071,7 @@ final readonly class WebApplicationFactory
             $forumPublicReader,
             $viewerResolver,
             $authorizer,
+            $presence,
             $basePath,
         );
         $forumViewHandler = new ForumViewHandler(

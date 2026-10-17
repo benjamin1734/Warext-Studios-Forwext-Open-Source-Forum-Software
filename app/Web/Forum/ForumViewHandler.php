@@ -251,15 +251,36 @@ final readonly class ForumViewHandler implements RequestHandlerInterface
             return '';
         }
 
-        $html = '<nav class="pagination" aria-label="Konu sayfaları">';
+        $path = $this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()));
+        $url = static fn (int $target): string => $target === 1 ? $path : $path . '?page=' . $target;
+        $html = '<nav class="pagination forum-directory-pagination" aria-label="Konu sayfaları">';
+        if ($page > 2) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url(1)) . '">İlk</a>';
+        }
+        if ($page > 1) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url($page - 1))
+                . '" rel="prev">← Önceki</a>';
+        }
+
         $start = max(1, $page - 2);
         $end = min($pages, $page + 2);
+        if ($start > 1) {
+            $html .= '<span class="pagination-gap" aria-hidden="true">…</span>';
+        }
         for ($current = $start; $current <= $end; $current++) {
-            $url = $this->basePath->prepend('/forums/' . rawurlencode($node->slug()->value()))
-                . ($current === 1 ? '' : '?page=' . $current);
-            $html .= '<a href="' . self::e($url) . '"'
+            $html .= '<a href="' . self::e($url($current)) . '"'
                 . ($current === $page ? ' aria-current="page"' : '') . '>'
                 . $current . '</a>';
+        }
+        if ($end < $pages) {
+            $html .= '<span class="pagination-gap" aria-hidden="true">…</span>';
+        }
+        if ($page < $pages) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url($page + 1))
+                . '" rel="next">Sonraki →</a>';
+        }
+        if ($page < $pages - 1) {
+            $html .= '<a class="pagination-edge" href="' . self::e($url($pages)) . '">Son</a>';
         }
 
         return $html . '</nav>';

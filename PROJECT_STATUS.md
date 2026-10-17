@@ -5,14 +5,24 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.25
+CURRENT_VERSION = 1.0.26
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
+CURRENT_STEP = v1.0.26 reference-informed forum directory/sidebar, page navigation and visual capture qualification
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
+NEXT_STEP = Continue reference-mapped forum, thread, profile, and ACP visual/state implementation; full 562-image acceptance remains open.
 ```
+
+## v1.0.26 forum reference navigation and real community sidebar — 2026-10-17
+
+- The public forum home sidebar now follows the primary reference screen's information hierarchy: latest visible topics, staff-directory access, actual visibility-filtered online members, visible forum counters, first-party page sharing and optional exploration links.
+- Online lists use the existing server-side public/member presence rules and the current authenticated viewer context. Anonymous visitors cannot discover member-only or hidden presence. No invented staff-online status or active-member count is shown.
+- Authenticated users may open a native accessible new-topic chooser populated exclusively from visible forums where both local forum settings and server authorizer allow thread creation. A single authorized forum links directly to its composer; guests receive no composer shortcut.
+- The compact first-party share button copies the real current page URL using modern Clipboard API with a no-network fallback and assistive-technology status, without third-party libraries or external calls.
+- Forum thread directory pagination now has first/previous/next/last controls, bounded numeric windows, deterministic URL generation, accessible current-page labeling and noninteractive gaps.
+- Live browser acceptance now checks guest action isolation and share behavior. Installed review captures follow genuine forum index links to screen-capture the first permitted forum and, only when a visible thread exists, a real thread. Missing fixture states remain explicitly unverified.
+- Reference REF-0001 and related directory/thread workflow matches remain PARTIAL; screenshot creation is not 562-image visual signoff.
 
 ## v1.0.25 ACP directory scalability and visual evidence gate — 2026-10-17
 
