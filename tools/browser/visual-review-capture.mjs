@@ -146,6 +146,9 @@ try {
         if ((await page.locator("body").innerText()).includes("Internal Server Error")) {
           record.error = "Rendered Internal Server Error";
         }
+        if (route.startsWith("/admin")) {
+          await page.locator('[data-acp-navigation-list][data-acp-navigation-loaded="1"]').waitFor({ timeout: 5000 });
+        }
         if (name === "admin-home" && viewport.label === "desktop") {
           const diagnostics = await page.evaluate(() => {
             const targets = [".acp-dashboard", ".acp-ux-guide", ".acp-hero", ".acp-overview",
