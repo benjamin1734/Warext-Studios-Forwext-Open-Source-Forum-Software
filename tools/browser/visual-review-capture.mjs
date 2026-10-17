@@ -151,7 +151,12 @@ try {
           await page.locator('[data-acp-navigation-list][data-acp-navigation-loaded="1"]').waitFor({ timeout: 5000 });
         }
         if (route.startsWith("/admin")) {
-          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.evaluate(async () => {
+            window.scrollTo({top:0,left:0,behavior:"instant"});
+            await document.fonts.ready;
+            await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          });
+          await page.waitForTimeout(450);
           const visibility = await page.evaluate(() => {
             const main = document.querySelector("#main-content");
             const content = main?.firstElementChild;
