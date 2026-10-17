@@ -78,7 +78,10 @@ final class ResponsiveAccessibilityWebSurfaceTest extends TestCase
         self::assertStringContainsString("'member' => ProfileHtml::page", $fixtureRenderer);
         self::assertStringContainsString("\$fixtures['moderator']", $fixtureRenderer);
         self::assertStringContainsString("\$fixtures['admin']", $fixtureRenderer);
-        self::assertStringContainsString('/assets/admin.css', $fixtureRenderer);
+        self::assertStringContainsString('AdminAssetsHtml::headAssets($basePath)', $fixtureRenderer);
+        $adminAssets = (string) file_get_contents($root . '/app/Web/Admin/AdminAssetsHtml.php');
+        self::assertStringContainsString('/assets/admin.css', $adminAssets);
+        self::assertStringContainsString('/assets/admin-navigation.js', $adminAssets);
         self::assertStringContainsString('admin-mobile', $browserSmoke);
         self::assertStringContainsString('admin-desktop', $browserSmoke);
         self::assertStringContainsString('requiredStylesheets.push("/public/assets/admin.css")', $browserSmoke);
