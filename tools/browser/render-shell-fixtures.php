@@ -33,11 +33,11 @@ $forumContent = <<<'HTML'
       </div>
     </section>
 
-    <section class="forum-category" aria-labelledby="fixture-category-title">
-      <header class="forum-category-head">
+    <details class="forum-category" data-forum-category-key="ci-fixture-general" open>
+      <summary class="forum-category-head">
         <div><h2 id="fixture-category-title">Genel forumlar</h2><p>Paylaşım ve topluluk alanı</p></div>
-        <span>2 forum</span>
-      </header>
+        <span class="forum-category-count">2 forum</span><svg class="forum-category-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg>
+      </summary>
       <div class="forum-node-list">
         <article class="forum-node">
           <a class="forum-node-icon" href="#fixture-thread" aria-label="Genel sohbet">G</a>
@@ -49,9 +49,9 @@ $forumContent = <<<'HTML'
           <div class="forum-node-last"><a class="forum-last-title" href="#fixture-thread">Responsive ve erişilebilir forum arayüzü</a><span>forwext-test · şimdi</span></div>
         </article>
       </div>
-    </section>
+    </details>
 
-    <section class="thread-view-head forum-page-head">
+    <section class="thread-view-head forum-page-head"
       <div class="thread-view-title">
         <div class="thread-badges"><span class="thread-badge">Sabit</span><span class="thread-badge thread-badge--accent">Öne çıkan</span></div>
         <h1>Responsive ve erişilebilir forum arayüzü</h1>
@@ -265,9 +265,11 @@ HTML;
 
 $basePath = new BasePath('/public');
 
+$forumHeadAssets = '<script src="'
+    . ProfileHtml::escape($basePath->prepend('/assets/forum-categories.js')) . '" defer></script>';
 $fixtures = [
-    'guest' => ProfileHtml::page('Tarayıcı Testi · Misafir', $forumContent, $basePath, authenticated: false),
-    'member' => ProfileHtml::page('Tarayıcı Testi · Üye', $forumContent, $basePath, authenticated: true),
+    'guest' => ProfileHtml::page('Tarayıcı Testi · Misafir', $forumContent, $basePath, authenticated: false, headAssets: $forumHeadAssets),
+    'member' => ProfileHtml::page('Tarayıcı Testi · Üye', $forumContent, $basePath, authenticated: true, headAssets: $forumHeadAssets),
 ];
 
 $adminHeadAssets = AdminAssetsHtml::headAssets($basePath);
@@ -302,6 +304,7 @@ foreach ($fixtures as $name => $html) {
         static function (array $match): string {
             return str_ends_with($match[1], '/assets/mobile-nav.js')
                 || str_ends_with($match[1], '/assets/admin-navigation.js')
+                || str_ends_with($match[1], '/assets/forum-categories.js')
                 ? $match[0]
                 : '';
         },
