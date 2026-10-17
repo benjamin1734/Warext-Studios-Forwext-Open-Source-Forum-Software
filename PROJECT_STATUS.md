@@ -5,14 +5,23 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.26
+CURRENT_VERSION = 1.0.27
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
-CURRENT_STEP = v1.0.26 reference-informed forum directory/sidebar, page navigation and visual capture qualification
+CURRENT_STEP = v1.0.27 thread discussion permalink correctness, native sharing and installed visual-state verification
 LAST_COMMIT = see current GitHub main
 BLOCKERS = none
-NEXT_STEP = Continue reference-mapped forum, thread, profile, and ACP visual/state implementation; full 562-image acceptance remains open.
+NEXT_STEP = Continue profile and ACP reference-state coverage; review every visual reference manually before declaring equivalence.
 ```
+
+## v1.0.27 thread post permalinks and first-party sharing — 2026-10-17
+
+- Every rendered post permalink now includes its real thread page when page >1, rather than a fragment-only URL that breaks when copied from a multi-page discussion. Links use the canonical server-side forum route and current page without copying transient query parameters.
+- The discussion header and individual messages expose first-party, keyboard-reachable copy-link controls to both guests and signed-in users; successful and denied clipboard attempts have visible, screen-reader-announced feedback.
+- The Clipboard API is preferred; a native selection fallback restores the original focused control. Only HTTP(S) same-origin links are accepted and there are no network calls or trackers.
+- The selected post receives a visible focus target outline and scroll margin without introducing animations. Existing reply/reaction permission gates, attachment visibility, read state and routes remain unchanged.
+- Installed-browser visual capture follows genuine published thread links, checks that the first visible post's permalink resolves to the same thread and page, exercises copying, and rejects wrong URLs; a standalone source-level test covers the contract.
+- Screenshot-state comparisons are **not** a proof of identity with the 562 screenshot references. Unvisited stateful flows and manual pixel review remain open.
 
 ## v1.0.26 forum reference navigation and real community sidebar — 2026-10-17
 
