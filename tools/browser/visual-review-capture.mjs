@@ -361,6 +361,33 @@ try {
                 throw new Error("Forum-linked thread returned HTTP " + (threadPage?.status() ?? "none"));
               }
               await page.locator(".thread-post-list").waitFor({state:"visible"});
+              // Verify an actual post's canonical, page-aware link and first-party
+              // clipboard flow against the installed runtime before evidence capture.
+              const firstPermalink=page.locator(".thread-post-list .thread-post-permalink").first();
+              const firstCopy=page.locator(".thread-post-list .thread-post-copy").first();
+              if (!(await firstPermalink.count()) || !(await firstCopy.count())) {
+                throw new Error("Live thread does not expose shareable post permalinks");
+              }
+              const permalinkHref=await firstPermalink.getAttribute("href");
+              const permalinkUrl=permalinkHref ? new URL(permalinkHref,baseUrl) : null;
+              if (!permalinkUrl || !permalinkUrl.hash.startsWith("#post-")
+                || permalinkUrl.pathname !== threadRoute.pathname
+                || permalinkUrl.searchParams.get("page") !== threadRoute.searchParams.get("page")) {
+                throw new Error("Live post permalink lost its real thread/page route");
+              }
+              await page.evaluate(() => {
+                window.forwextThreadCopiedUrl="";
+                Object.defineProperty(navigator,"clipboard",{
+                  configurable:true,value:{writeText:async text=>{window.forwextThreadCopiedUrl=text;}},
+                });
+              });
+              await firstCopy.click();
+              await page.locator(".thread-post-list .thread-copy-status").first()
+                .filter({hasText:"Bağlantı kopyalandı."}).waitFor();
+              const copiedPermalink=await page.evaluate(() => window.forwextThreadCopiedUrl);
+              if (copiedPermalink !== permalinkUrl.href) {
+                throw new Error("Post share copied a wrong or noncanonical permalink");
+              }
               const threadFile="thread-view-live-"+viewport.label+".jpg";
               await page.screenshot({path:path.join(output,threadFile),fullPage:true,type:"jpeg",quality:84,animations:"disabled"});
               stateRecords.push({name:"thread-view-live",viewport:viewport.label,captured:true,

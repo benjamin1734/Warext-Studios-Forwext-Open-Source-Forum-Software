@@ -80,7 +80,8 @@ final class ForumWritingWebSurfaceTest extends TestCase
         self::assertStringContainsString('id="quick-reply"', $thread);
         self::assertStringContainsString('RichEditorView::render(', $thread);
         self::assertStringContainsString('CsrfMiddleware::ATTRIBUTE_TOKEN', $thread);
-        self::assertStringContainsString('headAssets: $canReply ? RichEditorView::assets', $thread);
+        self::assertStringContainsString('headAssets: ($canReply ? RichEditorView::assets($this->basePath)', $thread);
+        self::assertStringContainsString('/assets/thread-post-share.js', $thread);
         self::assertStringContainsString('/* forum-compose-surface-v2 */', $css);
         self::assertStringContainsString('.forum-compose{', $css);
         self::assertStringContainsString('.forum-compose-form{', $css);
