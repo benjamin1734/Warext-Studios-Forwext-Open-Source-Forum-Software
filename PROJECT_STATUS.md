@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.22
+CURRENT_VERSION = 1.0.23
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
@@ -13,6 +13,15 @@ LAST_COMMIT = see current GitHub main
 BLOCKERS = none
 NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
 ```
+
+## v1.0.23 forum index disclosure and state evidence — 2026-10-17
+
+- Real forum categories now use compact keyboard-focusable native disclosure headings. Each permission-filtered category may be expanded/collapsed independently without JavaScript; the default remains expanded.
+- Stable category identity is derived from the existing visible hierarchy, with storage-backed preferences restored per browser when available. Storage failure cannot hide or prevent navigation.
+- The shared reference-density layout now owns chevron, hover, focus-visible, compact touch targets, collapsed rows and reduced-motion states.
+- Real browser fixtures verify keyboard toggling, truly hidden child rows, closed-state restoration after reload and reopening.
+- Installed-browser screenshot review now records collapsed forum index state separately only when a real visible category exists, explicitly distinguishing unavailable coverage from captured evidence. Reference image-level parity is not claimed.
+- Release remains PHP 8.4/cPanel-first with no additional runtime dependency.
 
 ## v1.0.22 ACP authorization-aware navigation — 2026-10-17
 
