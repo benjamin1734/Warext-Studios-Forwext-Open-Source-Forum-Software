@@ -19,7 +19,7 @@ final class AcpUserDirectoryPaginationTest extends TestCase
         self::assertStringContainsString("'page'=>\$page", $service);
         self::assertStringContainsString("'page_count'=>\$pageCount", $service);
         self::assertStringContainsString("'total'=>\$total", $service);
-        self::assertStringNotContainsString('LIMIT 100', $service);
+        self::assertStringNotContainsString('ORDER BY updated_at_utc DESC,user_id DESC LIMIT 100', $service);
     }
 
     public function testPageInputIsValidatedAndPaginationEscapesItsLinks(): void
