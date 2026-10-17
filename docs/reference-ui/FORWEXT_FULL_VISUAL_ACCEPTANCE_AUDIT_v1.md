@@ -20,6 +20,10 @@ Forum index category bars now provide compact native expand/collapse behavior wi
 
 The real ACP shared asset now includes a compact unsaved-changes state in POST edit forms, with native reset and navigation protection. Keyboard/pointer inputs and real installed forum-node editor regression exercise this state. This does **not** prove individual group/role/node modal equivalence, cannot substitute a reference image comparison, and does not change the 562-image manual acceptance gate.
 
+## v1.0.26 forum home/navigation observations
+
+The first public forum reference (REF-0001) places current discussions, staff, online users, statistics and sharing in a compact sidebar beside the forum category directory. The implementation now uses the existing visibility-scoped presence service, published/permission-filtered forum reader, authorized composer destinations, and a no-third-party share control. Additional live browser captures follow actual visible forum/thread links and explicitly record absence when a thread cannot be captured. This closes specific *functional/reference-structure gaps*, but does not assert pixel identity. Identity of thread/profile interaction states and the complete 562-image manual visual matrix remain open.
+
 ## Manual group-level observations
 
 | Source range / family | Actual Forwext evidence | Finding | Gate |
