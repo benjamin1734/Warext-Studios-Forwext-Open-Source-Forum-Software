@@ -1900,6 +1900,21 @@ try {
   ) {
     fail(`admin forums: dense node workspace contract failed ${JSON.stringify(forumAdminState)}`);
   }
+  const nodeEditor = page.locator(".ac-forum-editor-form");
+  const originalNodeTitle = await nodeEditor.locator('input[name="title"]').inputValue();
+  await nodeEditor.locator('input[name="title"]').fill(originalNodeTitle + " (kaydedilmedi)");
+  await nodeEditor.locator(".ac-form-unsaved").waitFor({ state: "visible" });
+  if (!(await nodeEditor.evaluate((element) => element.classList.contains("ac-form-is-dirty")))) {
+    fail("admin forums: real selected node editor failed to detect unsaved changes");
+  }
+  await nodeEditor.locator(".ac-form-unsaved-reset").click();
+  if (await nodeEditor.locator('input[name="title"]').inputValue() !== originalNodeTitle
+      || await nodeEditor.locator(".ac-form-unsaved").isVisible()) {
+    fail("admin forums: canceling unsaved node edits did not restore original state");
+  }
+  if (await page.locator(".ac-forum-filter .ac-form-unsaved").count() !== 0) {
+    fail("admin forums: GET filter was incorrectly enhanced as a mutable form");
+  }
   await assertHealthyDocument("admin forums desktop");
 
   response = await page.goto(baseUrl + "/admin/content", { waitUntil: "domcontentloaded" });
