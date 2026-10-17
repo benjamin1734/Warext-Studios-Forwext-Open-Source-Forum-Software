@@ -14,6 +14,9 @@ use Forwext\Core\Forum\Node\ForumNode;
 use Forwext\Core\Forum\Node\ForumNodeHierarchy;
 use Forwext\Core\Forum\Node\ForumNodeRepository;
 use Forwext\Core\Forum\Node\ForumNodeType;
+use Forwext\Core\Forum\Thread\ThreadPermission;
+use Forwext\Core\Presence\OnlineUser;
+use Forwext\Core\Presence\PresenceService;
 use Forwext\Core\Http\Middleware\RequestHandlerInterface;
 use Forwext\Core\Http\Request;
 use Forwext\Core\Http\Response;
@@ -29,6 +32,7 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         private DatabaseForumPublicReader $reader,
         private ProfileViewerResolver $viewers,
         private PermissionAuthorizer $authorizer,
+        private PresenceService $presence,
         private BasePath $basePath,
     ) {
     }
@@ -51,11 +55,20 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
         $recent = $this->reader->recentThreads($forumIds, 8);
 
         $groups = $this->groups($hierarchy, $forums);
+        // Presence is filtered by each account's public/member visibility rules.
+        // The homepage only reads the presence state; it never forces a heartbeat.
+        $onlineUsers = $this->presence->online($actor !== null, 8);
+        $writableForums = $actor === null ? [] : array_values(array_filter(
+            $forums,
+            fn (ForumNode $forum): bool => $forum->forumSettings()?->allowNewThreads() === true
+                && $this->authorizer->allows($actor, ThreadPermission::Create->key(), $forum->id()),
+        ));
         $body = '<div class="forum-home-layout"><div class="forum-home-main">'
             . '<section class="forum-hero forum-page-head"><div>'
             . '<h1>Forumlar</h1><p>Topluluk kategorileri, forumlar ve son hareketler.</p></div>'
             . '<div class="forum-hero-actions">'
-            . ($actor === null ? '' : '<a class="fx-btn fx-btn--primary" href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular</a>')
+            . $this->renderCreateMenu($writableForums)
+            . ($actor === null ? '' : '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular</a>')
             . '<a class="fx-btn" href="' . self::e($this->basePath->prepend('/search')) . '">Forumlarda ara</a>'
             . '</div></section>';
 
@@ -71,8 +84,15 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
 
         $body .= '</div><aside class="forum-home-side" aria-label="Forum özeti">'
             . $this->renderRecent($recent)
-            . '<section class="card forum-side-card forum-side-card--online"><h2>Çevrimiçi üyeler</h2>'
-            . '<p><a href="' . self::e($this->basePath->prepend('/members/online')) . '">Güncel çevrimiçi üye listesini görüntüle →</a></p></section>'
+            . '<section class="card forum-side-card forum-side-card--staff"><h2>Yetkili ekip</h2>'
+            . '<p class="forum-side-copy">Topluluğu yöneten ekibi görüntüle.</p>'
+            . '<a href="' . self::e($this->basePath->prepend('/members/staff')) . '">Yetkili kadrosu <span aria-hidden="true">→</span></a></section>'
+            . $this->renderOnline($onlineUsers)
+            . $this->renderStats($summaries)
+            . '<section class="card forum-side-card forum-side-card--share" data-forum-share>'
+            . '<h2>Bu sayfayı paylaş</h2>'
+            . '<button type="button" class="forum-share-copy" data-forum-share-copy>Bağlantıyı kopyala</button>'
+            . '<p class="forum-share-feedback" data-forum-share-feedback role="status" aria-live="polite"></p></section>'
             . ($actor === null
                 ? '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
                     . '<a href="' . self::e($this->basePath->prepend('/activity')) . '">Son hareketler <span>→</span></a>'
@@ -80,18 +100,12 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
                     . '<a href="' . self::e($this->basePath->prepend('/members')) . '">Üyeleri keşfet <span>→</span></a>'
                     . '</section>'
                 : '<section class="card forum-side-card forum-side-card--discovery"><h2>Keşfet</h2>'
-                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular <span>→</span></a>'
-                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/unread')) . '">Okunmamış <span>→</span></a>'
-                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/trending')) . '">Gündem <span>→</span></a>'
-                . '<a href="' . self::e($this->basePath->prepend('/activity/threads/featured')) . '">Öne çıkanlar <span>→</span></a>'
-                . '<a href="' . self::e($this->basePath->prepend('/activity/profile-posts')) . '">Profil gönderileri <span>→</span></a>'
-                . '</section>')
-            . '<section class="card forum-side-card"><h2>Topluluk</h2>'
-            . '<a href="' . self::e($this->basePath->prepend('/members/online')) . '">Çevrimiçi üyeler <span>→</span></a>'
-            . ($actor === null ? '' : '<a href="' . self::e($this->basePath->prepend('/stats')) . '">Forum istatistikleri <span>→</span></a>')
-            . '<a href="' . self::e($this->basePath->prepend('/faq')) . '">SSS <span>→</span></a>'
-            . '</section>'
-            . $this->renderStats($summaries)
+                    . '<a href="' . self::e($this->basePath->prepend('/activity/threads/new')) . '">Yeni konular <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/activity/threads/unread')) . '">Okunmamış <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/activity/threads/trending')) . '">Gündem <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/activity/threads/featured')) . '">Öne çıkanlar <span>→</span></a>'
+                    . '<a href="' . self::e($this->basePath->prepend('/activity/profile-posts')) . '">Profil gönderileri <span>→</span></a>'
+                    . '</section>')
             . '</aside></div>';
 
         $path = parse_url($request->uri(), PHP_URL_PATH);
@@ -105,8 +119,57 @@ final readonly class ForumIndexHandler implements RequestHandlerInterface
             breadcrumbs: $home ? null : BreadcrumbTrail::page('Forumlar'),
             authenticated: $actor !== null,
             viewerId: $actor?->value(),
-            headAssets: '<script src="' . self::e($this->basePath->prepend('/assets/forum-categories.js')) . '" defer></script>',
+            headAssets: '<script src="' . self::e($this->basePath->prepend('/assets/forum-categories.js')) . '" defer></script>'
+                . '<script src="' . self::e($this->basePath->prepend('/assets/forum-home-share.js')) . '" defer></script>',
         ))->withHeader('Cache-Control', $actor === null ? 'public, max-age=30' : 'private, no-store');
+    }
+
+    /** @param list<ForumNode> $forums */
+    private function renderCreateMenu(array $forums): string
+    {
+        if ($forums === []) {
+            return '';
+        }
+        if (count($forums) === 1) {
+            $forum = $forums[0];
+            return '<a class="fx-btn fx-btn--primary" href="'
+                . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value()) . '/new-thread'))
+                . '">Konu oluştur</a>';
+        }
+
+        $links = '';
+        foreach ($forums as $forum) {
+            $links .= '<a href="'
+                . self::e($this->basePath->prepend('/forums/' . rawurlencode($forum->slug()->value()) . '/new-thread'))
+                . '">' . self::e($forum->title()) . '</a>';
+        }
+
+        return '<details class="forum-create-menu"><summary class="fx-btn fx-btn--primary">'
+            . 'Konu oluştur <span aria-hidden="true">⌄</span></summary>'
+            . '<div class="forum-create-options" aria-label="Konu oluşturulacak forumu seçin">' . $links
+            . '</div></details>';
+    }
+
+    /** @param list<OnlineUser> $onlineUsers */
+    private function renderOnline(array $onlineUsers): string
+    {
+        $body = '<section class="card forum-side-card forum-side-card--online">'
+            . '<h2>Çevrimiçi üyeler</h2>';
+        if ($onlineUsers === []) {
+            $body .= '<p class="forum-side-copy">Şu anda görünür çevrimiçi üye bulunmuyor.</p>';
+        } else {
+            $body .= '<div class="forum-side-online-list">';
+            foreach ($onlineUsers as $online) {
+                $body .= '<a href="' . self::e(ProfileHtml::memberPath($this->basePath, $online->username))
+                    . '"><span class="forum-recent-avatar" aria-hidden="true">'
+                    . ProfileHtml::initial($online->username) . '</span><span>'
+                    . self::e($online->username) . '</span></a>';
+            }
+            $body .= '</div>';
+        }
+
+        return $body . '<a href="' . self::e($this->basePath->prepend('/members/online'))
+            . '">Tüm görünür çevrimiçi üyeler <span aria-hidden="true">→</span></a></section>';
     }
 
     private function canViewIndexForum(?EntityId $actor, ForumNode $node): bool
