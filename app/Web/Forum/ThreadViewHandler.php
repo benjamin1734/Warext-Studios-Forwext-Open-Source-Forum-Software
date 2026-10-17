@@ -135,7 +135,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . '">Foruma dön</a>'
             . '<button type="button" class="fx-btn thread-copy-button" data-thread-copy-url="'
             . self::e($canonicalThreadUrl) . '">Konuyu paylaş</button>'
-            . '<span class="thread-copy-status sr-only" role="status" aria-live="polite"></span></div>';
+            . '<span class="thread-copy-status" role="status" aria-live="polite"></span></div>';
         if ($actor !== null && is_string($csrfToken) && $csrfToken !== '') {
             $body .= '<div class="thread-view-action-follow">' . DiscussionWatchHtml::form(
                 $this->basePath->prepend('/threads/' . rawurlencode($thread->id()->value()) . '/watch'),
@@ -343,7 +343,7 @@ final readonly class ThreadViewHandler implements RequestHandlerInterface
             . number_format($post['position'], 0, ',', '.') . '</a>'
             . '<button type="button" class="thread-post-copy" data-thread-copy-url="' . self::e($permalink)
             . '" aria-label="Mesaj ' . number_format($post['position'], 0, ',', '.') . ' bağlantısını kopyala">'
-            . 'Kopyala</button><span class="thread-copy-status sr-only" role="status" aria-live="polite"></span></header>'
+            . 'Kopyala</button><span class="thread-copy-status" role="status" aria-live="polite"></span></header>'
             . '<div class="thread-post-content">' . $content . '</div>'
             . $this->renderAttachments($attachments)
             . '<footer class="thread-post-footer"><div class="thread-post-footer-meta">' . $edited . '</div>'
