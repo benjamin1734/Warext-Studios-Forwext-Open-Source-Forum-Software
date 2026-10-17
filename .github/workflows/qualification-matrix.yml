@@ -114,6 +114,9 @@ jobs:
       - name: Resolve browser tooling
         run: npm install --no-save --no-package-lock --no-audit --no-fund --ignore-scripts playwright@1.63.0
 
+      - name: Verify thread permalink clipboard contracts
+        run: npm run browser:thread-share
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
