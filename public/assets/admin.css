@@ -2199,7 +2199,17 @@ body[data-forwext-surface="admin"] .acp-dashboard--dense .acp-directory-main p{c
     padding:0;
   }
   .acp-app-sidebar-heading{padding:8px 12px}
-  .acp-app-nav-group{display:none}
+  body[data-forwext-surface="admin"] .acp-app-sidebar{
+    max-height:min(58dvh,420px);
+    overflow-y:auto;
+  }
+  body[data-forwext-surface="admin"] .acp-app-nav-group,
+  body[data-forwext-surface="admin"] .acp-app-nav-group:not([open]){
+    display:block;
+  }
+  body[data-forwext-surface="admin"] .acp-app-nav-group>summary{
+    min-height:44px;
+  }
   .acp-app-return{display:none}
   body[data-forwext-surface="admin"] .acp-app-layout>.wrap{width:calc(100% - 22px);margin:16px auto 50px}
   body[data-forwext-surface="admin"] .acp-dashboard--dense .acp-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
