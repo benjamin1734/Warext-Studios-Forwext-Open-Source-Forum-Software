@@ -71,6 +71,10 @@ final class AdminCommunityHtml
         $history = $usersSnapshot['selected_history'];
         $assignment = $usersSnapshot['access'];
         $query = trim((string) ($usersSnapshot['search'] ?? ''));
+        $page = max(1, (int) ($usersSnapshot['page'] ?? 1));
+        $perPage = max(1, (int) ($usersSnapshot['per_page'] ?? 50));
+        $pageCount = max(1, (int) ($usersSnapshot['page_count'] ?? 1));
+        $total = max(0, (int) ($usersSnapshot['total'] ?? count($rows)));
         $groups = $accessSnapshot['groups'];
         $roles = $accessSnapshot['roles'];
         $action = self::e($basePath->prepend('/admin/users'));
@@ -87,7 +91,8 @@ final class AdminCommunityHtml
         $table = '';
         foreach ($rows as $row) {
             $url = $basePath->prepend('/admin/users?user=' . rawurlencode((string) $row['user_id'])
-                . ($query !== '' ? '&q=' . rawurlencode($query) : ''));
+                . ($query !== '' ? '&q=' . rawurlencode($query) : '')
+                . ($page > 1 ? '&page=' . $page : ''));
             $table .= '<tr><td><a href="' . self::e($url) . '"><strong>' . self::e((string) $row['username'])
                 . '</strong></a><small class="ac-user-id">' . self::e((string) $row['user_id']) . '</small></td>'
                 . '<td><span class="ac-user-email">' . self::e((string) $row['email']) . '</span></td>'
@@ -196,13 +201,15 @@ final class AdminCommunityHtml
                 . '</tbody></table></div></section></div>';
         }
 
+        $first = $total === 0 ? 0 : (($page - 1) * $perPage) + 1;
+        $last = min($total, ($page - 1) * $perPage + count($rows));
         $searchSummary = $query === ''
-            ? count($rows) . ' son kullanıcı'
-            : '“' . self::e($query) . '” için ' . count($rows) . ' sonuç';
+            ? $total . ' kullanıcıdan ' . $first . '–' . $last . ' arası'
+            : '“' . self::e($query) . '” için ' . $total . ' sonuç · ' . $first . '–' . $last . ' arası';
 
         return '<div class="ac-users-shell"><section class="ac-panel ac-users-directory"><div class="ac-heading"><div><h1>Kullanıcı Yönetimi</h1>'
             . '<p class="ac-muted">Gerçek kullanıcı dizininde ara; hesap ayrıntısını aç ve güvenli access/status araçlarını kullan.</p></div>'
-            . '<span class="ac-count">' . count($rows) . '</span></div>'
+            . '<span class="ac-count">' . $total . '</span></div>'
             . '<form class="ac-filter ac-users-toolbar" method="get" action="' . $action . '">'
             . '<label>Kullanıcı/e-posta ara<input name="q" maxlength="80" value="' . self::e($query) . '" placeholder="Kullanıcı adı veya e-posta"></label>'
             . '<button class="ac-btn" type="submit">Ara</button>'
