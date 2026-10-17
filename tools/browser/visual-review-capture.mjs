@@ -189,6 +189,7 @@ try {
           await page.screenshot({path: path.join(output, "admin-home-viewport-debug.jpg"),
             fullPage: false,type:"jpeg",quality:90});
         }
+        await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: path.join(output, record.screenshot),
           fullPage: true,
