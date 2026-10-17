@@ -26,8 +26,8 @@ function browser({ raw = "/threads/aabb?page=2#post-ccdd", mode = "native" } = {
     parentElement = { querySelector: () => feedback };
     getAttribute(name) { return name === "data-thread-copy-url" ? raw : null; }
   }
-  const button = new HTMLButtonElement();
   const feedback = new HTMLElement();
+  const button = new HTMLButtonElement();
   feedback.textContent = "";
   const document = {
     activeElement: button,
