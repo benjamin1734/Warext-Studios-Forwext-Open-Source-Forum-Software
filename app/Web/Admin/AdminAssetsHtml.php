@@ -26,6 +26,13 @@ final class AdminAssetsHtml
             'UTF-8',
         );
 
-        return '<link rel="stylesheet" href="' . $href . '">';
+        $script = htmlspecialchars(
+            $basePath->prepend('/assets/admin-navigation.js'),
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8',
+        );
+
+        return '<link rel="stylesheet" href="' . $href . '">'
+            . '<script src="' . $script . '" defer></script>';
     }
 }

@@ -37,13 +37,12 @@ final readonly class AdminInformationArchitectureService
             throw new InvalidArgumentException('ACP search query is invalid.');
         }
 
-        $visible = $this->navigation->visible($actor);
+        $sections = $this->navigationSections($actor);
         $allowedKeys = [];
-        $sections = [];
-        foreach ($visible as $item) {
-            $allowedKeys[$item->key] = true;
-            $sections[$item->section->value] ??= [];
-            $sections[$item->section->value][] = $item;
+        foreach ($sections as $items) {
+            foreach ($items as $item) {
+                $allowedKeys[$item->key] = true;
+            }
         }
 
         $preferences = $this->preferences->load($actor)->filtered($allowedKeys);
@@ -56,6 +55,25 @@ final readonly class AdminInformationArchitectureService
             $this->resolvePreferenceItems($actor, $preferences->recent()),
             $this->queues->forActor($actor),
         );
+    }
+
+    /**
+     * Returns the same access-controlled navigation sections for the dashboard
+     * and the shared sidebar. The caller never receives inaccessible targets.
+     *
+     * @return array<string, list<AdminNavigationItem>>
+     */
+    public function navigationSections(EntityId $actor): array
+    {
+        $this->requireAccess($actor);
+
+        $sections = [];
+        foreach ($this->navigation->visible($actor) as $item) {
+            $sections[$item->section->value] ??= [];
+            $sections[$item->section->value][] = $item;
+        }
+
+        return $sections;
     }
 
     public function toggleFavorite(

@@ -5,7 +5,7 @@ This file is the canonical human-readable continuation pointer for Forwext. The 
 ```text
 PROJECT = Forwext
 PLAN_VERSION = v2.0
-CURRENT_VERSION = 1.0.20
+CURRENT_VERSION = 1.0.22
 LAST_COMPLETED_MAIN_STEP = 20
 LAST_COMPLETED_SUBSTEP = 20.08
 CURRENT_STEP = v5 reference UI 20/20 phases VERIFIED; v1.0.19 release qualified
@@ -13,6 +13,14 @@ LAST_COMMIT = see current GitHub main
 BLOCKERS = none
 NEXT_STEP = Maintenance and requested new features; manually adjudicated full-reference pixel parity remains a separate optional review (not established by automated screenshot smoke).
 ```
+
+## v1.0.22 ACP authorization-aware navigation — 2026-10-17
+
+- Shared ACP navigation is sourced from one server-side registry with live account permission checks; each accessible destination is a direct route, not a dashboard search shortcut.
+- A read-only, no-store, authenticated sidebar navigation endpoint is used across ACP management pages; role filtering is never guessed client-side.
+- Progressive enhancement retains a functional server-rendered directory fallback. Active subpages select the most specific allowed link. Mobile groups stay visible, accessible and collapsible.
+- Installed-browser and source regression checks cover routing, direct links, current-route highlighting and screenshots after menu hydration.
+- Full manual per-image review of all 562 source reference states remains outstanding; this change does not claim pixel parity.
 
 ## v1.0.20 visual-reference audit and browser evidence — 2026-10-08
 

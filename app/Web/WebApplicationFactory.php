@@ -14,6 +14,7 @@ use Forwext\App\Web\Account\AccountPreferencesHandler;
 use Forwext\App\Web\Account\AccountSessionsHandler;
 use Forwext\App\Web\Admin\AdminCommunityHandler;
 use Forwext\App\Web\Admin\AdminDashboardHandler;
+use Forwext\App\Web\Admin\AdminSidebarNavigationHandler;
 use Forwext\App\Web\Admin\AdminModuleManagerHandler;
 use Forwext\App\Web\Admin\PublicNavigationHandler;
 use Forwext\App\Web\Admin\SystemIntegrationHandler;
@@ -2875,6 +2876,12 @@ final readonly class WebApplicationFactory
             new PathTemplate('/admin'),
             new AdminDashboardHandler($adminInformation, $viewerResolver, $basePath),
             [$adminNavigationCsrf],
+        ));
+        $routes->add(new Route(
+            'admin.sidebar-navigation',
+            [HttpMethod::Get],
+            new PathTemplate('/admin/sidebar-navigation'),
+            new AdminSidebarNavigationHandler($adminInformation, $viewerResolver, $basePath),
         ));
         $routes->add(new Route(
             'admin.navigation',

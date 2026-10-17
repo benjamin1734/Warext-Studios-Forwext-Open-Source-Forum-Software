@@ -1725,7 +1725,7 @@ body[data-forwext-surface="admin"] .acp-directory-kicker code{color:#7b9aae}
   body[data-forwext-surface="admin"] .acp-app-sidebar{position:static;height:auto;max-height:260px;overflow:auto}
   body[data-forwext-surface="admin"] .acp-app-layout>.wrap{width:calc(100% - 32px)}
   body[data-forwext-surface="admin"] .acp-app-sidebar-heading{min-height:48px;padding:10px 16px}
-  body[data-forwext-surface="admin"] .acp-app-nav-group:not([open]){display:none}
+  body[data-forwext-surface="admin"] .acp-app-nav-group>summary{min-height:44px}
   body[data-forwext-surface="admin"] .top-sub{display:none}
 }
 @media(max-width:630px){
@@ -1905,6 +1905,20 @@ body[data-forwext-surface="admin"] .acp-app-topbar{
   font-size:11px;
   text-decoration:none;
 }
+.acp-app-nav-group nav>a[aria-current="page"]{
+  color:#e3f6ff;
+  background:#1c4860;
+  border-left:3px solid #72bae2;
+  padding-left:21px;
+}
+.acp-app-directory-link{
+  display:block;
+  padding:12px 16px;
+  color:#b0cfe2;
+  font-size:12px;
+  text-decoration:none;
+}
+.acp-app-nav-group:focus-within>summary{color:#d7f1ff}
 .acp-app-sidebar :is(a,summary):is(:hover,:focus-visible){
   color:#fff;
   background:rgba(255,255,255,.07);

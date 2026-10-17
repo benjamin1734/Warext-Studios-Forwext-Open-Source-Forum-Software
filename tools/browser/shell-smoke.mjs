@@ -49,6 +49,30 @@ try {
       failedRequests.push(`${request.method()} ${request.url()} :: ${request.failure()?.errorText ?? "unknown"}`);
     });
 
+    if (testCase.admin) {
+      // Fixture browser tests have no authenticated PHP service. Stub only
+      // their read-only navigation contract; live-route smoke exercises the
+      // actual permission-scoped database-backed endpoint separately.
+      await page.route("**/admin/sidebar-navigation", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          headers: { "Cache-Control": "no-store" },
+          body: JSON.stringify({
+            sections: [{
+              key: "appearance",
+              label: "Görünüm",
+              items: [{
+                key: "admin.appearance",
+                label: "Görünüm yönetimi",
+                href: "/admin/appearance",
+              }],
+            }],
+          }),
+        });
+      });
+    }
+
     const response = await page.goto(
       `${baseUrl}/build/browser-fixtures/${testCase.fixture}.html`,
       { waitUntil: "networkidle" },
