@@ -60,12 +60,15 @@ final readonly class AdminCommunityService
      *   search:string
      * }
      */
-    public function usersSnapshot(EntityId $actor, string $search, ?EntityId $selectedUserId): array
+    public function usersSnapshot(EntityId $actor, string $search, ?EntityId $selectedUserId, int $page = 1): array
     {
         $this->requireManage($actor);
         $search = trim($search);
         if (strlen($search) > 80 || preg_match('//u', $search) !== 1) {
             throw new InvalidArgumentException('ACP user search is invalid.');
+        }
+        if ($page < 1 || $page > 100000) {
+            throw new InvalidArgumentException('ACP user page is out of range.');
         }
 
         $parameters = [];
@@ -77,9 +80,21 @@ final readonly class AdminCommunityService
             $parameters['email_search'] = $needle;
         }
 
+        $perPage = 50;
+        $total = max(0, (int) $this->database->fetchValue(new CompiledQuery(
+            'SELECT COUNT(*) FROM forwext_users' . $where,
+            $parameters,
+        )));
+        $pageCount = max(1, intdiv(max(0, $total - 1), $perPage) + 1);
+        $page = min($page, $pageCount);
+        $offset = ($page - 1) * $perPage;
+
+        // Only integer-derived LIMIT/OFFSET enter SQL; arbitrary query strings are
+        // bound separately. Stable ID ordering prevents duplicates on tied timestamps.
         $rows = $this->database->fetchAll(new CompiledQuery(
             'SELECT user_id,username,email,status,locale,timezone,created_at_utc,updated_at_utc '
-            . 'FROM forwext_users' . $where . ' ORDER BY updated_at_utc DESC,user_id DESC LIMIT 100',
+            . 'FROM forwext_users' . $where
+            . ' ORDER BY updated_at_utc DESC,user_id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset,
             $parameters,
         ));
 
@@ -95,6 +110,10 @@ final readonly class AdminCommunityService
             'access'=>$selected === null ? ['primary'=>null,'secondary'=>[],'roles'=>[]]
                 : $this->directAccess($selected->id()),
             'search'=>$search,
+            'page'=>$page,
+            'per_page'=>$perPage,
+            'page_count'=>$pageCount,
+            'total'=>$total,
         ];
     }
 
