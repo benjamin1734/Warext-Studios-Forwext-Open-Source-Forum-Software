@@ -1548,16 +1548,29 @@ try {
   if (adminDensityState.overview !== 4 || adminDensityState.sectionIndex < 1 || adminDensityState.directoryRows < 1) {
     fail(`admin: dense dashboard contract failed ${JSON.stringify(adminDensityState)}`);
   }
+  await page.locator('[data-acp-navigation-list][data-acp-navigation-loaded="1"]').waitFor();
+  const sidebarEndpoint = await page.request.get(baseUrl + "/admin/sidebar-navigation", {
+    headers: { Accept: "application/json" },
+  });
+  if (sidebarEndpoint.status() !== 200) fail("admin sidebar: authorized endpoint unavailable");
+  const sidebarPayload = await sidebarEndpoint.json();
+  if (!Array.isArray(sidebarPayload.sections) || sidebarPayload.sections.length < 1) {
+    fail("admin sidebar: permission-scoped sections absent");
+  }
   const adminAppChrome = await page.evaluate(() => {
     const layout = document.querySelector(".acp-app-layout");
     const sidebar = document.querySelector(".acp-app-sidebar");
     const stats = document.querySelectorAll(".acp-insight-panel");
-    const searchLinks = sidebar?.querySelectorAll('a[href*="/admin?q="]') ?? [];
+    const authorizedLinks = sidebar?.querySelectorAll(".acp-app-nav-group nav>a[href]") ?? [];
+    const fakeSearchLinks = sidebar?.querySelectorAll('a[href*="/admin?q="]') ?? [];
+    const activeLinks = [...authorizedLinks].filter((link) => link.getAttribute("aria-current") === "page");
     return {
       columns: layout instanceof HTMLElement
         ? getComputedStyle(layout).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
       sidebarVisible: sidebar instanceof HTMLElement && getComputedStyle(sidebar).display !== "none",
-      searchLinks: searchLinks.length,
+      authorizedLinks: authorizedLinks.length,
+      fakeSearchLinks: fakeSearchLinks.length,
+      activeLinks: activeLinks.length,
       charts: stats.length,
       environment: document.querySelectorAll(".acp-environment-status").length,
       width: layout instanceof HTMLElement ? Math.round(layout.getBoundingClientRect().width) : 0,
@@ -1572,7 +1585,8 @@ try {
   }
   if (
     adminAppChrome.columns !== 2 || !adminAppChrome.sidebarVisible
-    || adminAppChrome.searchLinks < 8 || adminAppChrome.charts !== 2
+    || adminAppChrome.authorizedLinks < 8 || adminAppChrome.fakeSearchLinks !== 0
+    || adminAppChrome.charts !== 2
     || adminAppChrome.environment !== 1 || adminAppChrome.width > adminAppChrome.viewport
   ) fail(`admin: separate management application contract failed ${JSON.stringify(adminAppChrome)}`);
   const dashboardLaunchpad = await page.evaluate(() => {
@@ -2017,6 +2031,11 @@ try {
   response = await page.goto(baseUrl + "/admin/navigation?state=all&placement=all", { waitUntil: "domcontentloaded" });
   if (!response || response.status() !== 200) fail("admin navigation: route did not return HTTP 200");
   await page.getByRole("heading", { name: "Navigasyon Yönetimi", exact: true }).waitFor();
+  await page.locator('[data-acp-navigation-list][data-acp-navigation-loaded="1"]').waitFor();
+  const activeNavigation = page.locator('.acp-app-nav-group nav>a[aria-current="page"]');
+  if (await activeNavigation.count() !== 1 || !(await activeNavigation.first().getAttribute("href"))?.endsWith("/admin/navigation")) {
+    fail("admin navigation: real active route not highlighted in permission-scoped sidebar");
+  }
   const platformNavigation = await page.evaluate(() => ({
     tabs: document.querySelectorAll(".platform-tabs .platform-tab").length,
     stats: document.querySelectorAll(".platform-overview .platform-stat").length,
